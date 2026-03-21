@@ -105,58 +105,100 @@ st.html("""
   [data-testid="stMetricDelta"] { font-family: 'DM Mono', monospace !important;
     font-size: 14px !important; }
 
-  /* DataFrames and Tables */
+  /* DataFrames and Tables - Comprehensive Light Mode */
+  [data-testid="stDataFrame"],
+  [data-testid="stDataFrame"] *,
+  table, table *, tbody, thead, tr, th, td {
+    background-color: #ffffff !important;
+    color: #111318 !important;
+  }
   [data-testid="stDataFrame"] {
     background: #ffffff !important;
   }
+  [data-testid="stDataFrame"] thead,
   [data-testid="stDataFrame"] thead th {
-    background: #f5f6f8 !important; color: #2d2f36 !important;
-    font-family: 'DM Mono', monospace !important; font-size: 14px !important;
-    font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.5px;
+    background: #f5f6f8 !important;
+    color: #2d2f36 !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
+  [data-testid="stDataFrame"] tbody,
   [data-testid="stDataFrame"] tbody tr {
     background: #ffffff !important;
   }
   [data-testid="stDataFrame"] tbody tr:hover {
     background: #f5f6f8 !important;
   }
-  [data-testid="stDataFrame"] td {
-    font-family: 'DM Mono', monospace !important; font-size: 14px !important;
+  [data-testid="stDataFrame"] td,
+  [data-testid="stDataFrame"] tbody td {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 14px !important;
     color: #111318 !important;
     background: #ffffff !important;
+    border-color: #e2e4e9 !important;
   }
   table {
     background: #ffffff !important;
     color: #111318 !important;
+    border-color: #e2e4e9 !important;
+  }
+  table thead {
+    background: #f5f6f8 !important;
   }
   table th {
     background: #f5f6f8 !important;
     color: #2d2f36 !important;
+    border-color: #e2e4e9 !important;
   }
-  table td {
+  table td, table tbody td {
     color: #111318 !important;
     background: #ffffff !important;
+    border-color: #e2e4e9 !important;
   }
+  tbody tr:nth-child(even) { background: #ffffff !important; }
+  tbody tr:nth-child(odd) { background: #ffffff !important; }
 
-  /* Select boxes and dropdowns */
-  .stSelectbox select, [data-baseweb="select"] {
-    font-family: 'DM Mono', monospace !important; font-size: 16px !important;
-    background: #ffffff !important;
-    color: #111318 !important;
-    border-color: #e2e4e9 !important;
-  }
-  [data-baseweb="select__popup"] {
-    background: #ffffff !important;
-    border-color: #e2e4e9 !important;
-  }
-  [data-baseweb="select__option"] {
+  /* Select boxes and dropdowns - Comprehensive Light Mode */
+  .stSelectbox,
+  .stSelectbox *,
+  [data-baseweb="select"],
+  [data-baseweb="select"] * {
     background: #ffffff !important;
     color: #111318 !important;
   }
-  [data-baseweb="select__option"]:hover {
+  .stSelectbox select,
+  [data-baseweb="select"],
+  [data-baseweb="select"] input,
+  [data-baseweb="select"] div {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 16px !important;
+    background: #ffffff !important;
+    color: #111318 !important;
+    border: 1px solid #e2e4e9 !important;
+    border-color: #e2e4e9 !important;
+  }
+  [data-baseweb="select__popup"],
+  [data-baseweb="select__popup"] * {
+    background: #ffffff !important;
+    border-color: #e2e4e9 !important;
+    color: #111318 !important;
+  }
+  [data-baseweb="select__option"],
+  [data-baseweb="select__option"] * {
+    background: #ffffff !important;
+    color: #111318 !important;
+  }
+  [data-baseweb="select__option"]:hover,
+  [data-baseweb="select__option"]:focus,
+  [data-baseweb="select__option"][aria-selected="true"] {
     background: #f5f6f8 !important;
+    color: #111318 !important;
   }
   .stSelectbox { color: #111318 !important; }
+  select, select * { background: #ffffff !important; color: #111318 !important; border-color: #e2e4e9 !important; }
 
   /* KPI cards (custom HTML) */
   .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -281,14 +323,21 @@ def brew_fig(fig, height=320, show_legend=True, margin=None):
     m = margin or dict(t=16, b=40, l=8, r=8)
     fig.update_layout(
         height=height, paper_bgcolor="white", plot_bgcolor="white",
-        font=dict(family="DM Sans, sans-serif", color=BODY, size=12),
+        font=dict(family="DM Sans, sans-serif", color=BODY, size=15, weight="bold"),
         margin=m, showlegend=show_legend,
-        legend=dict(font=dict(size=10, color=MID, family="DM Mono")),
+        legend=dict(font=dict(size=13, color=MID, family="DM Mono", weight="bold")),
+        title_font=dict(size=18, color=BODY, family="DM Sans, sans-serif", weight="bold"),
     )
     fig.update_xaxes(gridcolor=GRID, linecolor=BORDER,
-                     tickfont=dict(size=9, color=MID, family="DM Mono"))
+                     tickfont=dict(size=13, color=MID, family="DM Mono", weight="bold"),
+                     title_font=dict(size=14, color=BODY, weight="bold"))
     fig.update_yaxes(gridcolor=GRID, linecolor=BORDER,
-                     tickfont=dict(size=9, color=MID, family="DM Mono"))
+                     tickfont=dict(size=13, color=MID, family="DM Mono", weight="bold"),
+                     title_font=dict(size=14, color=BODY, weight="bold"))
+    # Make data labels bold and larger
+    for trace in fig.data:
+        if hasattr(trace, 'textfont'):
+            trace.textfont = dict(size=12, weight="bold", family="DM Mono")
     return fig
 
 def section(title, sub=""):
