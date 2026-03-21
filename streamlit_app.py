@@ -764,6 +764,162 @@ def tab_ceo(dash):
     filtered_pks    = filtered_df["period_key"].tolist()
     filtered_stands = stands_df[stands_df["Period_Key"].isin(filtered_pks)]
 
+    # ── Annual Goals Tracker (shown when a goal year is selected) ─────────────
+    ANNUAL_GOALS = {
+        2026: {
+            "net_sales":  205_646_328,
+            "cogs_pct":   0.276,
+            "labor_pct":  0.236,   # all-in
+            "ebitda":     39_857_275,
+        },
+        # Add future years here as goals are set
+    }
+
+    if sel_year in ANNUAL_GOALS:
+        goals       = ANNUAL_GOALS[sel_year]
+        goal_ebitda_pct = goals["ebitda"] / goals["net_sales"]
+
+        # Always use full-year periods (not the filtered sub-selection) for YTD pacing
+        ytd_df      = year_periods.copy()
+        n_completed = len(ytd_df)            # periods completed so far this year
+        pct_elapsed = n_completed / 13       # fraction of year elapsed
+
+        ytd_sales  = ytd_df["net_sales"].sum()
+        ytd_ebitda = ytd_df["ebitda"].sum()
+        ytd_cogs_pct   = ((ytd_df["cogs_pct"]  * ytd_df["net_sales"]).sum() / ytd_sales
+                          if ytd_sales > 0 and "cogs_pct"  in ytd_df.columns else None)
+        ytd_labor_pct  = ((ytd_df["labor_pct"] * ytd_df["net_sales"]).sum() / ytd_sales
+                          if ytd_sales > 0 and "labor_pct" in ytd_df.columns else None)
+
+        # On-pace targets for $ metrics
+        pace_sales  = goals["net_sales"] * pct_elapsed
+        pace_ebitda = goals["ebitda"]    * pct_elapsed
+
+        def _goal_card(label, actual_fmt, goal_fmt, progress_pct, status, status_color,
+                       detail="", bar_color=None):
+            """Render a goal-tracker card with progress bar."""
+            bar_color  = bar_color or BLUE
+            bar_w      = min(max(progress_pct * 100, 0), 100)
+            pace_line  = f'<div style="font-size:11px;color:{status_color};font-weight:700;margin-top:4px;">{status}</div>'
+            return f"""
+            <div style="background:white;border:1px solid #e2e4e9;border-radius:10px;
+                        padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;
+                          text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">{label}</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;
+                          color:#111318;line-height:1;">{actual_fmt}</div>
+              <div style="font-size:11px;color:#8a919e;margin-bottom:8px;">
+                goal: <strong style="color:#4a5060;">{goal_fmt}</strong>
+                {(" · " + detail) if detail else ""}
+              </div>
+              <div style="background:#f0f1f3;border-radius:4px;height:6px;overflow:hidden;">
+                <div style="background:{bar_color};width:{bar_w:.1f}%;height:100%;
+                            border-radius:4px;transition:width .3s;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px;">
+                <span style="font-size:10px;color:#8a919e;">{bar_w:.0f}% of goal</span>
+                {pace_line}
+              </div>
+            </div>"""
+
+        def _pace_status(actual, pace_target, tolerance=0.03):
+            """Return (status_text, color) based on actual vs on-pace target."""
+            if pace_target == 0:
+                return "—", MID
+            ratio = actual / pace_target
+            if ratio >= 1 + tolerance:
+                return f"▲ AHEAD  ({ratio*100:.0f}% of pace)", GREEN
+            elif ratio >= 1 - tolerance:
+                return f"→ ON PACE ({ratio*100:.0f}% of pace)", BLUE
+            else:
+                return f"▼ BEHIND  ({ratio*100:.0f}% of pace)", RED
+
+        def _pct_status(actual, target, lower_is_better=False):
+            """Return (status_text, color) for a % metric."""
+            if actual is None:
+                return "No data yet", MID
+            delta = (actual - target) * 100
+            better = delta < 0 if lower_is_better else delta > 0
+            on_target = abs(delta) <= 0.3
+            if on_target:
+                return f"→ ON TARGET ({actual*100:.1f}%)", BLUE
+            elif better:
+                return f"▲ {'BELOW' if lower_is_better else 'ABOVE'} TARGET ({delta:+.1f}pts)", GREEN
+            else:
+                return f"▼ {'ABOVE' if lower_is_better else 'BELOW'} TARGET ({delta:+.1f}pts)", RED
+
+        st.html(f"""
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
+                    color:#2d2f36;margin:16px 0 4px;display:flex;align-items:center;gap:10px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#cd2128;
+                       display:inline-block;flex-shrink:0;"></span>
+          FY{sel_year} GOALS TRACKER
+          <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:400;
+                       color:#8a919e;letter-spacing:1px;margin-left:8px;">
+            P{n_completed} of 13 complete · {pct_elapsed*100:.0f}% of year elapsed
+          </span>
+        </div>""")
+
+        # Sales status
+        sales_status, sales_color = _pace_status(ytd_sales, pace_sales)
+        # EBITDA $ status
+        ebi_status, ebi_color = _pace_status(ytd_ebitda, pace_ebitda)
+        # COGs % status
+        cogs_status, cogs_color = _pct_status(ytd_cogs_pct, goals["cogs_pct"], lower_is_better=True)
+        # Labor % status
+        labor_status, labor_color = _pct_status(ytd_labor_pct, goals["labor_pct"], lower_is_better=True)
+
+        g1, g2, g3, g4 = st.columns(4)
+        with g1:
+            st.html(_goal_card(
+                label="Net Sales (YTD)",
+                actual_fmt=f"${ytd_sales/1e6:.1f}M",
+                goal_fmt=f"${goals['net_sales']/1e6:.1f}M",
+                progress_pct=ytd_sales / goals["net_sales"],
+                status=sales_status, status_color=sales_color,
+                detail=f"pace: ${pace_sales/1e6:.1f}M",
+                bar_color=sales_color,
+            ))
+        with g2:
+            st.html(_goal_card(
+                label="EBITDA (YTD)",
+                actual_fmt=f"${ytd_ebitda/1e6:.1f}M",
+                goal_fmt=f"${goals['ebitda']/1e6:.1f}M",
+                progress_pct=ytd_ebitda / goals["ebitda"] if goals["ebitda"] else 0,
+                status=ebi_status, status_color=ebi_color,
+                detail=f"pace: ${pace_ebitda/1e6:.1f}M",
+                bar_color=ebi_color,
+            ))
+        with g3:
+            cogs_actual_fmt = f"{ytd_cogs_pct*100:.1f}%" if ytd_cogs_pct is not None else "—"
+            cogs_prog = max(0, 1 - (ytd_cogs_pct - goals["cogs_pct"]) * 10) if ytd_cogs_pct else 0.5
+            st.html(_goal_card(
+                label="COGs % (YTD avg)",
+                actual_fmt=cogs_actual_fmt,
+                goal_fmt=f"{goals['cogs_pct']*100:.1f}%",
+                progress_pct=min(cogs_prog, 1.0),
+                status=cogs_status, status_color=cogs_color,
+                detail="lower is better",
+                bar_color=cogs_color,
+            ))
+        with g4:
+            labor_actual_fmt = f"{ytd_labor_pct*100:.1f}%" if ytd_labor_pct is not None else "—"
+            labor_prog = max(0, 1 - (ytd_labor_pct - goals["labor_pct"]) * 10) if ytd_labor_pct else 0.5
+            st.html(_goal_card(
+                label="Labor % All-In (YTD avg)",
+                actual_fmt=labor_actual_fmt,
+                goal_fmt=f"{goals['labor_pct']*100:.1f}%",
+                progress_pct=min(labor_prog, 1.0),
+                status=labor_status, status_color=labor_color,
+                detail="lower is better",
+                bar_color=labor_color,
+            ))
+
+        st.html('<hr class="brew">')
+
+    else:
+        goal_ebitda_pct = 0.20   # fallback PE benchmark for non-goal years
+
     # ── Revenue + EBITDA Trend (all periods) ──
     col1, col2 = st.columns([3, 2])
     with col1:
@@ -791,7 +947,8 @@ def tab_ceo(dash):
     with col2:
         # ── Board Narrative — computed from live data ──────────────────────
 
-        PE_TARGET = 0.20   # 20% EBITDA is the PE benchmark
+        # Use the actual company goal if defined for this year, otherwise 20% PE benchmark
+        PE_TARGET = goal_ebitda_pct if sel_year in ANNUAL_GOALS else 0.20
 
         # Trend: first-third vs last-third of selected range
         n_f = len(filtered_df)
