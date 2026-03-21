@@ -165,22 +165,87 @@ def brew_fig(fig, height=320, show_legend=True, margin=None):
     m = margin or dict(t=60, b=60, l=8, r=8)
     fig.update_layout(
         height=height, paper_bgcolor="white", plot_bgcolor="white",
-        font=dict(family="DM Sans, sans-serif", color=BODY, size=15, weight="bold"),
+        font=dict(family="DM Sans, sans-serif", color=BODY, size=15),
         margin=m, showlegend=show_legend,
-        legend=dict(font=dict(size=13, color=MID, family="DM Mono", weight="bold")),
-        title_font=dict(size=18, color=BODY, family="DM Sans, sans-serif", weight="bold"),
+        legend=dict(font=dict(size=13, color=MID, family="DM Mono")),
+        title_font=dict(size=18, color=BODY, family="DM Sans, sans-serif"),
     )
     fig.update_xaxes(gridcolor=GRID, linecolor=BORDER,
-                     tickfont=dict(size=13, color=MID, family="DM Mono", weight="bold"),
-                     title_font=dict(size=14, color=BODY, weight="bold"))
+                     tickfont=dict(size=13, color=MID, family="DM Mono"),
+                     title_font=dict(size=14, color=BODY))
     fig.update_yaxes(gridcolor=GRID, linecolor=BORDER,
-                     tickfont=dict(size=13, color=MID, family="DM Mono", weight="bold"),
-                     title_font=dict(size=14, color=BODY, weight="bold"))
-    # Make data labels bold and larger
+                     tickfont=dict(size=13, color=MID, family="DM Mono"),
+                     title_font=dict(size=14, color=BODY))
+    # Make data labels larger
     for trace in fig.data:
         if hasattr(trace, 'textfont'):
-            trace.textfont = dict(size=12, weight="bold", family="DM Mono")
+            trace.textfont = dict(size=12, family="DM Mono")
     return fig
+
+def period_multiselect(periods_df, key, label="Select Period(s)"):
+    """Render a multi-select period picker with quarterly preset buttons.
+    Returns (list_of_period_keys, aggregated_series_or_None).
+    If one period selected, returns that period's row as a Series.
+    If multiple, returns a weighted-average aggregation."""
+
+    all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
+    label_to_key = {lbl: pk for lbl, pk in all_labels}
+
+    # Quarter presets
+    q_presets = {"Q1 (P1–P3)": [1, 2, 3], "Q2 (P4–P6)": [4, 5, 6],
+                 "Q3 (P7–P9)": [7, 8, 9], "Q4 (P10–P13)": [10, 11, 12, 13]}
+
+    sel_col, btn_col = st.columns([3, 2])
+    with sel_col:
+        selected_labels = st.multiselect(label, [l for l, _ in all_labels],
+                                         default=[all_labels[0][0]], key=key)
+    with btn_col:
+        st.caption("Quick select:")
+        bcols = st.columns(4)
+        for i, (q_name, p_nums) in enumerate(q_presets.items()):
+            with bcols[i]:
+                if st.button(q_name, key=f"{key}_{q_name}", use_container_width=True):
+                    # Find matching periods for the latest year in the data
+                    latest_year = periods_df["year"].max()
+                    matching = []
+                    for _, row in periods_df.iterrows():
+                        if row["year"] == latest_year and row["period_num"] in p_nums:
+                            matching.append(row["label"])
+                    if matching:
+                        st.session_state[key] = matching
+
+    selected_keys = [label_to_key[lbl] for lbl in selected_labels if lbl in label_to_key]
+
+    if not selected_keys:
+        return [], None, label_to_key
+
+    if len(selected_keys) == 1:
+        pk = selected_keys[0]
+        ps = periods_df[periods_df["period_key"] == pk].iloc[0]
+        return selected_keys, ps, label_to_key
+
+    # Aggregate multiple periods
+    subset = periods_df[periods_df["period_key"].isin(selected_keys)].copy()
+    total_sales = subset["net_sales"].sum()
+    agg = {}
+    agg["period_key"] = "+".join(selected_keys)
+    agg["label"] = ", ".join(subset["label"].tolist())
+    agg["year"] = subset["year"].max()
+    agg["period_num"] = subset["period_num"].max()
+    agg["stands"] = int(subset["stands"].mean())
+    agg["net_sales"] = total_sales
+    agg["avg_sales"] = total_sales / subset["stands"].mean() if subset["stands"].mean() > 0 else 0
+    agg["ebitda"] = subset["ebitda"].sum()
+
+    # Weighted average for pct columns
+    pct_cols = [c for c in subset.columns if c.endswith("_pct")]
+    for col in pct_cols:
+        if col in subset.columns and total_sales > 0:
+            agg[col] = (subset[col] * subset["net_sales"]).sum() / total_sales
+        else:
+            agg[col] = 0
+
+    return selected_keys, pd.Series(agg), label_to_key
 
 def section(title, sub=""):
     st.html(f"""
@@ -333,6 +398,16 @@ def delete_saved_uploads():
     for fp in upload_dir.glob("*.json"):
         fp.unlink()
 
+def save_to_base_data(merged_dash):
+    """Permanently write merged data to data.json so it becomes the new base."""
+    data_path = Path(__file__).parent / "data.json"
+    with open(data_path, "w", encoding="utf-8") as f:
+        json.dump(merged_dash, f, indent=2, default=str)
+    # Clear the cache so load_base_data picks up the new file
+    load_base_data.clear()
+    # Clear upload temp files since they're now in the base
+    delete_saved_uploads()
+
 def get_dash():
     """Return merged DASH: base + session uploads + any saved-to-disk uploads."""
     from pl_parser import merge_into_dash
@@ -353,19 +428,160 @@ def get_dash():
 
     return base
 
-def get_periods_df(dash):
+QUARTER_MAP = {1: "Q1", 2: "Q1", 3: "Q1", 4: "Q2", 5: "Q2", 6: "Q2",
+               7: "Q3", 8: "Q3", 9: "Q3", 10: "Q4", 11: "Q4", 12: "Q4", 13: "Q4"}
+
+def _build_quarterly_summaries(periods_df):
+    """Build quarterly roll-up rows from individual period summaries."""
+    if periods_df.empty:
+        return pd.DataFrame()
+
+    df = periods_df.copy()
+    df["quarter"] = df["period_num"].map(QUARTER_MAP)
+    df["q_key"] = df["year"].astype(str) + "_" + df["quarter"]
+
+    # Percentage columns are weighted by net_sales
+    pct_cols = [c for c in df.columns if c.endswith("_pct")]
+    sum_cols = ["net_sales", "ebitda", "stands"]
+
+    quarterly_rows = []
+    for q_key, grp in df.groupby("q_key", sort=False):
+        year = grp["year"].iloc[0]
+        quarter = grp["quarter"].iloc[0]
+        total_sales = grp["net_sales"].sum()
+        row = {
+            "period_key": f"{year}_{quarter}",
+            "year": year,
+            "period": quarter,
+            "label": f"{quarter} '{str(year)[-2:]}",
+            "stands": int(grp["stands"].mean()),
+            "net_sales": total_sales,
+            "avg_sales": total_sales / grp["stands"].mean() if grp["stands"].mean() > 0 else 0,
+            "ebitda": grp["ebitda"].sum(),
+            "period_num": {"Q1": 100, "Q2": 200, "Q3": 300, "Q4": 400}[quarter],
+        }
+        # Weighted average for pct columns
+        for col in pct_cols:
+            if col in grp.columns:
+                row[col] = (grp[col] * grp["net_sales"]).sum() / total_sales if total_sales > 0 else 0
+        quarterly_rows.append(row)
+
+    return pd.DataFrame(quarterly_rows)
+
+def _build_quarterly_stands(stands_df):
+    """Build quarterly aggregated stand records."""
+    if stands_df.empty:
+        return pd.DataFrame()
+
+    df = stands_df.copy()
+    df["period_num"] = df["Period_Key"].apply(lambda x: int(x.split("_P")[1]))
+    df["year"] = df["Period_Key"].apply(lambda x: int(x.split("_")[0]))
+    df["quarter"] = df["period_num"].map(QUARTER_MAP)
+    df["Q_Key"] = df["year"].astype(str) + "_" + df["quarter"]
+
+    # Sum dollar columns, weighted-avg pct columns
+    dollar_cols = [c for c in df.columns if c in ["Net_Sales", "Store_EBITDA", "Electricity",
+                   "Water_Sewer", "Waste_Removal", "RM_Equipment", "RM_Building"]]
+    pct_cols = [c for c in df.columns if c.endswith("_pct")]
+
+    rows = []
+    for (q_key, stand), grp in df.groupby(["Q_Key", "Stand"]):
+        row = {"Period_Key": q_key, "Stand": stand}
+        # Copy non-numeric fields from first row
+        for col in ["Region", "Age_Bucket", "Open_Date"]:
+            if col in grp.columns:
+                row[col] = grp[col].iloc[0]
+        # Sum dollar columns
+        for col in dollar_cols:
+            if col in grp.columns:
+                row[col] = grp[col].sum()
+        # Weighted avg pct columns by Net_Sales
+        total_sales = grp["Net_Sales"].sum() if "Net_Sales" in grp.columns else 1
+        for col in pct_cols:
+            if col in grp.columns and total_sales > 0:
+                row[col] = (grp[col] * grp["Net_Sales"]).sum() / total_sales
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+def _build_quarterly_regions(dash):
+    """Build quarterly aggregated region data."""
+    region_by_period = dash.get("region_by_period", {})
+    if not region_by_period:
+        return {}
+
+    # Group period keys by quarter
+    q_groups = {}
+    for pk in region_by_period:
+        parts = pk.split("_P")
+        if len(parts) != 2:
+            continue
+        year = int(parts[0])
+        pnum = int(parts[1])
+        q = QUARTER_MAP.get(pnum)
+        if q:
+            q_key = f"{year}_{q}"
+            if q_key not in q_groups:
+                q_groups[q_key] = []
+            q_groups[q_key].extend(region_by_period[pk])
+
+    # Aggregate by region within each quarter
+    quarterly_regions = {}
+    for q_key, rows in q_groups.items():
+        rdf = pd.DataFrame(rows)
+        if rdf.empty:
+            continue
+        dollar_cols = [c for c in rdf.columns if c in ["net_sales", "ebitda"]]
+        pct_cols = [c for c in rdf.columns if c.endswith("_pct")]
+
+        agg_rows = []
+        for region, grp in rdf.groupby("region"):
+            row = {"region": region}
+            total_sales = grp["net_sales"].sum() if "net_sales" in grp.columns else 1
+            for col in dollar_cols:
+                if col in grp.columns:
+                    row[col] = grp[col].sum()
+            for col in pct_cols:
+                if col in grp.columns and total_sales > 0:
+                    row[col] = (grp[col] * grp["net_sales"]).sum() / total_sales
+            if "stands" in grp.columns:
+                row["stands"] = int(grp["stands"].mean())
+            agg_rows.append(row)
+        quarterly_regions[q_key] = agg_rows
+
+    return quarterly_regions
+
+def get_periods_df(dash, include_quarters=False):
     df = pd.DataFrame(dash["period_summaries"])
-    df["period_num"] = df["period_key"].apply(lambda x: int(x.split("_P")[1]))
+    df["period_num"] = df["period_key"].apply(lambda x: int(x.split("_P")[1]) if "_P" in x else 0)
     df["year"] = df["period_key"].apply(lambda x: int(x.split("_")[0]))
     df.sort_values(["year", "period_num"], inplace=True)
     df.reset_index(drop=True, inplace=True)
+
+    if include_quarters:
+        q_df = _build_quarterly_summaries(df)
+        if not q_df.empty:
+            combined = pd.concat([df, q_df], ignore_index=True)
+            combined.sort_values(["year", "period_num"], inplace=True)
+            combined.reset_index(drop=True, inplace=True)
+            return combined
+
     return df
 
-def get_stands_df(dash):
-    return pd.DataFrame(dash["stand_records"])
+def get_stands_df(dash, period_key=None):
+    df = pd.DataFrame(dash["stand_records"])
+    if period_key and "_Q" in period_key:
+        # Build quarterly stand data on the fly
+        q_stands = _build_quarterly_stands(df)
+        return q_stands[q_stands["Period_Key"] == period_key] if not q_stands.empty else pd.DataFrame()
+    return df
 
 def get_regions_df(dash, period_key):
-    rows = dash.get("region_by_period", {}).get(period_key, [])
+    if "_Q" in period_key:
+        q_regions = _build_quarterly_regions(dash)
+        rows = q_regions.get(period_key, [])
+    else:
+        rows = dash.get("region_by_period", {}).get(period_key, [])
     return pd.DataFrame(rows) if rows else pd.DataFrame()
 
 # ─────────────────────────────────────────────
@@ -444,24 +660,59 @@ def tab_ceo(dash):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
 
-    latest = periods_df.iloc[-1]
+    # ── Time Frame Selector ──
+    available_years = sorted(periods_df["year"].unique().tolist())
+    all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
+
+    sel_col1, sel_col2, sel_col3 = st.columns([1, 2, 2])
+    with sel_col1:
+        sel_year = st.selectbox("Fiscal Year", available_years, index=len(available_years)-1, key="ceo_year")
+    with sel_col2:
+        year_periods = periods_df[periods_df["year"] == sel_year]
+        period_labels = year_periods["label"].tolist()
+        selected_periods = st.multiselect("Periods (select multiple or leave blank for all)",
+                                          period_labels, key="ceo_periods")
+    with sel_col3:
+        q_presets = {"Q1 (P1–3)": [1, 2, 3], "Q2 (P4–6)": [4, 5, 6],
+                     "Q3 (P7–9)": [7, 8, 9], "Q4 (P10–13)": [10, 11, 12, 13], "Full Year": list(range(1, 14))}
+        st.caption("Quick select:")
+        qcols = st.columns(5)
+        for i, (q_name, p_nums) in enumerate(q_presets.items()):
+            with qcols[i]:
+                if st.button(q_name, key=f"ceo_q_{q_name}", use_container_width=True):
+                    matching = year_periods[year_periods["period_num"].isin(p_nums)]["label"].tolist()
+                    st.session_state["ceo_periods"] = matching
+                    st.rerun()
+
+    # Filter to selected periods (or all periods for selected year)
+    if selected_periods:
+        filtered_df = periods_df[(periods_df["year"] == sel_year) & (periods_df["label"].isin(selected_periods))]
+    else:
+        filtered_df = periods_df[periods_df["year"] == sel_year]
+
+    latest = filtered_df.iloc[-1] if not filtered_df.empty else periods_df.iloc[-1]
     prev   = periods_df.iloc[-2] if len(periods_df) > 1 else None
     first  = periods_df.iloc[0]
 
-    # ── System KPIs ──
-    section("CEO SNAPSHOT", f"Latest period: {latest['label']} · {int(latest['stands'])} active stands · FY2025–2026")
+    period_range = f"{filtered_df.iloc[0]['label']} – {filtered_df.iloc[-1]['label']}" if len(filtered_df) > 1 else latest['label']
 
-    total_revenue_ytd = periods_df[periods_df["year"] == 2025]["net_sales"].sum()
-    total_ebitda_ytd  = periods_df[periods_df["year"] == 2025]["ebitda"].sum()
+    # ── System KPIs ──
+    section("CEO SNAPSHOT", f"{period_range} · {int(latest['stands'])} active stands · FY{sel_year}")
+
+    total_revenue_ytd = filtered_df["net_sales"].sum()
+    total_ebitda_ytd  = filtered_df["ebitda"].sum()
     growth_rate       = dash.get("yoy_growth", 1.0) - 1.0
-    avg_ebitda_pct    = periods_df[periods_df["year"] == 2025]["ebitda_pct"].mean()
+    avg_ebitda_pct    = (filtered_df["ebitda_pct"] * filtered_df["net_sales"]).sum() / total_revenue_ytd if total_revenue_ytd > 0 else 0
+
+    year_label = f"FY{sel_year}"
+    n_periods = len(filtered_df)
 
     kpi_row([
-        {"label": "FY2025 Total Revenue",     "value": f"${total_revenue_ytd/1e6:.1f}M",  "sub": "13-period total",             "color": "red"},
+        {"label": f"{year_label} Total Revenue",     "value": f"${total_revenue_ytd/1e6:.1f}M",  "sub": f"{n_periods}-period total",   "color": "red"},
         {"label": "YoY Revenue Growth",       "value": f"+{growth_rate*100:.1f}%",        "sub": "vs prior year class",         "color": "green",
          "valcls": "good"},
-        {"label": "FY2025 Total EBITDA",      "value": f"${total_ebitda_ytd/1e6:.1f}M",  "sub": "after rent",                  "color": "blue"},
-        {"label": "FY2025 Avg EBITDA%",       "value": _fmt_p(avg_ebitda_pct),             "sub": "system-wide average",         "color": "green",
+        {"label": f"{year_label} Total EBITDA",      "value": f"${total_ebitda_ytd/1e6:.1f}M",  "sub": "after rent",                  "color": "blue"},
+        {"label": f"{year_label} Avg EBITDA%",       "value": _fmt_p(avg_ebitda_pct),             "sub": "sales-weighted average",      "color": "green",
          "valcls": "good" if avg_ebitda_pct >= 0.18 else "warn"},
         {"label": f"{latest['label']} Stands","value": str(int(latest["stands"])),        "sub": "active this period",          "color": "grey"},
         {"label": f"{latest['label']} Avg Sales","value": _fmt_d(latest["avg_sales"]),    "sub": "per stand",                   "color": "amber"},
@@ -470,12 +721,12 @@ def tab_ceo(dash):
     # ── Revenue + EBITDA Trend (all periods) ──
     col1, col2 = st.columns([3, 2])
     with col1:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin-bottom:4px;">REVENUE & EBITDA TREND — ALL PERIODS</div>')
+        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin-bottom:4px;">REVENUE & EBITDA TREND — {period_range}</div>')
         fig = go.Figure()
-        fig.add_bar(x=periods_df["label"], y=periods_df["avg_sales"],
+        fig.add_bar(x=filtered_df["label"], y=filtered_df["avg_sales"],
                     name="Avg Sales/Stand", marker_color=BLUE, opacity=0.7,
                     yaxis="y1")
-        fig.add_scatter(x=periods_df["label"], y=periods_df["ebitda_pct"] * 100,
+        fig.add_scatter(x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
                         name="EBITDA %", mode="lines+markers",
                         line=dict(color=RED, width=2.5), marker=dict(size=6),
                         yaxis="y2")
@@ -640,20 +891,20 @@ def tab_ceo(dash):
 # ─────────────────────────────────────────────
 def tab_overview(dash):
     periods_df = get_periods_df(dash)
-    section("SYSTEM OVERVIEW", "Select a period to view performance KPIs and cost structure")
+    section("SYSTEM OVERVIEW", "Select period(s) to view performance KPIs and cost structure")
 
+    selected_keys, ps, label_to_key = period_multiselect(periods_df, key="ov_period", label="View Period(s)")
+
+    if not selected_keys or ps is None:
+        st.info("Select at least one period above")
+        return
+
+    pk = selected_keys[0]  # Primary period key (for region lookups when single)
+
+    # Compare To selector
     all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
-    label_to_key = {lbl: pk for lbl, pk in all_labels}
-
-    c1, c2 = st.columns([2, 1])
-    with c1:
-        sel_lbl = st.selectbox("View Period", [l for l, _ in all_labels], key="ov_period")
-    with c2:
-        cmp_lbl = st.selectbox("Compare To", [l for l, _ in all_labels][1:] + [all_labels[-1][0]], key="ov_compare")
-
-    pk  = label_to_key[sel_lbl]
+    cmp_lbl = st.selectbox("Compare To", [l for l, _ in all_labels][1:] + [all_labels[-1][0]], key="ov_compare")
     pkB = label_to_key.get(cmp_lbl, periods_df.iloc[-2]["period_key"])
-    ps  = periods_df[periods_df["period_key"] == pk].iloc[0]
     psB = periods_df[periods_df["period_key"] == pkB].iloc[0] if pkB else None
 
     # KPI cards
@@ -688,10 +939,29 @@ def tab_overview(dash):
         {"label": "Rent %",              "value": _fmt_p(ps["rent_pct"]),     "sub": "occupancy cost",                 "color": "grey"},
     ])
 
-    # Charts row 1
+    # Charts row 1 — aggregate regions if multi-period
+    if len(selected_keys) > 1:
+        reg_frames = [get_regions_df(dash, k) for k in selected_keys]
+        reg_all = pd.concat([r for r in reg_frames if not r.empty], ignore_index=True)
+        if not reg_all.empty:
+            pct_cols = [c for c in reg_all.columns if c.endswith("_pct")]
+            agg_dict = {"net_sales": "sum", "ebitda": "sum"}
+            if "stands" in reg_all.columns:
+                agg_dict["stands"] = "mean"
+            reg_df = reg_all.groupby("region").agg(agg_dict).reset_index()
+            # Recompute pct from totals
+            for c in pct_cols:
+                if c in reg_all.columns:
+                    reg_df[c] = reg_all.groupby("region").apply(
+                        lambda g: (g[c] * g["net_sales"]).sum() / g["net_sales"].sum() if g["net_sales"].sum() > 0 else 0
+                    ).values
+        else:
+            reg_df = pd.DataFrame()
+    else:
+        reg_df = get_regions_df(dash, pk)
+
     col1, col2 = st.columns(2)
     with col1:
-        reg_df = get_regions_df(dash, pk)
         if not reg_df.empty:
             reg_df = reg_df.sort_values("net_sales", ascending=False)
             fig = go.Figure(go.Bar(
@@ -1635,17 +1905,32 @@ def main():
     saved_count = len(saved_periods)
 
     # Show compact status bar with saved period count
+    # Show base data info
+    base = load_base_data()
+    base_keys = sorted([p["period_key"] for p in base.get("period_summaries", [])])
+    st.caption(f"📊 **Base data:** {len(base_keys)} periods ({base_keys[0]} – {base_keys[-1]}) · {len(base.get('stand_records', []))} stand records")
+
     if saved_count > 0:
         saved_keys = sorted([s["period_key"] for s in saved_periods])
-        status_col1, status_col2, status_col3 = st.columns([4, 1, 1])
+        status_col1, status_col2, status_col3, status_col4 = st.columns([3, 1, 1, 1])
         with status_col1:
-            st.caption(f"📁 **{saved_count} uploaded period(s) active:** {', '.join(saved_keys)}")
+            st.caption(f"📁 **{saved_count} pending upload(s):** {', '.join(saved_keys)}")
         with status_col2:
+            if st.button("💾 Save to Base Data", type="primary", help="Permanently merge uploaded periods into data.json — they'll survive any redeploy"):
+                merged = get_dash()  # This already has base + uploads merged
+                save_to_base_data(merged)
+                if "uploaded_dash" in st.session_state:
+                    del st.session_state["uploaded_dash"]
+                if "upload_count" in st.session_state:
+                    del st.session_state["upload_count"]
+                st.success("✅ Saved! Uploaded periods are now part of the base data. Push data.json to GitHub to make it permanent.")
+                st.rerun()
+        with status_col3:
             backup = json.dumps(saved_periods, default=str, indent=2)
             st.download_button("⬇ Backup", backup, "7brew_upload_backup.json",
                                mime="application/json")
-        with status_col3:
-            if st.button("🗑 Clear All"):
+        with status_col4:
+            if st.button("🗑 Clear Pending"):
                 delete_saved_uploads()
                 if "uploaded_dash" in st.session_state:
                     del st.session_state["uploaded_dash"]
@@ -1680,7 +1965,7 @@ def main():
                     for period_data in restored:
                         if "period_key" in period_data:
                             save_uploaded_period(period_data)
-                    st.success(f"✅ Restored {len(restored)} period(s) from backup — data is now active in all tabs")
+                    st.success(f"✅ Restored {len(restored)} period(s) — click 'Save to Base Data' to make permanent")
                     st.rerun()
                 else:
                     st.error("Invalid backup format — expected a JSON array of periods")
@@ -1691,8 +1976,8 @@ def main():
         if uploaded:
             from pl_parser import parse_pl_file, merge_into_dash
             import copy
-            base = load_base_data()
-            dash_copy = copy.deepcopy(base)
+            base_data = load_base_data()
+            dash_copy = copy.deepcopy(base_data)
             parsed = []
             errors = []
             for uf in uploaded:
@@ -1718,6 +2003,7 @@ def main():
                 updated = merge_into_dash(dash_copy, parsed)
                 st.session_state["uploaded_dash"] = updated
                 st.session_state["upload_count"] = len(parsed)
+                st.success(f"✅ {len(parsed)} period(s) loaded — click **Save to Base Data** above to make permanent")
                 st.rerun()
 
     # Tabs
