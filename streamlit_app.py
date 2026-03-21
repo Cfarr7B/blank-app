@@ -224,7 +224,7 @@ def brew_fig(fig, height=320, show_legend=True, margin=None):
         legend=dict(font=dict(size=13, color=MID, family="DM Mono")),
         title=dict(
             text=existing_title,
-            font=dict(size=18, color=BODY, family="DM Sans, sans-serif"),
+            font=dict(size=16, color=BODY, family="Bebas Neue, sans-serif"),
         ),
     )
     fig.update_xaxes(gridcolor=GRID, linecolor=BORDER,
@@ -1445,7 +1445,7 @@ def tab_overview(dash):
                 textposition="outside",
             ))
             brew_fig(fig, height=260)
-            fig.update_layout(title_text="NET SALES BY REGION", title_font=dict(family="Bebas Neue", size=18),
+            fig.update_layout(title_text="NET SALES BY REGION",
                               yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
             st.plotly_chart(fig, config={"displayModeBar": False})
 
@@ -1462,7 +1462,7 @@ def tab_overview(dash):
             fig2.add_vline(x=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
                            annotation_text="Sys avg", annotation_font_size=9)
             brew_fig(fig2, height=260)
-            fig2.update_layout(title_text="EBITDA % BY REGION", title_font=dict(family="Bebas Neue", size=18),
+            fig2.update_layout(title_text="EBITDA % BY REGION",
                                xaxis=dict(ticksuffix="%"), showlegend=False)
             st.plotly_chart(fig2, config={"displayModeBar": False})
 
@@ -1489,7 +1489,6 @@ def tab_overview(dash):
                              mode="lines+markers", line=dict(color=MUTED, dash="dot"))
             brew_fig(fig3, height=260)
             fig3.update_layout(title_text="PERFORMANCE BY STAND MATURITY",
-                               title_font=dict(family="Bebas Neue", size=18),
                                yaxis=dict(ticksuffix="%"))
             st.plotly_chart(fig3, config={"displayModeBar": False})
 
@@ -1504,7 +1503,7 @@ def tab_overview(dash):
             textfont=dict(size=10, family="DM Mono"),
         ))
         brew_fig(fig4, height=260)
-        fig4.update_layout(title_text="COST STRUCTURE", title_font=dict(family="Bebas Neue", size=18),
+        fig4.update_layout(title_text="COST STRUCTURE",
                            legend=dict(font=dict(size=10)))
         st.plotly_chart(fig4, config={"displayModeBar": False})
 
@@ -1578,7 +1577,7 @@ def tab_comparison(dash):
             textposition="outside",
         ))
         brew_fig(fig, height=260)
-        fig.update_layout(title_text="AVG SALES COMPARISON", title_font=dict(family="Bebas Neue", size=18),
+        fig.update_layout(title_text="AVG SALES COMPARISON",
                           yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
         st.plotly_chart(fig, config={"displayModeBar": False})
 
@@ -1593,7 +1592,7 @@ def tab_comparison(dash):
             fig2.add_bar(x=merged["region"], y=merged["ebitda_pct_b"] * 100,
                          name=psB["label"], marker_color=GREEN, opacity=0.75)
             brew_fig(fig2, height=260)
-            fig2.update_layout(title_text="EBITDA % BY REGION", title_font=dict(family="Bebas Neue", size=18),
+            fig2.update_layout(title_text="EBITDA % BY REGION",
                                barmode="group", yaxis=dict(ticksuffix="%"))
             st.plotly_chart(fig2, config={"displayModeBar": False})
 
@@ -1607,7 +1606,6 @@ def tab_comparison(dash):
                                        name=psA["label"]))
         brew_fig(fig3, height=240)
         fig3.update_layout(title_text=f"LABOR % DISTRIBUTION — {psA['label']}",
-                           title_font=dict(family="Bebas Neue", size=18),
                            xaxis=dict(ticksuffix="%"), showlegend=False)
         st.plotly_chart(fig3, config={"displayModeBar": False})
     with col4:
@@ -1615,7 +1613,6 @@ def tab_comparison(dash):
                                        marker_color=BLUE, opacity=0.8))
         brew_fig(fig4, height=240)
         fig4.update_layout(title_text=f"COGS % DISTRIBUTION — {psA['label']}",
-                           title_font=dict(family="Bebas Neue", size=18),
                            xaxis=dict(ticksuffix="%"), showlegend=False)
         st.plotly_chart(fig4, config={"displayModeBar": False})
 
@@ -2033,7 +2030,6 @@ def tab_forecast(dash):
                                  line=dict(color=RED, width=2), marker=dict(size=6))
             brew_fig(fig2, height=300)
             fig2.update_layout(title_text="2025 vs 2026 EBITDA%",
-                               title_font=dict(family="Bebas Neue", size=18),
                                yaxis=dict(ticksuffix="%"))
             st.plotly_chart(fig2, config={"displayModeBar": False})
 
@@ -2286,7 +2282,6 @@ def tab_utilities(dash):
     )
     brew_fig(fig, height=350)
     fig.update_layout(title_text=f"TOTAL UTILITIES — PERIOD OVER PERIOD{title_sfx}",
-                      title_font=dict(family="Bebas Neue", size=18),
                       xaxis=dict(tickangle=-35))
     st.plotly_chart(fig, config={"displayModeBar": False})
 
@@ -2309,7 +2304,6 @@ def tab_utilities(dash):
     )
     brew_fig(fig2, height=350)
     fig2.update_layout(title_text=f"TOTAL R&M — PERIOD OVER PERIOD{title_sfx}",
-                       title_font=dict(family="Bebas Neue", size=18),
                        xaxis=dict(tickangle=-35))
     st.plotly_chart(fig2, config={"displayModeBar": False})
 
@@ -2342,7 +2336,6 @@ def tab_utilities(dash):
         brew_fig(fig3, height=350)
         fig3.update_layout(
             title_text=f"UTILITY & R&M $/STAND/DAY{title_sfx}",
-            title_font=dict(family="Bebas Neue", size=18),
             xaxis=dict(tickangle=-35),
         )
         st.plotly_chart(fig3, config={"displayModeBar": False})
@@ -2484,7 +2477,6 @@ def tab_utilities(dash):
             brew_fig(fig_u, height=max(320, len(ds_u) * 22 + 80))
             fig_u.update_layout(
                 title_text=f"UTILITIES % BY STAND — {drill_title}",
-                title_font=dict(family="Bebas Neue", size=16),
                 xaxis=dict(ticksuffix="%", title="Utilities % of Net Sales"),
                 yaxis=dict(title=""), showlegend=False,
                 margin=dict(t=60, b=40, l=8, r=90),
@@ -2513,7 +2505,6 @@ def tab_utilities(dash):
             brew_fig(fig_r, height=max(320, len(ds_r) * 22 + 80))
             fig_r.update_layout(
                 title_text=f"R&M % BY STAND — {drill_title}",
-                title_font=dict(family="Bebas Neue", size=16),
                 xaxis=dict(ticksuffix="%", title="R&M % of Net Sales"),
                 yaxis=dict(title=""), showlegend=False,
                 margin=dict(t=60, b=40, l=8, r=90),
@@ -2580,7 +2571,6 @@ def tab_utilities(dash):
     brew_fig(fig_t, height=380)
     fig_t.update_layout(
         title_text=f"UTILITIES & R&M TREND — {trend_label} vs System Avg",
-        title_font=dict(family="Bebas Neue", size=18),
         yaxis=dict(ticksuffix="%"),
         xaxis=dict(tickangle=-35),
     )
@@ -2604,7 +2594,6 @@ def tab_utilities(dash):
                        ]), name="Utilities %")
     brew_fig(fig_s1, height=350)
     fig_s1.update_layout(title_text="UTILITIES % BY PERIOD (SEASONALITY)",
-                         title_font=dict(family="Bebas Neue", size=18),
                          yaxis=dict(ticksuffix="%"),
                          xaxis=dict(tickangle=-35), showlegend=False)
     summer_idxs = [i for i, lbl in enumerate(pct_df["label"]) if any(x in str(lbl) for x in ["P6", "P7", "P8"])]
@@ -2631,7 +2620,6 @@ def tab_utilities(dash):
                        line=dict(color=RED, dash="dot", width=1.5))
     brew_fig(fig_s2, height=350)
     fig_s2.update_layout(title_text="R&M % BY PERIOD (WITH TREND)",
-                         title_font=dict(family="Bebas Neue", size=18),
                          yaxis=dict(ticksuffix="%"),
                          xaxis=dict(tickangle=-35))
     st.plotly_chart(fig_s2, config={"displayModeBar": False})
