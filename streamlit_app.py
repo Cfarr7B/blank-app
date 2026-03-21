@@ -821,7 +821,8 @@ def tab_ceo(dash):
         # Aggregate regions across selected periods
         section("REGIONAL PERFORMANCE", f"EBITDA% by region — {period_range}")
         reg_frames = [get_regions_df(dash, k) for k in filtered_pks]
-        reg_all = pd.concat([r for r in reg_frames if not r.empty], ignore_index=True)
+        valid_reg_frames = [r for r in reg_frames if not r.empty]
+        reg_all = pd.concat(valid_reg_frames, ignore_index=True) if valid_reg_frames else pd.DataFrame()
         if not reg_all.empty:
             pct_cols_r = [c for c in reg_all.columns if c.endswith("_pct")]
             reg_agg = reg_all.groupby("region").agg({"net_sales": "sum"}).reset_index()
@@ -1037,7 +1038,8 @@ def tab_overview(dash):
     # Charts row 1 — aggregate regions if multi-period
     if len(selected_keys) > 1:
         reg_frames = [get_regions_df(dash, k) for k in selected_keys]
-        reg_all = pd.concat([r for r in reg_frames if not r.empty], ignore_index=True)
+        valid_reg_frames = [r for r in reg_frames if not r.empty]
+        reg_all = pd.concat(valid_reg_frames, ignore_index=True) if valid_reg_frames else pd.DataFrame()
         if not reg_all.empty:
             pct_cols = [c for c in reg_all.columns if c.endswith("_pct")]
             agg_dict = {"net_sales": "sum", "ebitda": "sum"}
