@@ -47,7 +47,7 @@ REGION_COLORS = {
 }
 
 # Inject Google Fonts + custom CSS
-st.markdown("""
+st.html("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -187,7 +187,7 @@ st.markdown("""
   #MainMenu, footer, header { visibility: hidden; }
   .block-container { padding-top: 24px !important; max-width: 1600px !important; }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 # ─────────────────────────────────────────────
 # HELPERS
@@ -219,10 +219,10 @@ def brew_fig(fig, height=320, show_legend=True, margin=None):
     return fig
 
 def section(title, sub=""):
-    st.markdown(f"""
+    st.html(f"""
     <div class="section-hdr">{title}</div>
     {"<div class='section-sub'>" + sub + "</div>" if sub else ""}
-    <div class="red-rule"></div>""", unsafe_allow_html=True)
+    <div class="red-rule"></div>""")
 
 def kpi_row(cards):
     """Render a row of KPI cards. cards = list of dicts with label,value,sub,delta,color,valcls"""
@@ -241,16 +241,16 @@ def kpi_row(cards):
           <div class="kpi-sub">{c.get('sub','')}</div>
           {delta_html}
         </div>"""
-    st.markdown(f'<div class="kpi-row">{inner}</div>', unsafe_allow_html=True)
+    st.html(f'<div class="kpi-row">{inner}</div>')
 
 def insight_card(title, body, tag="", tag_cls="grey", card_cls=""):
     tag_html = f'<span class="ic-tag {tag_cls}">{tag}</span>' if tag else ""
-    st.markdown(f"""
+    st.html(f"""
     <div class="insight-card {card_cls}">
       <div class="ic-title">{title}</div>
       <div class="ic-body">{body}</div>
       {tag_html}
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
 def delta_style(val, inv=False):
     """Return delta dict for KPI card: {str, cls}"""
@@ -312,13 +312,12 @@ def get_regions_df(dash, period_key):
 # SIDEBAR: Upload + Navigation
 # ─────────────────────────────────────────────
 def render_sidebar():
-    st.markdown("### 7BREW DASHBOARD")
-    st.markdown("---")
-    st.markdown("**📤 Upload P&L Files**")
-    st.markdown(
+    st.html("### 7BREW DASHBOARD")
+    st.html("<hr>")
+    st.html("**📤 Upload P&L Files**")
+    st.html(
         '<div class="info-box">Upload 7BREW <strong>PTD Side By Side</strong> Excel files '
-        'to add new periods or enrich existing ones with utility detail.</div>',
-        unsafe_allow_html=True,
+        'to add new periods or enrich existing ones with utility detail.</div>'
     )
 
     uploaded = st.file_uploader(
@@ -370,8 +369,8 @@ def render_sidebar():
             del st.session_state["upload_count"]
             st.rerun()
 
-    st.markdown("---")
-    st.markdown('<div style="font-family:DM Mono,monospace;font-size:10px;color:#8a919e;">7BREW · CONFIDENTIAL · FY2025–2026</div>', unsafe_allow_html=True)
+    st.html("<hr>")
+    st.html('<div style="font-family:DM Mono,monospace;font-size:10px;color:#8a919e;">7BREW · CONFIDENTIAL · FY2025–2026</div>')
 
 # ─────────────────────────────────────────────
 # TAB: CEO SNAPSHOT
@@ -406,7 +405,7 @@ def tab_ceo(dash):
     # ── Revenue + EBITDA Trend (all periods) ──
     col1, col2 = st.columns([3, 2])
     with col1:
-        st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin-bottom:4px;">REVENUE & EBITDA TREND — ALL PERIODS</div>', unsafe_allow_html=True)
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin-bottom:4px;">REVENUE & EBITDA TREND — ALL PERIODS</div>')
         fig = go.Figure()
         fig.add_bar(x=periods_df["label"], y=periods_df["avg_sales"],
                     name="Avg Sales/Stand", marker_color=BLUE, opacity=0.7,
@@ -430,7 +429,7 @@ def tab_ceo(dash):
         # YoY growth story
         best  = periods_df.loc[periods_df["ebitda_pct"].idxmax()]
         worst = periods_df.loc[periods_df["ebitda_pct"].idxmin()]
-        st.markdown(f"""
+        st.html(f"""
         <div class="story-block">
           <div class="story-label">Performance Narrative</div>
           <div class="story-headline">PEAK: {best['label']} AT {_fmt_p(best['ebitda_pct'])}</div>
@@ -446,9 +445,9 @@ def tab_ceo(dash):
             As the network matures, EBITDA improvement opportunity lies in labor
             efficiency (target &lt;20% hourly) and stand-level utility cost control.
           </div>
-        </div>""", unsafe_allow_html=True)
+        </div>""")
 
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
 
     # ── Cohort Analysis ──
     col3, col4 = st.columns(2)
@@ -503,7 +502,7 @@ def tab_ceo(dash):
             fig3.update_layout(xaxis=dict(ticksuffix="%"))
             st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
 
     # ── Regional Heatmap (all periods) ──
     section("REGIONAL EBITDA HEATMAP", "EBITDA% by region × period — red = below 15%, green = above 22%")
@@ -533,7 +532,7 @@ def tab_ceo(dash):
     fig4.update_layout(xaxis_tickangle=-35)
     st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
 
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
 
     # ── Forward Story ──
     section("LOOKING FORWARD", "Key themes for 2026 P3–P13 and beyond")
@@ -714,7 +713,7 @@ def tab_comparison(dash):
     with c1:
         lbl_a = st.selectbox("Period A", [l for l, _ in all_options], key="cmp_a")
     with c2:
-        st.markdown('<div style="text-align:center;font-family:Bebas Neue;font-size:24px;color:#5a6070;padding-top:28px;">VS</div>', unsafe_allow_html=True)
+        st.html('<div style="text-align:center;font-family:Bebas Neue;font-size:24px;color:#5a6070;padding-top:28px;">VS</div>')
     with c3:
         lbl_b = st.selectbox("Period B", [l for l, _ in all_options][1:], key="cmp_b")
 
@@ -895,15 +894,15 @@ def tab_regions(dash):
         color = REGION_COLORS.get(row["region"], MID)
         ebi_color = "good" if row["ebitda_pct"] >= 0.22 else ("warn" if row["ebitda_pct"] >= 0.15 else "bad")
         with cols[col_idx]:
-            st.markdown(f"""
+            st.html(f"""
             <div class="kpi-card" style="border-top:3px solid {color}; margin-bottom:10px;">
               <div class="kpi-label">{row['region']}</div>
               <div class="kpi-value">${row['net_sales']/1000:.0f}k</div>
               <div class="kpi-sub">{int(row['stands'])} stands · ${row['avg_sales']:,.0f}/stand</div>
               <div class="kpi-delta {'up' if row['ebitda_pct']>=0.20 else 'down'}">EBITDA {_fmt_p(row['ebitda_pct'])}</div>
-            </div>""", unsafe_allow_html=True)
+            </div>""")
 
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
 
     col1, col2 = st.columns(2)
     with col1:
@@ -1040,11 +1039,11 @@ def tab_insights(dash):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#12a06e;margin-bottom:10px;">🏆 WINS</div>', unsafe_allow_html=True)
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#12a06e;margin-bottom:10px;">🏆 WINS</div>')
         for w in wins:
             insight_card(w["title"], w["body"], w.get("tag",""), w.get("tag_cls","green"), "win")
     with col2:
-        st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">⚠ OPPORTUNITIES</div>', unsafe_allow_html=True)
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">⚠ OPPORTUNITIES</div>')
         for o in opps:
             insight_card(o["title"], o["body"], o.get("tag",""), o.get("tag_cls","red"))
 
@@ -1117,7 +1116,7 @@ def tab_forecast(dash):
             st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
     # Forecast table
-    st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin:16px 0 8px;">PERIOD-BY-PERIOD FORECAST TABLE</div>', unsafe_allow_html=True)
+    st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin:16px 0 8px;">PERIOD-BY-PERIOD FORECAST TABLE</div>')
     watchpts = {
         "P1":"Winter floor — manage labor vs minimum staffing",
         "P2":"Early spring — discount audit; COGS relief as volume ramps",
@@ -1173,7 +1172,7 @@ def tab_potholes(dash):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">🚨 CRITICAL ISSUES</div>', unsafe_allow_html=True)
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">🚨 CRITICAL ISSUES</div>')
 
         top_disc  = ps_stands.nlargest(1, "Discounts_pct").iloc[0]
         top_labor = ps_stands.nlargest(1, "Total_Labor_pct").iloc[0]
@@ -1208,7 +1207,7 @@ def tab_potholes(dash):
             )
 
     with col2:
-        st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#e8940a;margin-bottom:10px;">⚠ WATCH ITEMS</div>', unsafe_allow_html=True)
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#e8940a;margin-bottom:10px;">⚠ WATCH ITEMS</div>')
         watch_items = [
             ("⚠ FL-SW Region: Structural Labor Risk",
              "FL-SW has averaged 28%+ Total Labor & Benefits across most 2025 periods. A persistent 550bps gap vs system avg. Bradenton FL-2 and Belleview FL-1 are chronic outliers.",
@@ -1250,14 +1249,14 @@ def tab_utilities(dash):
     has_detail = any([has_elec, has_water, has_waste, has_rm_eq, has_rm_bld])
 
     if not has_detail:
-        st.markdown("""
+        st.html("""
         <div class="info-box">
           <strong>📤 Upload P&L files to unlock detailed utility breakdowns.</strong><br>
           The charts below show Total Utilities & Total R&M from embedded period data.
           Upload 7BREW PTD Side By Side Excel files via the sidebar to add
           Electricity, Water & Sewer, Waste Removal, R&M Equipment, and R&M Building
           breakdowns per period.
-        </div>""", unsafe_allow_html=True)
+        </div>""")
 
     # ── Total Utilities & R&M PoP ──
     pct_df = periods_df.copy()
@@ -1303,7 +1302,7 @@ def tab_utilities(dash):
                            xaxis_tickangle=-35)
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
 
     # ── Sub-category detail (from uploads) OR placeholder ──
     if has_detail:
@@ -1353,16 +1352,16 @@ def tab_utilities(dash):
                     median_val = sub_df[field].median()
                     spikes = sub_df[sub_df[field] > median_val * 1.5]
                     if not spikes.empty:
-                        st.markdown(f"""
+                        st.html(f"""
                         <div class="info-box">
                           <strong>🗑 Waste Removal Spike Detected</strong> — {', '.join(spikes['label'].tolist())}
                           show 1.5× above median. This may indicate overage charges (3× pickup frequency or
                           volume overage fees). Review pickup schedule and container sizing for these periods.
-                        </div>""", unsafe_allow_html=True)
+                        </div>""")
             chart_idx += 1
 
         # R&M sub-categories
-        st.markdown('<hr class="brew">', unsafe_allow_html=True)
+        st.html('<hr class="brew">')
         rm_cols = {}
         if has_rm_eq:  rm_cols["RM_Equipment"] = "R&M Equipment"
         if has_rm_bld: rm_cols["RM_Building"]  = "R&M Building"
@@ -1405,19 +1404,19 @@ def tab_utilities(dash):
             ("🔧 R&M Equipment", None),
             ("🏗 R&M Building", None),
         ]
-        st.markdown('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin-bottom:12px;">SUB-CATEGORY DETAIL — UPLOAD P&L FILES TO ACTIVATE</div>', unsafe_allow_html=True)
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin-bottom:12px;">SUB-CATEGORY DETAIL — UPLOAD P&L FILES TO ACTIVATE</div>')
         cols_p = st.columns(5)
         for i, (name, _) in enumerate(sub_metrics):
             with cols_p[i]:
-                st.markdown(f"""
+                st.html(f"""
                 <div class="kpi-card grey" style="text-align:center;opacity:0.5;">
                   <div style="font-size:20px;margin-bottom:6px;">{name.split()[0]}</div>
                   <div class="kpi-label">{' '.join(name.split()[1:])}</div>
                   <div class="kpi-value" style="font-size:18px;color:#8a919e;">—</div>
                   <div class="kpi-sub">Upload P&L to activate</div>
-                </div>""", unsafe_allow_html=True)
+                </div>""")
 
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
 
     # ── Seasonality Analysis ──
     section("SEASONALITY ANALYSIS", "How period of year drives utility & R&M costs")
@@ -1480,7 +1479,7 @@ def tab_utilities(dash):
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
     # ── Opportunity Flags ──
-    st.markdown('<hr class="brew">', unsafe_allow_html=True)
+    st.html('<hr class="brew">')
     section("OPPORTUNITY FLAGS", "Data-driven cost reduction opportunities")
 
     # Find highest utility periods
@@ -1539,7 +1538,7 @@ def main():
     dash = get_dash()
 
     # Header
-    st.markdown("""
+    st.html("""
     <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;
                 border-bottom:2px solid #cd2128;margin-bottom:16px;">
       <div style="background:#cd2128;color:white;font-family:'Bebas Neue',sans-serif;
@@ -1549,7 +1548,7 @@ def main():
       <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;">
         FY2025–2026 · 15 Periods · Confidential
       </div>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
     # Tabs
     tab_names = [
