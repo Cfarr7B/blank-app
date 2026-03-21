@@ -40,10 +40,24 @@ BG2    = "#f5f6f8"
 GRID   = "rgba(0,0,0,0.055)"
 
 REGION_COLORS = {
+    # Full region names (current)
+    "North Central TX":   "#1d6fcf",
+    "South Central TX":   "#2980b9",
+    "FL Panhandle East":  "#12a06e",
+    "FL Panhandle West":  "#1a8c5c",
+    "FL West Coast":      "#0e7a6e",
+    "Middle Earth":       "#7c3aed",
+    "NM":                 "#c2410c",
+    "CO":                 "#a16207",
+    "North OK":           "#cd2128",
+    "Central OK":         "#9b1a1f",
+    "South OK":           "#7f1d1d",
+    "Permian Basin":      "#e8940a",
+    "West TX":            "#d97706",
+    # Legacy abbreviations (backward compat)
     "CTX-N": "#1d6fcf", "CTX-S": "#2980b9", "FL-P": "#12a06e",
-    "FL-P1": "#1a8c5c", "FL-SW": "#0e7a6e", "Middle Earth": "#7c3aed",
-    "NM": "#c2410c", "OKC-N": "#cd2128", "OKC-S": "#9b1a1f",
-    "Permian Basin": "#e8940a", "WTX": "#d97706",
+    "FL-P1": "#1a8c5c", "FL-SW": "#0e7a6e",
+    "OKC-N": "#cd2128", "OKC-S": "#9b1a1f", "WTX": "#d97706",
 }
 
 # Inject Google Fonts + minimal custom component styling
@@ -1793,245 +1807,412 @@ def tab_potholes(dash):
 # TAB: UTILITIES & R&M
 # ─────────────────────────────────────────────
 def tab_utilities(dash):
+    import numpy as np
+
     periods_df = get_periods_df(dash)
-    stands_df  = get_stands_df(dash)
-    section("UTILITIES & R&M", "Period-over-period cost trends · Seasonality · Opportunity flags")
+    stands_df  = get_stands_df(dash).copy()
+    section("UTILITIES & R&M", "Filter by period · region · stand for detailed diagnosis")
 
-    # Detect if sub-category data is available
-    has_elec  = "Electricity" in stands_df.columns and stands_df["Electricity"].sum() > 0
-    has_water = "Water_Sewer" in stands_df.columns and stands_df["Water_Sewer"].sum() > 0
-    has_waste = "Waste_Removal" in stands_df.columns and stands_df["Waste_Removal"].sum() > 0
-    has_rm_eq = "RM_Equipment" in stands_df.columns and stands_df["RM_Equipment"].sum() > 0
-    has_rm_bld= "RM_Building" in stands_df.columns and stands_df["RM_Building"].sum() > 0
-    has_detail = any([has_elec, has_water, has_waste, has_rm_eq, has_rm_bld])
+    # ── Detect available sub-columns ──────────────────────────────────────────
+    sub_avail = {
+        "Electricity":   "Electricity"   in stands_df.columns and stands_df["Electricity"].fillna(0).sum() > 0,
+        "Water_Sewer":   "Water_Sewer"   in stands_df.columns and stands_df["Water_Sewer"].fillna(0).sum() > 0,
+        "Waste_Removal": "Waste_Removal" in stands_df.columns and stands_df["Waste_Removal"].fillna(0).sum() > 0,
+        "RM_Equipment":  "RM_Equipment"  in stands_df.columns and stands_df["RM_Equipment"].fillna(0).sum() > 0,
+        "RM_Building":   "RM_Building"   in stands_df.columns and stands_df["RM_Building"].fillna(0).sum() > 0,
+    }
+    has_detail = any(sub_avail.values())
 
-    if not has_detail:
-        st.html("""
-        <div class="info-box">
-          <strong>📤 Upload P&L files to unlock detailed utility breakdowns.</strong><br>
-          The charts below show Total Utilities & Total R&M from embedded period data.
-          Upload 7BREW PTD Side By Side Excel files via the sidebar to add
-          Electricity, Water & Sewer, Waste Removal, R&M Equipment, and R&M Building
-          breakdowns per period.
-        </div>""")
+    # Compute Total_Utilities and Total_RM per stand from components
+    util_comp = [c for c in ["Electricity", "Water_Sewer", "Waste_Removal"] if c in stands_df.columns]
+    rm_comp   = [c for c in ["RM_Equipment", "RM_Building"] if c in stands_df.columns]
+    if "Total_Utilities" not in stands_df.columns or stands_df["Total_Utilities"].fillna(0).sum() == 0:
+        stands_df["Total_Utilities"] = stands_df[util_comp].fillna(0).sum(axis=1) if util_comp else 0
+    if "Total_RM" not in stands_df.columns or stands_df["Total_RM"].fillna(0).sum() == 0:
+        stands_df["Total_RM"] = stands_df[rm_comp].fillna(0).sum(axis=1) if rm_comp else 0
 
-    # ── Total Utilities & R&M PoP ──
+    # ── FILTER BAR ───────────────────────────────────────────────────────────
+    all_options  = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
+    label_to_key = {l: pk for l, pk in all_options}
+
+    fil_col1, fil_col2, fil_col3 = st.columns([2, 2, 3])
+    with fil_col1:
+        sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="util_period")
+        pk      = label_to_key[sel_lbl]
+
+    period_stands = stands_df[stands_df["Period_Key"] == pk].copy()
+    all_regions   = ["All Regions"] + sorted(period_stands["Region"].dropna().unique().tolist())
+
+    with fil_col2:
+        sel_region = st.selectbox("Region", all_regions, key="util_region")
+
+    pool       = period_stands[period_stands["Region"] == sel_region] if sel_region != "All Regions" else period_stands
+    stand_names = ["All Stands"] + sorted(pool["Stand"].dropna().unique().tolist())
+
+    with fil_col3:
+        sel_stand = st.selectbox("Stand", stand_names, key="util_stand")
+
+    st.html('<hr class="brew">')
+
+    # ── SECTION 1: Company-Level PoP Charts (with entity overlay) ────────────
+    section("COMPANY OVERVIEW", "System-wide trend — selected entity shown as dashed overlay")
+
     pct_df = periods_df.copy()
     pct_df["util_$"] = pct_df["utilities_pct"] * pct_df["net_sales"]
-    pct_df["rm_$"]   = pct_df["rm_pct"] * pct_df["net_sales"]
+    pct_df["rm_$"]   = pct_df["rm_pct"]        * pct_df["net_sales"]
 
-    # Full-width charts — stacked vertically
+    # Build per-period overlay for selected region or stand
+    overlay_label     = None
+    overlay_util_map  = {}   # period_key -> util fraction
+    overlay_rm_map    = {}
+
+    if sel_stand != "All Stands":
+        overlay_label = sel_stand
+        for pk_iter, grp in stands_df[stands_df["Stand"] == sel_stand].groupby("Period_Key"):
+            s = grp["Net_Sales"].sum()
+            if s > 0:
+                overlay_util_map[pk_iter] = grp["Total_Utilities"].sum() / s
+                overlay_rm_map[pk_iter]   = grp["Total_RM"].sum() / s
+    elif sel_region != "All Regions":
+        overlay_label = sel_region
+        for pk_iter, grp in stands_df[stands_df["Region"] == sel_region].groupby("Period_Key"):
+            s = grp["Net_Sales"].sum()
+            if s > 0:
+                overlay_util_map[pk_iter] = grp["Total_Utilities"].sum() / s
+                overlay_rm_map[pk_iter]   = grp["Total_RM"].sum() / s
+
+    ov_labels, ov_util, ov_rm = [], [], []
+    for _, row in pct_df.iterrows():
+        if row["period_key"] in overlay_util_map:
+            ov_labels.append(row["label"])
+            ov_util.append(overlay_util_map[row["period_key"]] * 100)
+            ov_rm.append(overlay_rm_map[row["period_key"]] * 100)
+
+    has_util_ov = bool(ov_labels) and any(v > 0 for v in ov_util)
+    has_rm_ov   = bool(ov_labels) and any(v > 0 for v in ov_rm)
+    title_sfx   = f" · {overlay_label}" if overlay_label else ""
+
+    # Chart 1: Total Utilities PoP
     fig = go.Figure()
     fig.add_bar(x=pct_df["label"], y=pct_df["util_$"] / 1000,
-                name="Total Utilities ($k)", marker_color=BLUE, opacity=0.8)
+                name="System Utilities ($k)", marker_color=BLUE, opacity=0.7)
     fig.add_scatter(x=pct_df["label"], y=pct_df["utilities_pct"] * 100,
-                    name="Utilities % (right)", mode="lines+markers",
-                    line=dict(color=RED, width=2), marker=dict(size=5),
-                    yaxis="y2")
+                    name="System Util %", mode="lines+markers",
+                    line=dict(color=BLUE, width=2), marker=dict(size=5), yaxis="y2")
+    if has_util_ov:
+        fig.add_scatter(x=ov_labels, y=ov_util,
+                        name=f"{overlay_label} Util %", mode="lines+markers",
+                        line=dict(color=RED, width=2, dash="dot"),
+                        marker=dict(size=7, symbol="diamond"), yaxis="y2")
     fig.update_layout(
         yaxis=dict(title="Total Utilities ($k)", tickprefix="$", ticksuffix="k"),
         yaxis2=dict(title="% of Net Sales", overlaying="y", side="right",
-                    ticksuffix="%", tickfont=dict(size=9, color=RED)),
+                    ticksuffix="%", tickfont=dict(size=9, color=BLUE)),
     )
     brew_fig(fig, height=350)
-    fig.update_layout(title_text="TOTAL UTILITIES — PERIOD OVER PERIOD",
+    fig.update_layout(title_text=f"TOTAL UTILITIES — PERIOD OVER PERIOD{title_sfx}",
                       title_font=dict(family="Bebas Neue", size=18),
                       xaxis=dict(tickangle=-35))
     st.plotly_chart(fig, config={"displayModeBar": False})
 
+    # Chart 2: Total R&M PoP
     fig2 = go.Figure()
     fig2.add_bar(x=pct_df["label"], y=pct_df["rm_$"] / 1000,
-                 name="Total R&M ($k)", marker_color=AMBER, opacity=0.8)
+                 name="System R&M ($k)", marker_color=AMBER, opacity=0.7)
     fig2.add_scatter(x=pct_df["label"], y=pct_df["rm_pct"] * 100,
-                     name="R&M % (right)", mode="lines+markers",
-                     line=dict(color=DARK, width=2), marker=dict(size=5),
-                     yaxis="y2")
+                     name="System R&M %", mode="lines+markers",
+                     line=dict(color=AMBER, width=2), marker=dict(size=5), yaxis="y2")
+    if has_rm_ov:
+        fig2.add_scatter(x=ov_labels, y=ov_rm,
+                         name=f"{overlay_label} R&M %", mode="lines+markers",
+                         line=dict(color=RED, width=2, dash="dot"),
+                         marker=dict(size=7, symbol="diamond"), yaxis="y2")
     fig2.update_layout(
         yaxis=dict(title="Total R&M ($k)", tickprefix="$", ticksuffix="k"),
         yaxis2=dict(title="% of Net Sales", overlaying="y", side="right",
-                    ticksuffix="%", tickfont=dict(size=9, color=DARK)),
+                    ticksuffix="%", tickfont=dict(size=9, color=AMBER)),
     )
     brew_fig(fig2, height=350)
-    fig2.update_layout(title_text="TOTAL R&M — PERIOD OVER PERIOD",
+    fig2.update_layout(title_text=f"TOTAL R&M — PERIOD OVER PERIOD{title_sfx}",
                        title_font=dict(family="Bebas Neue", size=18),
                        xaxis=dict(tickangle=-35))
     st.plotly_chart(fig2, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
 
-    # ── Sub-category detail (from uploads) OR placeholder ──
-    if has_detail:
-        # Build per-period sub-category aggregates from stand_records
-        sub_cols = {}
-        if has_elec:  sub_cols["Electricity"]  = "Electricity"
-        if has_water: sub_cols["Water_Sewer"]   = "Water & Sewer"
-        if has_waste: sub_cols["Waste_Removal"] = "Waste Removal"
+    # ── SECTION 2: Region Summary Table ──────────────────────────────────────
+    section("REGION SUMMARY", f"Utility & R&M breakdown by region · {sel_lbl}")
 
-        agg_dict = {col: "sum" for col in sub_cols}
-        agg_dict["Net_Sales"] = "sum"
-        sub_df = stands_df.groupby("Period_Key").agg(agg_dict).reset_index()
-        sub_df = sub_df.merge(periods_df[["period_key", "label"]], left_on="Period_Key", right_on="period_key")
-        sub_df = sub_df.sort_values(["period_key"])
-
-        chart_idx = 0
-        for field, display_name in sub_cols.items():
-            if field not in sub_df.columns:
-                continue
-            fig = go.Figure()
-            fig.add_bar(x=sub_df["label"], y=sub_df[field] / 1000,
-                        marker_color=[BLUE, GREEN, RED, AMBER, MID, DARK][chart_idx % 6],
-                        opacity=0.8, name=f"{display_name} ($k)")
-            # Add % line
-            sub_df[f"{field}_pct"] = sub_df[field] / sub_df["Net_Sales"]
-            fig.add_scatter(x=sub_df["label"], y=sub_df[f"{field}_pct"] * 100,
-                            mode="lines+markers", name="% of Sales",
-                            line=dict(color=RED, width=1.5, dash="dot"),
-                            marker=dict(size=5), yaxis="y2")
-            fig.update_layout(
-                yaxis=dict(title=f"{display_name} ($k)", tickprefix="$", ticksuffix="k"),
-                yaxis2=dict(title="% of Sales", overlaying="y", side="right",
-                            ticksuffix="%", tickfont=dict(size=9, color=RED)),
-            )
-            brew_fig(fig, height=350)
-            fig.update_layout(title_text=f"{display_name.upper()} — PERIOD OVER PERIOD",
-                              title_font=dict(family="Bebas Neue", size=18),
-                              xaxis=dict(tickangle=-35))
-            st.plotly_chart(fig, config={"displayModeBar": False})
-
-            # Spike detection for Waste Removal
-            if field == "Waste_Removal":
-                median_val = sub_df[field].median()
-                spikes = sub_df[sub_df[field] > median_val * 1.5]
-                if not spikes.empty:
-                    st.html(f"""
-                    <div class="info-box">
-                      <strong>🗑 Waste Removal Spike Detected</strong> — {', '.join(spikes['label'].tolist())}
-                      show 1.5× above median. This may indicate overage charges (3× pickup frequency or
-                      volume overage fees). Review pickup schedule and container sizing for these periods.
-                    </div>""")
-            chart_idx += 1
-
-        # R&M sub-categories
-        st.html('<hr class="brew">')
-        rm_cols = {}
-        if has_rm_eq:  rm_cols["RM_Equipment"] = "R&M Equipment"
-        if has_rm_bld: rm_cols["RM_Building"]  = "R&M Building"
-
-        if rm_cols:
-            rm_agg = {col: "sum" for col in rm_cols}
-            rm_agg["Net_Sales"] = "sum"
-            rm_sub = stands_df.groupby("Period_Key").agg(rm_agg).reset_index()
-            rm_sub = rm_sub.merge(periods_df[["period_key", "label"]], left_on="Period_Key", right_on="period_key")
-            rm_sub = rm_sub.sort_values("period_key")
-
-            for idx, (field, display_name) in enumerate(rm_cols.items()):
-                fig = go.Figure()
-                fig.add_bar(x=rm_sub["label"], y=rm_sub[field] / 1000,
-                            marker_color=[AMBER, MID][idx], opacity=0.8, name=f"{display_name} ($k)")
-                rm_sub[f"{field}_pct"] = rm_sub[field] / rm_sub["Net_Sales"]
-                fig.add_scatter(x=rm_sub["label"], y=rm_sub[f"{field}_pct"] * 100,
-                                mode="lines+markers", name="% of Sales",
-                                line=dict(color=RED, width=1.5, dash="dot"),
-                                marker=dict(size=5), yaxis="y2")
-                fig.update_layout(
-                    yaxis=dict(title=f"{display_name} ($k)", tickprefix="$", ticksuffix="k"),
-                    yaxis2=dict(title="% of Sales", overlaying="y", side="right",
-                                ticksuffix="%", tickfont=dict(size=9, color=RED)),
-                )
-                brew_fig(fig, height=350)
-                fig.update_layout(title_text=f"{display_name.upper()} — PERIOD OVER PERIOD",
-                                  title_font=dict(family="Bebas Neue", size=18),
-                                  xaxis=dict(tickangle=-35))
-                st.plotly_chart(fig, config={"displayModeBar": False})
-
+    if period_stands.empty:
+        st.info("No stand data available for this period.")
     else:
-        # Placeholder sub-category grid
-        sub_metrics = [
-            ("⚡ Electricity", "electricity_pct"),
-            ("💧 Water & Sewer", None),
-            ("🗑 Waste Removal", None),
-            ("🔧 R&M Equipment", None),
-            ("🏗 R&M Building", None),
-        ]
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin-bottom:12px;">SUB-CATEGORY DETAIL — UPLOAD P&L FILES TO ACTIVATE</div>')
-        cols_p = st.columns(5)
-        for i, (name, _) in enumerate(sub_metrics):
-            with cols_p[i]:
-                st.html(f"""
-                <div class="kpi-card grey" style="text-align:center;opacity:0.5;">
-                  <div style="font-size:34px;margin-bottom:6px;">{name.split()[0]}</div>
-                  <div class="kpi-label">{' '.join(name.split()[1:])}</div>
-                  <div class="kpi-value" style="font-size:18px;color:#8a919e;">—</div>
-                  <div class="kpi-sub">Upload P&L to activate</div>
-                </div>""")
+        agg_dict = {"Net_Sales": "sum"}
+        for col in ["Total_Utilities", "Total_RM", "Electricity", "Water_Sewer",
+                    "Waste_Removal", "RM_Equipment", "RM_Building"]:
+            if col in period_stands.columns:
+                agg_dict[col] = "sum"
+
+        reg_agg = period_stands.groupby("Region").agg(agg_dict).reset_index()
+        stand_counts = period_stands.groupby("Region")["Stand"].nunique().rename("Stands")
+        reg_agg = reg_agg.merge(stand_counts, on="Region")
+        reg_agg = reg_agg[reg_agg["Net_Sales"] > 0].copy()
+
+        tbl_rows = []
+        for _, row in reg_agg.iterrows():
+            s = row["Net_Sales"]
+            r = {"Region": row["Region"], "Stands": int(row["Stands"])}
+            for col, lbl in [("Total_Utilities", "Util %"), ("Electricity", "Elec %"),
+                              ("Water_Sewer", "Water %"), ("Waste_Removal", "Waste %"),
+                              ("RM_Equipment", "R&M Eq %"), ("RM_Building", "R&M Bldg %"),
+                              ("Total_RM", "R&M %")]:
+                if col in row.index and pd.notna(row[col]) and row[col] > 0:
+                    r[lbl] = round(row[col] / s * 100, 2)
+            tbl_rows.append(r)
+
+        reg_tbl = pd.DataFrame(tbl_rows).fillna(0)
+        pct_cols = [c for c in reg_tbl.columns if "%" in c]
+        sort_col = "Util %" if "Util %" in pct_cols else ("R&M %" if "R&M %" in pct_cols else "Region")
+        if sort_col != "Region":
+            reg_tbl = reg_tbl.sort_values(sort_col, ascending=False)
+        reg_tbl = reg_tbl.reset_index(drop=True)
+
+        def _util_color(v):
+            try:
+                f = float(v)
+            except Exception:
+                return ""
+            if f > 4.0: return "background-color:#ffd5d5"
+            if f > 3.0: return "background-color:#fff3cd"
+            if f > 0:   return "background-color:#d4edda"
+            return ""
+
+        def _rm_color(v):
+            try:
+                f = float(v)
+            except Exception:
+                return ""
+            if f > 1.5: return "background-color:#ffd5d5"
+            if f > 1.0: return "background-color:#fff3cd"
+            if f > 0:   return "background-color:#d4edda"
+            return ""
+
+        if pct_cols:
+            styled = reg_tbl.style.format({c: "{:.2f}%" for c in pct_cols})
+            for col in pct_cols:
+                fn = _rm_color if "R&M" in col else _util_color
+                styled = styled.map(fn, subset=[col])
+            st.dataframe(styled, use_container_width=True, hide_index=True)
+        else:
+            render_table(reg_tbl)
 
     st.html('<hr class="brew">')
 
-    # ── Seasonality Analysis ──
+    # ── SECTION 3: Stand Detail Drill-Down ───────────────────────────────────
+    if sel_stand != "All Stands":
+        drill_title  = sel_stand
+        drill_stands = period_stands[period_stands["Stand"] == sel_stand].copy()
+    elif sel_region != "All Regions":
+        drill_title  = sel_region
+        drill_stands = period_stands[period_stands["Region"] == sel_region].copy()
+    else:
+        drill_title  = "All Regions"
+        drill_stands = period_stands.copy()
+
+    section("STAND DETAIL", f"Ranked by cost · {sel_lbl} · {drill_title}")
+
+    if drill_stands.empty:
+        st.info("No stand data for this selection.")
+    elif has_detail:
+        ds = drill_stands[drill_stands["Net_Sales"] > 0].copy()
+        sys_util_avg = (
+            period_stands["Total_Utilities"].sum() / period_stands["Net_Sales"].sum() * 100
+            if period_stands["Net_Sales"].sum() > 0 else 0
+        )
+        sys_rm_avg = (
+            period_stands["Total_RM"].sum() / period_stands["Net_Sales"].sum() * 100
+            if period_stands["Net_Sales"].sum() > 0 else 0
+        )
+
+        # Utilities ranked bar
+        if ds["Total_Utilities"].sum() > 0:
+            ds["util_pct_val"] = ds["Total_Utilities"] / ds["Net_Sales"] * 100
+            ds_u = ds.sort_values("util_pct_val", ascending=True)
+            colors_u = [
+                RED if v > sys_util_avg * 1.2 else (AMBER if v > sys_util_avg else GREEN)
+                for v in ds_u["util_pct_val"]
+            ]
+            fig_u = go.Figure()
+            fig_u.add_bar(
+                y=ds_u["Stand"], x=ds_u["util_pct_val"], orientation="h",
+                marker_color=colors_u,
+                text=ds_u["util_pct_val"].map(lambda v: f"{v:.2f}%"),
+                textposition="outside", name="Util %",
+            )
+            if sys_util_avg > 0:
+                fig_u.add_vline(x=sys_util_avg, line_dash="dot", line_color=DARK, line_width=1.5,
+                                annotation_text=f"Sys Avg {sys_util_avg:.2f}%",
+                                annotation_position="top right", annotation_font_size=9)
+            brew_fig(fig_u, height=max(320, len(ds_u) * 22 + 80))
+            fig_u.update_layout(
+                title_text=f"UTILITIES % BY STAND — {drill_title}",
+                title_font=dict(family="Bebas Neue", size=16),
+                xaxis=dict(ticksuffix="%", title="Utilities % of Net Sales"),
+                yaxis=dict(title=""), showlegend=False,
+                margin=dict(t=60, b=40, l=8, r=90),
+            )
+            st.plotly_chart(fig_u, config={"displayModeBar": False})
+
+        # R&M ranked bar
+        if ds["Total_RM"].sum() > 0:
+            ds["rm_pct_val"] = ds["Total_RM"] / ds["Net_Sales"] * 100
+            ds_r = ds.sort_values("rm_pct_val", ascending=True)
+            colors_r = [
+                RED if v > sys_rm_avg * 1.2 else (AMBER if v > sys_rm_avg else GREEN)
+                for v in ds_r["rm_pct_val"]
+            ]
+            fig_r = go.Figure()
+            fig_r.add_bar(
+                y=ds_r["Stand"], x=ds_r["rm_pct_val"], orientation="h",
+                marker_color=colors_r,
+                text=ds_r["rm_pct_val"].map(lambda v: f"{v:.2f}%"),
+                textposition="outside", name="R&M %",
+            )
+            if sys_rm_avg > 0:
+                fig_r.add_vline(x=sys_rm_avg, line_dash="dot", line_color=DARK, line_width=1.5,
+                                annotation_text=f"Sys Avg {sys_rm_avg:.2f}%",
+                                annotation_position="top right", annotation_font_size=9)
+            brew_fig(fig_r, height=max(320, len(ds_r) * 22 + 80))
+            fig_r.update_layout(
+                title_text=f"R&M % BY STAND — {drill_title}",
+                title_font=dict(family="Bebas Neue", size=16),
+                xaxis=dict(ticksuffix="%", title="R&M % of Net Sales"),
+                yaxis=dict(title=""), showlegend=False,
+                margin=dict(t=60, b=40, l=8, r=90),
+            )
+            st.plotly_chart(fig_r, config={"displayModeBar": False})
+
+        # Single-stand KPI breakdown
+        if sel_stand != "All Stands" and not ds.empty:
+            stand_row = ds.iloc[0]
+            sales = float(stand_row.get("Net_Sales", 0))
+            if sales > 0:
+                st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin:12px 0 8px;">COST BREAKDOWN — {sel_stand}</div>')
+                items = [
+                    (col, lbl) for col, lbl in [
+                        ("Electricity", "Electricity"), ("Water_Sewer", "Water & Sewer"),
+                        ("Waste_Removal", "Waste Removal"), ("RM_Equipment", "R&M Equipment"),
+                        ("RM_Building", "R&M Building"),
+                    ]
+                    if col in stand_row.index and pd.notna(stand_row[col]) and float(stand_row[col]) > 0
+                ]
+                if items:
+                    met_cols = st.columns(len(items))
+                    for i, (col, lbl) in enumerate(items):
+                        with met_cols[i]:
+                            val = float(stand_row[col])
+                            st.metric(lbl, f"${val:,.0f}", f"{val/sales*100:.2f}% of sales")
+    else:
+        st.caption("Upload P&L files to activate stand-level utility drill-down.")
+        if not drill_stands.empty:
+            disp = drill_stands[["Stand", "Net_Sales"]].copy()
+            disp["Net_Sales"] = disp["Net_Sales"].apply(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
+            render_table(disp.reset_index(drop=True))
+
+    st.html('<hr class="brew">')
+
+    # ── SECTION 4: Trend Analysis ─────────────────────────────────────────────
+    trend_label = (sel_stand if sel_stand != "All Stands"
+                   else (sel_region if sel_region != "All Regions" else "Company"))
+    section("TREND ANALYSIS", f"Utilities & R&M over all periods — {trend_label} vs system average")
+
+    fig_t = go.Figure()
+    fig_t.add_scatter(x=pct_df["label"], y=pct_df["utilities_pct"] * 100,
+                      name="System Avg Util %", mode="lines+markers",
+                      line=dict(color=BLUE, width=2), marker=dict(size=5))
+    fig_t.add_scatter(x=pct_df["label"], y=pct_df["rm_pct"] * 100,
+                      name="System Avg R&M %", mode="lines+markers",
+                      line=dict(color=AMBER, width=2), marker=dict(size=5))
+    if has_util_ov:
+        fig_t.add_scatter(x=ov_labels, y=ov_util,
+                          name=f"{overlay_label} Util %", mode="lines+markers",
+                          line=dict(color=RED, width=2, dash="dot"),
+                          marker=dict(size=7, symbol="diamond"))
+    if has_rm_ov:
+        fig_t.add_scatter(x=ov_labels, y=ov_rm,
+                          name=f"{overlay_label} R&M %", mode="lines+markers",
+                          line=dict(color=MID, width=2, dash="dot"),
+                          marker=dict(size=7, symbol="diamond"))
+    # Highlight the selected period
+    fig_t.add_vline(x=sel_lbl, line_dash="dash", line_color=RED, line_width=1,
+                    annotation_text=sel_lbl, annotation_position="top",
+                    annotation_font_size=9)
+    brew_fig(fig_t, height=380)
+    fig_t.update_layout(
+        title_text=f"UTILITIES & R&M TREND — {trend_label} vs System Avg",
+        title_font=dict(family="Bebas Neue", size=18),
+        yaxis=dict(ticksuffix="%"),
+        xaxis=dict(tickangle=-35),
+    )
+    st.plotly_chart(fig_t, config={"displayModeBar": False})
+
+    st.html('<hr class="brew">')
+
+    # ── SEASONALITY ANALYSIS ──────────────────────────────────────────────────
     section("SEASONALITY ANALYSIS", "How period of year drives utility & R&M costs")
-    # Full-width seasonality charts
-    fig = go.Figure()
-    fig.add_scatter(x=pct_df["label"], y=pct_df["utilities_pct"] * 100,
-                    mode="lines+markers+text",
-                    text=pct_df["utilities_pct"].map(lambda v: f"{v*100:.1f}%"),
-                    textposition="top center",
-                    textfont=dict(size=8),
-                    fill="tozeroy",
-                    fillcolor=f"rgba(29,111,207,0.08)",
-                    line=dict(color=BLUE, width=2),
-                    marker=dict(size=6, color=[
-                        RED if i in [5,6,7] else (AMBER if i in [4,8] else BLUE)
-                        for i in range(len(pct_df))
-                    ]),
-                    name="Utilities %")
-    brew_fig(fig, height=350)
-    fig.update_layout(title_text="UTILITIES % BY PERIOD (SEASONALITY)",
-                      title_font=dict(family="Bebas Neue", size=18),
-                      yaxis=dict(ticksuffix="%"),
-                      xaxis=dict(tickangle=-35), showlegend=False)
-    # Add summer annotation
-    summer_idxs = [i for i, lbl in enumerate(pct_df["label"]) if any(x in str(lbl) for x in ["P6","P7","P8"])]
+
+    fig_s1 = go.Figure()
+    fig_s1.add_scatter(x=pct_df["label"], y=pct_df["utilities_pct"] * 100,
+                       mode="lines+markers+text",
+                       text=pct_df["utilities_pct"].map(lambda v: f"{v*100:.1f}%"),
+                       textposition="top center", textfont=dict(size=8),
+                       fill="tozeroy", fillcolor="rgba(29,111,207,0.08)",
+                       line=dict(color=BLUE, width=2),
+                       marker=dict(size=6, color=[
+                           RED if i in [5, 6, 7] else (AMBER if i in [4, 8] else BLUE)
+                           for i in range(len(pct_df))
+                       ]), name="Utilities %")
+    brew_fig(fig_s1, height=350)
+    fig_s1.update_layout(title_text="UTILITIES % BY PERIOD (SEASONALITY)",
+                         title_font=dict(family="Bebas Neue", size=18),
+                         yaxis=dict(ticksuffix="%"),
+                         xaxis=dict(tickangle=-35), showlegend=False)
+    summer_idxs = [i for i, lbl in enumerate(pct_df["label"]) if any(x in str(lbl) for x in ["P6", "P7", "P8"])]
     if summer_idxs:
-        mid_lbl = pct_df.iloc[summer_idxs[len(summer_idxs)//2]]["label"]
-        fig.add_annotation(x=mid_lbl, y=pct_df["utilities_pct"].max()*100*1.05,
-                           text="☀️ Summer Peak", showarrow=False,
-                           font=dict(size=9, color=RED, family="DM Mono"))
-    st.plotly_chart(fig, config={"displayModeBar": False})
+        mid_lbl = pct_df.iloc[summer_idxs[len(summer_idxs) // 2]]["label"]
+        fig_s1.add_annotation(x=mid_lbl, y=pct_df["utilities_pct"].max() * 100 * 1.05,
+                               text="☀️ Summer Peak", showarrow=False,
+                               font=dict(size=9, color=RED, family="DM Mono"))
+    st.plotly_chart(fig_s1, config={"displayModeBar": False})
 
-    fig2 = go.Figure()
-    fig2.add_scatter(x=pct_df["label"], y=pct_df["rm_pct"] * 100,
-                     mode="lines+markers+text",
-                     text=pct_df["rm_pct"].map(lambda v: f"{v*100:.2f}%"),
-                     textposition="top center",
-                     textfont=dict(size=8),
-                     fill="tozeroy",
-                     fillcolor=f"rgba(232,148,10,0.08)",
-                     line=dict(color=AMBER, width=2),
-                     marker=dict(size=6),
-                     name="R&M %")
-    # Add trend line
-    import numpy as np
-    x_num = list(range(len(pct_df)))
-    z = np.polyfit(x_num, pct_df["rm_pct"] * 100, 1)
-    p = np.poly1d(z)
-    fig2.add_scatter(x=pct_df["label"], y=[p(xi) for xi in x_num],
-                     mode="lines", name="Trend",
-                     line=dict(color=RED, dash="dot", width=1.5))
-    brew_fig(fig2, height=350)
-    fig2.update_layout(title_text="R&M % BY PERIOD (WITH TREND)",
-                       title_font=dict(family="Bebas Neue", size=18),
-                       yaxis=dict(ticksuffix="%"),
-                       xaxis=dict(tickangle=-35))
-    st.plotly_chart(fig2, config={"displayModeBar": False})
+    fig_s2 = go.Figure()
+    fig_s2.add_scatter(x=pct_df["label"], y=pct_df["rm_pct"] * 100,
+                       mode="lines+markers+text",
+                       text=pct_df["rm_pct"].map(lambda v: f"{v*100:.2f}%"),
+                       textposition="top center", textfont=dict(size=8),
+                       fill="tozeroy", fillcolor="rgba(232,148,10,0.08)",
+                       line=dict(color=AMBER, width=2), marker=dict(size=6),
+                       name="R&M %")
+    x_num  = list(range(len(pct_df)))
+    z      = np.polyfit(x_num, pct_df["rm_pct"] * 100, 1)
+    p_fit  = np.poly1d(z)
+    fig_s2.add_scatter(x=pct_df["label"], y=[p_fit(xi) for xi in x_num],
+                       mode="lines", name="Trend",
+                       line=dict(color=RED, dash="dot", width=1.5))
+    brew_fig(fig_s2, height=350)
+    fig_s2.update_layout(title_text="R&M % BY PERIOD (WITH TREND)",
+                         title_font=dict(family="Bebas Neue", size=18),
+                         yaxis=dict(ticksuffix="%"),
+                         xaxis=dict(tickangle=-35))
+    st.plotly_chart(fig_s2, config={"displayModeBar": False})
 
-    # ── Opportunity Flags ──
+    # ── OPPORTUNITY FLAGS ─────────────────────────────────────────────────────
     st.html('<hr class="brew">')
     section("OPPORTUNITY FLAGS", "Data-driven cost reduction opportunities")
 
-    # Find highest utility periods
-    top_util = pct_df.nlargest(3, "utilities_pct")
-    low_util  = pct_df.nsmallest(1, "utilities_pct").iloc[0]
-    rm_trend  = pct_df["rm_pct"].iloc[-3:].mean() - pct_df["rm_pct"].iloc[:3].mean()
+    top_util     = pct_df.nlargest(3, "utilities_pct")
+    low_util     = pct_df.nsmallest(1, "utilities_pct").iloc[0]
+    rm_trend_val = pct_df["rm_pct"].iloc[-3:].mean() - pct_df["rm_pct"].iloc[:3].mean()
+    has_waste    = sub_avail.get("Waste_Removal", False)
 
     opp_col1, opp_col2 = st.columns(2)
     with opp_col1:
@@ -2045,27 +2226,27 @@ def tab_utilities(dash):
         )
         insight_card(
             "💧 Water & Sewer — Days-in-Period Impact",
-            "Utility costs fluctuate with the number of days in a period (some 7BREW periods are 28 days, "
-            "others 35+). Normalize utility expense to $/day/stand rather than % of sales for a "
-            "cleaner comparison. A spike in Waste Removal % could be an overage charge, not "
-            "increased volume.",
+            "Utility costs fluctuate with the number of days in a period. Normalize utility expense "
+            "to $/day/stand rather than % of sales for a cleaner comparison. A spike in Waste Removal "
+            "% could be an overage charge, not increased volume.",
             tag="Measurement Tip", tag_cls="grey", card_cls="watch",
         )
     with opp_col2:
-        rm_direction = "increasing" if rm_trend > 0 else "decreasing"
+        rm_dir = "increasing" if rm_trend_val > 0 else "decreasing"
         insight_card(
-            f"🔧 R&M Trend: {rm_direction.title()} Over the Dataset",
-            f"R&M % has {'risen' if rm_trend > 0 else 'fallen'} by {abs(rm_trend)*100:.2f}% pts from early to recent periods. "
-            f"{'This aligns with the aging equipment cycle for stands opened 2022–2023. Schedule preventive maintenance in P9–P11 before it becomes reactive.' if rm_trend > 0 else 'Positive trend — newer stands have lower R&M. Monitor as the network ages.'}",
-            tag=f"Δ {'+' if rm_trend>0 else ''}{rm_trend*100:.2f}% pts", tag_cls="amber" if rm_trend > 0 else "green",
-            card_cls="watch" if rm_trend > 0 else "win",
+            f"🔧 R&M Trend: {rm_dir.title()} Over the Dataset",
+            f"R&M % has {'risen' if rm_trend_val > 0 else 'fallen'} by {abs(rm_trend_val)*100:.2f}% pts "
+            f"from early to recent periods. "
+            f"{'This aligns with the aging equipment cycle for stands opened 2022–2023. Schedule preventive maintenance in P9–P11 before it becomes reactive.' if rm_trend_val > 0 else 'Positive trend — newer stands have lower R&M. Monitor as the network ages.'}",
+            tag=f"Δ {'+' if rm_trend_val > 0 else ''}{rm_trend_val*100:.2f}% pts",
+            tag_cls="amber" if rm_trend_val > 0 else "green",
+            card_cls="watch" if rm_trend_val > 0 else "win",
         )
         insight_card(
             "🗑 Waste Removal: 2–3x Pickup Schedule",
             "Waste Removal is typically charged per pickup (2–3x/week). If a period contains an extra pickup "
             "cycle due to calendar length or overage fees, the cost will spike. Flag any period where Waste "
-            "Removal exceeds 1.5× the median value — this indicates an overage charge rather than "
-            "normal operations.",
+            "Removal exceeds 1.5× the median value — this indicates an overage charge rather than normal operations.",
             tag="Spike Detector Active" if has_waste else "Upload P&L to Activate",
             tag_cls="green" if has_waste else "grey",
             card_cls="win" if has_waste else "watch",
