@@ -112,6 +112,22 @@ st.html("""
     background-color: #ffffff !important;
     color: #111318 !important;
   }
+
+  /* Ultra-aggressive text color targeting for dataframe contents */
+  [data-testid="stDataFrame"] div,
+  [data-testid="stDataFrame"] span,
+  [data-testid="stDataFrame"] p,
+  [data-testid="stDataFrame"] a,
+  [data-testid="stDataFrame"] b,
+  [data-testid="stDataFrame"] strong,
+  [data-testid="stDataFrame"] td div,
+  [data-testid="stDataFrame"] th div,
+  [data-testid="stDataFrame"] tbody td div,
+  [data-testid="stDataFrame"] tbody td span,
+  [data-testid="stDataFrame"] thead th span {
+    color: #111318 !important;
+  }
+
   [data-testid="stDataFrame"] {
     background: #ffffff !important;
   }
@@ -124,6 +140,11 @@ st.html("""
     font-weight: 600 !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+  }
+  [data-testid="stDataFrame"] thead th div,
+  [data-testid="stDataFrame"] thead th span {
+    color: #2d2f36 !important;
+    background: #f5f6f8 !important;
   }
   [data-testid="stDataFrame"] tbody,
   [data-testid="stDataFrame"] tbody tr {
@@ -140,6 +161,10 @@ st.html("""
     background: #ffffff !important;
     border-color: #e2e4e9 !important;
   }
+  [data-testid="stDataFrame"] tbody td:hover {
+    background: #f5f6f8 !important;
+  }
+
   table {
     background: #ffffff !important;
     color: #111318 !important;
@@ -148,15 +173,34 @@ st.html("""
   table thead {
     background: #f5f6f8 !important;
   }
+  table thead th,
   table th {
     background: #f5f6f8 !important;
     color: #2d2f36 !important;
     border-color: #e2e4e9 !important;
   }
+  table thead th div,
+  table thead th span {
+    color: #2d2f36 !important;
+    background: #f5f6f8 !important;
+  }
+  table tbody {
+    background: #ffffff !important;
+  }
+  table tbody tr {
+    background: #ffffff !important;
+  }
+  table tbody tr:hover {
+    background: #f5f6f8 !important;
+  }
   table td, table tbody td {
     color: #111318 !important;
     background: #ffffff !important;
     border-color: #e2e4e9 !important;
+  }
+  table tbody td div,
+  table tbody td span {
+    color: #111318 !important;
   }
   tbody tr:nth-child(even) { background: #ffffff !important; }
   tbody tr:nth-child(odd) { background: #ffffff !important; }
