@@ -2142,10 +2142,12 @@ def tab_utilities(dash):
                           name=f"{overlay_label} R&M %", mode="lines+markers",
                           line=dict(color=MID, width=2, dash="dot"),
                           marker=dict(size=7, symbol="diamond"))
-    # Highlight the selected period
-    fig_t.add_vline(x=sel_lbl, line_dash="dash", line_color=RED, line_width=1,
-                    annotation_text=sel_lbl, annotation_position="top",
-                    annotation_font_size=9)
+    # Highlight the selected period (annotation separate — add_vline annotation_position
+    # fails on categorical string axes in newer Plotly)
+    fig_t.add_vline(x=sel_lbl, line_dash="dash", line_color=RED, line_width=1)
+    fig_t.add_annotation(x=sel_lbl, y=1, yref="paper", text=sel_lbl,
+                          showarrow=False, xanchor="left", yanchor="top",
+                          font=dict(size=9, color=RED, family="DM Mono"))
     brew_fig(fig_t, height=380)
     fig_t.update_layout(
         title_text=f"UTILITIES & R&M TREND — {trend_label} vs System Avg",
