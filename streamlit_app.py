@@ -46,203 +46,14 @@ REGION_COLORS = {
     "Permian Basin": "#e8940a", "WTX": "#d97706",
 }
 
-# Inject Google Fonts + custom CSS
+# Inject Google Fonts + minimal custom component styling
 st.html("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* Force light mode throughout */
-  html, body { background: #ffffff !important; color: #111318 !important; }
-  [data-testid="stAppViewContainer"] { background: #ffffff !important; }
-  [data-testid="stMainBlockContainer"] { background: #ffffff !important; }
-  .block-container { background: #ffffff !important; }
-
-  /* Global font override */
-  html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; color: #111318 !important; }
-  h1,h2,h3 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 2px; color: #2d2f36 !important; }
-  p, span, div, label { color: #111318 !important; }
-
-  /* Force text colors */
-  .stMarkdown, .stMarkdown p { color: #111318 !important; }
-  .stText { color: #111318 !important; }
-
-  /* Tab strip */
-  .stTabs [data-baseweb="tab-list"] {
-    gap: 2px; background: #f5f6f8; border-radius: 10px; padding: 4px;
-    border: 1px solid #e2e4e9;
-  }
-  .stTabs [data-baseweb="tab"] {
-    font-family: 'DM Sans', sans-serif !important; font-weight: 600;
-    font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase;
-    background: transparent; border-radius: 8px; color: #5a6070;
-    padding: 8px 16px;
-  }
-  .stTabs [aria-selected="true"] {
-    background: #cd2128 !important; color: white !important;
-  }
-
-  /* Sidebar */
-  [data-testid="stSidebar"] {
-    background: #f5f6f8 !important;
-    border-right: 1px solid #e2e4e9;
-    display: block !important;
-    visibility: visible !important;
-  }
-  [data-testid="stSidebar"] .stMarkdown h3 {
-    font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 34px; letter-spacing: 2px; color: #2d2f36;
-  }
-  [data-testid="stSidebarNav"] { display: block !important; visibility: visible !important; }
-
-  /* Metrics */
-  [data-testid="stMetric"] { background: white; border: 1px solid #e2e4e9;
-    border-radius: 10px; padding: 16px 18px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-  [data-testid="stMetricLabel"] { font-size: 17px !important; font-weight: 600 !important;
-    letter-spacing: 1px; text-transform: uppercase; color: #5a6070!important; }
-  [data-testid="stMetricValue"] { font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 28px !important; color: #111318 !important; }
-  [data-testid="stMetricDelta"] { font-family: 'DM Mono', monospace !important;
-    font-size: 14px !important; }
-
-  /* DataFrames and Tables - Comprehensive Light Mode */
-  [data-testid="stDataFrame"],
-  [data-testid="stDataFrame"] *,
-  table, table *, tbody, thead, tr, th, td {
-    background-color: #ffffff !important;
-    color: #111318 !important;
-  }
-
-  /* Ultra-aggressive text color targeting for dataframe contents */
-  [data-testid="stDataFrame"] div,
-  [data-testid="stDataFrame"] span,
-  [data-testid="stDataFrame"] p,
-  [data-testid="stDataFrame"] a,
-  [data-testid="stDataFrame"] b,
-  [data-testid="stDataFrame"] strong,
-  [data-testid="stDataFrame"] td div,
-  [data-testid="stDataFrame"] th div,
-  [data-testid="stDataFrame"] tbody td div,
-  [data-testid="stDataFrame"] tbody td span,
-  [data-testid="stDataFrame"] thead th span {
-    color: #111318 !important;
-  }
-
-  [data-testid="stDataFrame"] {
-    background: #ffffff !important;
-  }
-  [data-testid="stDataFrame"] thead,
-  [data-testid="stDataFrame"] thead th {
-    background: #f5f6f8 !important;
-    color: #2d2f36 !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  [data-testid="stDataFrame"] thead th div,
-  [data-testid="stDataFrame"] thead th span {
-    color: #2d2f36 !important;
-    background: #f5f6f8 !important;
-  }
-  [data-testid="stDataFrame"] tbody,
-  [data-testid="stDataFrame"] tbody tr {
-    background: #ffffff !important;
-  }
-  [data-testid="stDataFrame"] tbody tr:hover {
-    background: #f5f6f8 !important;
-  }
-  [data-testid="stDataFrame"] td,
-  [data-testid="stDataFrame"] tbody td {
-    font-family: 'DM Mono', monospace !important;
-    font-size: 14px !important;
-    color: #111318 !important;
-    background: #ffffff !important;
-    border-color: #e2e4e9 !important;
-  }
-  [data-testid="stDataFrame"] tbody td:hover {
-    background: #f5f6f8 !important;
-  }
-
-  table {
-    background: #ffffff !important;
-    color: #111318 !important;
-    border-color: #e2e4e9 !important;
-  }
-  table thead {
-    background: #f5f6f8 !important;
-  }
-  table thead th,
-  table th {
-    background: #f5f6f8 !important;
-    color: #2d2f36 !important;
-    border-color: #e2e4e9 !important;
-  }
-  table thead th div,
-  table thead th span {
-    color: #2d2f36 !important;
-    background: #f5f6f8 !important;
-  }
-  table tbody {
-    background: #ffffff !important;
-  }
-  table tbody tr {
-    background: #ffffff !important;
-  }
-  table tbody tr:hover {
-    background: #f5f6f8 !important;
-  }
-  table td, table tbody td {
-    color: #111318 !important;
-    background: #ffffff !important;
-    border-color: #e2e4e9 !important;
-  }
-  table tbody td div,
-  table tbody td span {
-    color: #111318 !important;
-  }
-  tbody tr:nth-child(even) { background: #ffffff !important; }
-  tbody tr:nth-child(odd) { background: #ffffff !important; }
-
-  /* Select boxes and dropdowns - Comprehensive Light Mode */
-  .stSelectbox,
-  .stSelectbox *,
-  [data-baseweb="select"],
-  [data-baseweb="select"] * {
-    background: #ffffff !important;
-    color: #111318 !important;
-  }
-  .stSelectbox select,
-  [data-baseweb="select"],
-  [data-baseweb="select"] input,
-  [data-baseweb="select"] div {
-    font-family: 'DM Mono', monospace !important;
-    font-size: 16px !important;
-    background: #ffffff !important;
-    color: #111318 !important;
-    border: 1px solid #e2e4e9 !important;
-    border-color: #e2e4e9 !important;
-  }
-  [data-baseweb="select__popup"],
-  [data-baseweb="select__popup"] * {
-    background: #ffffff !important;
-    border-color: #e2e4e9 !important;
-    color: #111318 !important;
-  }
-  [data-baseweb="select__option"],
-  [data-baseweb="select__option"] * {
-    background: #ffffff !important;
-    color: #111318 !important;
-  }
-  [data-baseweb="select__option"]:hover,
-  [data-baseweb="select__option"]:focus,
-  [data-baseweb="select__option"][aria-selected="true"] {
-    background: #f5f6f8 !important;
-    color: #111318 !important;
-  }
-  .stSelectbox { color: #111318 !important; }
-  select, select * { background: #ffffff !important; color: #111318 !important; border-color: #e2e4e9 !important; }
+  /* Global font family */
+  html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; }
+  h1, h2, h3 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 2px; }
 
   /* KPI cards (custom HTML) */
   .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -262,12 +73,12 @@ st.html("""
   .kpi-value { font-family:'Bebas Neue',sans-serif; font-size:39px;
     line-height:1; color:#111318; letter-spacing:1px; }
   .kpi-value.good { color:#12a06e; }
-  .kpi-value.bad  { color:#cd2128; }
+  .kpi-value.bad { color:#cd2128; }
   .kpi-value.warn { color:#e8940a; }
   .kpi-sub { font-family:'DM Mono',monospace; font-size:17px; color:#8a919e; margin-top:4px; }
   .kpi-delta { display:inline-block; font-family:'DM Mono',monospace;
     font-size:17px; font-weight:600; padding:2px 7px; border-radius:10px; margin-top:5px; }
-  .kpi-delta.up   { background:rgba(18,160,110,0.1); color:#12a06e; }
+  .kpi-delta.up { background:rgba(18,160,110,0.1); color:#12a06e; }
   .kpi-delta.down { background:rgba(205,33,40,0.1); color:#cd2128; }
   .kpi-delta.neut { background:rgba(29,111,207,0.1); color:#1d6fcf; }
 
@@ -287,19 +98,18 @@ st.html("""
   /* Insight / alert cards */
   .insight-card {
     background:white; border:1px solid #e2e4e9; border-radius:10px;
-    padding:16px 18px; margin-bottom:10px;
-    border-left: 4px solid #cd2128;
+    padding:16px 18px; margin-bottom:10px; border-left: 4px solid #cd2128;
   }
   .insight-card.win { border-left-color: #12a06e; }
   .insight-card.watch { border-left-color: #e8940a; }
   .insight-card .ic-title { font-weight:700; font-size:17px; color:#2d2f36; margin-bottom:4px; }
-  .insight-card .ic-body  { font-size:16px; color:#4a5060; line-height:1.6; }
-  .insight-card .ic-tag   { display:inline-block; font-family:'DM Mono',monospace;
+  .insight-card .ic-body { font-size:16px; color:#4a5060; line-height:1.6; }
+  .insight-card .ic-tag { display:inline-block; font-family:'DM Mono',monospace;
     font-size:17px; padding:2px 8px; border-radius:10px; margin-top:6px; }
-  .ic-tag.red   { background:rgba(205,33,40,0.1);   color:#cd2128; }
-  .ic-tag.green { background:rgba(18,160,110,0.1);  color:#12a06e; }
-  .ic-tag.amber { background:rgba(232,148,10,0.1);  color:#e8940a; }
-  .ic-tag.grey  { background:rgba(90,96,112,0.1);   color:#5a6070; }
+  .ic-tag.red { background:rgba(205,33,40,0.1); color:#cd2128; }
+  .ic-tag.green { background:rgba(18,160,110,0.1); color:#12a06e; }
+  .ic-tag.amber { background:rgba(232,148,10,0.1); color:#e8940a; }
+  .ic-tag.grey { background:rgba(90,96,112,0.1); color:#5a6070; }
 
   /* Utility / R&M info box */
   .info-box {
@@ -308,14 +118,21 @@ st.html("""
   }
   .info-box strong { color:#2d2f36; }
 
+  /* Sidebar */
+  [data-testid="stSidebar"] {
+    background: #f5f6f8 !important;
+    border-right: 1px solid #e2e4e9;
+    display: block !important;
+    visibility: visible !important;
+  }
+
   /* Divider */
   hr.brew { border:none; border-top:1px solid #e2e4e9; margin:20px 0; }
 
   /* Story block */
   .story-block {
     background:white; border:1px solid #e2e4e9; border-radius:10px;
-    padding:20px 24px; margin-bottom:16px;
-    box-shadow:0 1px 4px rgba(0,0,0,0.04);
+    padding:20px 24px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,0.04);
   }
   .story-label { font-family:'DM Mono',monospace; font-size:17px;
     text-transform:uppercase; letter-spacing:1px; color:#8a919e; margin-bottom:6px; }
@@ -325,26 +142,7 @@ st.html("""
 
   /* Hide Streamlit branding */
   #MainMenu, footer, header { visibility: hidden; }
-  .block-container { padding-top: 24px !important; max-width: 1600px !important; background: #ffffff !important; }
-
-  /* Additional light mode overrides */
-  [data-testid="stHeader"] { background: #ffffff !important; }
-  [data-testid="stToolbar"] { background: #ffffff !important; }
-  .stButton > button { color: #111318 !important; background-color: #f5f6f8 !important; }
-  input, select, textarea { background: #ffffff !important; color: #111318 !important; border-color: #e2e4e9 !important; }
-  input::placeholder { color: #8a919e !important; }
-
-  /* File uploader styling */
-  [data-testid="stFileUploadDropzone"] {
-    background: #ffffff !important;
-    border: 2px dashed #e2e4e9 !important;
-    color: #111318 !important;
-  }
-  [data-testid="stFileUploadDropzone"] p,
-  [data-testid="stFileUploadDropzone"] span {
-    color: #111318 !important;
-  }
-  .stFileUploader { background: #ffffff !important; }
+  .block-container { padding-top: 24px !important; max-width: 1600px !important; }
 </style>
 """)
 
@@ -364,7 +162,7 @@ def _fmt_bps(delta):
     return ("+"+str(b) if b >= 0 else str(b)) + " bps"
 
 def brew_fig(fig, height=320, show_legend=True, margin=None):
-    m = margin or dict(t=16, b=40, l=8, r=8)
+    m = margin or dict(t=60, b=60, l=8, r=8)
     fig.update_layout(
         height=height, paper_bgcolor="white", plot_bgcolor="white",
         font=dict(family="DM Sans, sans-serif", color=BODY, size=15, weight="bold"),
@@ -424,6 +222,56 @@ def delta_style(val, inv=False):
     s = ("+" if b >= 0 else "") + str(b) + " bps"
     good = (val < 0) if inv else (val > 0)
     return {"str": s, "cls": "up" if good else "down"}
+
+def render_table(df, max_rows=None, height=None):
+    """Render a pandas DataFrame as a styled HTML table via st.components.v1.html with explicit height."""
+    import streamlit.components.v1 as components
+
+    if df.empty:
+        st.info("No data to display")
+        return
+
+    if max_rows:
+        df = df.head(max_rows)
+
+    display_df = df.reset_index(drop=True)
+
+    # Calculate height: header(44px) + rows(37px each) + padding(20px)
+    calc_h = height or min(600, 44 + len(display_df) * 37 + 20)
+
+    # Build full HTML document with inline styles
+    html = """<!DOCTYPE html>
+<html><head>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:#ffffff; color:#111318; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { background:#f5f6f8; color:#111318; padding:10px 12px; text-align:left;
+       border-bottom:2px solid #e2e4e9; font-weight:600; white-space:nowrap;
+       position:sticky; top:0; z-index:1; }
+  td { padding:8px 12px; border-bottom:1px solid #e2e4e9; color:#111318; }
+  tr:nth-child(even) { background:#fafbfc; }
+  tr:nth-child(odd) { background:#ffffff; }
+  tr:hover { background:#f0f1f3; }
+  .wrap { width:100%; overflow:auto; }
+</style>
+</head><body><div class="wrap"><table>
+<thead><tr>"""
+
+    for col in display_df.columns:
+        html += f"<th>{col}</th>"
+    html += "</tr></thead><tbody>"
+
+    for _, row in display_df.iterrows():
+        html += "<tr>"
+        for val in row:
+            html += f"<td>{val}</td>"
+        html += "</tr>"
+
+    html += "</tbody></table></div></body></html>"
+
+    components.html(html, height=calc_h, scrolling=True)
 
 # ─────────────────────────────────────────────
 # DATA LOADING
@@ -590,7 +438,7 @@ def tab_ceo(dash):
             barmode="overlay",
         )
         brew_fig(fig, height=300)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col2:
         # YoY growth story
@@ -647,7 +495,7 @@ def tab_ceo(dash):
                              marker=dict(size=7), yaxis="y")
             brew_fig(fig2, height=280)
             fig2.update_layout(yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig2, config={"displayModeBar": False})
 
     with col4:
         section("REGIONAL PERFORMANCE SNAPSHOT", f"EBITDA% by region — {latest['label']}")
@@ -667,7 +515,7 @@ def tab_ceo(dash):
                            annotation_font_size=9)
             brew_fig(fig3, height=280)
             fig3.update_layout(xaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig3, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
 
@@ -697,7 +545,7 @@ def tab_ceo(dash):
     ))
     brew_fig(fig4, height=360)
     fig4.update_layout(xaxis=dict(tickangle=-35))
-    st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(fig4, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
 
@@ -724,7 +572,7 @@ def tab_ceo(dash):
             brew_fig(fig5, height=280)
             fig5.update_layout(barmode="group",
                                yaxis=dict(tickprefix="$", tickformat=",.0f", tickfont=dict(size=9)))
-            st.plotly_chart(fig5, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig5, config={"displayModeBar": False})
     with col6:
         themes = [
             ("📈 Growth Engine", "New stand pipeline of 10+ locations in H2 2026 will dilute system EBITDA% by ~150–200bps per cohort during ramp. Labor at new locations averages 30%+ for the first 60–90 days.", "watch", "amber"),
@@ -802,9 +650,9 @@ def tab_overview(dash):
                 textposition="outside",
             ))
             brew_fig(fig, height=260)
-            fig.update_layout(title_text="NET SALES BY REGION", title_font=dict(family="Bebas Neue", size=15),
+            fig.update_layout(title_text="NET SALES BY REGION", title_font=dict(family="Bebas Neue", size=18),
                               yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col2:
         if not reg_df.empty:
@@ -819,9 +667,9 @@ def tab_overview(dash):
             fig2.add_vline(x=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
                            annotation_text="Sys avg", annotation_font_size=9)
             brew_fig(fig2, height=260)
-            fig2.update_layout(title_text="EBITDA % BY REGION", title_font=dict(family="Bebas Neue", size=15),
+            fig2.update_layout(title_text="EBITDA % BY REGION", title_font=dict(family="Bebas Neue", size=18),
                                xaxis=dict(ticksuffix="%"), showlegend=False)
-            st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig2, config={"displayModeBar": False})
 
     # Charts row 2
     col3, col4 = st.columns(2)
@@ -846,9 +694,9 @@ def tab_overview(dash):
                              mode="lines+markers", line=dict(color=MUTED, dash="dot"))
             brew_fig(fig3, height=260)
             fig3.update_layout(title_text="PERFORMANCE BY STAND MATURITY",
-                               title_font=dict(family="Bebas Neue", size=15),
+                               title_font=dict(family="Bebas Neue", size=18),
                                yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig3, config={"displayModeBar": False})
 
     with col4:
         other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
@@ -861,9 +709,9 @@ def tab_overview(dash):
             textfont=dict(size=10, family="DM Mono"),
         ))
         brew_fig(fig4, height=260)
-        fig4.update_layout(title_text="COST STRUCTURE", title_font=dict(family="Bebas Neue", size=15),
+        fig4.update_layout(title_text="COST STRUCTURE", title_font=dict(family="Bebas Neue", size=18),
                            legend=dict(font=dict(size=10)))
-        st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig4, config={"displayModeBar": False})
 
 
 # ─────────────────────────────────────────────
@@ -922,11 +770,7 @@ def tab_comparison(dash):
             "Signal": "↑ Better" if good else ("↓ Worse" if not good else "—"),
         })
     cmp_df = pd.DataFrame(rows)
-    st.dataframe(cmp_df, hide_index=True, use_container_width=True, height=500,
-                 column_config={
-                     "Signal": st.column_config.TextColumn("Signal", width="small"),
-                     "Δ A − B": st.column_config.TextColumn("Δ A − B", width="small"),
-                 })
+    render_table(cmp_df)
 
     # Charts
     col1, col2 = st.columns(2)
@@ -939,9 +783,9 @@ def tab_comparison(dash):
             textposition="outside",
         ))
         brew_fig(fig, height=260)
-        fig.update_layout(title_text="AVG SALES COMPARISON", title_font=dict(family="Bebas Neue", size=15),
+        fig.update_layout(title_text="AVG SALES COMPARISON", title_font=dict(family="Bebas Neue", size=18),
                           yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col2:
         reg_a = pd.DataFrame(dash["region_by_period"].get(pka, []))
@@ -954,9 +798,9 @@ def tab_comparison(dash):
             fig2.add_bar(x=merged["region"], y=merged["ebitda_pct_b"] * 100,
                          name=psB["label"], marker_color=GREEN, opacity=0.75)
             brew_fig(fig2, height=260)
-            fig2.update_layout(title_text="EBITDA % BY REGION", title_font=dict(family="Bebas Neue", size=15),
+            fig2.update_layout(title_text="EBITDA % BY REGION", title_font=dict(family="Bebas Neue", size=18),
                                barmode="group", yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig2, config={"displayModeBar": False})
 
     # Distribution charts
     stands_df = get_stands_df(dash)
@@ -968,17 +812,17 @@ def tab_comparison(dash):
                                        name=psA["label"]))
         brew_fig(fig3, height=240)
         fig3.update_layout(title_text=f"LABOR % DISTRIBUTION — {psA['label']}",
-                           title_font=dict(family="Bebas Neue", size=14),
+                           title_font=dict(family="Bebas Neue", size=18),
                            xaxis=dict(ticksuffix="%"), showlegend=False)
-        st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig3, config={"displayModeBar": False})
     with col4:
         fig4 = go.Figure(go.Histogram(x=sa["Total_COGS_pct"] * 100, nbinsx=10,
                                        marker_color=BLUE, opacity=0.8))
         brew_fig(fig4, height=240)
         fig4.update_layout(title_text=f"COGS % DISTRIBUTION — {psA['label']}",
-                           title_font=dict(family="Bebas Neue", size=14),
+                           title_font=dict(family="Bebas Neue", size=18),
                            xaxis=dict(ticksuffix="%"), showlegend=False)
-        st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig4, config={"displayModeBar": False})
 
 
 # ─────────────────────────────────────────────
@@ -1039,7 +883,7 @@ def tab_stands(dash):
             disp[col] = disp[col].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
     disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
 
-    st.dataframe(disp, hide_index=True, use_container_width=True, height=420)
+    render_table(disp)
 
 
 # ─────────────────────────────────────────────
@@ -1097,7 +941,7 @@ def tab_regions(dash):
             for pct_col in ["Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]:
                 if pct_col in tbl.columns:
                     tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
-            st.dataframe(tbl.reset_index(drop=True), use_container_width=True)
+            render_table(tbl.reset_index(drop=True))
         else:
             st.info(f"No stand data available for {sel_region} in this period.")
 
@@ -1127,13 +971,12 @@ def tab_regions(dash):
             ),
             textfont=dict(size=9, family="DM Mono"),
         ))
-        brew_fig(fig, height=300)
         fig.update_layout(title_text="LABOR% vs EBITDA% (bubble = sales volume)",
-                          title_font=dict(family="Bebas Neue", size=14),
                           xaxis=dict(ticksuffix="%", title="Total Labor %"),
                           yaxis=dict(ticksuffix="%", title="EBITDA %"),
                           showlegend=False)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        brew_fig(fig, height=420)
+        st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col2:
         # Cost stack
@@ -1149,11 +992,10 @@ def tab_regions(dash):
                 name=name,
                 marker_color=color,
             )
-        brew_fig(fig2, height=300)
         fig2.update_layout(title_text="COST STACK BY REGION",
-                           title_font=dict(family="Bebas Neue", size=14),
                            barmode="stack", yaxis=dict(ticksuffix="%"))
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+        brew_fig(fig2, height=420, margin=dict(t=60, b=100, l=8, r=8))
+        st.plotly_chart(fig2, config={"displayModeBar": False})
 
 
 # ─────────────────────────────────────────────
@@ -1288,7 +1130,7 @@ def tab_forecast(dash):
                         ticksuffix="%", range=[0, 35]),
         )
         brew_fig(fig, height=300)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col2:
         # Prior year comparison
@@ -1310,9 +1152,9 @@ def tab_forecast(dash):
                                  line=dict(color=RED, width=2), marker=dict(size=6))
             brew_fig(fig2, height=300)
             fig2.update_layout(title_text="2025 vs 2026 EBITDA%",
-                               title_font=dict(family="Bebas Neue", size=14),
+                               title_font=dict(family="Bebas Neue", size=18),
                                yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig2, config={"displayModeBar": False})
 
     # Forecast table
     st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin:16px 0 8px;">PERIOD-BY-PERIOD FORECAST TABLE</div>')
@@ -1344,10 +1186,9 @@ def tab_forecast(dash):
     fc_display.columns = ["Period", "Base Sales", "Opt Sales", "Risk Sales",
                            "Base EBITDA%", "Opt EBITDA%", "Risk EBITDA%",
                            "Prior Yr Sales", "Prior Yr EBITDA%", "Watch Note", "Type"]
-    st.dataframe(fc_display[["Type", "Period", "Prior Yr Sales", "Prior Yr EBITDA%",
-                               "Base Sales", "Base EBITDA%", "Opt EBITDA%", "Risk EBITDA%",
-                               "Watch Note"]],
-                 hide_index=True, use_container_width=True)
+    fc_cols = ["Type", "Period", "Prior Yr Sales", "Prior Yr EBITDA%",
+               "Base Sales", "Base EBITDA%", "Opt EBITDA%", "Risk EBITDA%", "Watch Note"]
+    render_table(fc_display[fc_cols].reset_index(drop=True))
 
 
 # ─────────────────────────────────────────────
@@ -1478,9 +1319,9 @@ def tab_utilities(dash):
         )
         brew_fig(fig, height=280)
         fig.update_layout(title_text="TOTAL UTILITIES — PERIOD OVER PERIOD",
-                          title_font=dict(family="Bebas Neue", size=14),
+                          title_font=dict(family="Bebas Neue", size=18),
                           xaxis=dict(tickangle=-35))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col2:
         fig2 = go.Figure()
@@ -1497,9 +1338,9 @@ def tab_utilities(dash):
         )
         brew_fig(fig2, height=280)
         fig2.update_layout(title_text="TOTAL R&M — PERIOD OVER PERIOD",
-                           title_font=dict(family="Bebas Neue", size=14),
+                           title_font=dict(family="Bebas Neue", size=18),
                            xaxis=dict(tickangle=-35))
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig2, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
 
@@ -1542,9 +1383,9 @@ def tab_utilities(dash):
                 )
                 brew_fig(fig, height=260)
                 fig.update_layout(title_text=f"{display_name.upper()} — PERIOD OVER PERIOD",
-                                  title_font=dict(family="Bebas Neue", size=14),
+                                  title_font=dict(family="Bebas Neue", size=18),
                                   xaxis=dict(tickangle=-35))
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig, config={"displayModeBar": False})
 
                 # Spike detection for Waste Removal
                 if field == "Waste_Removal":
@@ -1590,9 +1431,9 @@ def tab_utilities(dash):
                     )
                     brew_fig(fig, height=260)
                     fig.update_layout(title_text=f"{display_name.upper()} — PERIOD OVER PERIOD",
-                                      title_font=dict(family="Bebas Neue", size=14),
+                                      title_font=dict(family="Bebas Neue", size=18),
                                       xaxis=dict(tickangle=-35))
-                    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                    st.plotly_chart(fig, config={"displayModeBar": False})
 
     else:
         # Placeholder sub-category grid
@@ -1638,7 +1479,7 @@ def tab_utilities(dash):
                         name="Utilities %")
         brew_fig(fig, height=260)
         fig.update_layout(title_text="UTILITIES % BY PERIOD (SEASONALITY)",
-                          title_font=dict(family="Bebas Neue", size=14),
+                          title_font=dict(family="Bebas Neue", size=18),
                           yaxis=dict(ticksuffix="%"),
                           xaxis=dict(tickangle=-35), showlegend=False)
         # Add summer annotation
@@ -1648,7 +1489,7 @@ def tab_utilities(dash):
             fig.add_annotation(x=mid_lbl, y=pct_df["utilities_pct"].max()*100*1.05,
                                text="☀️ Summer Peak", showarrow=False,
                                font=dict(size=9, color=RED, family="DM Mono"))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, config={"displayModeBar": False})
 
     with col6:
         fig2 = go.Figure()
@@ -1672,10 +1513,10 @@ def tab_utilities(dash):
                          line=dict(color=RED, dash="dot", width=1.5))
         brew_fig(fig2, height=260)
         fig2.update_layout(title_text="R&M % BY PERIOD (WITH TREND)",
-                           title_font=dict(family="Bebas Neue", size=14),
+                           title_font=dict(family="Bebas Neue", size=18),
                            yaxis=dict(ticksuffix="%"),
                            xaxis=dict(tickangle=-35))
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig2, config={"displayModeBar": False})
 
     # ── Opportunity Flags ──
     st.html('<hr class="brew">')
@@ -1748,6 +1589,54 @@ def main():
         FY2025–2026 · 15 Periods · Confidential
       </div>
     </div>""")
+
+    # Upload section — always visible at top
+    up_col1, up_col2 = st.columns([3, 1])
+    with up_col1:
+        uploaded = st.file_uploader(
+            "Upload P&L Files (.xlsx)",
+            type=["xlsx"],
+            accept_multiple_files=True,
+            help="Upload 7BREW PTD Side By Side Excel files to add new periods",
+        )
+    with up_col2:
+        if "upload_count" in st.session_state:
+            st.info(f"✅ {st.session_state['upload_count']} period(s) loaded")
+            if st.button("Clear Uploads", type="secondary"):
+                del st.session_state["uploaded_dash"]
+                del st.session_state["upload_count"]
+                st.rerun()
+
+    if uploaded:
+        from pl_parser import parse_pl_file, merge_into_dash
+        import copy
+        base = load_base_data()
+        dash_copy = copy.deepcopy(base)
+        parsed = []
+        errors = []
+        for uf in uploaded:
+            try:
+                suffix = ".xlsx"
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                    tmp.write(uf.read())
+                    tmp_path = tmp.name
+                result = parse_pl_file(tmp_path)
+                os.unlink(tmp_path)
+                if result and result.get("stands"):
+                    parsed.append(result)
+                    st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
+                else:
+                    errors.append(f"No stands found in {uf.name}")
+            except Exception as e:
+                errors.append(f"{uf.name}: {e}")
+        if errors:
+            for e in errors:
+                st.error(e)
+        if parsed:
+            updated = merge_into_dash(dash_copy, parsed)
+            st.session_state["uploaded_dash"] = updated
+            st.session_state["upload_count"] = len(parsed)
+            st.rerun()
 
     # Tabs
     tab_names = [
