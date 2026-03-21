@@ -51,9 +51,20 @@ st.html("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* Force light mode throughout */
+  html, body { background: #ffffff !important; color: #111318 !important; }
+  [data-testid="stAppViewContainer"] { background: #ffffff !important; }
+  [data-testid="stMainBlockContainer"] { background: #ffffff !important; }
+  .block-container { background: #ffffff !important; }
+
   /* Global font override */
-  html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; }
-  h1,h2,h3 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 2px; }
+  html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; color: #111318 !important; }
+  h1,h2,h3 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 2px; color: #2d2f36 !important; }
+  p, span, div, label { color: #111318 !important; }
+
+  /* Force text colors */
+  .stMarkdown, .stMarkdown p { color: #111318 !important; }
+  .stText { color: #111318 !important; }
 
   /* Tab strip */
   .stTabs [data-baseweb="tab-list"] {
@@ -185,7 +196,14 @@ st.html("""
 
   /* Hide Streamlit branding */
   #MainMenu, footer, header { visibility: hidden; }
-  .block-container { padding-top: 24px !important; max-width: 1600px !important; }
+  .block-container { padding-top: 24px !important; max-width: 1600px !important; background: #ffffff !important; }
+
+  /* Additional light mode overrides */
+  [data-testid="stHeader"] { background: #ffffff !important; }
+  [data-testid="stToolbar"] { background: #ffffff !important; }
+  .stButton > button { color: #111318 !important; background-color: #f5f6f8 !important; }
+  input, select, textarea { background: #ffffff !important; color: #111318 !important; border-color: #e2e4e9 !important; }
+  input::placeholder { color: #8a919e !important; }
 </style>
 """)
 
