@@ -190,7 +190,14 @@ def parse_stand_data(df, stand_name, val_col, pct_col, year, period_num, period_
     if net_sales <= 0:
         return None
 
+    # Look up metadata: try stand_name first, then fall back to numeric Store_ID
+    # (stand_meta.json is keyed by Store_ID string like "134"; stand_name is "000134 Lubbock, TX - 1")
     meta = _STAND_META.get(stand_name, {})
+    if not meta:
+        id_match = re.match(r'0*(\d+)', stand_name)
+        if id_match:
+            meta = _STAND_META.get(id_match.group(1), {})
+
     state = meta.get('State', '')
     if not state:
         state_match = re.search(r',\s*(\w{2})\s*-', stand_name)
@@ -200,6 +207,8 @@ def parse_stand_data(df, stand_name, val_col, pct_col, year, period_num, period_
     if not store_id:
         id_match = re.match(r'(\d+)', stand_name)
         store_id = int(id_match.group(1)) if id_match else 0
+
+    open_date = meta.get('Open_Date', meta.get('Open Date', ''))
 
     return {
         'Stand': stand_name,
@@ -211,7 +220,7 @@ def parse_stand_data(df, stand_name, val_col, pct_col, year, period_num, period_
         'Region': meta.get('Region', 'Unknown'),
         'Age_Bucket': meta.get('Age_Bucket', 'Unknown'),
         'RM': meta.get('RM', ''),
-        'Open Date': meta.get('Open Date', ''),
+        'Open Date': open_date,
         'Age (Yrs)': 0,
         'Net_Sales': net_sales,
         'Total_COGS': get_val('cogs'),

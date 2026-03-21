@@ -1,1010 +1,452 @@
 {
-  "000134 Lubbock, TX - 1": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-01-30",
-    "Store_ID": "134"
-  },
-  "000129 Odessa, TX - 1": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2023-05-22",
-    "Store_ID": "129"
-  },
-  "000121 Odessa, TX - 2": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2023-06-12",
-    "Store_ID": "121"
-  },
-  "000118 Lubbock, TX - 2": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-06-30",
-    "Store_ID": "118"
-  },
-  "000154 Lubbock, TX - 3": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-07-24",
-    "Store_ID": "154"
-  },
-  "000115 Lawton, OK - 1": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2023-07-31",
-    "Store_ID": "115"
-  },
-  "000151 Wichita Falls, TX - 1": {
-    "Region": "OKC-S",
-    "State": "TX",
-    "RM": "Madison Macias",
-    "Open Date": "2023-08-26",
-    "Store_ID": "151"
-  },
-  "000192 Ardmore, OK - 1": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2023-09-18",
-    "Store_ID": "192"
-  },
-  "000191 Amarillo, TX - 1": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-10-09",
-    "Store_ID": "191"
-  },
-  "000194 Yukon, OK - 1": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2023-10-09",
-    "Store_ID": "194"
-  },
-  "000147 San Angelo, TX - 1": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2023-10-16",
-    "Store_ID": "147"
-  },
-  "000197 Montrose, CO - 1": {
-    "Region": 0,
-    "State": "CO",
-    "RM": 0,
-    "Open Date": 0,
-    "Store_ID": "197"
-  },
-  "000193 Oklahoma City, OK - 1": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2023-12-11",
-    "Store_ID": "193"
-  },
-  "000218 San Angelo, TX - 2": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2023-12-11",
-    "Store_ID": "218"
-  },
-  "000220 Enid, OK - 1": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2023-12-11",
-    "Store_ID": "220"
-  },
-  "000215 Bryan, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2024-01-15",
-    "Store_ID": "215"
-  },
-  "000128 Midland, TX - 1": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-02-26",
-    "Store_ID": "128"
-  },
-  "000196 Alamosa, CO - 1": {
-    "Region": 0,
-    "State": "CO",
-    "RM": 0,
-    "Open Date": 0,
-    "Store_ID": "196"
-  },
-  "000219 Midland, TX - 2": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-03-18",
-    "Store_ID": "219"
-  },
-  "000325 Edmond, OK - 1": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2024-05-13",
-    "Store_ID": "325"
-  },
-  "000231 Odessa, TX - 3": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-07-01",
-    "Store_ID": "231"
-  },
-  "000245 Abilene, TX - 1": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2024-09-23",
-    "Store_ID": "245"
-  },
-  "000343 Bellmead, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2024-09-23",
-    "Store_ID": "343"
-  },
-  "000087 Big Spring, TX - 1": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-10-28",
-    "Store_ID": "87"
-  },
-  "000458 Abilene, TX - 2": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2024-12-02",
-    "Store_ID": "458"
-  },
-  "000198 Roswell, NM - 1": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-01-06",
-    "Store_ID": "198"
-  },
-  "000391 Brownwood, TX - 1": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2025-01-20",
-    "Store_ID": "391"
-  },
-  "000139 Crestview, FL - 1": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2023-05-22",
-    "Store_ID": "139"
-  },
-  "000232 Leesburg, FL - 1": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2024-02-26",
-    "Store_ID": "232"
-  },
-  "000264 Niceville, FL - 1": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2024-06-03",
-    "Store_ID": "264"
-  },
-  "000278 Fort Walton Beach, FL - 1": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2024-08-19",
-    "Store_ID": "278"
-  },
-  "000425 Pensacola, FL - 1": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-01-13",
-    "Store_ID": "425"
-  },
-  "000216 Burleson, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-02-17",
-    "Store_ID": "216"
-  },
-  "000487 Carlsbad, NM - 1": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-03-24",
-    "Store_ID": "487"
-  },
-  "000513 Mineral Wells, TX - 1": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2025-03-31",
-    "Store_ID": "513"
-  },
-  "000486 Clovis, NM - 1": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-05-05",
-    "Store_ID": "486"
-  },
-  "000482 Temple, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-05-26",
-    "Store_ID": "482"
-  },
-  "000515 Stephenville, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-06-16",
-    "Store_ID": "515"
-  },
-  "000427 Norman, OK - 1": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2025-06-23",
-    "Store_ID": "427"
-  },
-  "000705 Wichita Falls, TX - 2": {
-    "Region": "OKC-S",
-    "State": "TX",
-    "RM": "Madison Macias",
-    "Open Date": "2025-07-07",
-    "Store_ID": "705"
-  },
-  "000707 Decatur, TX - 1": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2025-07-28",
-    "Store_ID": "707"
-  },
-  "000392 Ada, OK - 1": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2025-08-11",
-    "Store_ID": "392"
-  },
-  "000405 Hobbs, NM - 1": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-08-18",
-    "Store_ID": "405"
-  },
-  "000697 Enid, OK - 2": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2025-08-18",
-    "Store_ID": "697"
-  },
-  "000704 Gatesville, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-08-18",
-    "Store_ID": "704"
-  },
-  "000514 Duncan, OK - 1": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2025-09-08",
-    "Store_ID": "514"
-  },
-  "000708 Benbrook, TX - 1": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2025-09-15",
-    "Store_ID": "708"
-  },
-  "000333 Port Charlotte, FL - 1": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-09-29",
-    "Store_ID": "333"
-  },
-  "000387 Milton, FL - 1": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-06-02",
-    "Store_ID": "387"
-  },
-  "000484 Gulf Breeze, FL - 1": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-07-21",
-    "Store_ID": "484"
-  },
-  "000511 Panama City, FL - 1": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2025-05-12",
-    "Store_ID": "511"
-  },
-  "000876 Plainview, TX - 1": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2025-10-27",
-    "Store_ID": "876"
-  },
-  "000284 Bradenton, FL - 1": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-10-20",
-    "Store_ID": "284"
-  },
-  "000492 Tampa, FL - 1": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-10-20",
-    "Store_ID": "492"
-  },
-  "000940 Andrews, TX - 1": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2025-11-03",
-    "Store_ID": "940"
-  },
-  "000949 Weatherford TX": {
-    "Region": "CTX-N",
-    "State": "Other",
-    "RM": "April Reyes",
-    "Open Date": "2025-11-03",
-    "Store_ID": "949"
-  },
-  "000706 Levelland, TX - 1": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2025-11-17",
-    "Store_ID": "706"
-  },
-  "000517 Pensacola, FL - 2": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-11-03",
-    "Store_ID": "517"
-  },
-  "000572 Leesburg, FL - 2": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-11-17",
-    "Store_ID": "572"
-  },
-  "000756 Artesia, NM - 1": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-12-08",
-    "Store_ID": "756"
-  },
-  "000881 San Angelo, TX - 3": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2025-12-08",
-    "Store_ID": "881"
-  },
-  "000965 Dumas, TX - 1": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2025-12-08",
-    "Store_ID": "965"
-  },
-  "000948 Copperas Cove, TX - 1": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-12-22",
-    "Store_ID": "948"
-  },
-  "000521 Pace, FL - 1": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-12-15",
-    "Store_ID": "521"
-  },
-  "000703 Navarre, FL - 1": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2025-12-01",
-    "Store_ID": "703"
-  },
-  "000875 Weatherford, OK - 1": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2026-01-19",
-    "Store_ID": "875"
-  },
-  "000356 Bradenton, FL - 2": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2026-01-19",
-    "Store_ID": "356"
-  },
-  "000570 Belleview, FL - 1": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2026-01-19",
-    "Store_ID": "570"
-  },
-  "000872 Oklahoma City, OK - 2": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2026-01-26",
-    "Store_ID": "872"
-  },
-  "000882 Gainesville, TX - 1": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2026-01-26",
-    "Store_ID": "882"
-  },
-  "001117 Midland, TX - 3": {
-    "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2026-01-26",
-    "Store_ID": "1117"
-  },
-  "000877 Pensacola, FL - 3": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2026-02-09",
-    "Store_ID": "877"
-  },
   "134": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-01-30",
+    "Display_Name": "Lubbock",
+    "Region": "West TX",
+    "Open_Date": "2023-01-30",
     "Store_ID": "134"
   },
   "129": {
+    "Display_Name": "Odessa",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2023-05-22",
+    "Open_Date": "2023-05-22",
     "Store_ID": "129"
   },
+  "139": {
+    "Display_Name": "Crestview",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2023-05-22",
+    "Store_ID": "139"
+  },
   "121": {
+    "Display_Name": "Odessa 2",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2023-06-12",
+    "Open_Date": "2023-06-12",
     "Store_ID": "121"
   },
   "118": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-06-30",
+    "Display_Name": "Lubbock 2",
+    "Region": "West TX",
+    "Open_Date": "2023-06-29",
     "Store_ID": "118"
   },
   "154": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-07-24",
+    "Display_Name": "Lubbock 3",
+    "Region": "West TX",
+    "Open_Date": "2023-07-24",
     "Store_ID": "154"
   },
   "115": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2023-07-31",
+    "Display_Name": "Lawton",
+    "Region": "South OK",
+    "Open_Date": "2023-07-31",
     "Store_ID": "115"
   },
   "151": {
-    "Region": "OKC-S",
-    "State": "TX",
-    "RM": "Madison Macias",
-    "Open Date": "2023-08-26",
+    "Display_Name": "Wichita Falls",
+    "Region": "South OK",
+    "Open_Date": "2023-08-26",
     "Store_ID": "151"
   },
   "192": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2023-09-18",
+    "Display_Name": "Ardmore",
+    "Region": "South OK",
+    "Open_Date": "2023-09-18",
     "Store_ID": "192"
   },
   "191": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2023-10-09",
+    "Display_Name": "Amarillo",
+    "Region": "West TX",
+    "Open_Date": "2023-10-09",
     "Store_ID": "191"
   },
   "194": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2023-10-09",
+    "Display_Name": "Yukon",
+    "Region": "Central OK",
+    "Open_Date": "2023-10-09",
     "Store_ID": "194"
   },
   "147": {
+    "Display_Name": "San Angelo",
     "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2023-10-16",
+    "Open_Date": "2023-10-16",
     "Store_ID": "147"
   },
-  "197": {
-    "Region": 0,
-    "State": "CO",
-    "RM": 0,
-    "Open Date": 0,
-    "Store_ID": "197"
-  },
   "193": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2023-12-11",
+    "Display_Name": "Oklahoma City",
+    "Region": "Central OK",
+    "Open_Date": "2023-12-04",
     "Store_ID": "193"
   },
-  "218": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2023-12-11",
-    "Store_ID": "218"
-  },
   "220": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2023-12-11",
+    "Display_Name": "Enid",
+    "Region": "North OK",
+    "Open_Date": "2023-12-11",
     "Store_ID": "220"
   },
+  "218": {
+    "Display_Name": "San Angelo 2",
+    "Region": "Middle Earth",
+    "Open_Date": "2023-12-11",
+    "Store_ID": "218"
+  },
   "215": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2024-01-15",
+    "Display_Name": "Bryan",
+    "Region": "South Central TX",
+    "Open_Date": "2024-01-15",
     "Store_ID": "215"
   },
+  "232": {
+    "Display_Name": "Leesburg",
+    "Region": "FL West Coast",
+    "Open_Date": "2024-02-26",
+    "Store_ID": "232"
+  },
   "128": {
+    "Display_Name": "Midland",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-02-26",
+    "Open_Date": "2024-02-26",
     "Store_ID": "128"
   },
-  "196": {
-    "Region": 0,
-    "State": "CO",
-    "RM": 0,
-    "Open Date": 0,
-    "Store_ID": "196"
-  },
   "219": {
+    "Display_Name": "Midland 2",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-03-18",
+    "Open_Date": "2024-03-18",
     "Store_ID": "219"
   },
   "325": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2024-05-13",
+    "Display_Name": "Edmond",
+    "Region": "North OK",
+    "Open_Date": "2024-05-13",
     "Store_ID": "325"
   },
+  "264": {
+    "Display_Name": "Niceville",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2024-06-03",
+    "Store_ID": "264"
+  },
   "231": {
+    "Display_Name": "Odessa 3",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-07-01",
+    "Open_Date": "2024-07-01",
     "Store_ID": "231"
   },
+  "278": {
+    "Display_Name": "Ft. Walton",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2024-08-19",
+    "Store_ID": "278"
+  },
   "245": {
+    "Display_Name": "Abilene",
     "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2024-09-23",
+    "Open_Date": "2024-09-23",
     "Store_ID": "245"
   },
-  "343": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2024-09-23",
-    "Store_ID": "343"
-  },
   "87": {
+    "Display_Name": "Big Spring",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2024-10-28",
+    "Open_Date": "2024-10-28",
     "Store_ID": "87"
   },
   "458": {
+    "Display_Name": "Abilene 2",
     "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2024-12-02",
+    "Open_Date": "2024-12-02",
     "Store_ID": "458"
   },
   "198": {
+    "Display_Name": "Roswell",
     "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-01-06",
+    "Open_Date": "2025-01-06",
     "Store_ID": "198"
   },
   "391": {
+    "Display_Name": "Brownwood",
     "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2025-01-20",
+    "Open_Date": "2025-01-20",
     "Store_ID": "391"
   },
-  "139": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2023-05-22",
-    "Store_ID": "139"
-  },
-  "232": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2024-02-26",
-    "Store_ID": "232"
-  },
-  "264": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2024-06-03",
-    "Store_ID": "264"
-  },
-  "278": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2024-08-19",
-    "Store_ID": "278"
-  },
-  "425": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-01-13",
-    "Store_ID": "425"
-  },
   "216": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-02-17",
+    "Display_Name": "Burleson",
+    "Region": "South Central TX",
+    "Open_Date": "2025-02-17",
     "Store_ID": "216"
   },
   "487": {
+    "Display_Name": "Carlsbad",
     "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-03-24",
+    "Open_Date": "2025-03-24",
     "Store_ID": "487"
   },
   "513": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2025-03-31",
+    "Display_Name": "Mineral Wells",
+    "Region": "North Central TX",
+    "Open_Date": "2025-03-31",
     "Store_ID": "513"
   },
   "486": {
+    "Display_Name": "Clovis",
     "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-05-05",
+    "Open_Date": "2025-05-05",
     "Store_ID": "486"
   },
+  "511": {
+    "Display_Name": "Panama City",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2025-05-12",
+    "Store_ID": "511"
+  },
   "482": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-05-26",
+    "Display_Name": "Temple",
+    "Region": "South Central TX",
+    "Open_Date": "2025-05-26",
     "Store_ID": "482"
   },
+  "387": {
+    "Display_Name": "Milton",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2025-06-02",
+    "Store_ID": "387"
+  },
   "515": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-06-16",
+    "Display_Name": "Stephenville",
+    "Region": "South Central TX",
+    "Open_Date": "2025-06-16",
     "Store_ID": "515"
   },
   "427": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2025-06-23",
+    "Display_Name": "Norman",
+    "Region": "Central OK",
+    "Open_Date": "2025-06-23",
     "Store_ID": "427"
   },
   "705": {
-    "Region": "OKC-S",
-    "State": "TX",
-    "RM": "Madison Macias",
-    "Open Date": "2025-07-07",
+    "Display_Name": "Wichita Falls 2",
+    "Region": "South OK",
+    "Open_Date": "2025-07-07",
     "Store_ID": "705"
   },
+  "484": {
+    "Display_Name": "Gulf Breeze",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2025-07-21",
+    "Store_ID": "484"
+  },
   "707": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2025-07-28",
+    "Display_Name": "Decatur",
+    "Region": "North Central TX",
+    "Open_Date": "2025-07-28",
     "Store_ID": "707"
   },
   "392": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2025-08-11",
+    "Display_Name": "Ada",
+    "Region": "South OK",
+    "Open_Date": "2025-08-11",
     "Store_ID": "392"
   },
-  "405": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-08-18",
-    "Store_ID": "405"
-  },
   "697": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2025-08-18",
+    "Display_Name": "Enid 2",
+    "Region": "North OK",
+    "Open_Date": "2025-08-18",
     "Store_ID": "697"
   },
+  "405": {
+    "Display_Name": "Hobbs",
+    "Region": "NM",
+    "Open_Date": "2025-08-18",
+    "Store_ID": "405"
+  },
   "704": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-08-18",
+    "Display_Name": "Gatesville",
+    "Region": "South Central TX",
+    "Open_Date": "2025-08-18",
     "Store_ID": "704"
   },
   "514": {
-    "Region": "OKC-S",
-    "State": "OK",
-    "RM": "Madison Macias",
-    "Open Date": "2025-09-08",
+    "Display_Name": "Duncan",
+    "Region": "South OK",
+    "Open_Date": "2025-09-08",
     "Store_ID": "514"
   },
   "708": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2025-09-15",
+    "Display_Name": "Benbrook",
+    "Region": "North Central TX",
+    "Open_Date": "2025-09-15",
     "Store_ID": "708"
   },
   "333": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-09-29",
+    "Display_Name": "Port Charlotte",
+    "Region": "FL West Coast",
+    "Open_Date": "2025-09-29",
     "Store_ID": "333"
   },
-  "387": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-06-02",
-    "Store_ID": "387"
-  },
-  "484": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-07-21",
-    "Store_ID": "484"
-  },
-  "511": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2025-05-12",
-    "Store_ID": "511"
-  },
-  "876": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2025-10-27",
-    "Store_ID": "876"
-  },
   "284": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-10-20",
+    "Display_Name": "Bradenton",
+    "Region": "FL West Coast",
+    "Open_Date": "2025-10-20",
     "Store_ID": "284"
   },
   "492": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-10-20",
+    "Display_Name": "Tampa",
+    "Region": "FL West Coast",
+    "Open_Date": "2025-10-20",
     "Store_ID": "492"
   },
   "940": {
+    "Display_Name": "Andrews",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2025-11-03",
+    "Open_Date": "2025-11-03",
     "Store_ID": "940"
   },
-  "949": {
-    "Region": "CTX-N",
-    "State": "Other",
-    "RM": "April Reyes",
-    "Open Date": "2025-11-03",
-    "Store_ID": "949"
-  },
-  "706": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2025-11-17",
-    "Store_ID": "706"
-  },
   "517": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-11-03",
+    "Display_Name": "Pensacola 2",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2025-11-03",
     "Store_ID": "517"
   },
+  "949": {
+    "Display_Name": "Weatherford",
+    "Region": "North Central TX",
+    "Open_Date": "2025-11-03",
+    "Store_ID": "949"
+  },
   "572": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2025-11-17",
+    "Display_Name": "Leesburg 2",
+    "Region": "FL West Coast",
+    "Open_Date": "2025-11-17",
     "Store_ID": "572"
   },
-  "756": {
-    "Region": "NM",
-    "State": "NM",
-    "RM": "Anne Springer",
-    "Open Date": "2025-12-08",
-    "Store_ID": "756"
-  },
-  "881": {
-    "Region": "Middle Earth",
-    "State": "TX",
-    "RM": "Ryley Cooper",
-    "Open Date": "2025-12-08",
-    "Store_ID": "881"
-  },
-  "965": {
-    "Region": "WTX",
-    "State": "TX",
-    "RM": "Lauren Fowler",
-    "Open Date": "2025-12-08",
-    "Store_ID": "965"
-  },
-  "948": {
-    "Region": "CTX-S",
-    "State": "TX",
-    "RM": "Olivia Kaminski",
-    "Open Date": "2025-12-22",
-    "Store_ID": "948"
-  },
-  "521": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2025-12-15",
-    "Store_ID": "521"
+  "706": {
+    "Display_Name": "Levelland",
+    "Region": "West TX",
+    "Open_Date": "2025-11-17",
+    "Store_ID": "706"
   },
   "703": {
-    "Region": "FL-P1",
-    "State": "FL",
-    "RM": "Cristina Pimentel",
-    "Open Date": "2025-12-01",
+    "Display_Name": "Navarre",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2025-12-01",
     "Store_ID": "703"
   },
-  "875": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2026-01-19",
-    "Store_ID": "875"
+  "756": {
+    "Display_Name": "Artesia",
+    "Region": "NM",
+    "Open_Date": "2025-12-08",
+    "Store_ID": "756"
   },
-  "356": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2026-01-19",
-    "Store_ID": "356"
+  "965": {
+    "Display_Name": "Dumas",
+    "Region": "West TX",
+    "Open_Date": "2025-12-08",
+    "Store_ID": "965"
+  },
+  "881": {
+    "Display_Name": "San Angelo 3",
+    "Region": "Middle Earth",
+    "Open_Date": "2025-12-08",
+    "Store_ID": "881"
+  },
+  "521": {
+    "Display_Name": "Pace",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2025-12-15",
+    "Store_ID": "521"
+  },
+  "948": {
+    "Display_Name": "Copperas Cove",
+    "Region": "South Central TX",
+    "Open_Date": "2025-12-22",
+    "Store_ID": "948"
+  },
+  "425": {
+    "Display_Name": "Pensacola",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2026-01-13",
+    "Store_ID": "425"
   },
   "570": {
-    "Region": "FL-SW",
-    "State": "FL",
-    "RM": "Denali Martinez",
-    "Open Date": "2026-01-19",
+    "Display_Name": "Belleview",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-01-19",
     "Store_ID": "570"
   },
-  "872": {
-    "Region": "OKC-N",
-    "State": "OK",
-    "RM": "Lexi Johnson",
-    "Open Date": "2026-01-26",
-    "Store_ID": "872"
+  "356": {
+    "Display_Name": "Bradenton 2",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-01-19",
+    "Store_ID": "356"
+  },
+  "875": {
+    "Display_Name": "Weatherford",
+    "Region": "Central OK",
+    "Open_Date": "2026-01-19",
+    "Store_ID": "875"
   },
   "882": {
-    "Region": "CTX-N",
-    "State": "TX",
-    "RM": "April Reyes",
-    "Open Date": "2026-01-26",
+    "Display_Name": "Gainesville",
+    "Region": "North Central TX",
+    "Open_Date": "2026-01-26",
     "Store_ID": "882"
   },
   "1117": {
+    "Display_Name": "Midland 3",
     "Region": "Permian Basin",
-    "State": "TX",
-    "RM": "Robmikia Holman",
-    "Open Date": "2026-01-26",
+    "Open_Date": "2026-01-26",
     "Store_ID": "1117"
   },
+  "872": {
+    "Display_Name": "Oklahoma City 2",
+    "Region": "North OK",
+    "Open_Date": "2026-01-26",
+    "Store_ID": "872"
+  },
   "877": {
-    "Region": "FL-P",
-    "State": "FL",
-    "RM": "Katelyn Browning ",
-    "Open Date": "2026-02-09",
+    "Display_Name": "Pensacola 3",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2026-02-09",
     "Store_ID": "877"
+  },
+  "394": {
+    "Display_Name": "Bradenton 3",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-02-23",
+    "Store_ID": "394"
+  },
+  "758": {
+    "Display_Name": "Belton",
+    "Region": "South Central TX",
+    "Open_Date": "2026-03-09",
+    "Store_ID": "758"
+  },
+  "573": {
+    "Display_Name": "Spring Hill",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-03-09",
+    "Store_ID": "573"
+  },
+  "343": {
+    "Display_Name": "Bellmead",
+    "Region": "South Central TX",
+    "Open_Date": "Unknown",
+    "Store_ID": "343"
+  },
+  "876": {
+    "Display_Name": "Plainview",
+    "Region": "West TX",
+    "Open_Date": "Unknown",
+    "Store_ID": "876"
+  },
+  "196": {
+    "Display_Name": "Alamosa",
+    "Region": "CO",
+    "Open_Date": "Unknown",
+    "Store_ID": "196"
+  },
+  "197": {
+    "Display_Name": "Montrose",
+    "Region": "CO",
+    "Open_Date": "Unknown",
+    "Store_ID": "197"
   }
 }
