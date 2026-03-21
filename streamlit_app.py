@@ -722,6 +722,17 @@ def tab_ceo(dash):
             "cogs_pct":   0.276,
             "labor_pct":  0.236,   # all-in
             "ebitda":     39_857_275,
+            # Per-period goals — P1 through P13 (reflects stand-count ramp)
+            "net_sales_by_period": [
+                 9_130_515, 11_159_651, 12_790_640, 13_664_652, 15_126_988,
+                15_496_441, 16_407_317, 17_458_962, 17_984_433, 18_758_183,
+                18_843_634, 19_135_068, 19_689_843,
+            ],
+            "ebitda_by_period": [
+                1_507_851, 1_966_287, 2_410_946, 2_658_865, 3_107_604,
+                3_067_255, 3_196_020, 3_404_142, 3_487_614, 3_668_610,
+                3_722_240, 3_808_510, 3_851_330,
+            ],
         },
         # Add future years here as goals are set
     }
@@ -742,9 +753,17 @@ def tab_ceo(dash):
         ytd_labor_pct  = ((ytd_df["labor_pct"] * ytd_df["net_sales"]).sum() / ytd_sales
                           if ytd_sales > 0 and "labor_pct" in ytd_df.columns else None)
 
-        # On-pace targets for $ metrics
-        pace_sales  = goals["net_sales"] * pct_elapsed
-        pace_ebitda = goals["ebitda"]    * pct_elapsed
+        # Period-specific YTD goal: sum of goals for completed periods only
+        # (accounts for stand-count ramp — early periods have lower goals than later)
+        has_period_goals = ("net_sales_by_period" in goals and
+                            "ebitda_by_period"    in goals)
+        if has_period_goals and n_completed > 0:
+            pace_sales  = sum(goals["net_sales_by_period"][:n_completed])
+            pace_ebitda = sum(goals["ebitda_by_period"][:n_completed])
+        else:
+            # Fallback to linear pace if per-period arrays not defined
+            pace_sales  = goals["net_sales"] * pct_elapsed
+            pace_ebitda = goals["ebitda"]    * pct_elapsed
 
         def _goal_card(label, actual_fmt, goal_fmt, progress_pct, status, status_color,
                        detail="", bar_color=None):
@@ -799,6 +818,8 @@ def tab_ceo(dash):
             else:
                 return f"▼ {'ABOVE' if lower_is_better else 'BELOW'} TARGET ({delta:+.1f}pts)", RED
 
+        ytd_sales_goal_fmt  = f"${pace_sales/1e6:.1f}M"  if n_completed > 0 else "—"
+        ytd_ebitda_goal_fmt = f"${pace_ebitda/1e6:.1f}M" if n_completed > 0 else "—"
         st.html(f"""
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
                     color:#2d2f36;margin:16px 0 4px;display:flex;align-items:center;gap:10px;">
@@ -807,7 +828,7 @@ def tab_ceo(dash):
           FY{sel_year} GOALS TRACKER
           <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:400;
                        color:#8a919e;letter-spacing:1px;margin-left:8px;">
-            P{n_completed} of 13 complete · {pct_elapsed*100:.0f}% of year elapsed
+            P1–P{n_completed} of 13 complete · YTD Sales Goal: {ytd_sales_goal_fmt} · YTD EBITDA Goal: {ytd_ebitda_goal_fmt}
           </span>
         </div>""")
 
@@ -828,7 +849,7 @@ def tab_ceo(dash):
                 goal_fmt=f"${goals['net_sales']/1e6:.1f}M",
                 progress_pct=ytd_sales / goals["net_sales"],
                 status=sales_status, status_color=sales_color,
-                detail=f"pace: ${pace_sales/1e6:.1f}M",
+                detail=f"YTD goal: ${pace_sales/1e6:.1f}M",
                 bar_color=sales_color,
             ))
         with g2:
@@ -838,7 +859,7 @@ def tab_ceo(dash):
                 goal_fmt=f"${goals['ebitda']/1e6:.1f}M",
                 progress_pct=ytd_ebitda / goals["ebitda"] if goals["ebitda"] else 0,
                 status=ebi_status, status_color=ebi_color,
-                detail=f"pace: ${pace_ebitda/1e6:.1f}M",
+                detail=f"YTD goal: ${pace_ebitda/1e6:.1f}M",
                 bar_color=ebi_color,
             ))
         with g3:
@@ -865,6 +886,110 @@ def tab_ceo(dash):
                 detail="lower is better",
                 bar_color=labor_color,
             ))
+
+        # ── Period-by-Period Actual vs Goal Chart ─────────────────────────────
+        if has_period_goals and n_completed > 0:
+            st.html("""
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;
+                        text-transform:uppercase;letter-spacing:1.5px;margin:8px 0 4px;">
+              PERIOD-BY-PERIOD: ACTUAL VS GOAL
+            </div>""")
+
+            period_labels = [f"P{i+1}" for i in range(13)]
+
+            # Build per-period actuals from ytd_df (match on period number)
+            # ytd_df is sorted by period; we index it by position
+            actual_sales_by_period  = [None] * 13
+            actual_ebitda_by_period = [None] * 13
+            actual_ebitda_pct_by_p  = [None] * 13
+
+            # Map period_key -> index (P1=0 … P13=12)
+            for i, row in enumerate(ytd_df.itertuples()):
+                if i < 13:
+                    actual_sales_by_period[i]  = row.net_sales
+                    actual_ebitda_by_period[i] = row.ebitda
+                    ep = row.ebitda / row.net_sales if row.net_sales else None
+                    actual_ebitda_pct_by_p[i]  = ep
+
+            goal_ebitda_pct_by_p = [
+                g_e / g_s if g_s else None
+                for g_e, g_s in zip(goals["ebitda_by_period"],
+                                    goals["net_sales_by_period"])
+            ]
+
+            ch1, ch2 = st.columns(2)
+            with ch1:
+                fig_g = go.Figure()
+                # Goal bars (all 13, lighter)
+                fig_g.add_bar(
+                    x=period_labels,
+                    y=[v/1e6 for v in goals["net_sales_by_period"]],
+                    name="Goal", marker_color=BORDER,
+                    marker_line_color=BORDER, marker_line_width=1,
+                )
+                # Actual bars (completed periods only)
+                act_vals = [v/1e6 if v is not None else None
+                            for v in actual_sales_by_period]
+                fig_g.add_bar(
+                    x=period_labels[:n_completed],
+                    y=[v for v in act_vals[:n_completed] if v is not None],
+                    name="Actual", marker_color=BLUE, opacity=0.85,
+                )
+                fig_g.update_layout(
+                    barmode="overlay",
+                    yaxis=dict(tickprefix="$", ticksuffix="M", tickformat=".1f",
+                               title_font=dict(size=9, color=MID)),
+                    legend=dict(orientation="h", y=1.12, x=0,
+                                font=dict(size=9)),
+                    margin=dict(t=24, b=28, l=0, r=0),
+                    height=200,
+                    xaxis=dict(tickfont=dict(size=9)),
+                )
+                brew_fig(fig_g, height=200)
+                st.plotly_chart(fig_g, config={"displayModeBar": False},
+                                use_container_width=True)
+                st.caption("Net Sales — Actual vs Goal by Period")
+
+            with ch2:
+                fig_e = go.Figure()
+                # Goal EBITDA% line (all 13)
+                fig_e.add_scatter(
+                    x=period_labels,
+                    y=[v * 100 if v is not None else None
+                       for v in goal_ebitda_pct_by_p],
+                    name="Goal %", mode="lines",
+                    line=dict(color=MUTED, width=1.5, dash="dot"),
+                )
+                # Actual EBITDA% (completed periods)
+                fig_e.add_scatter(
+                    x=period_labels[:n_completed],
+                    y=[v * 100 if v is not None else None
+                       for v in actual_ebitda_pct_by_p[:n_completed]],
+                    name="Actual %", mode="lines+markers",
+                    line=dict(color=RED, width=2.5),
+                    marker=dict(size=6),
+                )
+                # PE target reference
+                fig_e.add_hline(
+                    y=goal_ebitda_pct * 100,
+                    line_dash="dash", line_color=GREEN, line_width=1,
+                    annotation_text=f"FY Goal {goal_ebitda_pct*100:.1f}%",
+                    annotation_font=dict(size=9, color=GREEN),
+                    annotation_position="top right",
+                )
+                fig_e.update_layout(
+                    yaxis=dict(ticksuffix="%", tickformat=".1f",
+                               title_font=dict(size=9, color=MID)),
+                    legend=dict(orientation="h", y=1.12, x=0,
+                                font=dict(size=9)),
+                    margin=dict(t=24, b=28, l=0, r=0),
+                    height=200,
+                    xaxis=dict(tickfont=dict(size=9)),
+                )
+                brew_fig(fig_e, height=200)
+                st.plotly_chart(fig_e, config={"displayModeBar": False},
+                                use_container_width=True)
+                st.caption("EBITDA % — Actual vs Goal by Period")
 
         st.html('<hr class="brew">')
 
