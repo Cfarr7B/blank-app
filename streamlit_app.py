@@ -414,12 +414,20 @@ def get_dash():
     import copy
 
     base = load_base_data()
+    base_period_count = len(base.get("period_summaries", []))
 
-    # If session has fresh uploads, use those (they've already been saved to disk)
+    # If session has a cached uploaded_dash, use it — but discard if base has grown
+    # (happens after "Save to Base Data" bakes uploads in and gets pushed to GitHub)
     if "uploaded_dash" in st.session_state:
-        return st.session_state["uploaded_dash"]
+        cached = st.session_state["uploaded_dash"]
+        cached_count = len(cached.get("period_summaries", []))
+        if cached_count >= base_period_count:
+            return cached
+        # Base has more periods now — stale cache, drop it
+        del st.session_state["uploaded_dash"]
+        st.session_state.pop("upload_count", None)
 
-    # Otherwise, check disk for previously saved uploads
+    # Check disk for previously saved uploads
     saved = load_saved_uploads()
     if saved:
         dash = copy.deepcopy(base)
@@ -604,8 +612,13 @@ def render_sidebar():
     )
 
     if uploaded:
-        from pl_parser import parse_pl_file, merge_into_dash
+        from pl_parser import parse_pl_file, merge_into_dash, load_stand_metadata
         import copy
+
+        # Load stand metadata so uploaded files get correct region assignments
+        _meta_path = Path(__file__).parent / "stand_meta.json"
+        if _meta_path.exists():
+            load_stand_metadata(str(_meta_path))
 
         # Only process files we haven't seen this session (prevents re-parse on every rerun)
         if "sidebar_processed_ids" not in st.session_state:
@@ -2161,8 +2174,13 @@ def main():
 
         # Handle new P&L file uploads
         if uploaded:
-            from pl_parser import parse_pl_file, merge_into_dash
+            from pl_parser import parse_pl_file, merge_into_dash, load_stand_metadata
             import copy
+
+            # Load stand metadata so uploaded files get correct region assignments
+            _meta_path = Path(__file__).parent / "stand_meta.json"
+            if _meta_path.exists():
+                load_stand_metadata(str(_meta_path))
 
             # Only process files we haven't seen this session (prevents re-parse on every rerun)
             if "main_processed_ids" not in st.session_state:

@@ -21,9 +21,10 @@ from pathlib import Path
 script_dir = Path(__file__).parent
 sys.path.insert(0, str(script_dir))
 
-from pl_parser import parse_pl_file, merge_into_dash
+from pl_parser import parse_pl_file, merge_into_dash, load_stand_metadata
 
-DATA_JSON = script_dir / "data.json"
+DATA_JSON    = script_dir / "data.json"
+STAND_META   = script_dir / "stand_meta.json"
 
 
 def load_base():
@@ -46,6 +47,11 @@ def main():
         action="store_true",
         help="Parse files and report what would be added, but don't write data.json",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-parse and overwrite periods already in data.json (use when fixing region data)",
+    )
     args = parser.parse_args()
 
     pl_folder = Path(args.folder)
@@ -59,6 +65,13 @@ def main():
         sys.exit(1)
 
     print(f"Found {len(xlsx_files)} file(s) in {pl_folder}\n")
+
+    # Load stand metadata so parser can assign correct regions
+    if STAND_META.exists():
+        load_stand_metadata(str(STAND_META))
+        print(f"Loaded stand metadata from {STAND_META.name}\n")
+    else:
+        print(f"WARNING: {STAND_META.name} not found — regions will show as 'Unknown'\n")
 
     base = load_base()
     existing_keys = {p["period_key"] for p in base.get("period_summaries", [])}
@@ -78,7 +91,7 @@ def main():
             if result and result.get("stands"):
                 pk = result["period_key"]
                 stands = len(result["stands"])
-                if pk in existing_keys:
+                if pk in existing_keys and not args.force:
                     print(f"SKIP (already in base: {pk})")
                     skipped.append(pk)
                 else:
