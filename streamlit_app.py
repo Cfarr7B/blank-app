@@ -203,6 +203,18 @@ def _fmt_d(v):
     if v is None: return "—"
     return "$" + f"{abs(float(v)):,.0f}"
 
+def _fmt_d_short(v):
+    """Abbreviated dollar format for KPI cards where space is tight.
+    ≥ $1M → $X.XM  |  ≥ $1K → $X.XK  |  otherwise full
+    """
+    if v is None: return "—"
+    v = abs(float(v))
+    if v >= 1_000_000:
+        return f"${v/1_000_000:.1f}M"
+    if v >= 1_000:
+        return f"${v/1_000:.1f}K"
+    return f"${v:,.0f}"
+
 def _fmt_p(v, dec=1):
     if v is None: return "—"
     return f"{float(v)*100:.{dec}f}%"
@@ -1392,24 +1404,28 @@ def tab_overview(dash):
         pct_diff = (ps["avg_sales"] - psB["avg_sales"]) / psB["avg_sales"]
         avg_delta = {"str": f"{pct_diff:+.1f}% vs {psB['label']}", "cls": "up" if pct_diff > 0 else "down"}
 
+    # Row 1 — Sales & Cost metrics
     kpi_row([
-        {"label": "Total Net Sales",     "value": _fmt_d(ps["net_sales"]),    "sub": f"{int(ps['stands'])} stands",     "color": "red"},
-        {"label": "Avg Sales / Stand",   "value": _fmt_d(ps["avg_sales"]),    "sub": "per-stand average",              "color": "red",  "delta": avg_delta},
-        {"label": "COGS %",              "value": _fmt_p(ps["cogs_pct"]),     "sub": "% of net sales",                 "color": "blue", "delta": d(ps["cogs_pct"], psB["cogs_pct"] if psB is not None else 0, inv=True)},
-        {"label": "Hourly Labor %",      "value": _fmt_p(ps["hourly_pct"]),   "sub": "wages only",                     "color": "amber",
+        {"label": "Total Net Sales",     "value": _fmt_d_short(ps["net_sales"]), "sub": f"{int(ps['stands'])} stands",  "color": "red"},
+        {"label": "Avg Sales / Stand",   "value": _fmt_d_short(ps["avg_sales"]), "sub": "per-stand average",            "color": "red",  "delta": avg_delta},
+        {"label": "COGS %",              "value": _fmt_p(ps["cogs_pct"]),        "sub": "% of net sales",               "color": "blue", "delta": d(ps["cogs_pct"], psB["cogs_pct"] if psB is not None else 0, inv=True)},
+        {"label": "Hourly Labor %",      "value": _fmt_p(ps["hourly_pct"]),      "sub": "wages only",                   "color": "amber",
          "valcls": "good" if ps["hourly_pct"] <= 0.18 else ("bad" if ps["hourly_pct"] > 0.22 else ""),
          "delta": d(ps["hourly_pct"], psB["hourly_pct"] if psB is not None else 0, inv=True)},
-        {"label": "Total Labor & Ben %", "value": _fmt_p(ps["labor_pct"]),    "sub": "incl. mgmt & benefits",          "color": "amber",
+        {"label": "Total Labor & Ben %", "value": _fmt_p(ps["labor_pct"]),       "sub": "incl. mgmt & benefits",        "color": "amber",
          "delta": d(ps["labor_pct"], psB["labor_pct"] if psB is not None else 0, inv=True)},
-        {"label": "R&M %",               "value": _fmt_p(ps["rm_pct"]),       "sub": "repair & maintenance",           "color": "grey",
+        {"label": "R&M %",               "value": _fmt_p(ps["rm_pct"]),          "sub": "repair & maintenance",         "color": "grey",
          "valcls": "good" if ps["rm_pct"] <= 0.012 else ("bad" if ps["rm_pct"] >= 0.02 else ""),
          "delta": d(ps["rm_pct"], psB["rm_pct"] if psB is not None else 0, inv=True)},
-        {"label": "Unit EBITDAR %",      "value": _fmt_p(ps["ebitdar_pct"]),  "sub": "before rent",                    "color": "green", "valcls": "good"},
-        {"label": "Store EBITDA $",      "value": _fmt_d(ps["ebitda"]),       "sub": "total portfolio",                "color": "green"},
-        {"label": "Store EBITDA %",      "value": _fmt_p(ps["ebitda_pct"]),   "sub": "% of net sales",                 "color": "green",
+    ])
+    # Row 2 — EBITDA & profitability metrics
+    kpi_row([
+        {"label": "Store EBITDA $",      "value": _fmt_d_short(ps["ebitda"]),    "sub": "total portfolio",              "color": "green"},
+        {"label": "Store EBITDA %",      "value": _fmt_p(ps["ebitda_pct"]),      "sub": "% of net sales",               "color": "green",
          "valcls": "good" if ps["ebitda_pct"] >= 0.20 else ("warn" if ps["ebitda_pct"] >= 0.15 else "bad"),
          "delta": d(ps["ebitda_pct"], psB["ebitda_pct"] if psB is not None else 0)},
-        {"label": "Rent %",              "value": _fmt_p(ps["rent_pct"]),     "sub": "occupancy cost",                 "color": "grey"},
+        {"label": "Unit EBITDAR %",      "value": _fmt_p(ps["ebitdar_pct"]),     "sub": "before rent",                  "color": "green", "valcls": "good"},
+        {"label": "Rent %",              "value": _fmt_p(ps["rent_pct"]),        "sub": "occupancy cost",               "color": "grey"},
     ])
 
     # Charts row 1 — aggregate regions if multi-period
