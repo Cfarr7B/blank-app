@@ -415,12 +415,13 @@ def tab_ceo(dash):
                         line=dict(color=RED, width=2.5), marker=dict(size=6),
                         yaxis="y2")
         fig.update_layout(
+            xaxis=dict(tickangle=-35),
             yaxis=dict(title="Avg Sales / Stand ($)", tickprefix="$", tickformat=",.0f",
-                       titlefont=dict(size=10, color=MID)),
+                       title_font=dict(size=10, color=MID)),
             yaxis2=dict(title="EBITDA %", overlaying="y", side="right",
-                        ticksuffix="%", titlefont=dict(size=10, color=RED),
+                        ticksuffix="%", title_font=dict(size=10, color=RED),
                         tickfont=dict(size=9, color=RED)),
-            barmode="overlay", xaxis_tickangle=-35,
+            barmode="overlay",
         )
         brew_fig(fig, height=300)
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
@@ -529,7 +530,7 @@ def tab_ceo(dash):
         colorbar=dict(ticksuffix="%", tickfont=dict(size=9)),
     ))
     brew_fig(fig4, height=360)
-    fig4.update_layout(xaxis_tickangle=-35)
+    fig4.update_layout(xaxis=dict(tickangle=-35))
     st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
@@ -1280,7 +1281,7 @@ def tab_utilities(dash):
         brew_fig(fig, height=280)
         fig.update_layout(title_text="TOTAL UTILITIES — PERIOD OVER PERIOD",
                           title_font=dict(family="Bebas Neue", size=14),
-                          xaxis_tickangle=-35)
+                          xaxis=dict(tickangle=-35))
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with col2:
@@ -1299,7 +1300,7 @@ def tab_utilities(dash):
         brew_fig(fig2, height=280)
         fig2.update_layout(title_text="TOTAL R&M — PERIOD OVER PERIOD",
                            title_font=dict(family="Bebas Neue", size=14),
-                           xaxis_tickangle=-35)
+                           xaxis=dict(tickangle=-35))
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
@@ -1344,7 +1345,7 @@ def tab_utilities(dash):
                 brew_fig(fig, height=260)
                 fig.update_layout(title_text=f"{display_name.upper()} — PERIOD OVER PERIOD",
                                   title_font=dict(family="Bebas Neue", size=14),
-                                  xaxis_tickangle=-35)
+                                  xaxis=dict(tickangle=-35))
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
                 # Spike detection for Waste Removal
@@ -1392,7 +1393,7 @@ def tab_utilities(dash):
                     brew_fig(fig, height=260)
                     fig.update_layout(title_text=f"{display_name.upper()} — PERIOD OVER PERIOD",
                                       title_font=dict(family="Bebas Neue", size=14),
-                                      xaxis_tickangle=-35)
+                                      xaxis=dict(tickangle=-35))
                     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     else:
@@ -1441,7 +1442,7 @@ def tab_utilities(dash):
         fig.update_layout(title_text="UTILITIES % BY PERIOD (SEASONALITY)",
                           title_font=dict(family="Bebas Neue", size=14),
                           yaxis=dict(ticksuffix="%"),
-                          xaxis_tickangle=-35, showlegend=False)
+                          xaxis=dict(tickangle=-35), showlegend=False)
         # Add summer annotation
         summer_idxs = [i for i, lbl in enumerate(pct_df["label"]) if any(x in str(lbl) for x in ["P6","P7","P8"])]
         if summer_idxs:
@@ -1475,7 +1476,7 @@ def tab_utilities(dash):
         fig2.update_layout(title_text="R&M % BY PERIOD (WITH TREND)",
                            title_font=dict(family="Bebas Neue", size=14),
                            yaxis=dict(ticksuffix="%"),
-                           xaxis_tickangle=-35)
+                           xaxis=dict(tickangle=-35))
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
     # ── Opportunity Flags ──
