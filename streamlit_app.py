@@ -1857,40 +1857,65 @@ def tab_utilities(dash):
     # ── SECTION 1: Company-Level PoP Charts (with entity overlay) ────────────
     section("COMPANY OVERVIEW", "System-wide trend — selected entity shown as dashed overlay")
 
+    PERIOD_DAYS = 28   # all 7BREW periods are exactly 4 weeks
+
     pct_df = periods_df.copy()
     pct_df["util_$"] = pct_df["utilities_pct"] * pct_df["net_sales"]
     pct_df["rm_$"]   = pct_df["rm_pct"]        * pct_df["net_sales"]
 
+    # Stand count per period (for $/stand/day normalization)
+    stand_cnt_map = stands_df.groupby("Period_Key")["Stand"].nunique()
+    pct_df["stand_count"] = pct_df["period_key"].map(stand_cnt_map).fillna(1).astype(float)
+    pct_df["util_per_std_day"] = pct_df["util_$"] / (pct_df["stand_count"] * PERIOD_DAYS)
+    pct_df["rm_per_std_day"]   = pct_df["rm_$"]   / (pct_df["stand_count"] * PERIOD_DAYS)
+
     # Build per-period overlay for selected region or stand
-    overlay_label     = None
-    overlay_util_map  = {}   # period_key -> util fraction
-    overlay_rm_map    = {}
+    # Tracks both % of sales and $/stand/day
+    overlay_label        = None
+    overlay_util_map     = {}   # period_key -> util fraction of sales
+    overlay_rm_map       = {}
+    overlay_util_day_map = {}   # period_key -> util $/stand/day
+    overlay_rm_day_map   = {}
 
     if sel_stand != "All Stands":
         overlay_label = sel_stand
         for pk_iter, grp in stands_df[stands_df["Stand"] == sel_stand].groupby("Period_Key"):
             s = grp["Net_Sales"].sum()
             if s > 0:
-                overlay_util_map[pk_iter] = grp["Total_Utilities"].sum() / s
-                overlay_rm_map[pk_iter]   = grp["Total_RM"].sum() / s
+                u = grp["Total_Utilities"].sum()
+                r = grp["Total_RM"].sum()
+                overlay_util_map[pk_iter]     = u / s
+                overlay_rm_map[pk_iter]       = r / s
+                overlay_util_day_map[pk_iter] = u / PERIOD_DAYS          # 1 stand
+                overlay_rm_day_map[pk_iter]   = r / PERIOD_DAYS
     elif sel_region != "All Regions":
         overlay_label = sel_region
         for pk_iter, grp in stands_df[stands_df["Region"] == sel_region].groupby("Period_Key"):
             s = grp["Net_Sales"].sum()
+            n = max(grp["Stand"].nunique(), 1)
             if s > 0:
-                overlay_util_map[pk_iter] = grp["Total_Utilities"].sum() / s
-                overlay_rm_map[pk_iter]   = grp["Total_RM"].sum() / s
+                u = grp["Total_Utilities"].sum()
+                r = grp["Total_RM"].sum()
+                overlay_util_map[pk_iter]     = u / s
+                overlay_rm_map[pk_iter]       = r / s
+                overlay_util_day_map[pk_iter] = u / (n * PERIOD_DAYS)
+                overlay_rm_day_map[pk_iter]   = r / (n * PERIOD_DAYS)
 
     ov_labels, ov_util, ov_rm = [], [], []
+    ov_util_day, ov_rm_day    = [], []
     for _, row in pct_df.iterrows():
         if row["period_key"] in overlay_util_map:
             ov_labels.append(row["label"])
             ov_util.append(overlay_util_map[row["period_key"]] * 100)
             ov_rm.append(overlay_rm_map[row["period_key"]] * 100)
+            ov_util_day.append(overlay_util_day_map.get(row["period_key"], 0))
+            ov_rm_day.append(overlay_rm_day_map.get(row["period_key"], 0))
 
-    has_util_ov = bool(ov_labels) and any(v > 0 for v in ov_util)
-    has_rm_ov   = bool(ov_labels) and any(v > 0 for v in ov_rm)
-    title_sfx   = f" · {overlay_label}" if overlay_label else ""
+    has_util_ov     = bool(ov_labels) and any(v > 0 for v in ov_util)
+    has_rm_ov       = bool(ov_labels) and any(v > 0 for v in ov_rm)
+    has_util_day_ov = bool(ov_labels) and any(v > 0 for v in ov_util_day)
+    has_rm_day_ov   = bool(ov_labels) and any(v > 0 for v in ov_rm_day)
+    title_sfx       = f" · {overlay_label}" if overlay_label else ""
 
     # Chart 1: Total Utilities PoP
     fig = go.Figure()
@@ -1938,6 +1963,49 @@ def tab_utilities(dash):
                        xaxis=dict(tickangle=-35))
     st.plotly_chart(fig2, config={"displayModeBar": False})
 
+    # Chart 3: $/Stand/Day — removes both network-size and sales-volume effects
+    has_day_data = pct_df["util_per_std_day"].sum() > 0 or pct_df["rm_per_std_day"].sum() > 0
+    if has_day_data:
+        fig3 = go.Figure()
+        fig3.add_scatter(x=pct_df["label"], y=pct_df["util_per_std_day"],
+                         name="System Util $/Stand/Day", mode="lines+markers",
+                         line=dict(color=BLUE, width=2), marker=dict(size=5))
+        fig3.add_scatter(x=pct_df["label"], y=pct_df["rm_per_std_day"],
+                         name="System R&M $/Stand/Day", mode="lines+markers",
+                         line=dict(color=AMBER, width=2), marker=dict(size=5),
+                         yaxis="y2")
+        if has_util_day_ov:
+            fig3.add_scatter(x=ov_labels, y=ov_util_day,
+                             name=f"{overlay_label} Util $/Std/Day", mode="lines+markers",
+                             line=dict(color=BLUE, width=2, dash="dot"),
+                             marker=dict(size=7, symbol="diamond"))
+        if has_rm_day_ov:
+            fig3.add_scatter(x=ov_labels, y=ov_rm_day,
+                             name=f"{overlay_label} R&M $/Std/Day", mode="lines+markers",
+                             line=dict(color=AMBER, width=2, dash="dot"),
+                             marker=dict(size=7, symbol="diamond"), yaxis="y2")
+        fig3.update_layout(
+            yaxis=dict(title="Utility $/Stand/Day", tickprefix="$"),
+            yaxis2=dict(title="R&M $/Stand/Day", overlaying="y", side="right",
+                        tickprefix="$", tickfont=dict(size=9, color=AMBER)),
+        )
+        brew_fig(fig3, height=350)
+        fig3.update_layout(
+            title_text=f"UTILITY & R&M $/STAND/DAY{title_sfx}",
+            title_font=dict(family="Bebas Neue", size=18),
+            xaxis=dict(tickangle=-35),
+        )
+        st.plotly_chart(fig3, config={"displayModeBar": False})
+        st.html("""
+        <div class="info-box">
+          <strong>💡 Why $/Stand/Day?</strong>
+          All 7BREW periods are exactly 28 days, so this metric removes two confounders from % of Sales:
+          (1) <strong>Network growth</strong> — as you open more stands, total utility $ climbs even if
+          per-stand efficiency is flat. (2) <strong>Sales volume swings</strong> — in a slow period,
+          utility % of sales rises even if the actual electricity bill didn't change.
+          Divergence between % of Sales and $/Stand/Day is where your real cost story lives.
+        </div>""")
+
     st.html('<hr class="brew">')
 
     # ── SECTION 2: Region Summary Table ──────────────────────────────────────
@@ -1959,18 +2027,26 @@ def tab_utilities(dash):
 
         tbl_rows = []
         for _, row in reg_agg.iterrows():
-            s = row["Net_Sales"]
-            r = {"Region": row["Region"], "Stands": int(row["Stands"])}
+            s    = row["Net_Sales"]
+            n    = int(row["Stands"])
+            r    = {"Region": row["Region"], "Stands": n}
+            # % of sales columns
             for col, lbl in [("Total_Utilities", "Util %"), ("Electricity", "Elec %"),
                               ("Water_Sewer", "Water %"), ("Waste_Removal", "Waste %"),
                               ("RM_Equipment", "R&M Eq %"), ("RM_Building", "R&M Bldg %"),
                               ("Total_RM", "R&M %")]:
                 if col in row.index and pd.notna(row[col]) and row[col] > 0:
                     r[lbl] = round(row[col] / s * 100, 2)
+            # $/stand/day columns (28-day periods)
+            if "Total_Utilities" in row.index and pd.notna(row["Total_Utilities"]) and row["Total_Utilities"] > 0:
+                r["Util $/Std/Day"] = round(row["Total_Utilities"] / (n * PERIOD_DAYS), 2)
+            if "Total_RM" in row.index and pd.notna(row["Total_RM"]) and row["Total_RM"] > 0:
+                r["R&M $/Std/Day"] = round(row["Total_RM"] / (n * PERIOD_DAYS), 2)
             tbl_rows.append(r)
 
-        reg_tbl = pd.DataFrame(tbl_rows).fillna(0)
-        pct_cols = [c for c in reg_tbl.columns if "%" in c]
+        reg_tbl  = pd.DataFrame(tbl_rows).fillna(0)
+        pct_cols = [c for c in reg_tbl.columns if c.endswith("%")]
+        day_cols = [c for c in reg_tbl.columns if "$/Std/Day" in c]
         sort_col = "Util %" if "Util %" in pct_cols else ("R&M %" if "R&M %" in pct_cols else "Region")
         if sort_col != "Region":
             reg_tbl = reg_tbl.sort_values(sort_col, ascending=False)
@@ -1996,8 +2072,11 @@ def tab_utilities(dash):
             if f > 0:   return "background-color:#d4edda"
             return ""
 
-        if pct_cols:
-            styled = reg_tbl.style.format({c: "{:.2f}%" for c in pct_cols})
+        fmt = {c: "{:.2f}%" for c in pct_cols}
+        fmt.update({c: "${:.2f}" for c in day_cols})
+
+        if pct_cols or day_cols:
+            styled = reg_tbl.style.format(fmt)
             for col in pct_cols:
                 fn = _rm_color if "R&M" in col else _util_color
                 styled = styled.map(fn, subset=[col])
