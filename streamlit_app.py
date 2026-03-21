@@ -830,9 +830,12 @@ def tab_stands(dash):
     with c1:
         sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="std_period")
     with c2:
-        if "Region" in stands_df.columns:
-            regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
-        else:
+        try:
+            if "Region" in stands_df.columns and len(stands_df) > 0:
+                regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
+            else:
+                regions = ["All Regions"]
+        except (KeyError, TypeError, AttributeError):
             regions = ["All Regions"]
         sel_reg = st.selectbox("Region", regions, key="std_region")
     with c3:
