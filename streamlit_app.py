@@ -300,12 +300,58 @@ def load_base_data():
     st.error("No data source found. Add data.json or dashboard.html to the repo.")
     st.stop()
 
+def get_upload_dir():
+    """Return path to persistent upload storage folder, creating it if needed."""
+    upload_dir = Path(__file__).parent / "data" / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    return upload_dir
+
+def save_uploaded_period(parsed_result):
+    """Save a single parsed period as a JSON file for persistence."""
+    upload_dir = get_upload_dir()
+    pk = parsed_result["period_key"]
+    filepath = upload_dir / f"{pk}.json"
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(parsed_result, f, default=str)
+    return filepath
+
+def load_saved_uploads():
+    """Load all previously saved uploaded periods from disk."""
+    upload_dir = get_upload_dir()
+    saved = []
+    for fp in sorted(upload_dir.glob("*.json")):
+        try:
+            with open(fp, "r", encoding="utf-8") as f:
+                saved.append(json.load(f))
+        except Exception:
+            pass
+    return saved
+
+def delete_saved_uploads():
+    """Remove all saved upload files."""
+    upload_dir = get_upload_dir()
+    for fp in upload_dir.glob("*.json"):
+        fp.unlink()
+
 def get_dash():
-    """Return merged DASH: base + any session-uploaded periods."""
+    """Return merged DASH: base + session uploads + any saved-to-disk uploads."""
+    from pl_parser import merge_into_dash
+    import copy
+
     base = load_base_data()
-    if "uploaded_dash" not in st.session_state:
-        return base
-    return st.session_state["uploaded_dash"]
+
+    # If session has fresh uploads, use those (they've already been saved to disk)
+    if "uploaded_dash" in st.session_state:
+        return st.session_state["uploaded_dash"]
+
+    # Otherwise, check disk for previously saved uploads
+    saved = load_saved_uploads()
+    if saved:
+        dash = copy.deepcopy(base)
+        merged = merge_into_dash(dash, saved)
+        return merged
+
+    return base
 
 def get_periods_df(dash):
     df = pd.DataFrame(dash["period_summaries"])
@@ -360,6 +406,7 @@ def render_sidebar():
                 os.unlink(tmp_path)
                 if result and result.get("stands"):
                     parsed.append(result)
+                    save_uploaded_period(result)
                     st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
                 else:
                     errors.append(f"No stands found in {uf.name}")
@@ -376,11 +423,15 @@ def render_sidebar():
             st.session_state["upload_count"] = len(parsed)
             st.rerun()
 
-    if "upload_count" in st.session_state:
-        st.info(f"✅ {st.session_state['upload_count']} period(s) merged into dashboard")
-        if st.button("🗑 Clear Uploaded Data"):
-            del st.session_state["uploaded_dash"]
-            del st.session_state["upload_count"]
+    saved = load_saved_uploads()
+    if saved:
+        st.info(f"📁 {len(saved)} saved period(s)")
+        if st.button("🗑 Clear All Saved Data"):
+            delete_saved_uploads()
+            if "uploaded_dash" in st.session_state:
+                del st.session_state["uploaded_dash"]
+            if "upload_count" in st.session_state:
+                del st.session_state["upload_count"]
             st.rerun()
 
     st.html("<hr>")
@@ -1591,22 +1642,63 @@ def main():
     </div>""")
 
     # Upload section — always visible at top
-    up_col1, up_col2 = st.columns([3, 1])
-    with up_col1:
+    saved_periods = load_saved_uploads()
+    saved_count = len(saved_periods)
+
+    st.markdown("---")
+    upload_col1, upload_col2 = st.columns([2, 1])
+
+    with upload_col1:
         uploaded = st.file_uploader(
             "Upload P&L Files (.xlsx)",
             type=["xlsx"],
             accept_multiple_files=True,
-            help="Upload 7BREW PTD Side By Side Excel files to add new periods",
+            help="Upload 7BREW PTD Side By Side Excel files to add new periods or historical data",
         )
-    with up_col2:
-        if "upload_count" in st.session_state:
-            st.info(f"✅ {st.session_state['upload_count']} period(s) loaded")
-            if st.button("Clear Uploads", type="secondary"):
-                del st.session_state["uploaded_dash"]
-                del st.session_state["upload_count"]
-                st.rerun()
+        # Also allow restoring from a previous backup JSON
+        restore_file = st.file_uploader(
+            "Restore from Backup (.json)",
+            type=["json"],
+            accept_multiple_files=False,
+            help="Upload a previously downloaded 7brew_upload_backup.json to restore saved periods",
+            key="restore_backup",
+        )
 
+    with upload_col2:
+        if saved_count > 0:
+            saved_keys = sorted([s["period_key"] for s in saved_periods])
+            st.markdown(f"**📁 {saved_count} saved period(s):**")
+            st.caption(", ".join(saved_keys))
+            # Download backup
+            backup = json.dumps(saved_periods, default=str, indent=2)
+            st.download_button("⬇ Download Backup", backup, "7brew_upload_backup.json",
+                               mime="application/json")
+            if st.button("🗑 Clear All Saved Data"):
+                delete_saved_uploads()
+                if "uploaded_dash" in st.session_state:
+                    del st.session_state["uploaded_dash"]
+                if "upload_count" in st.session_state:
+                    del st.session_state["upload_count"]
+                st.rerun()
+        else:
+            st.caption("No saved periods yet. Upload P&L files or restore from a backup.")
+
+    # Handle restore from backup JSON
+    if restore_file:
+        try:
+            restored = json.load(restore_file)
+            if isinstance(restored, list):
+                for period_data in restored:
+                    if "period_key" in period_data:
+                        save_uploaded_period(period_data)
+                st.success(f"✅ Restored {len(restored)} period(s) from backup")
+                st.rerun()
+            else:
+                st.error("Invalid backup format — expected a JSON array of periods")
+        except Exception as e:
+            st.error(f"Failed to restore backup: {e}")
+
+    # Handle new P&L file uploads
     if uploaded:
         from pl_parser import parse_pl_file, merge_into_dash
         import copy
@@ -1624,7 +1716,8 @@ def main():
                 os.unlink(tmp_path)
                 if result and result.get("stands"):
                     parsed.append(result)
-                    st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
+                    save_uploaded_period(result)
+                    st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands) — saved")
                 else:
                     errors.append(f"No stands found in {uf.name}")
             except Exception as e:
@@ -1637,6 +1730,8 @@ def main():
             st.session_state["uploaded_dash"] = updated
             st.session_state["upload_count"] = len(parsed)
             st.rerun()
+
+    st.markdown("---")
 
     # Tabs
     tab_names = [
