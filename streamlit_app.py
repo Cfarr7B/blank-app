@@ -760,6 +760,10 @@ def tab_ceo(dash):
         {"label": f"{latest['label']} Avg Sales","value": _fmt_d(latest["avg_sales"]),    "sub": "per stand",                   "color": "amber"},
     ])
 
+    # Pre-compute filtered stands (needed by narrative AND cohort sections below)
+    filtered_pks    = filtered_df["period_key"].tolist()
+    filtered_stands = stands_df[stands_df["Period_Key"].isin(filtered_pks)]
+
     # ── Revenue + EBITDA Trend (all periods) ──
     col1, col2 = st.columns([3, 2])
     with col1:
@@ -918,9 +922,6 @@ def tab_ceo(dash):
     st.html('<hr class="brew">')
 
     # ── Cohort Analysis — filtered by selected periods ──
-    filtered_pks = filtered_df["period_key"].tolist()
-    filtered_stands = stands_df[stands_df["Period_Key"].isin(filtered_pks)]
-
     col3, col4 = st.columns(2)
     with col3:
         section("COHORT PERFORMANCE", f"EBITDA% & Labor% by stand maturity — {period_range}")
