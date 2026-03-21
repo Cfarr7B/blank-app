@@ -73,7 +73,7 @@ st.html("""
   }
   .stTabs [data-baseweb="tab"] {
     font-family: 'DM Sans', sans-serif !important; font-weight: 600;
-    font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+    font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase;
     background: transparent; border-radius: 8px; color: #5a6070;
     padding: 8px 16px;
   }
@@ -82,38 +82,81 @@ st.html("""
   }
 
   /* Sidebar */
-  [data-testid="stSidebar"] { background: #f5f6f8; border-right: 1px solid #e2e4e9; }
+  [data-testid="stSidebar"] {
+    background: #f5f6f8 !important;
+    border-right: 1px solid #e2e4e9;
+    display: block !important;
+    visibility: visible !important;
+  }
   [data-testid="stSidebar"] .stMarkdown h3 {
     font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 20px; letter-spacing: 2px; color: #2d2f36;
+    font-size: 34px; letter-spacing: 2px; color: #2d2f36;
   }
+  [data-testid="stSidebarNav"] { display: block !important; visibility: visible !important; }
 
   /* Metrics */
   [data-testid="stMetric"] { background: white; border: 1px solid #e2e4e9;
     border-radius: 10px; padding: 16px 18px !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-  [data-testid="stMetricLabel"] { font-size: 10px !important; font-weight: 600 !important;
+  [data-testid="stMetricLabel"] { font-size: 17px !important; font-weight: 600 !important;
     letter-spacing: 1px; text-transform: uppercase; color: #5a6070!important; }
   [data-testid="stMetricValue"] { font-family: 'Bebas Neue', sans-serif !important;
     font-size: 28px !important; color: #111318 !important; }
   [data-testid="stMetricDelta"] { font-family: 'DM Mono', monospace !important;
-    font-size: 11px !important; }
+    font-size: 14px !important; }
 
-  /* DataFrames */
+  /* DataFrames and Tables */
+  [data-testid="stDataFrame"] {
+    background: #ffffff !important;
+  }
   [data-testid="stDataFrame"] thead th {
     background: #f5f6f8 !important; color: #2d2f36 !important;
-    font-family: 'DM Mono', monospace !important; font-size: 11px !important;
+    font-family: 'DM Mono', monospace !important; font-size: 14px !important;
     font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.5px;
   }
+  [data-testid="stDataFrame"] tbody tr {
+    background: #ffffff !important;
+  }
+  [data-testid="stDataFrame"] tbody tr:hover {
+    background: #f5f6f8 !important;
+  }
   [data-testid="stDataFrame"] td {
-    font-family: 'DM Mono', monospace !important; font-size: 11px !important;
+    font-family: 'DM Mono', monospace !important; font-size: 14px !important;
+    color: #111318 !important;
+    background: #ffffff !important;
+  }
+  table {
+    background: #ffffff !important;
     color: #111318 !important;
   }
-
-  /* Select boxes */
-  .stSelectbox select, [data-baseweb="select"] {
-    font-family: 'DM Mono', monospace !important; font-size: 12px !important;
+  table th {
+    background: #f5f6f8 !important;
+    color: #2d2f36 !important;
   }
+  table td {
+    color: #111318 !important;
+    background: #ffffff !important;
+  }
+
+  /* Select boxes and dropdowns */
+  .stSelectbox select, [data-baseweb="select"] {
+    font-family: 'DM Mono', monospace !important; font-size: 16px !important;
+    background: #ffffff !important;
+    color: #111318 !important;
+    border-color: #e2e4e9 !important;
+  }
+  [data-baseweb="select__popup"] {
+    background: #ffffff !important;
+    border-color: #e2e4e9 !important;
+  }
+  [data-baseweb="select__option"] {
+    background: #ffffff !important;
+    color: #111318 !important;
+  }
+  [data-baseweb="select__option"]:hover {
+    background: #f5f6f8 !important;
+  }
+  .stSelectbox { color: #111318 !important; }
 
   /* KPI cards (custom HTML) */
   .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -128,29 +171,29 @@ st.html("""
   .kpi-card.blue::before { background:#1d6fcf; }
   .kpi-card.amber::before { background:#e8940a; }
   .kpi-card.grey::before { background:#5a6070; }
-  .kpi-label { font-size:10px; font-weight:700; letter-spacing:1px;
+  .kpi-label { font-size:17px; font-weight:700; letter-spacing:1px;
     text-transform:uppercase; color:#5a6070; margin-bottom:6px; }
-  .kpi-value { font-family:'Bebas Neue',sans-serif; font-size:30px;
+  .kpi-value { font-family:'Bebas Neue',sans-serif; font-size:39px;
     line-height:1; color:#111318; letter-spacing:1px; }
   .kpi-value.good { color:#12a06e; }
   .kpi-value.bad  { color:#cd2128; }
   .kpi-value.warn { color:#e8940a; }
-  .kpi-sub { font-family:'DM Mono',monospace; font-size:10px; color:#8a919e; margin-top:4px; }
+  .kpi-sub { font-family:'DM Mono',monospace; font-size:17px; color:#8a919e; margin-top:4px; }
   .kpi-delta { display:inline-block; font-family:'DM Mono',monospace;
-    font-size:10px; font-weight:600; padding:2px 7px; border-radius:10px; margin-top:5px; }
+    font-size:17px; font-weight:600; padding:2px 7px; border-radius:10px; margin-top:5px; }
   .kpi-delta.up   { background:rgba(18,160,110,0.1); color:#12a06e; }
   .kpi-delta.down { background:rgba(205,33,40,0.1); color:#cd2128; }
   .kpi-delta.neut { background:rgba(29,111,207,0.1); color:#1d6fcf; }
 
   /* Section headers */
   .section-hdr {
-    font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:3px;
+    font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:3px;
     color:#2d2f36; margin-bottom:2px; margin-top:8px;
     display:flex; align-items:center; gap:8px;
   }
   .section-hdr::before { content:''; width:6px; height:6px; border-radius:50%;
     background:#cd2128; display:inline-block; flex-shrink:0; }
-  .section-sub { font-family:'DM Mono',monospace; font-size:11px;
+  .section-sub { font-family:'DM Mono',monospace; font-size:14px;
     color:#8a919e; margin-bottom:16px; margin-left:14px; }
   .red-rule { width:36px; height:3px; background:#cd2128;
     border-radius:2px; margin-bottom:18px; margin-left:14px; }
@@ -163,10 +206,10 @@ st.html("""
   }
   .insight-card.win { border-left-color: #12a06e; }
   .insight-card.watch { border-left-color: #e8940a; }
-  .insight-card .ic-title { font-weight:700; font-size:13px; color:#2d2f36; margin-bottom:4px; }
-  .insight-card .ic-body  { font-size:12px; color:#4a5060; line-height:1.6; }
+  .insight-card .ic-title { font-weight:700; font-size:17px; color:#2d2f36; margin-bottom:4px; }
+  .insight-card .ic-body  { font-size:16px; color:#4a5060; line-height:1.6; }
   .insight-card .ic-tag   { display:inline-block; font-family:'DM Mono',monospace;
-    font-size:10px; padding:2px 8px; border-radius:10px; margin-top:6px; }
+    font-size:17px; padding:2px 8px; border-radius:10px; margin-top:6px; }
   .ic-tag.red   { background:rgba(205,33,40,0.1);   color:#cd2128; }
   .ic-tag.green { background:rgba(18,160,110,0.1);  color:#12a06e; }
   .ic-tag.amber { background:rgba(232,148,10,0.1);  color:#e8940a; }
@@ -175,7 +218,7 @@ st.html("""
   /* Utility / R&M info box */
   .info-box {
     background:#f5f6f8; border:1px solid #e2e4e9; border-radius:10px;
-    padding:14px 18px; font-size:12px; color:#4a5060; margin-bottom:16px;
+    padding:14px 18px; font-size:16px; color:#4a5060; margin-bottom:16px;
   }
   .info-box strong { color:#2d2f36; }
 
@@ -188,11 +231,11 @@ st.html("""
     padding:20px 24px; margin-bottom:16px;
     box-shadow:0 1px 4px rgba(0,0,0,0.04);
   }
-  .story-label { font-family:'DM Mono',monospace; font-size:10px;
+  .story-label { font-family:'DM Mono',monospace; font-size:17px;
     text-transform:uppercase; letter-spacing:1px; color:#8a919e; margin-bottom:6px; }
-  .story-headline { font-family:'Bebas Neue',sans-serif; font-size:20px;
+  .story-headline { font-family:'Bebas Neue',sans-serif; font-size:34px;
     letter-spacing:1.5px; color:#cd2128; margin-bottom:8px; }
-  .story-body { font-size:13px; color:#4a5060; line-height:1.7; }
+  .story-body { font-size:17px; color:#4a5060; line-height:1.7; }
 
   /* Hide Streamlit branding */
   #MainMenu, footer, header { visibility: hidden; }
@@ -204,6 +247,18 @@ st.html("""
   .stButton > button { color: #111318 !important; background-color: #f5f6f8 !important; }
   input, select, textarea { background: #ffffff !important; color: #111318 !important; border-color: #e2e4e9 !important; }
   input::placeholder { color: #8a919e !important; }
+
+  /* File uploader styling */
+  [data-testid="stFileUploadDropzone"] {
+    background: #ffffff !important;
+    border: 2px dashed #e2e4e9 !important;
+    color: #111318 !important;
+  }
+  [data-testid="stFileUploadDropzone"] p,
+  [data-testid="stFileUploadDropzone"] span {
+    color: #111318 !important;
+  }
+  .stFileUploader { background: #ffffff !important; }
 </style>
 """)
 
@@ -388,7 +443,7 @@ def render_sidebar():
             st.rerun()
 
     st.html("<hr>")
-    st.html('<div style="font-family:DM Mono,monospace;font-size:10px;color:#8a919e;">7BREW · CONFIDENTIAL · FY2025–2026</div>')
+    st.html('<div style="font-family:DM Mono,monospace;font-size:17px;color:#8a919e;">7BREW · CONFIDENTIAL · FY2025–2026</div>')
 
 # ─────────────────────────────────────────────
 # TAB: CEO SNAPSHOT
@@ -931,6 +986,30 @@ def tab_regions(dash):
 
     st.html('<hr class="brew">')
 
+    # Drill-down: Show stands by selected region
+    section("STANDS BY REGION", "Click on a region below to view its stands")
+    region_list = sorted(reg_df["region"].unique().tolist())
+    sel_region = st.selectbox("Select Region to Drill Down", region_list, key="region_drilldown")
+
+    if sel_region:
+        region_stands = stands_df[(stands_df["Period_Key"] == pk) & (stands_df["Region"] == sel_region)].copy()
+        if not region_stands.empty:
+            st.caption(f"**{sel_region}** - {len(region_stands)} stands")
+            # Display stands in selected region
+            display_cols_region = ["Stand", "Net_Sales", "Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]
+            display_cols_region = [c for c in display_cols_region if c in region_stands.columns]
+            tbl = region_stands[display_cols_region].copy()
+            if "Net_Sales" in tbl.columns:
+                tbl["Net_Sales"] = tbl["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
+            for pct_col in ["Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]:
+                if pct_col in tbl.columns:
+                    tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
+            st.dataframe(tbl.reset_index(drop=True), use_container_width=True)
+        else:
+            st.info(f"No stand data available for {sel_region} in this period.")
+
+    st.html('<hr class="brew">')
+
     col1, col2 = st.columns(2)
     with col1:
         # Labor vs EBITDA scatter
@@ -1437,7 +1516,7 @@ def tab_utilities(dash):
             with cols_p[i]:
                 st.html(f"""
                 <div class="kpi-card grey" style="text-align:center;opacity:0.5;">
-                  <div style="font-size:20px;margin-bottom:6px;">{name.split()[0]}</div>
+                  <div style="font-size:34px;margin-bottom:6px;">{name.split()[0]}</div>
                   <div class="kpi-label">{' '.join(name.split()[1:])}</div>
                   <div class="kpi-value" style="font-size:18px;color:#8a919e;">—</div>
                   <div class="kpi-sub">Upload P&L to activate</div>
@@ -1572,7 +1651,7 @@ def main():
                   font-size:22px;letter-spacing:1px;padding:4px 12px;border-radius:6px;">7BREW</div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;
                   color:#5a6070;text-transform:uppercase;">Financial Performance Dashboard</div>
-      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;">
+      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:17px;color:#8a919e;">
         FY2025–2026 · 15 Periods · Confidential
       </div>
     </div>""")
