@@ -213,12 +213,19 @@ def _fmt_bps(delta):
 
 def brew_fig(fig, height=320, show_legend=True, margin=None):
     m = margin or dict(t=60, b=60, l=8, r=8)
+    # Use title dict with explicit text="" to avoid Plotly rendering "undefined"
+    # on charts that never receive a title_text. Individual update_layout calls
+    # below will override the text when a real title is needed.
+    existing_title = (fig.layout.title.text or "") if fig.layout.title.text is not None else ""
     fig.update_layout(
         height=height, paper_bgcolor="white", plot_bgcolor="white",
         font=dict(family="DM Sans, sans-serif", color=BODY, size=15),
         margin=m, showlegend=show_legend,
         legend=dict(font=dict(size=13, color=MID, family="DM Mono")),
-        title_font=dict(size=18, color=BODY, family="DM Sans, sans-serif"),
+        title=dict(
+            text=existing_title,
+            font=dict(size=18, color=BODY, family="DM Sans, sans-serif"),
+        ),
     )
     fig.update_xaxes(gridcolor=GRID, linecolor=BORDER,
                      tickfont=dict(size=13, color=MID, family="DM Mono"),
