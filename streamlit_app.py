@@ -878,7 +878,7 @@ def tab_comparison(dash):
             "Signal": "↑ Better" if good else ("↓ Worse" if not good else "—"),
         })
     cmp_df = pd.DataFrame(rows)
-    st.dataframe(cmp_df, hide_index=True, use_container_width=True,
+    st.dataframe(cmp_df, hide_index=True, use_container_width=True, height=500,
                  column_config={
                      "Signal": st.column_config.TextColumn("Signal", width="small"),
                      "Δ A − B": st.column_config.TextColumn("Δ A − B", width="small"),
