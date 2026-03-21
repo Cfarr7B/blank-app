@@ -664,33 +664,41 @@ def tab_ceo(dash):
     available_years = sorted(periods_df["year"].unique().tolist())
     all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
 
-    sel_col1, sel_col2, sel_col3 = st.columns([1, 2, 2])
+    sel_col1, sel_col2 = st.columns([1, 4])
     with sel_col1:
         sel_year = st.selectbox("Fiscal Year", available_years, index=len(available_years)-1, key="ceo_year")
+
+    year_periods = periods_df[periods_df["year"] == sel_year]
+    period_labels = year_periods["label"].tolist()
+
+    # Clear stale selections when year changes
+    if "ceo_periods" in st.session_state:
+        st.session_state["ceo_periods"] = [l for l in st.session_state["ceo_periods"] if l in period_labels]
+
     with sel_col2:
-        year_periods = periods_df[periods_df["year"] == sel_year]
-        period_labels = year_periods["label"].tolist()
-        selected_periods = st.multiselect("Periods (select multiple or leave blank for all)",
-                                          period_labels, key="ceo_periods")
-    with sel_col3:
         q_presets = {"Q1 (P1–3)": [1, 2, 3], "Q2 (P4–6)": [4, 5, 6],
-                     "Q3 (P7–9)": [7, 8, 9], "Q4 (P10–13)": [10, 11, 12, 13], "Full Year": list(range(1, 14))}
-        st.caption("Quick select:")
+                     "Q3 (P7–9)": [7, 8, 9], "Q4 (P10–13)": [10, 11, 12, 13], "All": list(range(1, 14))}
         qcols = st.columns(5)
         for i, (q_name, p_nums) in enumerate(q_presets.items()):
             with qcols[i]:
                 if st.button(q_name, key=f"ceo_q_{q_name}", use_container_width=True):
                     matching = year_periods[year_periods["period_num"].isin(p_nums)]["label"].tolist()
-                    st.session_state["ceo_periods"] = matching
+                    if matching:
+                        st.session_state["ceo_periods"] = matching
                     st.rerun()
+
+    selected_periods = st.session_state.get("ceo_periods", [])
 
     # Filter to selected periods (or all periods for selected year)
     if selected_periods:
-        filtered_df = periods_df[(periods_df["year"] == sel_year) & (periods_df["label"].isin(selected_periods))]
+        filtered_df = year_periods[year_periods["label"].isin(selected_periods)]
     else:
-        filtered_df = periods_df[periods_df["year"] == sel_year]
+        filtered_df = year_periods.copy()
 
-    latest = filtered_df.iloc[-1] if not filtered_df.empty else periods_df.iloc[-1]
+    if filtered_df.empty:
+        filtered_df = year_periods.copy()
+
+    latest = filtered_df.iloc[-1]
     prev   = periods_df.iloc[-2] if len(periods_df) > 1 else None
     first  = periods_df.iloc[0]
 
@@ -766,17 +774,20 @@ def tab_ceo(dash):
 
     st.html('<hr class="brew">')
 
-    # ── Cohort Analysis ──
+    # ── Cohort Analysis — filtered by selected periods ──
+    filtered_pks = filtered_df["period_key"].tolist()
+    filtered_stands = stands_df[stands_df["Period_Key"].isin(filtered_pks)]
+
     col3, col4 = st.columns(2)
     with col3:
-        section("COHORT PERFORMANCE", "EBITDA% & Labor% by stand maturity")
+        section("COHORT PERFORMANCE", f"EBITDA% & Labor% by stand maturity — {period_range}")
 
         age_buckets = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
         age_colors  = [RED, AMBER, BLUE, GREEN]
 
         cohort_rows = []
         for bkt in age_buckets:
-            sub = stands_df[stands_df["Age_Bucket"] == bkt]
+            sub = filtered_stands[filtered_stands["Age_Bucket"] == bkt] if "Age_Bucket" in filtered_stands.columns else pd.DataFrame()
             if len(sub) == 0:
                 continue
             cohort_rows.append({
@@ -800,90 +811,167 @@ def tab_ceo(dash):
             st.plotly_chart(fig2, config={"displayModeBar": False})
 
     with col4:
-        section("REGIONAL PERFORMANCE SNAPSHOT", f"EBITDA% by region — {latest['label']}")
-        reg_df = get_regions_df(dash, latest["period_key"])
-        if not reg_df.empty:
-            reg_df = reg_df.sort_values("ebitda_pct", ascending=True)
-            colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_df["ebitda_pct"]]
-            fig3 = go.Figure(go.Bar(
-                x=reg_df["ebitda_pct"] * 100, y=reg_df["region"],
-                orientation="h",
-                marker_color=colors,
-                text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
-                textposition="outside",
-            ))
-            fig3.add_vline(x=latest["ebitda_pct"] * 100, line_dash="dot",
-                           line_color=MID, annotation_text="Sys avg",
-                           annotation_font_size=9)
-            brew_fig(fig3, height=280)
-            fig3.update_layout(xaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig3, config={"displayModeBar": False})
+        # Aggregate regions across selected periods
+        section("REGIONAL PERFORMANCE", f"EBITDA% by region — {period_range}")
+        reg_frames = [get_regions_df(dash, k) for k in filtered_pks]
+        reg_all = pd.concat([r for r in reg_frames if not r.empty], ignore_index=True)
+        if not reg_all.empty:
+            pct_cols_r = [c for c in reg_all.columns if c.endswith("_pct")]
+            reg_agg = reg_all.groupby("region").agg({"net_sales": "sum"}).reset_index()
+            for c in pct_cols_r:
+                if c in reg_all.columns:
+                    reg_agg[c] = reg_all.groupby("region").apply(
+                        lambda g: (g[c] * g["net_sales"]).sum() / g["net_sales"].sum() if g["net_sales"].sum() > 0 else 0
+                    ).values
+            reg_df = reg_agg.sort_values("ebitda_pct", ascending=True) if "ebitda_pct" in reg_agg.columns else reg_agg
+            if "ebitda_pct" in reg_df.columns:
+                colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_df["ebitda_pct"]]
+                fig3 = go.Figure(go.Bar(
+                    x=reg_df["ebitda_pct"] * 100, y=reg_df["region"],
+                    orientation="h",
+                    marker_color=colors,
+                    text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
+                    textposition="outside",
+                ))
+                fig3.add_vline(x=avg_ebitda_pct * 100, line_dash="dot",
+                               line_color=MID, annotation_text="Sys avg",
+                               annotation_font_size=9)
+                brew_fig(fig3, height=280)
+                fig3.update_layout(xaxis=dict(ticksuffix="%"))
+                st.plotly_chart(fig3, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
 
-    # ── Regional Heatmap (all periods) ──
-    section("REGIONAL EBITDA HEATMAP", "EBITDA% by region × period — red = below 15%, green = above 22%")
-    all_regions = sorted(set(r for pk in dash["region_by_period"] for r in [x["region"] for x in dash["region_by_period"][pk]]))
+    # ── Regional Heatmap — filtered by selected periods ──
+    section("REGIONAL EBITDA HEATMAP", f"EBITDA% by region × period — {period_range}")
+    all_regions = sorted(set(r for pk in filtered_pks for r in [x["region"] for x in dash.get("region_by_period", {}).get(pk, [])]))
     heat_data = []
-    for pk in periods_df["period_key"]:
-        regs = {r["region"]: r["ebitda_pct"] for r in dash["region_by_period"].get(pk, [])}
-        row = {"Period": periods_df.loc[periods_df["period_key"]==pk, "label"].values[0]}
+    for pk in filtered_pks:
+        regs = {r["region"]: r["ebitda_pct"] for r in dash.get("region_by_period", {}).get(pk, [])}
+        lbl = filtered_df.loc[filtered_df["period_key"]==pk, "label"].values
+        row = {"Period": lbl[0] if len(lbl) else pk}
         for reg in all_regions:
             row[reg] = round(regs.get(reg, float("nan")) * 100, 1) if reg in regs else None
         heat_data.append(row)
 
-    heat_df = pd.DataFrame(heat_data).set_index("Period")
-    fig4 = go.Figure(go.Heatmap(
-        z=heat_df.values,
-        x=heat_df.columns.tolist(),
-        y=heat_df.index.tolist(),
-        colorscale=[[0, "#cd2128"], [0.5, "#e8940a"], [1, "#12a06e"]],
-        zmid=18, zmin=5, zmax=30,
-        text=[[f"{v:.1f}%" if v is not None else "—" for v in row] for row in heat_df.values],
-        texttemplate="%{text}",
-        textfont=dict(size=9, family="DM Mono"),
-        hoverongaps=False,
-        colorbar=dict(ticksuffix="%", tickfont=dict(size=9)),
-    ))
-    brew_fig(fig4, height=360)
-    fig4.update_layout(xaxis=dict(tickangle=-35))
-    st.plotly_chart(fig4, config={"displayModeBar": False})
+    if heat_data:
+        heat_df = pd.DataFrame(heat_data).set_index("Period")
+        fig4 = go.Figure(go.Heatmap(
+            z=heat_df.values,
+            x=heat_df.columns.tolist(),
+            y=heat_df.index.tolist(),
+            colorscale=[[0, "#cd2128"], [0.5, "#e8940a"], [1, "#12a06e"]],
+            zmid=18, zmin=5, zmax=30,
+            text=[[f"{v:.1f}%" if v is not None else "—" for v in row] for row in heat_df.values],
+            texttemplate="%{text}",
+            textfont=dict(size=9, family="DM Mono"),
+            hoverongaps=False,
+            colorbar=dict(ticksuffix="%", tickfont=dict(size=9)),
+        ))
+        brew_fig(fig4, height=max(200, 60 + len(heat_data) * 35))
+        fig4.update_layout(xaxis=dict(tickangle=-35))
+        st.plotly_chart(fig4, config={"displayModeBar": False})
 
     st.html('<hr class="brew">')
 
-    # ── Forward Story ──
-    section("LOOKING FORWARD", "Key themes for 2026 P3–P13 and beyond")
-    col5, col6 = st.columns(2)
-    with col5:
-        fc = dash.get("forecast_26", [])
-        fc_df = pd.DataFrame(fc)
-        if not fc_df.empty:
-            fig5 = go.Figure()
-            actuals = fc_df[fc_df["is_actual"] == True]
-            forecast = fc_df[fc_df["is_actual"] == False]
-            if not actuals.empty:
-                fig5.add_bar(x=actuals["period"], y=actuals["ns_base"],
-                             name="2026 Actual", marker_color=DARK, opacity=0.85)
-            if not forecast.empty:
-                fig5.add_bar(x=forecast["period"], y=forecast["ns_base"],
-                             name="2026 Base Forecast", marker_color=BLUE, opacity=0.7)
-                fig5.add_bar(x=forecast["period"], y=forecast["ns_opt"],
-                             name="Optimistic", marker_color=GREEN, opacity=0.5)
-                fig5.add_bar(x=forecast["period"], y=forecast["ns_risk"],
-                             name="Risk", marker_color=RED, opacity=0.4)
-            brew_fig(fig5, height=280)
-            fig5.update_layout(barmode="group",
-                               yaxis=dict(tickprefix="$", tickformat=",.0f", tickfont=dict(size=9)))
-            st.plotly_chart(fig5, config={"displayModeBar": False})
-    with col6:
-        themes = [
-            ("📈 Growth Engine", "New stand pipeline of 10+ locations in H2 2026 will dilute system EBITDA% by ~150–200bps per cohort during ramp. Labor at new locations averages 30%+ for the first 60–90 days.", "watch", "amber"),
-            ("⚡ Utility Pressure", "Summer periods (P6–P8) historically see utility cost increases of 30–50bps. Proactive chiller maintenance and LED retrofits in 2026 pipeline stands can cap this.", "watch", "amber"),
-            ("🏆 Regional Maturity", "CTX and OKC mature stands consistently at 22–25% EBITDA. FL-SW structural labor gap (28%+) requires dedicated RM coaching and scheduling discipline.", "win", "green"),
-            ("🔧 R&M Watch", "Stands opened 2022–2023 are approaching the 2–3yr equipment cycle. Budget preventive maintenance in P9–P11 to avoid emergency R&M spikes.", "", "red"),
-        ]
-        for title, body, cls, tag_cls in themes:
-            insight_card(title, body, tag=cls.upper() if cls else "", tag_cls=tag_cls, card_cls=cls)
+    # ── Seasonal Watch — data-driven alerts based on upcoming periods ──
+    section("SEASONAL WATCH", "Data-driven alerts based on historical patterns and upcoming period trends")
+
+    # Determine what's "next" — look at the period after the latest selected
+    latest_pnum = int(latest["period_num"])
+    latest_year = int(latest["year"])
+    next_periods = list(range(latest_pnum + 1, min(latest_pnum + 4, 14)))  # Next 3 periods
+
+    # Build seasonal pattern from historical data (all periods, not just filtered)
+    seasonal_alerts = []
+
+    # Compare current trajectory to same periods in prior year
+    prior_year = latest_year - 1
+    prior_data = periods_df[periods_df["year"] == prior_year]
+
+    if not prior_data.empty and len(filtered_df) >= 2:
+        # Labor trend
+        labor_trend = filtered_df["labor_pct"].iloc[-1] - filtered_df["labor_pct"].iloc[0]
+        if labor_trend > 0.01:
+            seasonal_alerts.append({
+                "title": f"📈 Labor Trending Up (+{labor_trend*100:.1f}% pts across selected periods)",
+                "body": f"Labor has increased from {_fmt_p(filtered_df['labor_pct'].iloc[0])} to {_fmt_p(filtered_df['labor_pct'].iloc[-1])}. "
+                        f"If this trend continues, EBITDA compression of ~{abs(labor_trend)*100:.0f}bps is likely in the next 2–3 periods. "
+                        f"Review scheduling compliance and overtime at high-labor stands.",
+                "cls": "watch", "tag_cls": "amber",
+            })
+
+        # COGS trend
+        cogs_trend = filtered_df["cogs_pct"].iloc[-1] - filtered_df["cogs_pct"].iloc[0]
+        if cogs_trend > 0.005:
+            seasonal_alerts.append({
+                "title": f"📦 COGS Creeping Up (+{cogs_trend*100:.1f}% pts)",
+                "body": f"COGS moved from {_fmt_p(filtered_df['cogs_pct'].iloc[0])} to {_fmt_p(filtered_df['cogs_pct'].iloc[-1])}. "
+                        f"Check vendor pricing, waste rates, and portion control. Even 50bps of COGS savings = ~${filtered_df['net_sales'].mean() * 0.005 / 1000:.0f}k/period.",
+                "cls": "watch", "tag_cls": "amber",
+            })
+
+        # Utility seasonality alert
+        for np_num in next_periods:
+            prior_match = prior_data[prior_data["period_num"] == np_num]
+            if not prior_match.empty:
+                prior_util = prior_match.iloc[0]["utilities_pct"]
+                current_util = filtered_df["utilities_pct"].iloc[-1]
+                if prior_util > current_util + 0.003:
+                    p_label = f"P{np_num}"
+                    seasonal_alerts.append({
+                        "title": f"⚡ Utility Spike Expected in {p_label}",
+                        "body": f"Last year {p_label} hit {_fmt_p(prior_util)} utilities vs current {_fmt_p(current_util)}. "
+                                f"{'Summer HVAC load drives this — schedule chiller maintenance before P5.' if np_num in [6,7,8] else 'Seasonal pattern suggests cost increase. Pre-negotiate contracts where possible.'}",
+                        "cls": "watch", "tag_cls": "amber",
+                    })
+                    break  # Only show the nearest one
+
+        # EBITDA momentum
+        ebitda_trend = filtered_df["ebitda_pct"].iloc[-1] - filtered_df["ebitda_pct"].iloc[-2] if len(filtered_df) >= 2 else 0
+        if ebitda_trend > 0.01:
+            seasonal_alerts.append({
+                "title": f"🟢 EBITDA Momentum: +{ebitda_trend*100:.0f}bps period-over-period",
+                "body": f"System EBITDA improved from {_fmt_p(filtered_df['ebitda_pct'].iloc[-2])} to {_fmt_p(filtered_df['ebitda_pct'].iloc[-1])}. "
+                        f"Protect this by maintaining current labor scheduling and vendor pricing discipline.",
+                "cls": "win", "tag_cls": "green",
+            })
+        elif ebitda_trend < -0.015:
+            seasonal_alerts.append({
+                "title": f"🔴 EBITDA Slipping: {ebitda_trend*100:.0f}bps period-over-period",
+                "body": f"System EBITDA dropped from {_fmt_p(filtered_df['ebitda_pct'].iloc[-2])} to {_fmt_p(filtered_df['ebitda_pct'].iloc[-1])}. "
+                        f"Identify the top 3 contributors — likely labor overrun at ramping stands or seasonal volume softness.",
+                "cls": "watch", "tag_cls": "red",
+            })
+
+        # Region-specific leakage detection
+        if not reg_all.empty and "ebitda_pct" in reg_all.columns:
+            # Check for regions losing ground vs prior periods
+            for region in reg_all["region"].unique():
+                reg_periods = reg_all[reg_all["region"] == region].copy()
+                if len(reg_periods) >= 2:
+                    # Get region data across the filtered periods and check trend
+                    first_ebitda = reg_periods.iloc[0].get("ebitda_pct", 0)
+                    last_ebitda = reg_periods.iloc[-1].get("ebitda_pct", 0)
+                    if first_ebitda - last_ebitda > 0.03:  # >3% pts decline
+                        seasonal_alerts.append({
+                            "title": f"📍 {region}: EBITDA declining ({_fmt_p(first_ebitda)} → {_fmt_p(last_ebitda)})",
+                            "body": f"This region has dropped {(first_ebitda - last_ebitda)*100:.0f}bps across the selected periods. "
+                                    f"Investigate whether this is volume-driven (seasonal) or cost-driven (labor/R&M creep).",
+                            "cls": "watch", "tag_cls": "red",
+                        })
+
+    if not seasonal_alerts:
+        seasonal_alerts.append({
+            "title": "✅ No Major Alerts",
+            "body": "System metrics are stable across the selected periods. Continue monitoring labor scheduling and vendor pricing.",
+            "cls": "win", "tag_cls": "green",
+        })
+
+    for alert in seasonal_alerts:
+        insight_card(alert["title"], alert["body"],
+                     tag=alert.get("cls", "").upper(), tag_cls=alert.get("tag_cls", "amber"),
+                     card_cls=alert.get("cls", "watch"))
 
 
 # ─────────────────────────────────────────────
@@ -1338,8 +1426,8 @@ def tab_insights(dash):
         return
 
     # ── Separate stands by maturity ──
-    ramping_buckets = ["New (<6mo)", "Young (6-12mo)"]
-    mature_buckets  = ["Developing (1-2yr)", "Mature (2yr+)"]
+    ramping_buckets = ["New (<6mo)"]
+    mature_buckets  = ["Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
 
     if "Age_Bucket" in ps_stands.columns:
         ramping = ps_stands[ps_stands["Age_Bucket"].isin(ramping_buckets)]
@@ -1371,7 +1459,7 @@ def tab_insights(dash):
 
         st.html(f"""
         <div class="info-box">
-          <strong>📊 Ramp-Up Context:</strong> {n_ramping} of {len(ps_stands)} stands are in ramp-up phase (open &lt;12 months).
+          <strong>📊 Ramp-Up Context:</strong> {n_ramping} of {len(ps_stands)} stands are in ramp-up phase (open &lt;6 months).
           Ramping stands naturally carry higher labor ({_fmt_p(avg_ramp_labor)} avg vs {_fmt_p(avg_mature_labor)} mature)
           and lower EBITDA ({_fmt_p(avg_ramp_ebitda)} avg vs {_fmt_p(avg_mature_ebitda)} mature) as they build volume.
           The analysis below uses <strong>maturity-adjusted benchmarks</strong> so new locations aren't flagged for normal ramp behavior.
@@ -1484,7 +1572,7 @@ def tab_insights(dash):
     # ── Ramp-Up Tracker ──
     if n_ramping > 0:
         st.html('<hr class="brew">')
-        section("RAMP-UP TRACKER", f"{n_ramping} stands in first 12 months — expected higher labor & COGS, lower sales")
+        section("RAMP-UP TRACKER", f"{n_ramping} stands in first 6 months — expected higher labor & COGS, lower sales")
         ramp_display = ramping[["Stand", "Net_Sales", "Total_Labor_pct", "Total_COGS_pct", "Store_EBITDA_pct"]].copy()
         if "Age_Bucket" in ramping.columns:
             ramp_display.insert(1, "Stage", ramping["Age_Bucket"])
