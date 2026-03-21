@@ -191,7 +191,13 @@ st.markdown("""
 
 # ─────────────────────────────────────────────
 # HELPERS
-# ───eturn "—"
+# ─────────────────────────────────────────────
+def _fmt_d(v):
+    if v is None: return "—"
+    return "$" + f"{abs(float(v)):,.0f}"
+
+def _fmt_p(v, dec=1):
+    if v is None: return "—"
     return f"{float(v)*100:.{dec}f}%"
 
 def _fmt_bps(delta):
