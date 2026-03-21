@@ -1337,16 +1337,68 @@ def tab_insights(dash):
         st.info("No stand data for this period.")
         return
 
+    # ── Separate stands by maturity ──
+    ramping_buckets = ["New (<6mo)", "Young (6-12mo)"]
+    mature_buckets  = ["Developing (1-2yr)", "Mature (2yr+)"]
+
+    if "Age_Bucket" in ps_stands.columns:
+        ramping = ps_stands[ps_stands["Age_Bucket"].isin(ramping_buckets)]
+        mature  = ps_stands[ps_stands["Age_Bucket"].isin(mature_buckets)]
+        # Stands without age data go into mature (conservative)
+        unclassified = ps_stands[~ps_stands["Age_Bucket"].isin(ramping_buckets + mature_buckets)]
+        mature = pd.concat([mature, unclassified], ignore_index=True)
+    else:
+        ramping = pd.DataFrame()
+        mature  = ps_stands
+
+    n_ramping = len(ramping)
+    n_mature  = len(mature)
+
+    # Maturity-aware benchmarks
+    # Ramping stands: higher labor/COGS is expected, don't flag unless extreme
+    MATURE_LABOR_THRESHOLD = 0.25    # Flag mature stands >25%
+    RAMPING_LABOR_THRESHOLD = 0.35   # Only flag ramping stands >35% (expected to be 28-32%)
+    MATURE_EBITDA_FLOOR = 0.10       # Flag mature stands <10%
+    RAMPING_EBITDA_FLOOR = 0.0       # Only flag ramping stands if negative EBITDA
+
+    # Show ramp-up context
+    if n_ramping > 0:
+        avg_ramp_labor = ramping["Total_Labor_pct"].mean() if "Total_Labor_pct" in ramping.columns else 0
+        avg_ramp_ebitda = ramping["Store_EBITDA_pct"].mean() if "Store_EBITDA_pct" in ramping.columns else 0
+        avg_ramp_sales = ramping["Net_Sales"].mean() if "Net_Sales" in ramping.columns else 0
+        avg_mature_labor = mature["Total_Labor_pct"].mean() if len(mature) and "Total_Labor_pct" in mature.columns else 0
+        avg_mature_ebitda = mature["Store_EBITDA_pct"].mean() if len(mature) and "Store_EBITDA_pct" in mature.columns else 0
+
+        st.html(f"""
+        <div class="info-box">
+          <strong>📊 Ramp-Up Context:</strong> {n_ramping} of {len(ps_stands)} stands are in ramp-up phase (open &lt;12 months).
+          Ramping stands naturally carry higher labor ({_fmt_p(avg_ramp_labor)} avg vs {_fmt_p(avg_mature_labor)} mature)
+          and lower EBITDA ({_fmt_p(avg_ramp_ebitda)} avg vs {_fmt_p(avg_mature_ebitda)} mature) as they build volume.
+          The analysis below uses <strong>maturity-adjusted benchmarks</strong> so new locations aren't flagged for normal ramp behavior.
+        </div>""")
+
     # Auto-generate wins
     wins = []
     opps = []
 
-    top_ebitda = ps_stands.nlargest(3, "Store_EBITDA_pct")
-    wins.append({
-        "title": f"🏆 Top Performers: {', '.join(top_ebitda['Stand'].str.split(',').str[0].tolist())}",
-        "body": f"These stands achieved {_fmt_p(top_ebitda['Store_EBITDA_pct'].mean())} average EBITDA — {_fmt_bps(top_ebitda['Store_EBITDA_pct'].mean() - ps['ebitda_pct'])} above system avg. Best-in-class labor efficiency ({_fmt_p(top_ebitda['Total_Labor_pct'].mean())}) drives the margin.",
-        "tag": f"Avg EBITDA: {_fmt_p(top_ebitda['Store_EBITDA_pct'].mean())}", "tag_cls": "green",
-    })
+    # Win: Top performers (from mature stands — true operational excellence)
+    if len(mature) >= 3:
+        top_ebitda = mature.nlargest(3, "Store_EBITDA_pct")
+        wins.append({
+            "title": f"🏆 Top Performers: {', '.join(top_ebitda['Stand'].str.split(',').str[0].tolist())}",
+            "body": f"These mature stands achieved {_fmt_p(top_ebitda['Store_EBITDA_pct'].mean())} average EBITDA — {_fmt_bps(top_ebitda['Store_EBITDA_pct'].mean() - ps['ebitda_pct'])} above system avg. Best-in-class labor efficiency ({_fmt_p(top_ebitda['Total_Labor_pct'].mean())}) drives the margin.",
+            "tag": f"Avg EBITDA: {_fmt_p(top_ebitda['Store_EBITDA_pct'].mean())}", "tag_cls": "green",
+        })
+
+    # Win: Ramping stands beating expectations
+    if n_ramping > 0:
+        fast_ramp = ramping[ramping["Store_EBITDA_pct"] > 0.15]
+        if len(fast_ramp):
+            wins.append({
+                "title": f"🚀 Fast Ramp: {len(fast_ramp)} new stand(s) already >15% EBITDA",
+                "body": f"These new locations are ahead of the typical ramp curve: {', '.join(fast_ramp['Stand'].str.split(',').str[0].tolist()[:3])}. Average EBITDA of {_fmt_p(fast_ramp['Store_EBITDA_pct'].mean())} in the first year signals strong market fit and hiring execution.",
+                "tag": "Ahead of Ramp", "tag_cls": "green",
+            })
 
     strong_regions = []
     for _, row in get_regions_df(dash, pk).iterrows():
@@ -1366,13 +1418,23 @@ def tab_insights(dash):
             "tag": f"Target: <22%", "tag_cls": "green",
         })
 
-    # Auto-generate opportunities
-    high_labor = ps_stands[ps_stands["Total_Labor_pct"] > 0.30].nlargest(3, "Total_Labor_pct")
-    if len(high_labor):
+    # ── Opportunities — maturity-adjusted ──
+    # High labor: only flag MATURE stands above mature threshold, and ramping stands above ramping threshold
+    mature_high_labor = mature[mature["Total_Labor_pct"] > MATURE_LABOR_THRESHOLD].nlargest(3, "Total_Labor_pct") if len(mature) else pd.DataFrame()
+    ramp_high_labor = ramping[ramping["Total_Labor_pct"] > RAMPING_LABOR_THRESHOLD].nlargest(3, "Total_Labor_pct") if n_ramping else pd.DataFrame()
+
+    if len(mature_high_labor):
         opps.append({
-            "title": f"⚠️ High Labor Outliers ({len(high_labor)} stands > 30%)",
-            "body": f"Top offender: {high_labor.iloc[0]['Stand']} at {_fmt_p(high_labor.iloc[0]['Total_Labor_pct'])} Total Labor. With {_fmt_d(high_labor.iloc[0]['Net_Sales'])} in sales, EBITDA is compressed to {_fmt_p(high_labor.iloc[0]['Store_EBITDA_pct'])}. Pull scheduling data and compare with similar-volume stands.",
+            "title": f"⚠️ High Labor — Mature Stands ({len(mature_high_labor)} > 25%)",
+            "body": f"Top: {mature_high_labor.iloc[0]['Stand'].split(',')[0]} at {_fmt_p(mature_high_labor.iloc[0]['Total_Labor_pct'])} labor. These are established locations where labor should be optimized. Pull scheduling data and compare with similar-volume stands.",
             "tag": "Labor Risk", "tag_cls": "red",
+        })
+
+    if len(ramp_high_labor):
+        opps.append({
+            "title": f"🔶 Extreme Labor — Ramping Stands ({len(ramp_high_labor)} > 35%)",
+            "body": f"While elevated labor is expected during ramp, these stands are well above the 28–32% ramp range: {', '.join(ramp_high_labor['Stand'].str.split(',').str[0].tolist()[:3])}. Verify minimum staffing isn't being exceeded and training timelines are on track.",
+            "tag": "Ramp Watch", "tag_cls": "amber",
         })
 
     high_disc = ps_stands.nlargest(3, "Discounts_pct")
@@ -1383,12 +1445,22 @@ def tab_insights(dash):
             "tag": "Discount Risk", "tag_cls": "red",
         })
 
-    low_ebitda = ps_stands[ps_stands["Store_EBITDA_pct"] < 0.10]
-    if len(low_ebitda):
+    # Low EBITDA: use different floors for mature vs ramping
+    mature_low = mature[mature["Store_EBITDA_pct"] < MATURE_EBITDA_FLOOR] if len(mature) else pd.DataFrame()
+    ramp_low = ramping[ramping["Store_EBITDA_pct"] < RAMPING_EBITDA_FLOOR] if n_ramping else pd.DataFrame()
+
+    if len(mature_low):
         opps.append({
-            "title": f"🔴 Below-Floor EBITDA ({len(low_ebitda)} stands < 10%)",
-            "body": f"Stands below 10% EBITDA need immediate attention. Common root causes: high labor (>{_fmt_p(low_ebitda['Total_Labor_pct'].mean())} avg), sub-scale sales volume, or high fixed cost absorption.",
+            "title": f"🔴 Below-Floor EBITDA — Mature ({len(mature_low)} stands < 10%)",
+            "body": f"These established stands should be profitable. Avg labor at {_fmt_p(mature_low['Total_Labor_pct'].mean())} and avg sales at {_fmt_d(mature_low['Net_Sales'].mean())} suggest cost structure or volume issues requiring attention.",
             "tag": "<10% EBITDA", "tag_cls": "red",
+        })
+
+    if len(ramp_low):
+        opps.append({
+            "title": f"🔶 Negative EBITDA — Ramping ({len(ramp_low)} stands)",
+            "body": f"These new stands are losing money: {', '.join(ramp_low['Stand'].str.split(',').str[0].tolist()[:3])}. Some loss is expected during ramp, but negative EBITDA beyond 90 days warrants a review of staffing model and local market conditions.",
+            "tag": "Ramp Risk", "tag_cls": "amber",
         })
 
     high_rm = ps_stands[ps_stands["Total_RM_pct"] > 0.02].nlargest(3, "Total_RM_pct")
@@ -1408,6 +1480,20 @@ def tab_insights(dash):
         st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">⚠ OPPORTUNITIES</div>')
         for o in opps:
             insight_card(o["title"], o["body"], o.get("tag",""), o.get("tag_cls","red"))
+
+    # ── Ramp-Up Tracker ──
+    if n_ramping > 0:
+        st.html('<hr class="brew">')
+        section("RAMP-UP TRACKER", f"{n_ramping} stands in first 12 months — expected higher labor & COGS, lower sales")
+        ramp_display = ramping[["Stand", "Net_Sales", "Total_Labor_pct", "Total_COGS_pct", "Store_EBITDA_pct"]].copy()
+        if "Age_Bucket" in ramping.columns:
+            ramp_display.insert(1, "Stage", ramping["Age_Bucket"])
+        ramp_display["Net_Sales"] = ramp_display["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
+        for col in ["Total_Labor_pct", "Total_COGS_pct", "Store_EBITDA_pct"]:
+            if col in ramp_display.columns:
+                ramp_display[col] = ramp_display[col].apply(lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
+        ramp_display.columns = [c.replace("_pct", " %").replace("Total_", "").replace("Store_", "").replace("Net_", "") for c in ramp_display.columns]
+        render_table(ramp_display.reset_index(drop=True))
 
 
 # ─────────────────────────────────────────────
