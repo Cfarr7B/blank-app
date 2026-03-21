@@ -830,7 +830,10 @@ def tab_stands(dash):
     with c1:
         sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="std_period")
     with c2:
-        regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
+        if "Region" in stands_df.columns:
+            regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
+        else:
+            regions = ["All Regions"]
         sel_reg = st.selectbox("Region", regions, key="std_region")
     with c3:
         ages = ["All Ages", "New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
@@ -840,11 +843,11 @@ def tab_stands(dash):
 
     pk = label_to_key[sel_lbl]
     df = stands_df[stands_df["Period_Key"] == pk].copy()
-    if sel_reg != "All Regions":
+    if sel_reg != "All Regions" and "Region" in df.columns:
         df = df[df["Region"] == sel_reg]
-    if sel_age != "All Ages":
+    if sel_age != "All Ages" and "Age_Bucket" in df.columns:
         df = df[df["Age_Bucket"] == sel_age]
-    if search:
+    if search and "Stand" in df.columns:
         df = df[df["Stand"].str.contains(search, case=False, na=False)]
 
     st.caption(f"Showing {len(df)} stands")
@@ -858,7 +861,9 @@ def tab_stands(dash):
         "Unit_EBITDAR_pct": "EBITDAR%", "Total_Rent_pct": "Rent%",
         "Store_EBITDA_pct": "EBITDA%", "Discounts_pct": "Disc%",
     }
-    disp = df[list(display_cols.keys())].rename(columns=display_cols).copy()
+    # Only select columns that exist in the dataframe
+    available_cols = [col for col in display_cols.keys() if col in df.columns]
+    disp = df[available_cols].rename(columns={k: v for k, v in display_cols.items() if k in available_cols}).copy()
     for col in ["COGS%", "Hourly%", "Labor%", "R&M%", "Ctrl%", "Util%",
                 "Fixed%", "EBITDAR%", "Rent%", "EBITDA%", "Disc%"]:
         if col in disp.columns:
