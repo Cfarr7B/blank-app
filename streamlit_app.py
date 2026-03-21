@@ -1630,97 +1630,95 @@ def main():
       </div>
     </div>""")
 
-    # Upload section — always visible at top
+    # Upload section — compact status bar + expandable upload area
     saved_periods = load_saved_uploads()
     saved_count = len(saved_periods)
 
-    st.markdown("---")
-    upload_col1, upload_col2 = st.columns([2, 1])
-
-    with upload_col1:
-        uploaded = st.file_uploader(
-            "Upload P&L Files (.xlsx)",
-            type=["xlsx"],
-            accept_multiple_files=True,
-            help="Upload 7BREW PTD Side By Side Excel files to add new periods or historical data",
-        )
-        # Also allow restoring from a previous backup JSON
-        restore_file = st.file_uploader(
-            "Restore from Backup (.json)",
-            type=["json"],
-            accept_multiple_files=False,
-            help="Upload a previously downloaded 7brew_upload_backup.json to restore saved periods",
-            key="restore_backup",
-        )
-
-    with upload_col2:
-        if saved_count > 0:
-            saved_keys = sorted([s["period_key"] for s in saved_periods])
-            st.markdown(f"**📁 {saved_count} saved period(s):**")
-            st.caption(", ".join(saved_keys))
-            # Download backup
+    # Show compact status bar with saved period count
+    if saved_count > 0:
+        saved_keys = sorted([s["period_key"] for s in saved_periods])
+        status_col1, status_col2, status_col3 = st.columns([4, 1, 1])
+        with status_col1:
+            st.caption(f"📁 **{saved_count} uploaded period(s) active:** {', '.join(saved_keys)}")
+        with status_col2:
             backup = json.dumps(saved_periods, default=str, indent=2)
-            st.download_button("⬇ Download Backup", backup, "7brew_upload_backup.json",
+            st.download_button("⬇ Backup", backup, "7brew_upload_backup.json",
                                mime="application/json")
-            if st.button("🗑 Clear All Saved Data"):
+        with status_col3:
+            if st.button("🗑 Clear All"):
                 delete_saved_uploads()
                 if "uploaded_dash" in st.session_state:
                     del st.session_state["uploaded_dash"]
                 if "upload_count" in st.session_state:
                     del st.session_state["upload_count"]
                 st.rerun()
-        else:
-            st.caption("No saved periods yet. Upload P&L files or restore from a backup.")
 
-    # Handle restore from backup JSON
-    if restore_file:
-        try:
-            restored = json.load(restore_file)
-            if isinstance(restored, list):
-                for period_data in restored:
-                    if "period_key" in period_data:
-                        save_uploaded_period(period_data)
-                st.success(f"✅ Restored {len(restored)} period(s) from backup")
-                st.rerun()
-            else:
-                st.error("Invalid backup format — expected a JSON array of periods")
-        except Exception as e:
-            st.error(f"Failed to restore backup: {e}")
+    # Expandable upload area — collapsed by default so tabs are immediately visible
+    with st.expander("📤 Upload P&L Files or Restore Backup", expanded=False):
+        up_col1, up_col2 = st.columns(2)
+        with up_col1:
+            uploaded = st.file_uploader(
+                "Upload P&L Files (.xlsx)",
+                type=["xlsx"],
+                accept_multiple_files=True,
+                help="Upload 7BREW PTD Side By Side Excel files to add new periods or historical data",
+            )
+        with up_col2:
+            restore_file = st.file_uploader(
+                "Restore from Backup (.json)",
+                type=["json"],
+                accept_multiple_files=False,
+                help="Upload a previously downloaded 7brew_upload_backup.json to restore saved periods",
+                key="restore_backup",
+            )
 
-    # Handle new P&L file uploads
-    if uploaded:
-        from pl_parser import parse_pl_file, merge_into_dash
-        import copy
-        base = load_base_data()
-        dash_copy = copy.deepcopy(base)
-        parsed = []
-        errors = []
-        for uf in uploaded:
+        # Handle restore from backup JSON
+        if restore_file:
             try:
-                suffix = ".xlsx"
-                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                    tmp.write(uf.read())
-                    tmp_path = tmp.name
-                result = parse_pl_file(tmp_path)
-                os.unlink(tmp_path)
-                if result and result.get("stands"):
-                    parsed.append(result)
-                    save_uploaded_period(result)
-                    st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands) — saved")
+                restored = json.load(restore_file)
+                if isinstance(restored, list):
+                    for period_data in restored:
+                        if "period_key" in period_data:
+                            save_uploaded_period(period_data)
+                    st.success(f"✅ Restored {len(restored)} period(s) from backup — data is now active in all tabs")
+                    st.rerun()
                 else:
-                    errors.append(f"No stands found in {uf.name}")
+                    st.error("Invalid backup format — expected a JSON array of periods")
             except Exception as e:
-                errors.append(f"{uf.name}: {e}")
-        if errors:
-            for e in errors:
-                st.error(e)
-        if parsed:
-            updated = merge_into_dash(dash_copy, parsed)
-            st.session_state["uploaded_dash"] = updated
-            st.session_state["upload_count"] = len(parsed)
-            st.rerun()
+                st.error(f"Failed to restore backup: {e}")
 
-    st.markdown("---")
+        # Handle new P&L file uploads
+        if uploaded:
+            from pl_parser import parse_pl_file, merge_into_dash
+            import copy
+            base = load_base_data()
+            dash_copy = copy.deepcopy(base)
+            parsed = []
+            errors = []
+            for uf in uploaded:
+                try:
+                    suffix = ".xlsx"
+                    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                        tmp.write(uf.read())
+                        tmp_path = tmp.name
+                    result = parse_pl_file(tmp_path)
+                    os.unlink(tmp_path)
+                    if result and result.get("stands"):
+                        parsed.append(result)
+                        save_uploaded_period(result)
+                        st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
+                    else:
+                        errors.append(f"No stands found in {uf.name}")
+                except Exception as e:
+                    errors.append(f"{uf.name}: {e}")
+            if errors:
+                for e in errors:
+                    st.error(e)
+            if parsed:
+                updated = merge_into_dash(dash_copy, parsed)
+                st.session_state["uploaded_dash"] = updated
+                st.session_state["upload_count"] = len(parsed)
+                st.rerun()
 
     # Tabs
     tab_names = [
