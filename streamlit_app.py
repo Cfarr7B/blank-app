@@ -607,37 +607,44 @@ def render_sidebar():
         from pl_parser import parse_pl_file, merge_into_dash
         import copy
 
-        base = load_base_data()
-        dash = copy.deepcopy(base)
-        parsed = []
-        errors = []
+        # Only process files we haven't seen this session (prevents re-parse on every rerun)
+        if "sidebar_processed_ids" not in st.session_state:
+            st.session_state["sidebar_processed_ids"] = set()
+        new_files = [uf for uf in uploaded if uf.file_id not in st.session_state["sidebar_processed_ids"]]
 
-        for uf in uploaded:
-            try:
-                suffix = ".xlsx"
-                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                    tmp.write(uf.read())
-                    tmp_path = tmp.name
-                result = parse_pl_file(tmp_path)
-                os.unlink(tmp_path)
-                if result and result.get("stands"):
-                    parsed.append(result)
-                    save_uploaded_period(result)
-                    st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
-                else:
-                    errors.append(f"No stands found in {uf.name}")
-            except Exception as e:
-                errors.append(f"{uf.name}: {e}")
+        if new_files:
+            base = load_base_data()
+            dash = copy.deepcopy(base)
+            parsed = []
+            errors = []
 
-        if errors:
-            for e in errors:
-                st.error(e)
+            for uf in new_files:
+                try:
+                    suffix = ".xlsx"
+                    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                        tmp.write(uf.read())
+                        tmp_path = tmp.name
+                    result = parse_pl_file(tmp_path)
+                    os.unlink(tmp_path)
+                    st.session_state["sidebar_processed_ids"].add(uf.file_id)
+                    if result and result.get("stands"):
+                        parsed.append(result)
+                        save_uploaded_period(result)
+                        st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
+                    else:
+                        errors.append(f"No stands found in {uf.name}")
+                except Exception as e:
+                    errors.append(f"{uf.name}: {e}")
 
-        if parsed:
-            updated = merge_into_dash(dash, parsed)
-            st.session_state["uploaded_dash"] = updated
-            st.session_state["upload_count"] = len(parsed)
-            st.rerun()
+            if errors:
+                for e in errors:
+                    st.error(e)
+
+            if parsed:
+                updated = merge_into_dash(dash, parsed)
+                st.session_state["uploaded_dash"] = updated
+                st.session_state["upload_count"] = len(parsed)
+                st.rerun()
 
     saved = load_saved_uploads()
     if saved:
@@ -2084,6 +2091,10 @@ def main():
     base_keys = sorted([p["period_key"] for p in base.get("period_summaries", [])])
     st.caption(f"📊 **Base data:** {len(base_keys)} periods ({base_keys[0]} – {base_keys[-1]}) · {len(base.get('stand_records', []))} stand records")
 
+    # Filter pending uploads: exclude any period already in base data (stale files from old sessions)
+    saved_periods = [s for s in saved_periods if s.get("period_key") not in base_keys]
+    saved_count = len(saved_periods)
+
     if saved_count > 0:
         saved_keys = sorted([s["period_key"] for s in saved_periods])
         status_col1, status_col2, status_col3, status_col4 = st.columns([3, 1, 1, 1])
@@ -2150,35 +2161,43 @@ def main():
         if uploaded:
             from pl_parser import parse_pl_file, merge_into_dash
             import copy
-            base_data = load_base_data()
-            dash_copy = copy.deepcopy(base_data)
-            parsed = []
-            errors = []
-            for uf in uploaded:
-                try:
-                    suffix = ".xlsx"
-                    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                        tmp.write(uf.read())
-                        tmp_path = tmp.name
-                    result = parse_pl_file(tmp_path)
-                    os.unlink(tmp_path)
-                    if result and result.get("stands"):
-                        parsed.append(result)
-                        save_uploaded_period(result)
-                        st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
-                    else:
-                        errors.append(f"No stands found in {uf.name}")
-                except Exception as e:
-                    errors.append(f"{uf.name}: {e}")
-            if errors:
-                for e in errors:
-                    st.error(e)
-            if parsed:
-                updated = merge_into_dash(dash_copy, parsed)
-                st.session_state["uploaded_dash"] = updated
-                st.session_state["upload_count"] = len(parsed)
-                st.success(f"✅ {len(parsed)} period(s) loaded — click **Save to Base Data** above to make permanent")
-                st.rerun()
+
+            # Only process files we haven't seen this session (prevents re-parse on every rerun)
+            if "main_processed_ids" not in st.session_state:
+                st.session_state["main_processed_ids"] = set()
+            new_files = [uf for uf in uploaded if uf.file_id not in st.session_state["main_processed_ids"]]
+
+            if new_files:
+                base_data = load_base_data()
+                dash_copy = copy.deepcopy(base_data)
+                parsed = []
+                errors = []
+                for uf in new_files:
+                    try:
+                        suffix = ".xlsx"
+                        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                            tmp.write(uf.read())
+                            tmp_path = tmp.name
+                        result = parse_pl_file(tmp_path)
+                        os.unlink(tmp_path)
+                        st.session_state["main_processed_ids"].add(uf.file_id)
+                        if result and result.get("stands"):
+                            parsed.append(result)
+                            save_uploaded_period(result)
+                            st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
+                        else:
+                            errors.append(f"No stands found in {uf.name}")
+                    except Exception as e:
+                        errors.append(f"{uf.name}: {e}")
+                if errors:
+                    for e in errors:
+                        st.error(e)
+                if parsed:
+                    updated = merge_into_dash(dash_copy, parsed)
+                    st.session_state["uploaded_dash"] = updated
+                    st.session_state["upload_count"] = len(parsed)
+                    st.success(f"✅ {len(parsed)} period(s) loaded — click **Save to Base Data** above to make permanent")
+                    st.rerun()
 
     # Tabs
     tab_names = [
