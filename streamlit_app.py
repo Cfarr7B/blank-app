@@ -19,7 +19,7 @@ st.set_page_config(
     page_title="7BREW | Financial Performance Dashboard",
     page_icon="☕",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ─────────────────────────────────────────────
@@ -153,6 +153,42 @@ st.html("""
   .story-headline { font-family:'Bebas Neue',sans-serif; font-size:34px;
     letter-spacing:1.5px; color:#cd2128; margin-bottom:8px; }
   .story-body { font-size:17px; color:#4a5060; line-height:1.7; }
+
+  /* ── Navigation Tabs ─────────────────────────────────────────────────── */
+  .stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+    background: #f5f6f8;
+    border: 1px solid #e2e4e9;
+    border-radius: 12px;
+    padding: 5px 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .stTabs [data-baseweb="tab"] {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    padding: 9px 20px !important;
+    border-radius: 8px !important;
+    color: #5a6070 !important;
+    background: transparent !important;
+    border: none !important;
+    white-space: nowrap !important;
+    height: auto !important;
+    line-height: 1.2 !important;
+  }
+  .stTabs [data-baseweb="tab"]:hover {
+    color: #2d2f36 !important;
+    background: rgba(0,0,0,0.05) !important;
+  }
+  .stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background: white !important;
+    color: #cd2128 !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.10) !important;
+  }
+  .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
+  .stTabs [data-baseweb="tab-border"]    { display: none !important; }
 
   /* Hide Streamlit branding */
   #MainMenu, footer, header { visibility: hidden; }
@@ -423,32 +459,8 @@ def save_to_base_data(merged_dash):
     delete_saved_uploads()
 
 def get_dash():
-    """Return merged DASH: base + session uploads + any saved-to-disk uploads."""
-    from pl_parser import merge_into_dash
-    import copy
-
-    base = load_base_data()
-    base_period_count = len(base.get("period_summaries", []))
-
-    # If session has a cached uploaded_dash, use it — but discard if base has grown
-    # (happens after "Save to Base Data" bakes uploads in and gets pushed to GitHub)
-    if "uploaded_dash" in st.session_state:
-        cached = st.session_state["uploaded_dash"]
-        cached_count = len(cached.get("period_summaries", []))
-        if cached_count >= base_period_count:
-            return cached
-        # Base has more periods now — stale cache, drop it
-        del st.session_state["uploaded_dash"]
-        st.session_state.pop("upload_count", None)
-
-    # Check disk for previously saved uploads
-    saved = load_saved_uploads()
-    if saved:
-        dash = copy.deepcopy(base)
-        merged = merge_into_dash(dash, saved)
-        return merged
-
-    return base
+    """Return base dashboard data. New periods are added via build_base_data.py."""
+    return load_base_data()
 
 QUARTER_MAP = {1: "Q1", 2: "Q1", 3: "Q1", 4: "Q2", 5: "Q2", 6: "Q2",
                7: "Q3", 8: "Q3", 9: "Q3", 10: "Q4", 11: "Q4", 12: "Q4", 13: "Q4"}
@@ -607,85 +619,24 @@ def get_regions_df(dash, period_key):
     return pd.DataFrame(rows) if rows else pd.DataFrame()
 
 # ─────────────────────────────────────────────
-# SIDEBAR: Upload + Navigation
+# SIDEBAR: Minimal branding only
 # ─────────────────────────────────────────────
 def render_sidebar():
-    st.html("### 7BREW DASHBOARD")
-    st.html("<hr>")
-    st.html("**📤 Upload P&L Files**")
-    st.html(
-        '<div class="info-box">Upload 7BREW <strong>PTD Side By Side</strong> Excel files '
-        'to add new periods or enrich existing ones with utility detail.</div>'
-    )
-
-    uploaded = st.file_uploader(
-        "Drop .xlsx P&L files here",
-        type=["xlsx"],
-        accept_multiple_files=True,
-        label_visibility="collapsed",
-    )
-
-    if uploaded:
-        from pl_parser import parse_pl_file, merge_into_dash, load_stand_metadata
-        import copy
-
-        # Load stand metadata so uploaded files get correct region assignments
-        _meta_path = Path(__file__).parent / "stand_meta.json"
-        if _meta_path.exists():
-            load_stand_metadata(str(_meta_path))
-
-        # Only process files we haven't seen this session (prevents re-parse on every rerun)
-        if "sidebar_processed_ids" not in st.session_state:
-            st.session_state["sidebar_processed_ids"] = set()
-        new_files = [uf for uf in uploaded if uf.file_id not in st.session_state["sidebar_processed_ids"]]
-
-        if new_files:
-            base = load_base_data()
-            dash = copy.deepcopy(base)
-            parsed = []
-            errors = []
-
-            for uf in new_files:
-                try:
-                    suffix = ".xlsx"
-                    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                        tmp.write(uf.read())
-                        tmp_path = tmp.name
-                    result = parse_pl_file(tmp_path)
-                    os.unlink(tmp_path)
-                    st.session_state["sidebar_processed_ids"].add(uf.file_id)
-                    if result and result.get("stands"):
-                        parsed.append(result)
-                        save_uploaded_period(result)
-                        st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
-                    else:
-                        errors.append(f"No stands found in {uf.name}")
-                except Exception as e:
-                    errors.append(f"{uf.name}: {e}")
-
-            if errors:
-                for e in errors:
-                    st.error(e)
-
-            if parsed:
-                updated = merge_into_dash(dash, parsed)
-                st.session_state["uploaded_dash"] = updated
-                st.session_state["upload_count"] = len(parsed)
-                st.rerun()
-
-    saved = load_saved_uploads()
-    if saved:
-        st.info(f"📁 {len(saved)} saved period(s)")
-        if st.button("🗑 Clear All Saved Data"):
-            delete_saved_uploads()
-            if "uploaded_dash" in st.session_state:
-                del st.session_state["uploaded_dash"]
-            if "upload_count" in st.session_state:
-                del st.session_state["upload_count"]
-            st.rerun()
-
-    st.html("<hr>")
-    st.html('<div style="font-family:DM Mono,monospace;font-size:17px;color:#8a919e;">7BREW · CONFIDENTIAL · FY2025–2026</div>')
+    st.html("""
+    <div style="padding:12px 4px;">
+      <div style="background:#cd2128;color:white;font-family:'Bebas Neue',sans-serif;
+                  font-size:26px;letter-spacing:2px;padding:8px 14px;border-radius:8px;
+                  text-align:center;margin-bottom:12px;">7BREW</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:#8a919e;
+                  text-align:center;letter-spacing:1px;text-transform:uppercase;">
+        Financial Performance Dashboard
+      </div>
+      <hr style="border:none;border-top:1px solid #e2e4e9;margin:16px 0;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:#c0c4cc;
+                  text-align:center;letter-spacing:1px;">
+        CONFIDENTIAL · INTERNAL USE ONLY
+      </div>
+    </div>""")
 
 # ─────────────────────────────────────────────
 # TAB: CEO SNAPSHOT
@@ -2625,128 +2576,10 @@ def main():
       </div>
     </div>""")
 
-    # Upload section — compact status bar + expandable upload area
-    saved_periods = load_saved_uploads()
-    saved_count = len(saved_periods)
-
-    # Show compact status bar with saved period count
-    # Show base data info
-    base = load_base_data()
-    base_keys = sorted([p["period_key"] for p in base.get("period_summaries", [])])
-    st.caption(f"📊 **Base data:** {len(base_keys)} periods ({base_keys[0]} – {base_keys[-1]}) · {len(base.get('stand_records', []))} stand records")
-
-    # Filter pending uploads: exclude any period already in base data (stale files from old sessions)
-    saved_periods = [s for s in saved_periods if s.get("period_key") not in base_keys]
-    saved_count = len(saved_periods)
-
-    if saved_count > 0:
-        saved_keys = sorted([s["period_key"] for s in saved_periods])
-        status_col1, status_col2, status_col3, status_col4 = st.columns([3, 1, 1, 1])
-        with status_col1:
-            st.caption(f"📁 **{saved_count} pending upload(s):** {', '.join(saved_keys)}")
-        with status_col2:
-            if st.button("💾 Save to Base Data", type="primary", help="Permanently merge uploaded periods into data.json — they'll survive any redeploy"):
-                merged = get_dash()  # This already has base + uploads merged
-                save_to_base_data(merged)
-                if "uploaded_dash" in st.session_state:
-                    del st.session_state["uploaded_dash"]
-                if "upload_count" in st.session_state:
-                    del st.session_state["upload_count"]
-                st.success("✅ Saved! Uploaded periods are now part of the base data. Push data.json to GitHub to make it permanent.")
-                st.rerun()
-        with status_col3:
-            backup = json.dumps(saved_periods, default=str, indent=2)
-            st.download_button("⬇ Backup", backup, "7brew_upload_backup.json",
-                               mime="application/json")
-        with status_col4:
-            if st.button("🗑 Clear Pending"):
-                delete_saved_uploads()
-                if "uploaded_dash" in st.session_state:
-                    del st.session_state["uploaded_dash"]
-                if "upload_count" in st.session_state:
-                    del st.session_state["upload_count"]
-                st.rerun()
-
-    # Expandable upload area — collapsed by default so tabs are immediately visible
-    with st.expander("📤 Upload P&L Files or Restore Backup", expanded=False):
-        up_col1, up_col2 = st.columns(2)
-        with up_col1:
-            uploaded = st.file_uploader(
-                "Upload P&L Files (.xlsx)",
-                type=["xlsx"],
-                accept_multiple_files=True,
-                help="Upload 7BREW PTD Side By Side Excel files to add new periods or historical data",
-            )
-        with up_col2:
-            restore_file = st.file_uploader(
-                "Restore from Backup (.json)",
-                type=["json"],
-                accept_multiple_files=False,
-                help="Upload a previously downloaded 7brew_upload_backup.json to restore saved periods",
-                key="restore_backup",
-            )
-
-        # Handle restore from backup JSON
-        if restore_file:
-            try:
-                restored = json.load(restore_file)
-                if isinstance(restored, list):
-                    for period_data in restored:
-                        if "period_key" in period_data:
-                            save_uploaded_period(period_data)
-                    st.success(f"✅ Restored {len(restored)} period(s) — click 'Save to Base Data' to make permanent")
-                    st.rerun()
-                else:
-                    st.error("Invalid backup format — expected a JSON array of periods")
-            except Exception as e:
-                st.error(f"Failed to restore backup: {e}")
-
-        # Handle new P&L file uploads
-        if uploaded:
-            from pl_parser import parse_pl_file, merge_into_dash, load_stand_metadata
-            import copy
-
-            # Load stand metadata so uploaded files get correct region assignments
-            _meta_path = Path(__file__).parent / "stand_meta.json"
-            if _meta_path.exists():
-                load_stand_metadata(str(_meta_path))
-
-            # Only process files we haven't seen this session (prevents re-parse on every rerun)
-            if "main_processed_ids" not in st.session_state:
-                st.session_state["main_processed_ids"] = set()
-            new_files = [uf for uf in uploaded if uf.file_id not in st.session_state["main_processed_ids"]]
-
-            if new_files:
-                base_data = load_base_data()
-                dash_copy = copy.deepcopy(base_data)
-                parsed = []
-                errors = []
-                for uf in new_files:
-                    try:
-                        suffix = ".xlsx"
-                        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                            tmp.write(uf.read())
-                            tmp_path = tmp.name
-                        result = parse_pl_file(tmp_path)
-                        os.unlink(tmp_path)
-                        st.session_state["main_processed_ids"].add(uf.file_id)
-                        if result and result.get("stands"):
-                            parsed.append(result)
-                            save_uploaded_period(result)
-                            st.success(f"✓ {uf.name} → {result['period_key']} ({len(result['stands'])} stands)")
-                        else:
-                            errors.append(f"No stands found in {uf.name}")
-                    except Exception as e:
-                        errors.append(f"{uf.name}: {e}")
-                if errors:
-                    for e in errors:
-                        st.error(e)
-                if parsed:
-                    updated = merge_into_dash(dash_copy, parsed)
-                    st.session_state["uploaded_dash"] = updated
-                    st.session_state["upload_count"] = len(parsed)
-                    st.success(f"✅ {len(parsed)} period(s) loaded — click **Save to Base Data** above to make permanent")
-                    st.rerun()
+    # Data info line
+    base_keys = sorted([p["period_key"] for p in dash.get("period_summaries", [])])
+    if base_keys:
+        st.caption(f"📊 {len(base_keys)} periods · {base_keys[0]} – {base_keys[-1]} · {len(dash.get('stand_records', []))} stand records")
 
     # Tabs
     tab_names = [
