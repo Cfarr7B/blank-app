@@ -1482,40 +1482,36 @@ def tab_overview(dash):
 
         # ── COGs % by Region ─────────────────────────────────────────────────
         if "cogs_pct" in reg_df.columns:
-            reg_cogs = reg_df.sort_values("cogs_pct", ascending=True)
-            # Lower is better: ≤26% green, ≤28% amber, >28% red
-            cogs_colors = [GREEN if v <= 0.26 else (AMBER if v <= 0.28 else RED)
-                           for v in reg_cogs["cogs_pct"]]
+            reg_cogs = reg_df.sort_values("cogs_pct", ascending=False)
             fig_cogs = go.Figure(go.Bar(
-                x=reg_cogs["cogs_pct"] * 100, y=reg_cogs["region"],
-                orientation="h", marker_color=cogs_colors,
+                x=reg_cogs["region"], y=reg_cogs["cogs_pct"] * 100,
+                marker_color=[REGION_COLORS.get(r, MID) for r in reg_cogs["region"]],
                 text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.1f}%"),
                 textposition="outside",
             ))
-            fig_cogs.add_vline(x=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
-                               annotation_text="Sys avg", annotation_font_size=9)
+            fig_cogs.add_hline(y=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
+                               annotation_text="Sys avg", annotation_font_size=9,
+                               annotation_position="top right")
             brew_fig(fig_cogs, height=320)
             fig_cogs.update_layout(title_text="COGS % BY REGION",
-                                   xaxis=dict(ticksuffix="%"), showlegend=False)
+                                   yaxis=dict(ticksuffix="%"), showlegend=False)
             st.plotly_chart(fig_cogs, config={"displayModeBar": False}, use_container_width=True)
 
         # ── Labor % by Region ────────────────────────────────────────────────
         if "labor_pct" in reg_df.columns:
-            reg_labor = reg_df.sort_values("labor_pct", ascending=True)
-            # Lower is better: ≤22% green, ≤25% amber, >25% red
-            labor_colors = [GREEN if v <= 0.22 else (AMBER if v <= 0.25 else RED)
-                            for v in reg_labor["labor_pct"]]
+            reg_labor = reg_df.sort_values("labor_pct", ascending=False)
             fig_labor = go.Figure(go.Bar(
-                x=reg_labor["labor_pct"] * 100, y=reg_labor["region"],
-                orientation="h", marker_color=labor_colors,
+                x=reg_labor["region"], y=reg_labor["labor_pct"] * 100,
+                marker_color=[REGION_COLORS.get(r, MID) for r in reg_labor["region"]],
                 text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.1f}%"),
                 textposition="outside",
             ))
-            fig_labor.add_vline(x=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
-                                annotation_text="Sys avg", annotation_font_size=9)
+            fig_labor.add_hline(y=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
+                                annotation_text="Sys avg", annotation_font_size=9,
+                                annotation_position="top right")
             brew_fig(fig_labor, height=320)
             fig_labor.update_layout(title_text="TOTAL LABOR % BY REGION",
-                                    xaxis=dict(ticksuffix="%"), showlegend=False)
+                                    yaxis=dict(ticksuffix="%"), showlegend=False)
             st.plotly_chart(fig_labor, config={"displayModeBar": False}, use_container_width=True)
 
     # ── Cost Structure (donut) + P&L Bridge (waterfall) side by side ─────────
@@ -1547,7 +1543,6 @@ def tab_overview(dash):
              ps["ebitda_pct"]* 100,
         ]
         bridge_measure = ["absolute", "relative", "relative", "relative", "relative", "total"]
-        bridge_colors  = [BLUE, RED, AMBER, MID, MUTED, GREEN]
         fig5 = go.Figure(go.Waterfall(
             orientation="v",
             measure=bridge_measure,
@@ -1556,12 +1551,10 @@ def tab_overview(dash):
             text=[f"{abs(v):.1f}%" for v in bridge_values],
             textposition="outside",
             connector=dict(line=dict(color=BORDER, width=1)),
-            increasing=dict(marker_color=GREEN),
+            increasing=dict(marker_color=BLUE),
             decreasing=dict(marker_color=RED),
             totals=dict(marker_color=GREEN),
         ))
-        # Override bar colors individually
-        fig5.data[0].marker.color = bridge_colors
         brew_fig(fig5, height=360)
         fig5.update_layout(
             title_text="P&L BRIDGE",
