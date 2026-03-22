@@ -962,10 +962,10 @@ def tab_ceo(dash):
                     legend=dict(orientation="h", y=1.12, x=0,
                                 font=dict(size=9)),
                     margin=dict(t=24, b=28, l=0, r=0),
-                    height=200,
+                    height=250,
                     xaxis=dict(tickfont=dict(size=9)),
                 )
-                brew_fig(fig_g, height=200)
+                brew_fig(fig_g, height=250)
                 st.plotly_chart(fig_g, config={"displayModeBar": False},
                                 use_container_width=True)
                 st.caption("Net Sales — Actual vs Goal by Period")
@@ -1003,10 +1003,10 @@ def tab_ceo(dash):
                     legend=dict(orientation="h", y=1.12, x=0,
                                 font=dict(size=9)),
                     margin=dict(t=24, b=28, l=0, r=0),
-                    height=200,
+                    height=250,
                     xaxis=dict(tickfont=dict(size=9)),
                 )
-                brew_fig(fig_e, height=200)
+                brew_fig(fig_e, height=250)
                 st.plotly_chart(fig_e, config={"displayModeBar": False},
                                 use_container_width=True)
                 st.caption("EBITDA % — Actual vs Goal by Period")
