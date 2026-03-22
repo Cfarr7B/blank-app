@@ -25,16 +25,17 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 # DESIGN TOKENS & THEME
 # ─────────────────────────────────────────────
-RED    = "#cd2128"
+RED    = "#AC2430"   # 7BREW primary brand red  (172, 36, 48)
+PINK   = "#FFBDBD"   # light red tint           (255, 189, 189)
 GREEN  = "#12a06e"
 BLUE   = "#1d6fcf"
-DARK   = "#2d2f36"
-MID    = "#5a6070"
-MUTED  = "#8a919e"
+DARK   = "#1A1919"   # near black               (26, 25, 25)
+MID    = "#595959"   # mid gray                 (89, 89, 89)
+MUTED  = "#C5BEBE"   # warm light gray          (197, 190, 190)
 AMBER  = "#e8940a"
 BORDER = "#e2e4e9"
-BODY   = "#111318"
-SUB    = "#4a5060"
+BODY   = "#1A1919"   # near black body text     (26, 25, 25)
+SUB    = "#595959"
 BG     = "#ffffff"
 BG2    = "#f5f6f8"
 GRID   = "rgba(0,0,0,0.055)"
@@ -49,7 +50,7 @@ REGION_COLORS = {
     "Middle Earth":       "#7c3aed",
     "NM":                 "#c2410c",
     "CO":                 "#a16207",
-    "North OK":           "#cd2128",
+    "North OK":           "#AC2430",
     "Central OK":         "#9b1a1f",
     "South OK":           "#7f1d1d",
     "Permian Basin":      "#e8940a",
@@ -57,7 +58,7 @@ REGION_COLORS = {
     # Legacy abbreviations (backward compat)
     "CTX-N": "#1d6fcf", "CTX-S": "#2980b9", "FL-P": "#12a06e",
     "FL-P1": "#1a8c5c", "FL-SW": "#0e7a6e",
-    "OKC-N": "#cd2128", "OKC-S": "#9b1a1f", "WTX": "#d97706",
+    "OKC-N": "#AC2430", "OKC-S": "#9b1a1f", "WTX": "#d97706",
 }
 
 # Inject Google Fonts + minimal custom component styling
@@ -77,60 +78,60 @@ st.html("""
     box-shadow: 0 1px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden;
   }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-  .kpi-card.red::before { background:#cd2128; }
+  .kpi-card.red::before { background:#AC2430; }
   .kpi-card.green::before { background:#12a06e; }
   .kpi-card.blue::before { background:#1d6fcf; }
   .kpi-card.amber::before { background:#e8940a; }
-  .kpi-card.grey::before { background:#5a6070; }
+  .kpi-card.grey::before { background:#595959; }
   .kpi-label { font-size:17px; font-weight:700; letter-spacing:1px;
-    text-transform:uppercase; color:#5a6070; margin-bottom:6px; }
+    text-transform:uppercase; color:#595959; margin-bottom:6px; }
   .kpi-value { font-family:'Bebas Neue',sans-serif; font-size:39px;
-    line-height:1; color:#111318; letter-spacing:1px; }
+    line-height:1; color:#1A1919; letter-spacing:1px; }
   .kpi-value.good { color:#12a06e; }
-  .kpi-value.bad { color:#cd2128; }
+  .kpi-value.bad { color:#AC2430; }
   .kpi-value.warn { color:#e8940a; }
-  .kpi-sub { font-family:'DM Mono',monospace; font-size:17px; color:#8a919e; margin-top:4px; }
+  .kpi-sub { font-family:'DM Mono',monospace; font-size:17px; color:#C5BEBE; margin-top:4px; }
   .kpi-delta { display:inline-block; font-family:'DM Mono',monospace;
     font-size:17px; font-weight:600; padding:2px 7px; border-radius:10px; margin-top:5px; }
   .kpi-delta.up { background:rgba(18,160,110,0.1); color:#12a06e; }
-  .kpi-delta.down { background:rgba(205,33,40,0.1); color:#cd2128; }
+  .kpi-delta.down { background:rgba(172,36,48,0.1); color:#AC2430; }
   .kpi-delta.neut { background:rgba(29,111,207,0.1); color:#1d6fcf; }
 
   /* Section headers */
   .section-hdr {
     font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:3px;
-    color:#2d2f36; margin-bottom:2px; margin-top:8px;
+    color:#1A1919; margin-bottom:2px; margin-top:8px;
     display:flex; align-items:center; gap:8px;
   }
   .section-hdr::before { content:''; width:6px; height:6px; border-radius:50%;
-    background:#cd2128; display:inline-block; flex-shrink:0; }
+    background:#AC2430; display:inline-block; flex-shrink:0; }
   .section-sub { font-family:'DM Mono',monospace; font-size:14px;
-    color:#8a919e; margin-bottom:16px; margin-left:14px; }
-  .red-rule { width:36px; height:3px; background:#cd2128;
+    color:#C5BEBE; margin-bottom:16px; margin-left:14px; }
+  .red-rule { width:36px; height:3px; background:#AC2430;
     border-radius:2px; margin-bottom:18px; margin-left:14px; }
 
   /* Insight / alert cards */
   .insight-card {
     background:white; border:1px solid #e2e4e9; border-radius:10px;
-    padding:16px 18px; margin-bottom:10px; border-left: 4px solid #cd2128;
+    padding:16px 18px; margin-bottom:10px; border-left: 4px solid #AC2430;
   }
   .insight-card.win { border-left-color: #12a06e; }
   .insight-card.watch { border-left-color: #e8940a; }
-  .insight-card .ic-title { font-weight:700; font-size:17px; color:#2d2f36; margin-bottom:4px; }
-  .insight-card .ic-body { font-size:16px; color:#4a5060; line-height:1.6; }
+  .insight-card .ic-title { font-weight:700; font-size:17px; color:#1A1919; margin-bottom:4px; }
+  .insight-card .ic-body { font-size:16px; color:#595959; line-height:1.6; }
   .insight-card .ic-tag { display:inline-block; font-family:'DM Mono',monospace;
     font-size:17px; padding:2px 8px; border-radius:10px; margin-top:6px; }
-  .ic-tag.red { background:rgba(205,33,40,0.1); color:#cd2128; }
+  .ic-tag.red { background:rgba(172,36,48,0.1); color:#AC2430; }
   .ic-tag.green { background:rgba(18,160,110,0.1); color:#12a06e; }
   .ic-tag.amber { background:rgba(232,148,10,0.1); color:#e8940a; }
-  .ic-tag.grey { background:rgba(90,96,112,0.1); color:#5a6070; }
+  .ic-tag.grey { background:rgba(90,96,112,0.1); color:#595959; }
 
   /* Utility / R&M info box */
   .info-box {
     background:#f5f6f8; border:1px solid #e2e4e9; border-radius:10px;
-    padding:14px 18px; font-size:16px; color:#4a5060; margin-bottom:16px;
+    padding:14px 18px; font-size:16px; color:#595959; margin-bottom:16px;
   }
-  .info-box strong { color:#2d2f36; }
+  .info-box strong { color:#1A1919; }
 
   /* Sidebar */
   [data-testid="stSidebar"] {
@@ -149,10 +150,10 @@ st.html("""
     padding:20px 24px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,0.04);
   }
   .story-label { font-family:'DM Mono',monospace; font-size:17px;
-    text-transform:uppercase; letter-spacing:1px; color:#8a919e; margin-bottom:6px; }
+    text-transform:uppercase; letter-spacing:1px; color:#C5BEBE; margin-bottom:6px; }
   .story-headline { font-family:'Bebas Neue',sans-serif; font-size:34px;
-    letter-spacing:1.5px; color:#cd2128; margin-bottom:8px; }
-  .story-body { font-size:17px; color:#4a5060; line-height:1.7; }
+    letter-spacing:1.5px; color:#AC2430; margin-bottom:8px; }
+  .story-body { font-size:17px; color:#595959; line-height:1.7; }
 
   /* ── Navigation Tabs ─────────────────────────────────────────────────── */
   .stTabs [data-baseweb="tab-list"] {
@@ -171,7 +172,7 @@ st.html("""
     text-transform: uppercase !important;
     padding: 9px 20px !important;
     border-radius: 8px !important;
-    color: #5a6070 !important;
+    color: #595959 !important;
     background: transparent !important;
     border: none !important;
     white-space: nowrap !important;
@@ -179,12 +180,12 @@ st.html("""
     line-height: 1.2 !important;
   }
   .stTabs [data-baseweb="tab"]:hover {
-    color: #2d2f36 !important;
+    color: #1A1919 !important;
     background: rgba(0,0,0,0.05) !important;
   }
   .stTabs [data-baseweb="tab"][aria-selected="true"] {
     background: white !important;
-    color: #cd2128 !important;
+    color: #AC2430 !important;
     box-shadow: 0 1px 6px rgba(0,0,0,0.10) !important;
   }
   .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
@@ -379,12 +380,12 @@ def render_table(df, max_rows=None, height=None):
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'DM Sans',sans-serif; background:#ffffff; color:#111318; }
+  body { font-family:'DM Sans',sans-serif; background:#ffffff; color:#1A1919; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
-  th { background:#f5f6f8; color:#111318; padding:10px 12px; text-align:left;
+  th { background:#f5f6f8; color:#1A1919; padding:10px 12px; text-align:left;
        border-bottom:2px solid #e2e4e9; font-weight:600; white-space:nowrap;
        position:sticky; top:0; z-index:1; }
-  td { padding:8px 12px; border-bottom:1px solid #e2e4e9; color:#111318; }
+  td { padding:8px 12px; border-bottom:1px solid #e2e4e9; color:#1A1919; }
   tr:nth-child(even) { background:#fafbfc; }
   tr:nth-child(odd) { background:#ffffff; }
   tr:hover { background:#f0f1f3; }
@@ -643,10 +644,10 @@ def get_regions_df(dash, period_key):
 def render_sidebar():
     st.html("""
     <div style="padding:12px 4px;">
-      <div style="background:#cd2128;color:white;font-family:'Bebas Neue',sans-serif;
+      <div style="background:#AC2430;color:white;font-family:'Bebas Neue',sans-serif;
                   font-size:26px;letter-spacing:2px;padding:8px 14px;border-radius:8px;
                   text-align:center;margin-bottom:12px;">7BREW</div>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;color:#8a919e;
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:#C5BEBE;
                   text-align:center;letter-spacing:1px;text-transform:uppercase;">
         Financial Performance Dashboard
       </div>
@@ -793,12 +794,12 @@ def tab_ceo(dash):
             return f"""
             <div style="background:white;border:1px solid #e2e4e9;border-radius:10px;
                         padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;
                           text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">{label}</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;
-                          color:#111318;line-height:1;">{actual_fmt}</div>
-              <div style="font-size:11px;color:#8a919e;margin-bottom:8px;">
-                goal: <strong style="color:#4a5060;">{goal_fmt}</strong>
+                          color:#1A1919;line-height:1;">{actual_fmt}</div>
+              <div style="font-size:11px;color:#C5BEBE;margin-bottom:8px;">
+                goal: <strong style="color:#595959;">{goal_fmt}</strong>
                 {(" · " + detail) if detail else ""}
               </div>
               <div style="background:#f0f1f3;border-radius:4px;height:6px;overflow:hidden;">
@@ -806,7 +807,7 @@ def tab_ceo(dash):
                             border-radius:4px;transition:width .3s;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:4px;">
-                <span style="font-size:10px;color:#8a919e;">{bar_w:.0f}% of goal</span>
+                <span style="font-size:10px;color:#C5BEBE;">{bar_w:.0f}% of goal</span>
                 {pace_line}
               </div>
             </div>"""
@@ -841,12 +842,12 @@ def tab_ceo(dash):
         ytd_ebitda_goal_fmt = f"${pace_ebitda/1e6:.1f}M" if n_completed > 0 else "—"
         st.html(f"""
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
-                    color:#2d2f36;margin:16px 0 4px;display:flex;align-items:center;gap:10px;">
-          <span style="width:6px;height:6px;border-radius:50%;background:#cd2128;
+                    color:#1A1919;margin:16px 0 4px;display:flex;align-items:center;gap:10px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#AC2430;
                        display:inline-block;flex-shrink:0;"></span>
           FY{sel_year} GOALS TRACKER
           <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:400;
-                       color:#8a919e;letter-spacing:1px;margin-left:8px;">
+                       color:#C5BEBE;letter-spacing:1px;margin-left:8px;">
             P1–P{n_completed} of 13 complete · YTD Sales Goal: {ytd_sales_goal_fmt} · YTD EBITDA Goal: {ytd_ebitda_goal_fmt}
           </span>
         </div>""")
@@ -909,7 +910,7 @@ def tab_ceo(dash):
         # ── Period-by-Period Actual vs Goal Chart ─────────────────────────────
         if has_period_goals and n_completed > 0:
             st.html("""
-            <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;
                         text-transform:uppercase;letter-spacing:1.5px;margin:8px 0 4px;">
               PERIOD-BY-PERIOD: ACTUAL VS GOAL
             </div>""")
@@ -1018,7 +1019,7 @@ def tab_ceo(dash):
     # ── Revenue + EBITDA Trend (all periods) ──
     col1, col2 = st.columns([3, 2])
     with col1:
-        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin-bottom:4px;">REVENUE & EBITDA TREND — {period_range}</div>')
+        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">REVENUE & EBITDA TREND — {period_range}</div>')
         fig = go.Figure()
         fig.add_bar(x=filtered_df["label"], y=filtered_df["avg_sales"],
                     name="Avg Sales/Stand", marker_color=BLUE, opacity=0.7,
@@ -1135,25 +1136,25 @@ def tab_ceo(dash):
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
 
             <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Avg Sales / Stand</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#111318;">{_fmt_d(latest['avg_sales'])}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Avg Sales / Stand</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#1A1919;">{_fmt_d(latest['avg_sales'])}</div>
               <div style="font-size:11px;color:{rev_color};font-weight:600;">{rev_arrow} {rev_trend*100:+.1f}% over period</div>
             </div>
 
             <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">EBITDA Margin</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#111318;">{_fmt_p(avg_ebitda_pct)}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">EBITDA Margin</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#1A1919;">{_fmt_p(avg_ebitda_pct)}</div>
               <div style="font-size:11px;color:{gap_color};font-weight:600;">{gap_pts:+.1f}pts vs 20% target {ebi_arrow}</div>
             </div>
 
             <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Network Size</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#111318;">{last_stand_cnt} Stands</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Network Size</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#1A1919;">{last_stand_cnt} Stands</div>
               <div style="font-size:11px;color:{net_color};font-weight:600;">+{net_new_stands} added · {n_periods} periods shown</div>
             </div>
 
             <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#8a919e;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">EBITDA Trend</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">EBITDA Trend</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:{ebi_color};">{ebitda_trend*100:+.1f}pts</div>
               <div style="font-size:11px;color:{MID};">first → last third of range</div>
             </div>
@@ -1162,7 +1163,7 @@ def tab_ceo(dash):
 
           {reg_html}
 
-          <div style="font-size:12px;color:#4a5060;line-height:1.6;margin-top:10px;border-top:1px solid #e2e4e9;padding-top:10px;">
+          <div style="font-size:12px;color:#595959;line-height:1.6;margin-top:10px;border-top:1px solid #e2e4e9;padding-top:10px;">
             Over {period_range}, {ebitda_phrase} while avg sales/stand
             {"improved" if rev_trend > 0.005 else ("softened" if rev_trend < -0.005 else "held flat")}
             at {_fmt_d(latest['avg_sales'])}.
@@ -1257,7 +1258,7 @@ def tab_ceo(dash):
             z=heat_df.values,
             x=heat_df.columns.tolist(),
             y=heat_df.index.tolist(),
-            colorscale=[[0, "#cd2128"], [0.5, "#e8940a"], [1, "#12a06e"]],
+            colorscale=[[0, "#AC2430"], [0.5, "#e8940a"], [1, "#12a06e"]],
             zmid=18, zmin=5, zmax=30,
             text=[[f"{v:.1f}%" if v is not None else "—" for v in row] for row in heat_df.values],
             texttemplate="%{text}",
@@ -1465,19 +1466,19 @@ def tab_overview(dash):
         st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
         # ── EBITDA % by Region ───────────────────────────────────────────────
-        reg_ebi = reg_df.sort_values("ebitda_pct", ascending=True)
-        ebi_colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_ebi["ebitda_pct"]]
+        reg_ebi = reg_df.sort_values("ebitda_pct", ascending=False)
         fig2 = go.Figure(go.Bar(
-            x=reg_ebi["ebitda_pct"] * 100, y=reg_ebi["region"],
-            orientation="h", marker_color=ebi_colors,
+            x=reg_ebi["region"], y=reg_ebi["ebitda_pct"] * 100,
+            marker_color=[REGION_COLORS.get(r, MID) for r in reg_ebi["region"]],
             text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
             textposition="outside",
         ))
-        fig2.add_vline(x=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
-                       annotation_text="Sys avg", annotation_font_size=9)
+        fig2.add_hline(y=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
+                       annotation_text="Sys avg", annotation_font_size=9,
+                       annotation_position="top right")
         brew_fig(fig2, height=320)
         fig2.update_layout(title_text="EBITDA % BY REGION",
-                           xaxis=dict(ticksuffix="%"), showlegend=False)
+                           yaxis=dict(ticksuffix="%"), showlegend=False)
         st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
 
         # ── COGs % by Region ─────────────────────────────────────────────────
@@ -1602,7 +1603,7 @@ def tab_comparison(dash):
     with c1:
         lbl_a = st.selectbox("Period A", [l for l, _ in all_options], key="cmp_a")
     with c2:
-        st.html('<div style="text-align:center;font-family:Bebas Neue;font-size:24px;color:#5a6070;padding-top:28px;">VS</div>')
+        st.html('<div style="text-align:center;font-family:Bebas Neue;font-size:24px;color:#595959;padding-top:28px;">VS</div>')
     with c3:
         lbl_b = st.selectbox("Period B", [l for l, _ in all_options][1:], key="cmp_b")
 
@@ -2028,7 +2029,7 @@ def tab_insights(dash):
         for w in wins:
             insight_card(w["title"], w["body"], w.get("tag",""), w.get("tag_cls","green"), "win")
     with col2:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">⚠ OPPORTUNITIES</div>')
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#AC2430;margin-bottom:10px;">⚠ OPPORTUNITIES</div>')
         for o in opps:
             insight_card(o["title"], o["body"], o.get("tag",""), o.get("tag_cls","red"))
 
@@ -2114,7 +2115,7 @@ def tab_forecast(dash):
             st.plotly_chart(fig2, config={"displayModeBar": False})
 
     # Forecast table
-    st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#2d2f36;margin:16px 0 8px;">PERIOD-BY-PERIOD FORECAST TABLE</div>')
+    st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#1A1919;margin:16px 0 8px;">PERIOD-BY-PERIOD FORECAST TABLE</div>')
     watchpts = {
         "P1":"Winter floor — manage labor vs minimum staffing",
         "P2":"Early spring — discount audit; COGS relief as volume ramps",
@@ -2169,7 +2170,7 @@ def tab_potholes(dash):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#cd2128;margin-bottom:10px;">🚨 CRITICAL ISSUES</div>')
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#AC2430;margin-bottom:10px;">🚨 CRITICAL ISSUES</div>')
 
         top_disc  = ps_stands.nlargest(1, "Discounts_pct").iloc[0]
         top_labor = ps_stands.nlargest(1, "Total_Labor_pct").iloc[0]
@@ -2596,7 +2597,7 @@ def tab_utilities(dash):
             stand_row = ds.iloc[0]
             sales = float(stand_row.get("Net_Sales", 0))
             if sales > 0:
-                st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#2d2f36;margin:12px 0 8px;">COST BREAKDOWN — {sel_stand}</div>')
+                st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin:12px 0 8px;">COST BREAKDOWN — {sel_stand}</div>')
                 items = [
                     (col, lbl) for col, lbl in [
                         ("Electricity", "Electricity"), ("Water_Sewer", "Water & Sewer"),
@@ -2766,12 +2767,12 @@ def main():
     # Header
     st.html("""
     <div style="display:flex;align-items:center;gap:12px;padding-bottom:12px;
-                border-bottom:2px solid #cd2128;margin-bottom:16px;">
-      <div style="background:#cd2128;color:white;font-family:'Bebas Neue',sans-serif;
+                border-bottom:2px solid #AC2430;margin-bottom:16px;">
+      <div style="background:#AC2430;color:white;font-family:'Bebas Neue',sans-serif;
                   font-size:22px;letter-spacing:1px;padding:4px 12px;border-radius:6px;">7BREW</div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;
-                  color:#5a6070;text-transform:uppercase;">Financial Performance Dashboard</div>
-      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:17px;color:#8a919e;">
+                  color:#595959;text-transform:uppercase;">Financial Performance Dashboard</div>
+      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:17px;color:#C5BEBE;">
         FY2025–2026 · 15 Periods · Confidential
       </div>
     </div>""")
