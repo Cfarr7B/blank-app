@@ -1451,11 +1451,12 @@ def tab_overview(dash):
         reg_df = get_regions_df(dash, pk)
 
     if not reg_df.empty:
-        reg_df = reg_df.sort_values("net_sales", ascending=False)
+        # ── Net Sales by Region ──────────────────────────────────────────────
+        reg_sorted = reg_df.sort_values("net_sales", ascending=False)
         fig = go.Figure(go.Bar(
-            x=reg_df["region"], y=reg_df["net_sales"],
-            marker_color=[REGION_COLORS.get(r, MID) for r in reg_df["region"]],
-            text=reg_df["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
+            x=reg_sorted["region"], y=reg_sorted["net_sales"],
+            marker_color=[REGION_COLORS.get(r, MID) for r in reg_sorted["region"]],
+            text=reg_sorted["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
             textposition="outside",
         ))
         brew_fig(fig, height=320)
@@ -1463,12 +1464,12 @@ def tab_overview(dash):
                           yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
         st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
-    if not reg_df.empty:
+        # ── EBITDA % by Region ───────────────────────────────────────────────
         reg_ebi = reg_df.sort_values("ebitda_pct", ascending=True)
-        colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_ebi["ebitda_pct"]]
+        ebi_colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_ebi["ebitda_pct"]]
         fig2 = go.Figure(go.Bar(
             x=reg_ebi["ebitda_pct"] * 100, y=reg_ebi["region"],
-            orientation="h", marker_color=colors,
+            orientation="h", marker_color=ebi_colors,
             text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
             textposition="outside",
         ))
@@ -1479,6 +1480,97 @@ def tab_overview(dash):
                            xaxis=dict(ticksuffix="%"), showlegend=False)
         st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
 
+        # ── COGs % by Region ─────────────────────────────────────────────────
+        if "cogs_pct" in reg_df.columns:
+            reg_cogs = reg_df.sort_values("cogs_pct", ascending=True)
+            # Lower is better: ≤26% green, ≤28% amber, >28% red
+            cogs_colors = [GREEN if v <= 0.26 else (AMBER if v <= 0.28 else RED)
+                           for v in reg_cogs["cogs_pct"]]
+            fig_cogs = go.Figure(go.Bar(
+                x=reg_cogs["cogs_pct"] * 100, y=reg_cogs["region"],
+                orientation="h", marker_color=cogs_colors,
+                text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.1f}%"),
+                textposition="outside",
+            ))
+            fig_cogs.add_vline(x=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
+                               annotation_text="Sys avg", annotation_font_size=9)
+            brew_fig(fig_cogs, height=320)
+            fig_cogs.update_layout(title_text="COGS % BY REGION",
+                                   xaxis=dict(ticksuffix="%"), showlegend=False)
+            st.plotly_chart(fig_cogs, config={"displayModeBar": False}, use_container_width=True)
+
+        # ── Labor % by Region ────────────────────────────────────────────────
+        if "labor_pct" in reg_df.columns:
+            reg_labor = reg_df.sort_values("labor_pct", ascending=True)
+            # Lower is better: ≤22% green, ≤25% amber, >25% red
+            labor_colors = [GREEN if v <= 0.22 else (AMBER if v <= 0.25 else RED)
+                            for v in reg_labor["labor_pct"]]
+            fig_labor = go.Figure(go.Bar(
+                x=reg_labor["labor_pct"] * 100, y=reg_labor["region"],
+                orientation="h", marker_color=labor_colors,
+                text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.1f}%"),
+                textposition="outside",
+            ))
+            fig_labor.add_vline(x=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
+                                annotation_text="Sys avg", annotation_font_size=9)
+            brew_fig(fig_labor, height=320)
+            fig_labor.update_layout(title_text="TOTAL LABOR % BY REGION",
+                                    xaxis=dict(ticksuffix="%"), showlegend=False)
+            st.plotly_chart(fig_labor, config={"displayModeBar": False}, use_container_width=True)
+
+    # ── Cost Structure (donut) + P&L Bridge (waterfall) side by side ─────────
+    c_left, c_right = st.columns(2)
+    with c_left:
+        other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
+        fig4 = go.Figure(go.Pie(
+            labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
+            values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], other, ps["ebitda_pct"]],
+            hole=0.55,
+            marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
+            textinfo="label+percent",
+            textfont=dict(size=11, family="DM Mono"),
+        ))
+        brew_fig(fig4, height=360)
+        fig4.update_layout(title_text="COST STRUCTURE",
+                           legend=dict(font=dict(size=10)))
+        st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
+
+    with c_right:
+        # P&L Bridge: shows how Net Sales flows down to EBITDA
+        bridge_labels = ["Net Sales", "− COGS", "− Labor", "− Rent", "− Other OpEx", "EBITDA"]
+        bridge_values = [
+             100,
+            -ps["cogs_pct"]  * 100,
+            -ps["labor_pct"] * 100,
+            -ps["rent_pct"]  * 100,
+            -other           * 100,
+             ps["ebitda_pct"]* 100,
+        ]
+        bridge_measure = ["absolute", "relative", "relative", "relative", "relative", "total"]
+        bridge_colors  = [BLUE, RED, AMBER, MID, MUTED, GREEN]
+        fig5 = go.Figure(go.Waterfall(
+            orientation="v",
+            measure=bridge_measure,
+            x=bridge_labels,
+            y=bridge_values,
+            text=[f"{abs(v):.1f}%" for v in bridge_values],
+            textposition="outside",
+            connector=dict(line=dict(color=BORDER, width=1)),
+            increasing=dict(marker_color=GREEN),
+            decreasing=dict(marker_color=RED),
+            totals=dict(marker_color=GREEN),
+        ))
+        # Override bar colors individually
+        fig5.data[0].marker.color = bridge_colors
+        brew_fig(fig5, height=360)
+        fig5.update_layout(
+            title_text="P&L BRIDGE",
+            yaxis=dict(ticksuffix="%", range=[0, 115]),
+            showlegend=False,
+        )
+        st.plotly_chart(fig5, config={"displayModeBar": False}, use_container_width=True)
+
+    # ── Performance by Stand Maturity ─────────────────────────────────────────
     stands_df = get_stands_df(dash)
     ps_stands = stands_df[stands_df["Period_Key"] == pk]
     age_buckets = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
@@ -1501,20 +1593,6 @@ def tab_overview(dash):
         fig3.update_layout(title_text="PERFORMANCE BY STAND MATURITY",
                            yaxis=dict(ticksuffix="%"))
         st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
-
-    other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
-    fig4 = go.Figure(go.Pie(
-        labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
-        values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], other, ps["ebitda_pct"]],
-        hole=0.55,
-        marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
-        textinfo="label+percent",
-        textfont=dict(size=10, family="DM Mono"),
-    ))
-    brew_fig(fig4, height=320)
-    fig4.update_layout(title_text="COST STRUCTURE",
-                       legend=dict(font=dict(size=10)))
-    st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
 
 
 # ─────────────────────────────────────────────
