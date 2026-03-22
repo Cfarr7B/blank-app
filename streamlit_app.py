@@ -1450,78 +1450,71 @@ def tab_overview(dash):
     else:
         reg_df = get_regions_df(dash, pk)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if not reg_df.empty:
-            reg_df = reg_df.sort_values("net_sales", ascending=False)
-            fig = go.Figure(go.Bar(
-                x=reg_df["region"], y=reg_df["net_sales"],
-                marker_color=[REGION_COLORS.get(r, MID) for r in reg_df["region"]],
-                text=reg_df["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
-                textposition="outside",
-            ))
-            brew_fig(fig, height=260)
-            fig.update_layout(title_text="NET SALES BY REGION",
-                              yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
-            st.plotly_chart(fig, config={"displayModeBar": False})
-
-    with col2:
-        if not reg_df.empty:
-            reg_ebi = reg_df.sort_values("ebitda_pct", ascending=True)
-            colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_ebi["ebitda_pct"]]
-            fig2 = go.Figure(go.Bar(
-                x=reg_ebi["ebitda_pct"] * 100, y=reg_ebi["region"],
-                orientation="h", marker_color=colors,
-                text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
-                textposition="outside",
-            ))
-            fig2.add_vline(x=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
-                           annotation_text="Sys avg", annotation_font_size=9)
-            brew_fig(fig2, height=260)
-            fig2.update_layout(title_text="EBITDA % BY REGION",
-                               xaxis=dict(ticksuffix="%"), showlegend=False)
-            st.plotly_chart(fig2, config={"displayModeBar": False})
-
-    # Charts row 2
-    col3, col4 = st.columns(2)
-    with col3:
-        stands_df = get_stands_df(dash)
-        ps_stands = stands_df[stands_df["Period_Key"] == pk]
-        age_buckets = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
-        cohort_data = []
-        for b in age_buckets:
-            sub = ps_stands[ps_stands["Age_Bucket"] == b]
-            if len(sub):
-                cohort_data.append({"Cohort": b,
-                                    "EBITDA%": round(sub["Store_EBITDA_pct"].mean() * 100, 1),
-                                    "Labor%":  round(sub["Total_Labor_pct"].mean() * 100, 1)})
-        if cohort_data:
-            cdf = pd.DataFrame(cohort_data)
-            fig3 = go.Figure()
-            fig3.add_bar(x=cdf["Cohort"], y=cdf["EBITDA%"], name="EBITDA %",
-                         marker_color=[RED, AMBER, BLUE, GREEN][:len(cdf)],
-                         text=cdf["EBITDA%"].map(lambda v: f"{v}%"), textposition="outside")
-            fig3.add_scatter(x=cdf["Cohort"], y=cdf["Labor%"], name="Labor %",
-                             mode="lines+markers", line=dict(color=MUTED, dash="dot"))
-            brew_fig(fig3, height=260)
-            fig3.update_layout(title_text="PERFORMANCE BY STAND MATURITY",
-                               yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig3, config={"displayModeBar": False})
-
-    with col4:
-        other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
-        fig4 = go.Figure(go.Pie(
-            labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
-            values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], other, ps["ebitda_pct"]],
-            hole=0.55,
-            marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
-            textinfo="label+percent",
-            textfont=dict(size=10, family="DM Mono"),
+    if not reg_df.empty:
+        reg_df = reg_df.sort_values("net_sales", ascending=False)
+        fig = go.Figure(go.Bar(
+            x=reg_df["region"], y=reg_df["net_sales"],
+            marker_color=[REGION_COLORS.get(r, MID) for r in reg_df["region"]],
+            text=reg_df["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
+            textposition="outside",
         ))
-        brew_fig(fig4, height=260)
-        fig4.update_layout(title_text="COST STRUCTURE",
-                           legend=dict(font=dict(size=10)))
-        st.plotly_chart(fig4, config={"displayModeBar": False})
+        brew_fig(fig, height=320)
+        fig.update_layout(title_text="NET SALES BY REGION",
+                          yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
+        st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
+
+    if not reg_df.empty:
+        reg_ebi = reg_df.sort_values("ebitda_pct", ascending=True)
+        colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_ebi["ebitda_pct"]]
+        fig2 = go.Figure(go.Bar(
+            x=reg_ebi["ebitda_pct"] * 100, y=reg_ebi["region"],
+            orientation="h", marker_color=colors,
+            text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
+            textposition="outside",
+        ))
+        fig2.add_vline(x=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
+                       annotation_text="Sys avg", annotation_font_size=9)
+        brew_fig(fig2, height=320)
+        fig2.update_layout(title_text="EBITDA % BY REGION",
+                           xaxis=dict(ticksuffix="%"), showlegend=False)
+        st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
+
+    stands_df = get_stands_df(dash)
+    ps_stands = stands_df[stands_df["Period_Key"] == pk]
+    age_buckets = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+    cohort_data = []
+    for b in age_buckets:
+        sub = ps_stands[ps_stands["Age_Bucket"] == b]
+        if len(sub):
+            cohort_data.append({"Cohort": b,
+                                "EBITDA%": round(sub["Store_EBITDA_pct"].mean() * 100, 1),
+                                "Labor%":  round(sub["Total_Labor_pct"].mean() * 100, 1)})
+    if cohort_data:
+        cdf = pd.DataFrame(cohort_data)
+        fig3 = go.Figure()
+        fig3.add_bar(x=cdf["Cohort"], y=cdf["EBITDA%"], name="EBITDA %",
+                     marker_color=[RED, AMBER, BLUE, GREEN][:len(cdf)],
+                     text=cdf["EBITDA%"].map(lambda v: f"{v}%"), textposition="outside")
+        fig3.add_scatter(x=cdf["Cohort"], y=cdf["Labor%"], name="Labor %",
+                         mode="lines+markers", line=dict(color=MUTED, dash="dot"))
+        brew_fig(fig3, height=320)
+        fig3.update_layout(title_text="PERFORMANCE BY STAND MATURITY",
+                           yaxis=dict(ticksuffix="%"))
+        st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
+
+    other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
+    fig4 = go.Figure(go.Pie(
+        labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
+        values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], other, ps["ebitda_pct"]],
+        hole=0.55,
+        marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
+        textinfo="label+percent",
+        textfont=dict(size=10, family="DM Mono"),
+    ))
+    brew_fig(fig4, height=320)
+    fig4.update_layout(title_text="COST STRUCTURE",
+                       legend=dict(font=dict(size=10)))
+    st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
 
 
 # ─────────────────────────────────────────────
