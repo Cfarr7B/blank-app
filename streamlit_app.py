@@ -1221,22 +1221,21 @@ def tab_ceo(dash):
                     reg_agg[c] = reg_all.groupby("region").apply(
                         lambda g: (g[c] * g["net_sales"]).sum() / g["net_sales"].sum() if g["net_sales"].sum() > 0 else 0
                     ).values
-            reg_df = reg_agg.sort_values("ebitda_pct", ascending=True) if "ebitda_pct" in reg_agg.columns else reg_agg
+            reg_df = reg_agg.sort_values("ebitda_pct", ascending=False) if "ebitda_pct" in reg_agg.columns else reg_agg
             if "ebitda_pct" in reg_df.columns:
-                colors = [GREEN if v >= 0.22 else (AMBER if v >= 0.15 else RED) for v in reg_df["ebitda_pct"]]
                 fig3 = go.Figure(go.Bar(
-                    x=reg_df["ebitda_pct"] * 100, y=reg_df["region"],
-                    orientation="h",
-                    marker_color=colors,
+                    x=reg_df["region"], y=reg_df["ebitda_pct"] * 100,
+                    marker_color=[REGION_COLORS.get(r, MID) for r in reg_df["region"]],
                     text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
                     textposition="outside",
                 ))
-                fig3.add_vline(x=avg_ebitda_pct * 100, line_dash="dot",
+                fig3.add_hline(y=avg_ebitda_pct * 100, line_dash="dot",
                                line_color=MID, annotation_text="Sys avg",
-                               annotation_font_size=9)
-                brew_fig(fig3, height=280)
-                fig3.update_layout(xaxis=dict(ticksuffix="%"))
-                st.plotly_chart(fig3, config={"displayModeBar": False})
+                               annotation_font_size=9,
+                               annotation_position="top right")
+                brew_fig(fig3, height=320)
+                fig3.update_layout(yaxis=dict(ticksuffix="%"), showlegend=False)
+                st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
 
     st.html('<hr class="brew">')
 
