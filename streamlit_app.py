@@ -1473,69 +1473,178 @@ def tab_overview(dash):
     else:
         reg_df = get_regions_df(dash, pk)
 
-    if not reg_df.empty:
-        # ── Net Sales by Region ──────────────────────────────────────────────
-        reg_sorted = reg_df.sort_values("net_sales", ascending=False)
-        fig = go.Figure(go.Bar(
-            x=reg_sorted["region"], y=reg_sorted["net_sales"],
-            marker_color=[REGION_COLORS.get(r, MID) for r in reg_sorted["region"]],
-            text=reg_sorted["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
-            textposition="outside",
-        ))
-        brew_fig(fig, height=320)
-        fig.update_layout(title_text="NET SALES BY REGION",
-                          yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
-        st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
+    # ── Region drill-down selector ───────────────────────────────────────────
+    all_stands_df = get_stands_df(dash)
+    available_regions = sorted(all_stands_df["Region"].dropna().unique().tolist())
+    sel_region = st.selectbox(
+        "Drill Down by Region",
+        ["All Regions"] + available_regions,
+        key="ov_region",
+    )
 
-        # ── EBITDA % by Region ───────────────────────────────────────────────
-        reg_ebi = reg_df.sort_values("ebitda_pct", ascending=False)
-        fig2 = go.Figure(go.Bar(
-            x=reg_ebi["region"], y=reg_ebi["ebitda_pct"] * 100,
-            marker_color=[REGION_COLORS.get(r, MID) for r in reg_ebi["region"]],
-            text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
-            textposition="outside",
-        ))
-        fig2.add_hline(y=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
-                       annotation_text="Sys avg", annotation_font_size=9,
-                       annotation_position="top right")
-        brew_fig(fig2, height=320)
-        fig2.update_layout(title_text="EBITDA % BY REGION",
-                           yaxis=dict(ticksuffix="%"), showlegend=False)
-        st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
-
-        # ── COGs % by Region ─────────────────────────────────────────────────
-        if "cogs_pct" in reg_df.columns:
-            reg_cogs = reg_df.sort_values("cogs_pct", ascending=False)
-            fig_cogs = go.Figure(go.Bar(
-                x=reg_cogs["region"], y=reg_cogs["cogs_pct"] * 100,
-                marker_color=[REGION_COLORS.get(r, MID) for r in reg_cogs["region"]],
-                text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.1f}%"),
+    if sel_region == "All Regions":
+        # ── System-level regional charts ─────────────────────────────────────
+        if not reg_df.empty:
+            reg_sorted = reg_df.sort_values("net_sales", ascending=False)
+            fig = go.Figure(go.Bar(
+                x=reg_sorted["region"], y=reg_sorted["net_sales"],
+                marker_color=[REGION_COLORS.get(r, MID) for r in reg_sorted["region"]],
+                text=reg_sorted["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
                 textposition="outside",
             ))
-            fig_cogs.add_hline(y=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
-                               annotation_text="Sys avg", annotation_font_size=9,
-                               annotation_position="top right")
-            brew_fig(fig_cogs, height=320)
-            fig_cogs.update_layout(title_text="COGS % BY REGION",
-                                   yaxis=dict(ticksuffix="%"), showlegend=False)
-            st.plotly_chart(fig_cogs, config={"displayModeBar": False}, use_container_width=True)
+            brew_fig(fig, height=320)
+            fig.update_layout(title_text="NET SALES BY REGION",
+                              yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
+            st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
-        # ── Labor % by Region ────────────────────────────────────────────────
-        if "labor_pct" in reg_df.columns:
-            reg_labor = reg_df.sort_values("labor_pct", ascending=False)
-            fig_labor = go.Figure(go.Bar(
-                x=reg_labor["region"], y=reg_labor["labor_pct"] * 100,
-                marker_color=[REGION_COLORS.get(r, MID) for r in reg_labor["region"]],
-                text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.1f}%"),
+            reg_ebi = reg_df.sort_values("ebitda_pct", ascending=False)
+            fig2 = go.Figure(go.Bar(
+                x=reg_ebi["region"], y=reg_ebi["ebitda_pct"] * 100,
+                marker_color=[REGION_COLORS.get(r, MID) for r in reg_ebi["region"]],
+                text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
                 textposition="outside",
             ))
-            fig_labor.add_hline(y=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
-                                annotation_text="Sys avg", annotation_font_size=9,
-                                annotation_position="top right")
-            brew_fig(fig_labor, height=320)
-            fig_labor.update_layout(title_text="TOTAL LABOR % BY REGION",
-                                    yaxis=dict(ticksuffix="%"), showlegend=False)
-            st.plotly_chart(fig_labor, config={"displayModeBar": False}, use_container_width=True)
+            fig2.add_hline(y=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
+                           annotation_text="Sys avg", annotation_font_size=9,
+                           annotation_position="top right")
+            brew_fig(fig2, height=320)
+            fig2.update_layout(title_text="EBITDA % BY REGION",
+                               yaxis=dict(ticksuffix="%"), showlegend=False)
+            st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
+
+            if "cogs_pct" in reg_df.columns:
+                reg_cogs = reg_df.sort_values("cogs_pct", ascending=False)
+                fig_cogs = go.Figure(go.Bar(
+                    x=reg_cogs["region"], y=reg_cogs["cogs_pct"] * 100,
+                    marker_color=[REGION_COLORS.get(r, MID) for r in reg_cogs["region"]],
+                    text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.1f}%"),
+                    textposition="outside",
+                ))
+                fig_cogs.add_hline(y=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
+                                   annotation_text="Sys avg", annotation_font_size=9,
+                                   annotation_position="top right")
+                brew_fig(fig_cogs, height=320)
+                fig_cogs.update_layout(title_text="COGS % BY REGION",
+                                       yaxis=dict(ticksuffix="%"), showlegend=False)
+                st.plotly_chart(fig_cogs, config={"displayModeBar": False}, use_container_width=True)
+
+            if "labor_pct" in reg_df.columns:
+                reg_labor = reg_df.sort_values("labor_pct", ascending=False)
+                fig_labor = go.Figure(go.Bar(
+                    x=reg_labor["region"], y=reg_labor["labor_pct"] * 100,
+                    marker_color=[REGION_COLORS.get(r, MID) for r in reg_labor["region"]],
+                    text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.1f}%"),
+                    textposition="outside",
+                ))
+                fig_labor.add_hline(y=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
+                                    annotation_text="Sys avg", annotation_font_size=9,
+                                    annotation_position="top right")
+                brew_fig(fig_labor, height=320)
+                fig_labor.update_layout(title_text="TOTAL LABOR % BY REGION",
+                                        yaxis=dict(ticksuffix="%"), showlegend=False)
+                st.plotly_chart(fig_labor, config={"displayModeBar": False}, use_container_width=True)
+
+    else:
+        # ── Stand-level drill-down for selected region ────────────────────────
+        region_color = REGION_COLORS.get(sel_region, BLUE)
+
+        # Aggregate stand data across selected periods for this region
+        region_stands = all_stands_df[
+            (all_stands_df["Region"] == sel_region) &
+            (all_stands_df["Period_Key"].isin(selected_keys))
+        ].copy()
+
+        if region_stands.empty:
+            st.info(f"No stand data found for {sel_region} in the selected period(s).")
+        else:
+            # Aggregate across periods if multiple selected
+            stand_agg = region_stands.groupby("Stand").agg(
+                Net_Sales=("Net_Sales", "sum"),
+                Store_EBITDA_pct=("Store_EBITDA_pct", "mean"),
+                Total_COGS_pct=("Total_COGS_pct", "mean"),
+                Total_Labor_pct=("Total_Labor_pct", "mean"),
+            ).reset_index()
+
+            sys_ebitda_avg = ps["ebitda_pct"] * 100
+            sys_cogs_avg   = ps["cogs_pct"]   * 100
+            sys_labor_avg  = ps["labor_pct"]  * 100
+
+            # Net Sales by Stand
+            s_sales = stand_agg.sort_values("Net_Sales", ascending=False)
+            fig_s1 = go.Figure(go.Bar(
+                x=s_sales["Stand"], y=s_sales["Net_Sales"],
+                marker_color=region_color,
+                text=s_sales["Net_Sales"].map(lambda v: f"${v/1000:.0f}k"),
+                textposition="outside",
+            ))
+            brew_fig(fig_s1, height=340)
+            fig_s1.update_layout(
+                title_text=f"NET SALES BY STAND — {sel_region}",
+                yaxis=dict(tickprefix="$", tickformat=",.0f"),
+                xaxis=dict(tickangle=-40),
+                showlegend=False,
+            )
+            st.plotly_chart(fig_s1, config={"displayModeBar": False}, use_container_width=True)
+
+            # EBITDA % by Stand
+            s_ebi = stand_agg.sort_values("Store_EBITDA_pct", ascending=False)
+            fig_s2 = go.Figure(go.Bar(
+                x=s_ebi["Stand"], y=s_ebi["Store_EBITDA_pct"] * 100,
+                marker_color=region_color,
+                text=s_ebi["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%"),
+                textposition="outside",
+            ))
+            fig_s2.add_hline(y=sys_ebitda_avg, line_dash="dot", line_color=MID,
+                             annotation_text="Sys avg", annotation_font_size=9,
+                             annotation_position="top right")
+            brew_fig(fig_s2, height=340)
+            fig_s2.update_layout(
+                title_text=f"EBITDA % BY STAND — {sel_region}",
+                yaxis=dict(ticksuffix="%"),
+                xaxis=dict(tickangle=-40),
+                showlegend=False,
+            )
+            st.plotly_chart(fig_s2, config={"displayModeBar": False}, use_container_width=True)
+
+            # COGs % by Stand
+            s_cogs = stand_agg.sort_values("Total_COGS_pct", ascending=False)
+            fig_s3 = go.Figure(go.Bar(
+                x=s_cogs["Stand"], y=s_cogs["Total_COGS_pct"] * 100,
+                marker_color=region_color,
+                text=s_cogs["Total_COGS_pct"].map(lambda v: f"{v*100:.1f}%"),
+                textposition="outside",
+            ))
+            fig_s3.add_hline(y=sys_cogs_avg, line_dash="dot", line_color=MID,
+                             annotation_text="Sys avg", annotation_font_size=9,
+                             annotation_position="top right")
+            brew_fig(fig_s3, height=340)
+            fig_s3.update_layout(
+                title_text=f"COGS % BY STAND — {sel_region}",
+                yaxis=dict(ticksuffix="%"),
+                xaxis=dict(tickangle=-40),
+                showlegend=False,
+            )
+            st.plotly_chart(fig_s3, config={"displayModeBar": False}, use_container_width=True)
+
+            # Labor % by Stand
+            s_labor = stand_agg.sort_values("Total_Labor_pct", ascending=False)
+            fig_s4 = go.Figure(go.Bar(
+                x=s_labor["Stand"], y=s_labor["Total_Labor_pct"] * 100,
+                marker_color=region_color,
+                text=s_labor["Total_Labor_pct"].map(lambda v: f"{v*100:.1f}%"),
+                textposition="outside",
+            ))
+            fig_s4.add_hline(y=sys_labor_avg, line_dash="dot", line_color=MID,
+                             annotation_text="Sys avg", annotation_font_size=9,
+                             annotation_position="top right")
+            brew_fig(fig_s4, height=340)
+            fig_s4.update_layout(
+                title_text=f"TOTAL LABOR % BY STAND — {sel_region}",
+                yaxis=dict(ticksuffix="%"),
+                xaxis=dict(tickangle=-40),
+                showlegend=False,
+            )
+            st.plotly_chart(fig_s4, config={"displayModeBar": False}, use_container_width=True)
 
     # ── Cost Structure (donut) + P&L Bridge (waterfall) side by side ─────────
     c_left, c_right = st.columns(2)
