@@ -1040,6 +1040,29 @@ def tab_ceo(dash):
         brew_fig(fig, height=300)
         st.plotly_chart(fig, config={"displayModeBar": False})
 
+        # ── Labor % & COGs % Trend ────────────────────────────────────────
+        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">LABOR % & COGS % TREND — {period_range}</div>')
+        fig_lc = go.Figure()
+        if "labor_pct" in filtered_df.columns:
+            fig_lc.add_scatter(
+                x=filtered_df["label"], y=filtered_df["labor_pct"] * 100,
+                name="Total Labor %", mode="lines+markers",
+                line=dict(color=AMBER, width=2.5), marker=dict(size=6),
+            )
+        if "cogs_pct" in filtered_df.columns:
+            fig_lc.add_scatter(
+                x=filtered_df["label"], y=filtered_df["cogs_pct"] * 100,
+                name="COGs %", mode="lines+markers",
+                line=dict(color=BLUE, width=2.5), marker=dict(size=6),
+            )
+        fig_lc.update_layout(
+            xaxis=dict(tickangle=-35),
+            yaxis=dict(ticksuffix="%", tickformat=".1f"),
+            legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
+        )
+        brew_fig(fig_lc, height=280)
+        st.plotly_chart(fig_lc, config={"displayModeBar": False})
+
     with col2:
         # ── Board Narrative — computed from live data ──────────────────────
 
