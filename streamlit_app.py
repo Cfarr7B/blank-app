@@ -2402,92 +2402,77 @@ def tab_insights(dash):
         _sys_cogs   = float(ps.get("cogs_pct", 0)) * 100
 
         def _ramp_charts(subset, group_label, accent_color):
-            """Render 4 ramp tracker charts for a given subset of new stands."""
+            """Render 4 ramp tracker charts (each full-width row) for a given subset."""
             if subset.empty:
                 st.info(f"No new stands in {group_label} this period.")
                 return
             names = subset["Stand"].str.split(",").str[0].tolist()
             n = len(names)
-            rc1, rc2 = st.columns(2)
+
+            def _rc(fig, title, yaxis_opts):
+                brew_fig(fig, height=360)
+                fig.update_layout(
+                    title_text=title,
+                    barmode="group",
+                    xaxis=dict(tickangle=-30, tickfont=dict(size=13)),
+                    yaxis=dict(**yaxis_opts, tickfont=dict(size=13)),
+                    legend=dict(orientation="h", y=1.08, x=0, font=dict(size=13)),
+                    bargap=0.25,
+                )
+                st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
             # Chart 1 — Net Sales vs System Avg
-            with rc1:
-                sv = subset["Net_Sales"].fillna(0).tolist()
-                f1 = go.Figure()
-                f1.add_bar(x=names, y=sv, name="Actual", marker_color=accent_color,
-                           opacity=0.88, text=[f"${v:,.0f}" for v in sv],
-                           textposition="outside", textfont=dict(size=9))
-                f1.add_bar(x=names, y=[_sys_sales]*n, name="System Avg", marker_color=MUTED,
-                           opacity=0.55, text=[f"${_sys_sales:,.0f}"]*n,
-                           textposition="outside", textfont=dict(size=9))
-                brew_fig(f1, height=280)
-                f1.update_layout(title_text=f"NET SALES — {group_label}", barmode="group",
-                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                                 yaxis=dict(tickprefix="$", tickformat=",.0f"),
-                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
-                st.plotly_chart(f1, config={"displayModeBar": False}, use_container_width=True)
+            sv = subset["Net_Sales"].fillna(0).tolist()
+            f1 = go.Figure()
+            f1.add_bar(x=names, y=sv, name="Actual", marker_color=accent_color, opacity=0.88,
+                       text=[f"${v:,.0f}" for v in sv],
+                       textposition="outside", textfont=dict(size=12))
+            f1.add_bar(x=names, y=[_sys_sales]*n, name="System Avg", marker_color=MUTED, opacity=0.55,
+                       text=[f"${_sys_sales:,.0f}"]*n,
+                       textposition="outside", textfont=dict(size=12))
+            _rc(f1, f"NET SALES — {group_label}", dict(tickprefix="$", tickformat=",.0f"))
 
             # Chart 2 — EBITDA % vs System Avg
-            with rc2:
-                ev = (subset["Store_EBITDA_pct"].fillna(0) * 100).tolist()
-                f2 = go.Figure()
-                f2.add_bar(x=names, y=ev, name="Actual EBITDA %",
-                           marker_color=[GREEN if v >= _sys_ebitda else AMBER if v >= _sys_ebitda * 0.6 else RED
-                                         for v in ev],
-                           opacity=0.88, text=[f"{v:.1f}%" for v in ev],
-                           textposition="outside", textfont=dict(size=9))
-                f2.add_bar(x=names, y=[_sys_ebitda]*n, name=f"Sys Avg ({_sys_ebitda:.1f}%)",
-                           marker_color=MUTED, opacity=0.55,
-                           text=[f"{_sys_ebitda:.1f}%"]*n,
-                           textposition="outside", textfont=dict(size=9))
-                brew_fig(f2, height=280)
-                f2.update_layout(title_text=f"EBITDA % — {group_label}", barmode="group",
-                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
-                st.plotly_chart(f2, config={"displayModeBar": False}, use_container_width=True)
-
-            rc3, rc4 = st.columns(2)
+            ev = (subset["Store_EBITDA_pct"].fillna(0) * 100).tolist()
+            f2 = go.Figure()
+            f2.add_bar(x=names, y=ev, name="Actual EBITDA %",
+                       marker_color=[GREEN if v >= _sys_ebitda else AMBER if v >= _sys_ebitda * 0.6 else RED
+                                     for v in ev],
+                       opacity=0.88, text=[f"{v:.1f}%" for v in ev],
+                       textposition="outside", textfont=dict(size=12))
+            f2.add_bar(x=names, y=[_sys_ebitda]*n, name=f"Sys Avg ({_sys_ebitda:.1f}%)",
+                       marker_color=MUTED, opacity=0.55,
+                       text=[f"{_sys_ebitda:.1f}%"]*n,
+                       textposition="outside", textfont=dict(size=12))
+            _rc(f2, f"EBITDA % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
 
             # Chart 3 — Labor % vs System Avg
-            with rc3:
-                lv = (subset["Total_Labor_pct"].fillna(0) * 100).tolist()
-                f3 = go.Figure()
-                f3.add_bar(x=names, y=lv, name="Actual Labor %",
-                           marker_color=[GREEN if v <= _sys_labor else AMBER if v <= _sys_labor + 5 else RED
-                                         for v in lv],
-                           opacity=0.88, text=[f"{v:.1f}%" for v in lv],
-                           textposition="outside", textfont=dict(size=9))
-                f3.add_bar(x=names, y=[_sys_labor]*n, name=f"Sys Avg ({_sys_labor:.1f}%)",
-                           marker_color=MUTED, opacity=0.55,
-                           text=[f"{_sys_labor:.1f}%"]*n,
-                           textposition="outside", textfont=dict(size=9))
-                brew_fig(f3, height=280)
-                f3.update_layout(title_text=f"LABOR % — {group_label}", barmode="group",
-                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
-                st.plotly_chart(f3, config={"displayModeBar": False}, use_container_width=True)
+            lv = (subset["Total_Labor_pct"].fillna(0) * 100).tolist()
+            f3 = go.Figure()
+            f3.add_bar(x=names, y=lv, name="Actual Labor %",
+                       marker_color=[GREEN if v <= _sys_labor else AMBER if v <= _sys_labor + 5 else RED
+                                     for v in lv],
+                       opacity=0.88, text=[f"{v:.1f}%" for v in lv],
+                       textposition="outside", textfont=dict(size=12))
+            f3.add_bar(x=names, y=[_sys_labor]*n, name=f"Sys Avg ({_sys_labor:.1f}%)",
+                       marker_color=MUTED, opacity=0.55,
+                       text=[f"{_sys_labor:.1f}%"]*n,
+                       textposition="outside", textfont=dict(size=12))
+            _rc(f3, f"LABOR % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
 
             # Chart 4 — COGS % vs System Avg
-            with rc4:
-                cv = (subset["Total_COGS_pct"].fillna(0) * 100).tolist()
-                f4 = go.Figure()
-                f4.add_bar(x=names, y=cv, name="Actual COGS %",
-                           marker_color=[GREEN if v <= _sys_cogs else AMBER if v <= _sys_cogs + 3 else RED
-                                         for v in cv],
-                           opacity=0.88, text=[f"{v:.1f}%" for v in cv],
-                           textposition="outside", textfont=dict(size=9))
-                f4.add_bar(x=names, y=[_sys_cogs]*n, name=f"Sys Avg ({_sys_cogs:.1f}%)",
-                           marker_color=MUTED, opacity=0.55,
-                           text=[f"{_sys_cogs:.1f}%"]*n,
-                           textposition="outside", textfont=dict(size=9))
-                brew_fig(f4, height=280)
-                f4.update_layout(title_text=f"COGS % — {group_label}", barmode="group",
-                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
-                st.plotly_chart(f4, config={"displayModeBar": False}, use_container_width=True)
+            cv = (subset["Total_COGS_pct"].fillna(0) * 100).tolist()
+            f4 = go.Figure()
+            f4.add_bar(x=names, y=cv, name="Actual COGS %",
+                       marker_color=[GREEN if v <= _sys_cogs else AMBER if v <= _sys_cogs + 3 else RED
+                                     for v in cv],
+                       opacity=0.88, text=[f"{v:.1f}%" for v in cv],
+                       textposition="outside", textfont=dict(size=12))
+            f4.add_bar(x=names, y=[_sys_cogs]*n, name=f"Sys Avg ({_sys_cogs:.1f}%)",
+                       marker_color=MUTED, opacity=0.55,
+                       text=[f"{_sys_cogs:.1f}%"]*n,
+                       textposition="outside", textfont=dict(size=12))
+            _rc(f4, f"COGS % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
 
         # Split Florida vs Non-Florida by Region name (FL regions start with "FL")
         if "Region" in ramping.columns:
