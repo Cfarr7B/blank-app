@@ -1390,14 +1390,14 @@ def tab_ceo(dash):
         ebitda_trend = filtered_df["ebitda_pct"].iloc[-1] - filtered_df["ebitda_pct"].iloc[-2] if len(filtered_df) >= 2 else 0
         if ebitda_trend > 0.01:
             seasonal_alerts.append({
-                "title": f"🟢 EBITDA Momentum: +{ebitda_trend*100:.0f}bps period-over-period",
+                "title": f"🟢 EBITDA Momentum: +{ebitda_trend*10000:.0f}bps period-over-period",
                 "body": f"System EBITDA improved from {_fmt_p(filtered_df['ebitda_pct'].iloc[-2])} to {_fmt_p(filtered_df['ebitda_pct'].iloc[-1])}. "
                         f"Protect this by maintaining current labor scheduling and vendor pricing discipline.",
                 "cls": "win", "tag_cls": "green",
             })
         elif ebitda_trend < -0.015:
             seasonal_alerts.append({
-                "title": f"🔴 EBITDA Slipping: {ebitda_trend*100:.0f}bps period-over-period",
+                "title": f"🔴 EBITDA Slipping: {ebitda_trend*10000:.0f}bps period-over-period",
                 "body": f"System EBITDA dropped from {_fmt_p(filtered_df['ebitda_pct'].iloc[-2])} to {_fmt_p(filtered_df['ebitda_pct'].iloc[-1])}. "
                         f"Identify the top 3 contributors — likely labor overrun at ramping stands or seasonal volume softness.",
                 "cls": "watch", "tag_cls": "red",
@@ -2406,6 +2406,11 @@ def tab_insights(dash):
             if subset.empty:
                 st.info(f"No new stands in {group_label} this period.")
                 return
+            # Sort oldest → newest so left-to-right reads as maturity progression
+            if "Open Date" in subset.columns:
+                subset = subset.copy()
+                subset["_open_dt"] = pd.to_datetime(subset["Open Date"], errors="coerce")
+                subset = subset.sort_values("_open_dt", ascending=True).drop(columns=["_open_dt"])
             names = subset["Stand"].str.split(",").str[0].tolist()
             n = len(names)
 
