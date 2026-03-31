@@ -261,28 +261,8 @@ def period_multiselect(periods_df, key, label="Select Period(s)"):
     all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
     label_to_key = {lbl: pk for lbl, pk in all_labels}
 
-    # Quarter presets
-    q_presets = {"Q1 (P1–P3)": [1, 2, 3], "Q2 (P4–P6)": [4, 5, 6],
-                 "Q3 (P7–P9)": [7, 8, 9], "Q4 (P10–P13)": [10, 11, 12, 13]}
-
-    sel_col, btn_col = st.columns([3, 2])
-    with sel_col:
-        selected_labels = st.multiselect(label, [l for l, _ in all_labels],
-                                         default=[all_labels[0][0]], key=key)
-    with btn_col:
-        st.caption("Quick select:")
-        bcols = st.columns(4)
-        for i, (q_name, p_nums) in enumerate(q_presets.items()):
-            with bcols[i]:
-                if st.button(q_name, key=f"{key}_{q_name}", use_container_width=True):
-                    # Find matching periods for the latest year in the data
-                    latest_year = periods_df["year"].max()
-                    matching = []
-                    for _, row in periods_df.iterrows():
-                        if row["year"] == latest_year and row["period_num"] in p_nums:
-                            matching.append(row["label"])
-                    if matching:
-                        st.session_state[key] = matching
+    selected_labels = st.multiselect(label, [l for l, _ in all_labels],
+                                     default=[all_labels[0][0]], key=key)
 
     selected_keys = [label_to_key[lbl] for lbl in selected_labels if lbl in label_to_key]
 
@@ -1532,6 +1512,38 @@ def tab_overview(dash):
     else:
         reg_df = get_regions_df(dash, pk)
 
+    # ── Cost Structure (donut) + P&L Bridge (waterfall) ─────────────────────
+    _cs_other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
+    cs_left, cs_right = st.columns(2)
+    with cs_left:
+        fig_cs = go.Figure(go.Pie(
+            labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
+            values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], _cs_other, ps["ebitda_pct"]],
+            hole=0.55,
+            marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
+            textinfo="label+percent",
+            textfont=dict(size=11, family="DM Mono"),
+        ))
+        brew_fig(fig_cs, height=360)
+        fig_cs.update_layout(title_text="COST STRUCTURE", legend=dict(font=dict(size=10)))
+        st.plotly_chart(fig_cs, config={"displayModeBar": False}, use_container_width=True)
+    with cs_right:
+        bridge_labels = ["Net Sales", "− COGS", "− Labor", "− Rent", "− Other OpEx", "EBITDA"]
+        bridge_values = [100, -ps["cogs_pct"]*100, -ps["labor_pct"]*100,
+                         -ps["rent_pct"]*100, -_cs_other*100, ps["ebitda_pct"]*100]
+        fig_bridge = go.Figure(go.Waterfall(
+            orientation="v", measure=["absolute","relative","relative","relative","relative","total"],
+            x=bridge_labels, y=bridge_values,
+            text=[f"{abs(v):.1f}%" for v in bridge_values], textposition="outside",
+            connector=dict(line=dict(color=BORDER, width=1)),
+            increasing=dict(marker_color=BLUE), decreasing=dict(marker_color=RED),
+            totals=dict(marker_color=GREEN),
+        ))
+        brew_fig(fig_bridge, height=360)
+        fig_bridge.update_layout(title_text="P&L BRIDGE",
+                                 yaxis=dict(ticksuffix="%", range=[0, 115]), showlegend=False)
+        st.plotly_chart(fig_bridge, config={"displayModeBar": False}, use_container_width=True)
+
     # ── Region drill-down selector ───────────────────────────────────────────
     all_stands_df = get_stands_df(dash)
     available_regions = sorted(all_stands_df["Region"].dropna().unique().tolist())
@@ -1705,55 +1717,6 @@ def tab_overview(dash):
             )
             st.plotly_chart(fig_s4, config={"displayModeBar": False}, use_container_width=True)
 
-    # ── Cost Structure (donut) + P&L Bridge (waterfall) side by side ─────────
-    c_left, c_right = st.columns(2)
-    with c_left:
-        other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
-        fig4 = go.Figure(go.Pie(
-            labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
-            values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], other, ps["ebitda_pct"]],
-            hole=0.55,
-            marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
-            textinfo="label+percent",
-            textfont=dict(size=11, family="DM Mono"),
-        ))
-        brew_fig(fig4, height=360)
-        fig4.update_layout(title_text="COST STRUCTURE",
-                           legend=dict(font=dict(size=10)))
-        st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
-
-    with c_right:
-        # P&L Bridge: shows how Net Sales flows down to EBITDA
-        bridge_labels = ["Net Sales", "− COGS", "− Labor", "− Rent", "− Other OpEx", "EBITDA"]
-        bridge_values = [
-             100,
-            -ps["cogs_pct"]  * 100,
-            -ps["labor_pct"] * 100,
-            -ps["rent_pct"]  * 100,
-            -other           * 100,
-             ps["ebitda_pct"]* 100,
-        ]
-        bridge_measure = ["absolute", "relative", "relative", "relative", "relative", "total"]
-        fig5 = go.Figure(go.Waterfall(
-            orientation="v",
-            measure=bridge_measure,
-            x=bridge_labels,
-            y=bridge_values,
-            text=[f"{abs(v):.1f}%" for v in bridge_values],
-            textposition="outside",
-            connector=dict(line=dict(color=BORDER, width=1)),
-            increasing=dict(marker_color=BLUE),
-            decreasing=dict(marker_color=RED),
-            totals=dict(marker_color=GREEN),
-        ))
-        brew_fig(fig5, height=360)
-        fig5.update_layout(
-            title_text="P&L BRIDGE",
-            yaxis=dict(ticksuffix="%", range=[0, 115]),
-            showlegend=False,
-        )
-        st.plotly_chart(fig5, config={"displayModeBar": False}, use_container_width=True)
-
     # ── Performance by Stand Maturity ─────────────────────────────────────────
     stands_df = get_stands_df(dash)
     ps_stands = stands_df[stands_df["Period_Key"] == pk]
@@ -1784,7 +1747,7 @@ def tab_overview(dash):
 # ─────────────────────────────────────────────
 def tab_comparison(dash):
     periods_df = get_periods_df(dash)
-    section("PERIOD COMPARISON", "Compare any two periods across all key metrics")
+    section("PERIOD COMPARISON", "Head-to-head breakdown — sales, costs, EBITDA, and stand-level distribution")
 
     all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
     label_to_key = {l: pk for l, pk in all_options}
@@ -1793,7 +1756,8 @@ def tab_comparison(dash):
     with c1:
         lbl_a = st.selectbox("Period A", [l for l, _ in all_options], key="cmp_a")
     with c2:
-        st.html('<div style="text-align:center;font-family:Bebas Neue;font-size:24px;color:#595959;padding-top:28px;">VS</div>')
+        st.html('<div style="text-align:center;font-family:Bebas Neue,sans-serif;font-size:28px;'
+                'color:#AC2430;padding-top:26px;letter-spacing:2px;">VS</div>')
     with c3:
         lbl_b = st.selectbox("Period B", [l for l, _ in all_options][1:], key="cmp_b")
 
@@ -1803,89 +1767,223 @@ def tab_comparison(dash):
     psB = periods_df[periods_df["period_key"] == pkb].iloc[0] if pkb else None
 
     if psB is None:
-        st.warning("Select a second period to compare")
+        st.warning("Select a second period to compare.")
         return
 
-    # Metric comparison table
-    metrics = [
-        ("Avg Net Sales",            "avg_sales",        True,  True),
-        ("COGS %",                   "cogs_pct",         False, False),
-        ("Hourly Labor %",           "hourly_pct",       False, False),
-        ("Total Labor & Benefits %", "labor_pct",        False, False),
-        ("R&M %",                    "rm_pct",           False, False),
-        ("Utilities %",              "utilities_pct",    False, False),
-        ("Controllable %",           "controllable_pct", False, False),
-        ("Unit EBITDAR %",           "ebitdar_pct",      False, True),
-        ("Rent %",                   "rent_pct",         False, False),
-        ("Store EBITDA %",           "ebitda_pct",       False, True),
-        ("Discount %",               "discount_pct",     False, False),
+    # ── Scorecard row ─────────────────────────────────────────────────────────
+    metrics_def = [
+        ("Avg Sales/Stand", "avg_sales",   True,  True),
+        ("Store EBITDA %",  "ebitda_pct",  False, True),
+        ("Total Labor %",   "labor_pct",   False, False),
+        ("COGS %",          "cogs_pct",    False, False),
+        ("Discount %",      "discount_pct",False, False),
+        ("R&M %",           "rm_pct",      False, False),
     ]
-
-    rows = []
-    for label, field, is_dollar, higher_good in metrics:
-        va = psA.get(field, 0)
-        vb = psB.get(field, 0)
+    score_cols = st.columns(len(metrics_def))
+    for i, (m_label, field, is_dollar, higher_good) in enumerate(metrics_def):
+        va = float(psA.get(field, 0) or 0)
+        vb = float(psB.get(field, 0) or 0)
         delta = va - vb
-        good = (delta > 0) if higher_good else (delta < 0)
-        rows.append({
-            "Metric": label,
-            f"{psA['label']} (A)": _fmt_d(va) if is_dollar else _fmt_p(va),
-            f"{psB['label']} (B)": _fmt_d(vb) if is_dollar else _fmt_p(vb),
-            "Δ A − B":  (f"+${delta/1000:.1f}k" if is_dollar else _fmt_bps(delta)),
-            "Signal": "↑ Better" if good else ("↓ Worse" if not good else "—"),
+        is_better = (delta > 0) if higher_good else (delta < 0)
+        arrow   = "▲" if delta > 0 else ("▼" if delta < 0 else "—")
+        a_color = GREEN if is_better else RED
+        fmt_va  = _fmt_d(va) if is_dollar else _fmt_p(va)
+        fmt_vb  = _fmt_d(vb) if is_dollar else _fmt_p(vb)
+        fmt_d   = (f"+${abs(delta)/1000:.1f}k" if delta >= 0 else f"-${abs(delta)/1000:.1f}k") if is_dollar else _fmt_bps(delta)
+        with score_cols[i]:
+            st.html(f"""
+            <div style="background:#f8f8f8;border-radius:10px;padding:14px 10px;text-align:center;
+                        border-top:3px solid {a_color};margin-bottom:8px;">
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#595959;
+                          text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">{m_label}</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1A1919;">{fmt_va}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#595959;margin:2px 0;">
+                vs {fmt_vb}
+              </div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:bold;color:{a_color};">
+                {arrow} {fmt_d}
+              </div>
+            </div>""")
+
+    # ── Biggest Movers ────────────────────────────────────────────────────────
+    all_metrics = [
+        ("Avg Net Sales",       "avg_sales",        True,  True),
+        ("Store EBITDA %",      "ebitda_pct",       False, True),
+        ("Unit EBITDAR %",      "ebitdar_pct",      False, True),
+        ("Total Labor %",       "labor_pct",        False, False),
+        ("Hourly Labor %",      "hourly_pct",       False, False),
+        ("COGS %",              "cogs_pct",         False, False),
+        ("Rent %",              "rent_pct",         False, False),
+        ("Discount %",          "discount_pct",     False, False),
+        ("R&M %",               "rm_pct",           False, False),
+        ("Utilities %",         "utilities_pct",    False, False),
+        ("Controllable %",      "controllable_pct", False, False),
+        ("Marketing %",         "marketing_pct",    False, False),
+    ]
+    mover_rows = []
+    for m_label, field, is_dollar, higher_good in all_metrics:
+        va = float(psA.get(field, 0) or 0)
+        vb = float(psB.get(field, 0) or 0)
+        if va == 0 and vb == 0:
+            continue
+        delta = va - vb
+        is_positive = (delta > 0) if higher_good else (delta < 0)
+        magnitude = abs(delta)
+        mover_rows.append({
+            "label": m_label, "field": field, "is_dollar": is_dollar,
+            "higher_good": higher_good, "va": va, "vb": vb,
+            "delta": delta, "is_positive": is_positive, "magnitude": magnitude
         })
-    cmp_df = pd.DataFrame(rows)
-    render_table(cmp_df)
+    mover_rows.sort(key=lambda x: x["magnitude"], reverse=True)
+    top_improvements = [r for r in mover_rows if r["is_positive"]][:3]
+    top_concerns     = [r for r in mover_rows if not r["is_positive"]][:3]
 
-    # Charts
-    col1, col2 = st.columns(2)
-    with col1:
-        fig = go.Figure(go.Bar(
-            x=[psA["label"], psB["label"]],
-            y=[psA["avg_sales"], psB["avg_sales"]],
-            marker_color=[BLUE, GREEN],
-            text=[_fmt_d(psA["avg_sales"]), _fmt_d(psB["avg_sales"])],
-            textposition="outside",
-        ))
-        brew_fig(fig, height=260)
-        fig.update_layout(title_text="AVG SALES COMPARISON",
-                          yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
-        st.plotly_chart(fig, config={"displayModeBar": False})
+    mv_col1, mv_col2 = st.columns(2)
+    with mv_col1:
+        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
+                f'color:{GREEN};margin:12px 0 6px;">▲ BIGGEST IMPROVEMENTS — {psA["label"]} vs {psB["label"]}</div>')
+        for r in top_improvements:
+            fmt_d = (f"+${r['delta']/1000:.1f}k" if r["is_dollar"] else _fmt_bps(r["delta"]))
+            insight_card(
+                f"↑ {r['label']}: {_fmt_d(r['va']) if r['is_dollar'] else _fmt_p(r['va'])}",
+                f"Up from {_fmt_d(r['vb']) if r['is_dollar'] else _fmt_p(r['vb'])} in {psB['label']} — a {fmt_d} improvement.",
+                tag=fmt_d, tag_cls="green", style="win",
+            )
+    with mv_col2:
+        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
+                f'color:{RED};margin:12px 0 6px;">▼ BIGGEST DECLINES — {psA["label"]} vs {psB["label"]}</div>')
+        for r in top_concerns:
+            fmt_d = _fmt_bps(r["delta"]) if not r["is_dollar"] else f"-${abs(r['delta'])/1000:.1f}k"
+            insight_card(
+                f"↓ {r['label']}: {_fmt_d(r['va']) if r['is_dollar'] else _fmt_p(r['va'])}",
+                f"Down from {_fmt_d(r['vb']) if r['is_dollar'] else _fmt_p(r['vb'])} in {psB['label']} — a {fmt_d} move.",
+                tag=fmt_d, tag_cls="red",
+            )
 
-    with col2:
+    # ── Radar chart + Regional EBITDA side-by-side ────────────────────────────
+    col_r1, col_r2 = st.columns(2)
+    with col_r1:
+        # Radar: normalize each metric to 0–1 scale for visual comparison
+        radar_fields = ["ebitda_pct", "ebitdar_pct", "labor_pct", "cogs_pct", "discount_pct", "rm_pct"]
+        radar_labels = ["EBITDA %", "EBITDAR %", "Labor %", "COGS %", "Discount %", "R&M %"]
+        # For cost metrics (lower=better), invert so "bigger is better" on radar
+        invert = [False, False, True, True, True, True]
+        vals_a, vals_b = [], []
+        for fld, inv in zip(radar_fields, invert):
+            va_r = float(psA.get(fld, 0) or 0) * 100
+            vb_r = float(psB.get(fld, 0) or 0) * 100
+            all_v = [float(periods_df[fld].max()) * 100, float(periods_df[fld].min()) * 100]
+            rng = (max(all_v) - min(all_v)) or 1
+            na = (va_r - min(all_v)) / rng
+            nb = (vb_r - min(all_v)) / rng
+            vals_a.append(1 - na if inv else na)
+            vals_b.append(1 - nb if inv else nb)
+        # close the polygon
+        vals_a += [vals_a[0]]
+        vals_b += [vals_b[0]]
+        lbl_loop = radar_labels + [radar_labels[0]]
+        fig_radar = go.Figure()
+        fig_radar.add_scatterpolar(r=vals_a, theta=lbl_loop, fill="toself", name=psA["label"],
+                                   line=dict(color=RED, width=2), opacity=0.5)
+        fig_radar.add_scatterpolar(r=vals_b, theta=lbl_loop, fill="toself", name=psB["label"],
+                                   line=dict(color=BLUE, width=2), opacity=0.4)
+        brew_fig(fig_radar, height=340)
+        fig_radar.update_layout(
+            title_text="PERFORMANCE RADAR",
+            polar=dict(radialaxis=dict(visible=False, range=[0, 1])),
+            legend=dict(orientation="h", y=-0.12),
+        )
+        st.plotly_chart(fig_radar, config={"displayModeBar": False}, use_container_width=True)
+
+    with col_r2:
         reg_a = pd.DataFrame(dash["region_by_period"].get(pka, []))
         reg_b = pd.DataFrame(dash["region_by_period"].get(pkb, []))
         if not reg_a.empty and not reg_b.empty:
             merged = reg_a.merge(reg_b, on="region", suffixes=("_a", "_b"))
-            fig2 = go.Figure()
-            fig2.add_bar(x=merged["region"], y=merged["ebitda_pct_a"] * 100,
-                         name=psA["label"], marker_color=BLUE, opacity=0.85)
-            fig2.add_bar(x=merged["region"], y=merged["ebitda_pct_b"] * 100,
-                         name=psB["label"], marker_color=GREEN, opacity=0.75)
-            brew_fig(fig2, height=260)
-            fig2.update_layout(title_text="EBITDA % BY REGION",
-                               barmode="group", yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig2, config={"displayModeBar": False})
+            merged = merged.sort_values("ebitda_pct_a", ascending=False)
+            fig_reg = go.Figure()
+            fig_reg.add_bar(x=merged["region"], y=merged["ebitda_pct_a"] * 100,
+                            name=psA["label"], marker_color=RED, opacity=0.85)
+            fig_reg.add_bar(x=merged["region"], y=merged["ebitda_pct_b"] * 100,
+                            name=psB["label"], marker_color=BLUE, opacity=0.65)
+            brew_fig(fig_reg, height=340)
+            fig_reg.update_layout(title_text="EBITDA % BY REGION",
+                                  barmode="group", yaxis=dict(ticksuffix="%"))
+            st.plotly_chart(fig_reg, config={"displayModeBar": False}, use_container_width=True)
 
-    # Distribution charts
+    # ── Side-by-side P&L Bridge ───────────────────────────────────────────────
+    st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
+            'color:#1A1919;margin:16px 0 4px;">P&L BRIDGE COMPARISON</div>')
+    bridge_col1, bridge_col2 = st.columns(2)
+    for col, ps_x, color, lbl_x in [(bridge_col1, psA, RED, psA["label"]),
+                                      (bridge_col2, psB, BLUE, psB["label"])]:
+        with col:
+            _oth = max(0, 1 - ps_x["cogs_pct"] - ps_x["labor_pct"] - ps_x["rent_pct"] - ps_x["ebitda_pct"])
+            bv = [100, -ps_x["cogs_pct"]*100, -ps_x["labor_pct"]*100,
+                  -ps_x["rent_pct"]*100, -_oth*100, ps_x["ebitda_pct"]*100]
+            fig_b = go.Figure(go.Waterfall(
+                orientation="v",
+                measure=["absolute","relative","relative","relative","relative","total"],
+                x=["Net Sales","− COGS","− Labor","− Rent","− Other","EBITDA"],
+                y=bv,
+                text=[f"{abs(v):.1f}%" for v in bv], textposition="outside",
+                connector=dict(line=dict(color=BORDER, width=1)),
+                increasing=dict(marker_color=color),
+                decreasing=dict(marker_color=RED),
+                totals=dict(marker_color=GREEN),
+            ))
+            brew_fig(fig_b, height=300)
+            fig_b.update_layout(title_text=f"P&L BRIDGE — {lbl_x}",
+                                yaxis=dict(ticksuffix="%", range=[0, 115]), showlegend=False)
+            st.plotly_chart(fig_b, config={"displayModeBar": False}, use_container_width=True)
+
+    # ── Stand distribution comparison ─────────────────────────────────────────
     stands_df = get_stands_df(dash)
-    col3, col4 = st.columns(2)
-    with col3:
-        sa = stands_df[stands_df["Period_Key"] == pka]
-        fig3 = go.Figure(go.Histogram(x=sa["Total_Labor_pct"] * 100, nbinsx=12,
-                                       marker_color=RED, opacity=0.8,
-                                       name=psA["label"]))
-        brew_fig(fig3, height=240)
-        fig3.update_layout(title_text=f"LABOR % DISTRIBUTION — {psA['label']}",
-                           xaxis=dict(ticksuffix="%"), showlegend=False)
-        st.plotly_chart(fig3, config={"displayModeBar": False})
-    with col4:
-        fig4 = go.Figure(go.Histogram(x=sa["Total_COGS_pct"] * 100, nbinsx=10,
-                                       marker_color=BLUE, opacity=0.8))
-        brew_fig(fig4, height=240)
-        fig4.update_layout(title_text=f"COGS % DISTRIBUTION — {psA['label']}",
-                           xaxis=dict(ticksuffix="%"), showlegend=False)
-        st.plotly_chart(fig4, config={"displayModeBar": False})
+    sa = stands_df[stands_df["Period_Key"] == pka]
+    sb = stands_df[stands_df["Period_Key"] == pkb]
+
+    st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
+            'color:#1A1919;margin:16px 0 4px;">STAND-LEVEL DISTRIBUTION</div>')
+    dist_col1, dist_col2 = st.columns(2)
+    with dist_col1:
+        if not sa.empty and not sb.empty:
+            fig_lh = go.Figure()
+            fig_lh.add_histogram(x=sa["Total_Labor_pct"]*100, name=psA["label"],
+                                 marker_color=RED, opacity=0.65, nbinsx=12)
+            fig_lh.add_histogram(x=sb["Total_Labor_pct"]*100, name=psB["label"],
+                                 marker_color=BLUE, opacity=0.55, nbinsx=12)
+            brew_fig(fig_lh, height=260)
+            fig_lh.update_layout(title_text="LABOR % — STAND DISTRIBUTION",
+                                 barmode="overlay", xaxis=dict(ticksuffix="%"))
+            st.plotly_chart(fig_lh, config={"displayModeBar": False}, use_container_width=True)
+    with dist_col2:
+        if not sa.empty and not sb.empty:
+            fig_eh = go.Figure()
+            fig_eh.add_histogram(x=sa["Store_EBITDA_pct"]*100, name=psA["label"],
+                                 marker_color=RED, opacity=0.65, nbinsx=12)
+            fig_eh.add_histogram(x=sb["Store_EBITDA_pct"]*100, name=psB["label"],
+                                 marker_color=BLUE, opacity=0.55, nbinsx=12)
+            brew_fig(fig_eh, height=260)
+            fig_eh.update_layout(title_text="EBITDA % — STAND DISTRIBUTION",
+                                 barmode="overlay", xaxis=dict(ticksuffix="%"))
+            st.plotly_chart(fig_eh, config={"displayModeBar": False}, use_container_width=True)
+
+    # ── Full metric table (collapsible) ───────────────────────────────────────
+    with st.expander("Full Metric Table"):
+        rows = []
+        for m_label, field, is_dollar, higher_good in all_metrics:
+            va = float(psA.get(field, 0) or 0)
+            vb = float(psB.get(field, 0) or 0)
+            delta = va - vb
+            good = (delta > 0) if higher_good else (delta < 0)
+            rows.append({
+                "Metric": m_label,
+                f"{psA['label']} (A)": _fmt_d(va) if is_dollar else _fmt_p(va),
+                f"{psB['label']} (B)": _fmt_d(vb) if is_dollar else _fmt_p(vb),
+                "Δ A − B": (f"+${delta/1000:.1f}k" if is_dollar else _fmt_bps(delta)),
+                "Signal": "↑ Better" if good else "↓ Worse",
+            })
+        render_table(pd.DataFrame(rows))
 
 
 # ─────────────────────────────────────────────
@@ -2345,7 +2443,7 @@ def tab_forecast(dash):
 def tab_potholes(dash):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
-    section("⚠ POTHOLE WATCH", "Forward-looking risks — act before they become a crisis")
+    section("⚠ POTHOLE WATCH", "Maturity-adjusted risks — established stands only · new stands tracked separately")
 
     all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
     label_to_key = {l: pk for l, pk in all_options}
@@ -2358,66 +2456,218 @@ def tab_potholes(dash):
 
     ps = periods_df[periods_df["period_key"] == pk].iloc[0]
 
+    # ── Separate by maturity ──────────────────────────────────────────────────
+    NEW_BUCKETS = ["New (<6mo)"]
+    EST_BUCKETS = ["Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+    if "Age_Bucket" in ps_stands.columns:
+        new_stands  = ps_stands[ps_stands["Age_Bucket"].isin(NEW_BUCKETS)]
+        est_stands  = ps_stands[ps_stands["Age_Bucket"].isin(EST_BUCKETS)]
+        # Unclassified treated as established (conservative — avoids false flagging)
+        unclass = ps_stands[~ps_stands["Age_Bucket"].isin(NEW_BUCKETS + EST_BUCKETS)]
+        est_stands = pd.concat([est_stands, unclass], ignore_index=True)
+    else:
+        new_stands = pd.DataFrame()
+        est_stands = ps_stands
+
+    n_new = len(new_stands)
+    n_est = len(est_stands)
+
+    # Show maturity context banner
+    if n_new > 0:
+        avg_new_labor  = new_stands["Total_Labor_pct"].mean() if "Total_Labor_pct" in new_stands else 0
+        avg_est_labor  = est_stands["Total_Labor_pct"].mean() if n_est and "Total_Labor_pct" in est_stands else 0
+        st.html(f"""
+        <div style="background:#fff8e1;border-left:4px solid #e8940a;border-radius:6px;
+                    padding:12px 16px;margin-bottom:14px;font-family:'DM Mono',monospace;font-size:12px;">
+          <strong>📋 Maturity Filter Active:</strong> {n_new} new stand(s) (&lt;6 months) are excluded from Critical Issues
+          — their elevated labor ({_fmt_p(avg_new_labor)} avg) and lower EBITDA are expected during ramp.
+          Established stands ({n_est}) avg labor: {_fmt_p(avg_est_labor)}.
+          New stands are reviewed separately in the Ramp-Up section below.
+        </div>""")
+
     col1, col2 = st.columns(2)
+
+    # ── Critical Issues — established stands only ─────────────────────────────
     with col1:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#AC2430;margin-bottom:10px;">🚨 CRITICAL ISSUES</div>')
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
+                'color:#AC2430;margin-bottom:10px;">🚨 CRITICAL ISSUES — ESTABLISHED STANDS</div>')
 
-        top_disc  = ps_stands.nlargest(1, "Discounts_pct").iloc[0]
-        top_labor = ps_stands.nlargest(1, "Total_Labor_pct").iloc[0]
-        worst_ebi = ps_stands.nsmallest(1, "Store_EBITDA_pct").iloc[0]
-        top_rm    = ps_stands.nlargest(1, "Total_RM_pct").iloc[0]
-
-        insight_card(
-            f"🚨 Highest Discount Rate: {top_disc['Stand'].split(',')[0]}",
-            f"{_fmt_p(top_disc['Discounts_pct'])} discount rate — {top_disc['Discounts_pct']/0.028:.1f}× the 2.8% system avg. "
-            f"Possible POS mis-config or unauthorized promos. Direct EBITDA impact.",
-            tag=_fmt_p(top_disc['Discounts_pct']), tag_cls="red",
-        )
-        insight_card(
-            f"🚨 Highest Labor Rate: {top_labor['Stand'].split(',')[0]}",
-            f"{_fmt_p(top_labor['Total_Labor_pct'])} Total Labor on {_fmt_d(top_labor['Net_Sales'])} sales. "
-            f"EBITDA compressed to {_fmt_p(top_labor['Store_EBITDA_pct'])}. "
-            f"Pull scheduling report and compare vs similar-volume stands.",
-            tag=_fmt_p(top_labor['Total_Labor_pct']), tag_cls="red",
-        )
-        insight_card(
-            f"🚨 Lowest Store EBITDA: {worst_ebi['Stand'].split(',')[0]}",
-            f"Generating {_fmt_p(worst_ebi['Store_EBITDA_pct'])} EBITDA on {_fmt_d(worst_ebi['Net_Sales'])} sales. "
-            f"Root causes: Labor {_fmt_p(worst_ebi['Total_Labor_pct'])}, COGS {_fmt_p(worst_ebi['Total_COGS_pct'])}.",
-            tag=_fmt_p(worst_ebi['Store_EBITDA_pct']), tag_cls="red",
-        )
-        if top_rm["Total_RM_pct"] > 0.02:
+        if est_stands.empty:
+            st.info("No established stands in this period.")
+        else:
+            # Highest discount (ALL stands — discount anomalies aren't maturity-driven)
+            top_disc = ps_stands.nlargest(1, "Discounts_pct").iloc[0]
+            disc_age = top_disc.get("Age_Bucket", "")
+            disc_note = f" ({disc_age})" if disc_age else ""
             insight_card(
-                f"🚨 Highest R&M: {top_rm['Stand'].split(',')[0]}",
-                f"{_fmt_p(top_rm['Total_RM_pct'])} R&M — {top_rm['Total_RM_pct']/0.011:.1f}× system avg. "
-                f"Equipment issues or deferred maintenance catch-up. Correlate with stand age.",
-                tag=_fmt_p(top_rm['Total_RM_pct']), tag_cls="amber",
+                f"🚨 Highest Discount: {top_disc['Stand'].split(',')[0]}{disc_note}",
+                f"{_fmt_p(top_disc['Discounts_pct'])} discount rate — "
+                f"{top_disc['Discounts_pct']/0.028:.1f}× the 2.8% system avg. "
+                f"Discount issues aren't ramp-related — check POS config and promo authorization.",
+                tag=_fmt_p(top_disc['Discounts_pct']), tag_cls="red",
             )
 
+            # High labor — established stands only
+            top_labor = est_stands.nlargest(1, "Total_Labor_pct").iloc[0]
+            avg_sys_labor = ps["labor_pct"]
+            labor_gap = top_labor["Total_Labor_pct"] - avg_sys_labor
+            insight_card(
+                f"🚨 High Labor (Est.): {top_labor['Stand'].split(',')[0]}",
+                f"{_fmt_p(top_labor['Total_Labor_pct'])} Total Labor — "
+                f"{_fmt_bps(labor_gap)} above the {_fmt_p(avg_sys_labor)} system avg. "
+                f"This stand is past ramp — scheduling inefficiency or staffing model issue. "
+                f"EBITDA: {_fmt_p(top_labor['Store_EBITDA_pct'])}.",
+                tag=_fmt_p(top_labor['Total_Labor_pct']), tag_cls="red",
+            )
+
+            # Worst EBITDA — established stands only
+            worst_ebi = est_stands.nsmallest(1, "Store_EBITDA_pct").iloc[0]
+            insight_card(
+                f"🚨 Lowest EBITDA (Est.): {worst_ebi['Stand'].split(',')[0]}",
+                f"{_fmt_p(worst_ebi['Store_EBITDA_pct'])} EBITDA on {_fmt_d(worst_ebi['Net_Sales'])} sales. "
+                f"This is an established location — underperformance is a real issue, not ramp noise. "
+                f"Labor {_fmt_p(worst_ebi['Total_Labor_pct'])}, COGS {_fmt_p(worst_ebi['Total_COGS_pct'])}.",
+                tag=_fmt_p(worst_ebi['Store_EBITDA_pct']), tag_cls="red",
+            )
+
+            # R&M — established stands disproportionately affected by aging equipment
+            top_rm = est_stands.nlargest(1, "Total_RM_pct").iloc[0]
+            if top_rm["Total_RM_pct"] > 0.02:
+                insight_card(
+                    f"🚨 High R&M (Est.): {top_rm['Stand'].split(',')[0]}",
+                    f"{_fmt_p(top_rm['Total_RM_pct'])} R&M — {top_rm['Total_RM_pct']/0.011:.1f}× system avg. "
+                    f"Established stands with high R&M signal equipment aging or deferred maintenance. "
+                    f"Schedule a condition audit.",
+                    tag=_fmt_p(top_rm['Total_RM_pct']), tag_cls="amber",
+                )
+
+            # Multi-issue stands: high labor AND low EBITDA
+            multi_issue = est_stands[
+                (est_stands["Total_Labor_pct"] > 0.27) &
+                (est_stands["Store_EBITDA_pct"] < 0.12)
+            ]
+            if len(multi_issue) > 1:
+                names = ", ".join(multi_issue["Stand"].str.split(",").str[0].tolist()[:4])
+                insight_card(
+                    f"🚨 Multi-Issue Cluster: {len(multi_issue)} Established Stands",
+                    f"These stands have both high labor (>27%) AND low EBITDA (<12%): {names}. "
+                    f"Cluster pattern suggests a systemic issue — staffing model, market, or management.",
+                    tag=f"{len(multi_issue)} Stands", tag_cls="red",
+                )
+
+    # ── Forward-looking watch items ───────────────────────────────────────────
     with col2:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#e8940a;margin-bottom:10px;">⚠ WATCH ITEMS</div>')
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
+                'color:#e8940a;margin-bottom:10px;">⚠ FORWARD-LOOKING RISKS</div>')
+
+        # Dynamic: flag regions with consistently high labor in this period
+        reg_df = get_regions_df(dash, pk)
+        high_labor_regions = []
+        if not reg_df.empty and "labor_pct" in reg_df.columns:
+            sys_labor = float(ps.get("labor_pct", 0))
+            for _, rrow in reg_df.iterrows():
+                if rrow.get("labor_pct", 0) > sys_labor + 0.04:
+                    high_labor_regions.append((rrow["region"], rrow["labor_pct"]))
+        if high_labor_regions:
+            reg_list = ", ".join(f"{r} ({_fmt_p(l)})" for r, l in sorted(high_labor_regions, key=lambda x: -x[1]))
+            insight_card(
+                f"⚠ Regional Labor Gap: {len(high_labor_regions)} Region(s) 400bps+ Above Avg",
+                f"{reg_list} are running 400bps+ above system avg labor. "
+                f"Regional labor creep compounds quickly — investigate scheduling and staffing ratios.",
+                tag="Labor Risk", tag_cls="amber", style="watch",
+            )
+
+        # Dynamic: stands with declining sales trend (this period vs system avg)
+        low_sales = est_stands[est_stands["Net_Sales"] < est_stands["Net_Sales"].quantile(0.15)]
+        if len(low_sales) >= 2:
+            names = ", ".join(low_sales.nsmallest(3, "Net_Sales")["Stand"].str.split(",").str[0].tolist())
+            insight_card(
+                f"⚠ Low-Volume Established Stands ({len(low_sales)} in bottom 15%)",
+                f"Bottom performers by sales: {names}. "
+                f"For established locations, low volume may indicate market saturation, location issues, "
+                f"or operational problems — not just ramp lag.",
+                tag="Volume Risk", tag_cls="amber", style="watch",
+            )
+
+        # Seasonal / structural watch items
         watch_items = [
-            ("⚠ FL-SW Region: Structural Labor Risk",
-             "FL-SW has averaged 28%+ Total Labor & Benefits across most 2025 periods. A persistent 550bps gap vs system avg. Bradenton FL-2 and Belleview FL-1 are chronic outliers.",
-             "28%+ avg", "amber"),
-            ("⚠ WTX New Opens: Regional Ramp Pattern",
-             "Levelland, Dumas, and Plainview showing below-target ramp performance. Average ~$112k sales and 30%+ labor. This is a regional opening model issue, not isolated incidents.",
-             "~30%+ Labor", "amber"),
             ("⚠ Summer Labor P6–P8",
-             "2025 data shows P6–P8 EBITDA compressed to 16–20% vs 22–24% in P3–P5. Vacation coverage, call-outs, and new stand training overlap create labor creep every summer.",
-             "Forward Risk", "amber"),
-            ("⚠ P12–P13 Year-End Pattern",
-             "2025 P12 EBITDA was 14.4% and P13 was 11.5% — holiday fixed cost absorption and reduced traffic. 2026 P12–P13 will face same pressure. Plan ahead.",
+             "Historical data shows P6–P8 EBITDA compresses 300–500bps vs spring. Vacation coverage, "
+             "call-outs, and training overlap for summer new opens create labor creep. Build the schedule now.",
              "Seasonal Risk", "amber"),
-            ("⚠ H2 2026 New Stand Pipeline",
-             "10+ new locations planned for H2 2026. Each carries 25–35% labor for 60–90 days. System EBITDA% will be diluted 150–200bps per cohort.",
+            ("⚠ P12–P13 Year-End Pattern",
+             "P12–P13 historically run 600–900bps below peak EBITDA. Holiday fixed cost absorption + "
+             "traffic slowdown. No deferred expenses into year-end — plan cost controls in P11.",
+             "Seasonal Risk", "amber"),
+            ("⚠ New Stand Pipeline Dilution",
+             "Each new opening carries 25–35% labor for 60–90 days and compresses system EBITDA% by "
+             "~150–200bps per cohort. Factor into board-level EBITDA guidance.",
              "~150–200bps dilution", "grey"),
-            ("⚠ R&M Aging Stand Watch",
-             "Stands opened 2022–2023 are now 2–3 years old. 2025 data shows R&M% creeping up in P11–P13. Any stand over 2.0% R&M should have an equipment condition audit.",
+            ("⚠ Aging Equipment — 2022–2023 Vintage",
+             "Stands opened 2022–2023 are now 2–4 years old. R&M% tends to spike after year 3. "
+             "Any stand over 2.0% R&M should get a proactive equipment condition audit before P6.",
              "Equipment Risk", "grey"),
         ]
         for title, body, tag, tag_cls in watch_items:
             insight_card(title, body, tag, tag_cls, "watch")
+
+    # ── New Stand Ramp-Up Watch ───────────────────────────────────────────────
+    if n_new > 0:
+        st.html('<hr class="brew">')
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
+                'color:#e8940a;margin:8px 0 6px;">🆕 NEW STAND RAMP-UP WATCH</div>')
+        st.html('<div style="font-family:DM Mono,monospace;font-size:12px;color:#595959;margin-bottom:12px;">'
+                'Excluded from Critical Issues above — benchmarks adjusted for ramp-phase norms</div>')
+
+        ramp_col1, ramp_col2 = st.columns(2)
+        with ramp_col1:
+            # New stands above extreme thresholds (35%+ labor or negative EBITDA)
+            extreme_labor = new_stands[new_stands["Total_Labor_pct"] > 0.35]
+            negative_ebi  = new_stands[new_stands["Store_EBITDA_pct"] < 0.0]
+            fast_ramp     = new_stands[new_stands["Store_EBITDA_pct"] > 0.15]
+
+            if len(extreme_labor):
+                names = ", ".join(extreme_labor["Stand"].str.split(",").str[0].tolist()[:3])
+                insight_card(
+                    f"🔶 Extreme Labor — {len(extreme_labor)} New Stand(s) >35%",
+                    f"{names}. Normal ramp is 28–32% labor — these are well above. "
+                    f"Verify minimum staffing compliance and training timelines.",
+                    tag=">35% Labor", tag_cls="amber",
+                )
+            if len(negative_ebi):
+                names = ", ".join(negative_ebi["Stand"].str.split(",").str[0].tolist()[:3])
+                insight_card(
+                    f"🔶 Negative EBITDA — {len(negative_ebi)} New Stand(s)",
+                    f"{names}. Some loss is expected in first 30–60 days but "
+                    f"persistent negative EBITDA after that warrants a staffing model review.",
+                    tag="Negative EBITDA", tag_cls="amber",
+                )
+            if len(fast_ramp):
+                names = ", ".join(fast_ramp["Stand"].str.split(",").str[0].tolist()[:3])
+                insight_card(
+                    f"🚀 Fast Ramp — {len(fast_ramp)} New Stand(s) Already >15% EBITDA",
+                    f"{names}. These new opens are ahead of curve — strong market fit and execution.",
+                    tag="Ahead of Ramp", tag_cls="green",
+                )
+            if not len(extreme_labor) and not len(negative_ebi):
+                insight_card("✅ New Stands Within Ramp Norms",
+                             f"All {n_new} new stand(s) are within expected ramp ranges for labor and EBITDA. "
+                             f"No action needed this period.", tag="On Track", tag_cls="green")
+
+        with ramp_col2:
+            # Ramp table
+            ramp_cols = ["Stand", "Net_Sales", "Total_Labor_pct", "Total_COGS_pct",
+                         "Store_EBITDA_pct", "Age_Bucket"]
+            ramp_show = new_stands[[c for c in ramp_cols if c in new_stands.columns]].copy()
+            ramp_show["Net_Sales"] = ramp_show["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
+            for pct_col in ["Total_Labor_pct", "Total_COGS_pct", "Store_EBITDA_pct"]:
+                if pct_col in ramp_show.columns:
+                    ramp_show[pct_col] = ramp_show[pct_col].apply(
+                        lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
+            ramp_show.columns = [c.replace("Total_","").replace("_pct"," %")
+                                  .replace("Store_EBITDA","EBITDA").replace("Net_Sales","Sales")
+                                  for c in ramp_show.columns]
+            render_table(ramp_show.reset_index(drop=True))
 
 
 # ─────────────────────────────────────────────
