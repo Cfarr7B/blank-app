@@ -1854,7 +1854,7 @@ def tab_comparison(dash):
             insight_card(
                 f"↑ {r['label']}: {_fmt_d(r['va']) if r['is_dollar'] else _fmt_p(r['va'])}",
                 f"Up from {_fmt_d(r['vb']) if r['is_dollar'] else _fmt_p(r['vb'])} in {psB['label']} — a {fmt_d} improvement.",
-                tag=fmt_d, tag_cls="green", style="win",
+                tag=fmt_d, tag_cls="green", card_cls="win",
             )
     with mv_col2:
         st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
@@ -2581,7 +2581,7 @@ def tab_potholes(dash):
                 f"⚠ Regional Labor Gap: {len(high_labor_regions)} Region(s) 400bps+ Above Avg",
                 f"{reg_list} are running 400bps+ above system avg labor. "
                 f"Regional labor creep compounds quickly — investigate scheduling and staffing ratios.",
-                tag="Labor Risk", tag_cls="amber", style="watch",
+                tag="Labor Risk", tag_cls="amber", card_cls="watch",
             )
 
         # Dynamic: stands with declining sales trend (this period vs system avg)
@@ -2593,7 +2593,7 @@ def tab_potholes(dash):
                 f"Bottom performers by sales: {names}. "
                 f"For established locations, low volume may indicate market saturation, location issues, "
                 f"or operational problems — not just ramp lag.",
-                tag="Volume Risk", tag_cls="amber", style="watch",
+                tag="Volume Risk", tag_cls="amber", card_cls="watch",
             )
 
         # Seasonal / structural watch items
