@@ -2235,7 +2235,7 @@ def tab_insights(dash):
 # TAB: FORECAST
 # ─────────────────────────────────────────────
 def tab_forecast(dash):
-    section("FORECAST P3–P13 2026", "2025 actuals as baseline · 3 scenarios · Seasonal watch notes")
+    section("FORECAST P4–P13 2026", "P1–P3 actuals locked · P4–P13 projected · 3 scenarios · Seasonal watch notes")
 
     fc = dash.get("forecast_26", [])
     if not fc:
