@@ -2393,132 +2393,128 @@ def tab_insights(dash):
     # ── Ramp-Up Tracker — charts ──────────────────────────────────────────────
     if n_ramping > 0:
         st.html('<hr class="brew">')
-        section("RAMP-UP TRACKER", f"{n_ramping} stand(s) in first 6 months · actual vs system benchmark")
+        section("RAMP-UP TRACKER", f"{n_ramping} stand(s) in first 6 months · actual vs system benchmark · split FL / Non-FL")
 
-        # Benchmarks: system avg for this period
+        # Benchmarks — all use system average for this period
         _sys_sales  = float(ps.get("avg_sales", 0))
         _sys_ebitda = float(ps.get("ebitda_pct", 0)) * 100
         _sys_labor  = float(ps.get("labor_pct", 0)) * 100
         _sys_cogs   = float(ps.get("cogs_pct", 0)) * 100
-        # Expected ramp benchmarks (not system avg — what a new stand should realistically hit)
-        _ramp_labor_bmark = 30.0   # 28–32% expected during ramp
-        _ramp_ebitda_bmark = 12.0  # ~10–15% acceptable during ramp
 
-        _stand_names = ramping["Stand"].str.split(",").str[0].tolist()
+        def _ramp_charts(subset, group_label, accent_color):
+            """Render 4 ramp tracker charts for a given subset of new stands."""
+            if subset.empty:
+                st.info(f"No new stands in {group_label} this period.")
+                return
+            names = subset["Stand"].str.split(",").str[0].tolist()
+            n = len(names)
+            rc1, rc2 = st.columns(2)
 
-        rt_c1, rt_c2 = st.columns(2)
+            # Chart 1 — Net Sales vs System Avg
+            with rc1:
+                sv = subset["Net_Sales"].fillna(0).tolist()
+                f1 = go.Figure()
+                f1.add_bar(x=names, y=sv, name="Actual", marker_color=accent_color,
+                           opacity=0.88, text=[f"${v:,.0f}" for v in sv],
+                           textposition="outside", textfont=dict(size=9))
+                f1.add_bar(x=names, y=[_sys_sales]*n, name="System Avg", marker_color=MUTED,
+                           opacity=0.55, text=[f"${_sys_sales:,.0f}"]*n,
+                           textposition="outside", textfont=dict(size=9))
+                brew_fig(f1, height=280)
+                f1.update_layout(title_text=f"NET SALES — {group_label}", barmode="group",
+                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
+                                 yaxis=dict(tickprefix="$", tickformat=",.0f"),
+                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
+                st.plotly_chart(f1, config={"displayModeBar": False}, use_container_width=True)
 
-        # Chart 1: Net Sales — Actual vs System Avg
-        with rt_c1:
-            _sales_vals = ramping["Net_Sales"].fillna(0).tolist()
-            fig_r1 = go.Figure()
-            fig_r1.add_bar(
-                x=_stand_names, y=_sales_vals, name="Actual Sales",
-                marker_color=RED, opacity=0.85,
-                text=[f"${v:,.0f}" for v in _sales_vals],
-                textposition="outside", textfont=dict(size=9),
-            )
-            fig_r1.add_bar(
-                x=_stand_names, y=[_sys_sales] * len(_stand_names),
-                name="System Avg", marker_color=MUTED, opacity=0.6,
-                text=[f"${_sys_sales:,.0f}"] * len(_stand_names),
-                textposition="outside", textfont=dict(size=9),
-            )
-            brew_fig(fig_r1, height=280)
-            fig_r1.update_layout(
-                title_text="NET SALES — ACTUAL vs SYSTEM AVG",
-                barmode="group",
-                xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                yaxis=dict(tickprefix="$", tickformat=",.0f"),
-                legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
-            )
-            st.plotly_chart(fig_r1, config={"displayModeBar": False}, use_container_width=True)
+            # Chart 2 — EBITDA % vs System Avg
+            with rc2:
+                ev = (subset["Store_EBITDA_pct"].fillna(0) * 100).tolist()
+                f2 = go.Figure()
+                f2.add_bar(x=names, y=ev, name="Actual EBITDA %",
+                           marker_color=[GREEN if v >= _sys_ebitda else AMBER if v >= _sys_ebitda * 0.6 else RED
+                                         for v in ev],
+                           opacity=0.88, text=[f"{v:.1f}%" for v in ev],
+                           textposition="outside", textfont=dict(size=9))
+                f2.add_bar(x=names, y=[_sys_ebitda]*n, name=f"Sys Avg ({_sys_ebitda:.1f}%)",
+                           marker_color=MUTED, opacity=0.55,
+                           text=[f"{_sys_ebitda:.1f}%"]*n,
+                           textposition="outside", textfont=dict(size=9))
+                brew_fig(f2, height=280)
+                f2.update_layout(title_text=f"EBITDA % — {group_label}", barmode="group",
+                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
+                                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
+                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
+                st.plotly_chart(f2, config={"displayModeBar": False}, use_container_width=True)
 
-        # Chart 2: EBITDA % — Actual vs Ramp Benchmark
-        with rt_c2:
-            _ebitda_vals = (ramping["Store_EBITDA_pct"].fillna(0) * 100).tolist()
-            fig_r2 = go.Figure()
-            fig_r2.add_bar(
-                x=_stand_names, y=_ebitda_vals, name="Actual EBITDA %",
-                marker_color=[GREEN if v >= _ramp_ebitda_bmark else AMBER if v >= 0 else RED
-                              for v in _ebitda_vals],
-                opacity=0.88,
-                text=[f"{v:.1f}%" for v in _ebitda_vals],
-                textposition="outside", textfont=dict(size=9),
-            )
-            fig_r2.add_bar(
-                x=_stand_names, y=[_ramp_ebitda_bmark] * len(_stand_names),
-                name="Ramp Target (12%)", marker_color=MUTED, opacity=0.55,
-                text=[f"{_ramp_ebitda_bmark:.0f}%"] * len(_stand_names),
-                textposition="outside", textfont=dict(size=9),
-            )
-            brew_fig(fig_r2, height=280)
-            fig_r2.update_layout(
-                title_text="EBITDA % — ACTUAL vs RAMP TARGET",
-                barmode="group",
-                xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
-            )
-            st.plotly_chart(fig_r2, config={"displayModeBar": False}, use_container_width=True)
+            rc3, rc4 = st.columns(2)
 
-        rt_c3, rt_c4 = st.columns(2)
+            # Chart 3 — Labor % vs System Avg
+            with rc3:
+                lv = (subset["Total_Labor_pct"].fillna(0) * 100).tolist()
+                f3 = go.Figure()
+                f3.add_bar(x=names, y=lv, name="Actual Labor %",
+                           marker_color=[GREEN if v <= _sys_labor else AMBER if v <= _sys_labor + 5 else RED
+                                         for v in lv],
+                           opacity=0.88, text=[f"{v:.1f}%" for v in lv],
+                           textposition="outside", textfont=dict(size=9))
+                f3.add_bar(x=names, y=[_sys_labor]*n, name=f"Sys Avg ({_sys_labor:.1f}%)",
+                           marker_color=MUTED, opacity=0.55,
+                           text=[f"{_sys_labor:.1f}%"]*n,
+                           textposition="outside", textfont=dict(size=9))
+                brew_fig(f3, height=280)
+                f3.update_layout(title_text=f"LABOR % — {group_label}", barmode="group",
+                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
+                                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
+                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
+                st.plotly_chart(f3, config={"displayModeBar": False}, use_container_width=True)
 
-        # Chart 3: Labor % — Actual vs Ramp Benchmark
-        with rt_c3:
-            _labor_vals = (ramping["Total_Labor_pct"].fillna(0) * 100).tolist()
-            fig_r3 = go.Figure()
-            fig_r3.add_bar(
-                x=_stand_names, y=_labor_vals, name="Actual Labor %",
-                marker_color=[GREEN if v <= _ramp_labor_bmark else AMBER if v <= 35 else RED
-                              for v in _labor_vals],
-                opacity=0.88,
-                text=[f"{v:.1f}%" for v in _labor_vals],
-                textposition="outside", textfont=dict(size=9),
-            )
-            fig_r3.add_bar(
-                x=_stand_names, y=[_ramp_labor_bmark] * len(_stand_names),
-                name="Ramp Norm (30%)", marker_color=MUTED, opacity=0.55,
-                text=[f"{_ramp_labor_bmark:.0f}%"] * len(_stand_names),
-                textposition="outside", textfont=dict(size=9),
-            )
-            brew_fig(fig_r3, height=280)
-            fig_r3.update_layout(
-                title_text="LABOR % — ACTUAL vs RAMP NORM",
-                barmode="group",
-                xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
-            )
-            st.plotly_chart(fig_r3, config={"displayModeBar": False}, use_container_width=True)
+            # Chart 4 — COGS % vs System Avg
+            with rc4:
+                cv = (subset["Total_COGS_pct"].fillna(0) * 100).tolist()
+                f4 = go.Figure()
+                f4.add_bar(x=names, y=cv, name="Actual COGS %",
+                           marker_color=[GREEN if v <= _sys_cogs else AMBER if v <= _sys_cogs + 3 else RED
+                                         for v in cv],
+                           opacity=0.88, text=[f"{v:.1f}%" for v in cv],
+                           textposition="outside", textfont=dict(size=9))
+                f4.add_bar(x=names, y=[_sys_cogs]*n, name=f"Sys Avg ({_sys_cogs:.1f}%)",
+                           marker_color=MUTED, opacity=0.55,
+                           text=[f"{_sys_cogs:.1f}%"]*n,
+                           textposition="outside", textfont=dict(size=9))
+                brew_fig(f4, height=280)
+                f4.update_layout(title_text=f"COGS % — {group_label}", barmode="group",
+                                 xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
+                                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
+                                 legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)))
+                st.plotly_chart(f4, config={"displayModeBar": False}, use_container_width=True)
 
-        # Chart 4: COGS % — Actual vs System Avg
-        with rt_c4:
-            _cogs_vals = (ramping["Total_COGS_pct"].fillna(0) * 100).tolist()
-            fig_r4 = go.Figure()
-            fig_r4.add_bar(
-                x=_stand_names, y=_cogs_vals, name="Actual COGS %",
-                marker_color=[GREEN if v <= _sys_cogs else AMBER if v <= _sys_cogs + 3 else RED
-                              for v in _cogs_vals],
-                opacity=0.88,
-                text=[f"{v:.1f}%" for v in _cogs_vals],
-                textposition="outside", textfont=dict(size=9),
-            )
-            fig_r4.add_bar(
-                x=_stand_names, y=[_sys_cogs] * len(_stand_names),
-                name=f"System Avg ({_sys_cogs:.1f}%)", marker_color=MUTED, opacity=0.55,
-                text=[f"{_sys_cogs:.1f}%"] * len(_stand_names),
-                textposition="outside", textfont=dict(size=9),
-            )
-            brew_fig(fig_r4, height=280)
-            fig_r4.update_layout(
-                title_text="COGS % — ACTUAL vs SYSTEM AVG",
-                barmode="group",
-                xaxis=dict(tickangle=-35, tickfont=dict(size=9)),
-                yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
-            )
-            st.plotly_chart(fig_r4, config={"displayModeBar": False}, use_container_width=True)
+        # Split Florida vs Non-Florida by Region name (FL regions start with "FL")
+        if "Region" in ramping.columns:
+            fl_mask    = ramping["Region"].str.startswith("FL", na=False)
+            ramp_fl    = ramping[fl_mask].copy()
+            ramp_nonfl = ramping[~fl_mask].copy()
+        else:
+            ramp_fl    = pd.DataFrame()
+            ramp_nonfl = ramping.copy()
+
+        has_fl    = not ramp_fl.empty
+        has_nonfl = not ramp_nonfl.empty
+
+        if has_fl and has_nonfl:
+            # Both groups present — use tabs to keep it clean
+            fl_tab, nonfl_tab = st.tabs([
+                f"🌴 Florida  ({len(ramp_fl)} stand{'s' if len(ramp_fl)>1 else ''})",
+                f"📍 Non-Florida  ({len(ramp_nonfl)} stand{'s' if len(ramp_nonfl)>1 else ''})",
+            ])
+            with fl_tab:
+                _ramp_charts(ramp_fl, "FLORIDA", BLUE)
+            with nonfl_tab:
+                _ramp_charts(ramp_nonfl, "NON-FLORIDA", RED)
+        elif has_fl:
+            _ramp_charts(ramp_fl, "FLORIDA", BLUE)
+        else:
+            _ramp_charts(ramp_nonfl, "NON-FLORIDA", RED)
 
 
 # ─────────────────────────────────────────────
