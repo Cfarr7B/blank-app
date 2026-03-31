@@ -622,10 +622,62 @@ def get_periods_df(dash, include_quarters=False):
 
     return df
 
+def _period_end_date(period_key):
+    """Return the end date of a fiscal period (each period = 28 days).
+    P1 start dates: 2024 → Jan 1 2024 | 2025 → Dec 30 2024 | 2026 → Dec 29 2025
+    """
+    import datetime
+    P1_STARTS = {
+        2024: datetime.date(2024,  1,  1),
+        2025: datetime.date(2024, 12, 30),
+        2026: datetime.date(2025, 12, 29),
+    }
+    try:
+        year, pnum = int(period_key.split("_")[0]), int(period_key.split("_P")[1])
+        p1 = P1_STARTS.get(year)
+        if p1 is None:
+            return None
+        return p1 + datetime.timedelta(days=(pnum - 1) * 28 + 27)  # last day of the period
+    except Exception:
+        return None
+
+def _assign_age_bucket(open_date_str, period_key):
+    """Calculate age bucket from open date and period."""
+    import datetime
+    if not open_date_str or open_date_str in ("", "nan", "None"):
+        return "Unknown"
+    try:
+        open_date = pd.to_datetime(open_date_str).date()
+        period_end = _period_end_date(period_key)
+        if period_end is None:
+            return "Unknown"
+        age_days = (period_end - open_date).days
+        if age_days < 0:
+            return "Unknown"
+        elif age_days < 182:
+            return "New (<6mo)"
+        elif age_days < 365:
+            return "Young (6-12mo)"
+        elif age_days < 730:
+            return "Developing (1-2yr)"
+        else:
+            return "Mature (2yr+)"
+    except Exception:
+        return "Unknown"
+
 def get_stands_df(dash, period_key=None):
     df = pd.DataFrame(dash["stand_records"])
+
+    # Compute Age_Bucket dynamically from Open Date + Period_Key
+    # (stand_meta.json has Open_Date but Age_Bucket was never stored)
+    if "Open Date" in df.columns and "Period_Key" in df.columns:
+        mask = df["Age_Bucket"].isin(["Unknown", "", None]) | df["Age_Bucket"].isna()
+        if mask.any():
+            df.loc[mask, "Age_Bucket"] = df[mask].apply(
+                lambda r: _assign_age_bucket(str(r["Open Date"]), r["Period_Key"]), axis=1
+            )
+
     if period_key and "_Q" in period_key:
-        # Build quarterly stand data on the fly
         q_stands = _build_quarterly_stands(df)
         return q_stands[q_stands["Period_Key"] == period_key] if not q_stands.empty else pd.DataFrame()
     return df
