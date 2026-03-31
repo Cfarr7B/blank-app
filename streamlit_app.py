@@ -585,7 +585,7 @@ def _build_quarterly_regions(dash):
         rdf = pd.DataFrame(rows)
         if rdf.empty:
             continue
-        dollar_cols = [c for c in rdf.columns if c in ["net_sales", "ebitda"]]
+        dollar_cols = [c for c in rdf.columns if c in ["net_sales", "ebitda", "ebitda_total"]]
         pct_cols = [c for c in rdf.columns if c.endswith("_pct")]
 
         agg_rows = []
@@ -1510,10 +1510,17 @@ def tab_overview(dash):
         reg_all = pd.concat(valid_reg_frames, ignore_index=True) if valid_reg_frames else pd.DataFrame()
         if not reg_all.empty:
             pct_cols = [c for c in reg_all.columns if c.endswith("_pct")]
-            agg_dict = {"net_sales": "sum", "ebitda": "sum"}
+            # Build agg_dict only for columns that actually exist
+            agg_dict = {}
+            for col in ["net_sales", "ebitda_total", "ebitda", "avg_sales"]:
+                if col in reg_all.columns:
+                    agg_dict[col] = "sum" if col != "avg_sales" else "mean"
             if "stands" in reg_all.columns:
                 agg_dict["stands"] = "mean"
-            reg_df = reg_all.groupby("region").agg(agg_dict).reset_index()
+            if not agg_dict:
+                reg_df = pd.DataFrame()
+            else:
+                reg_df = reg_all.groupby("region").agg(agg_dict).reset_index()
             # Recompute pct from totals
             for c in pct_cols:
                 if c in reg_all.columns:
