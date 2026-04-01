@@ -3722,6 +3722,424 @@ def tab_utilities(dash):
 
 
 # ─────────────────────────────────────────────
+# PIPELINE TAB
+# ─────────────────────────────────────────────
+
+# City-level coordinates for map rendering
+_CITY_COORDS = {
+    # Texas
+    ("Lubbock","TX"):(33.5779,-101.8552),("Odessa","TX"):(31.8457,-102.3676),
+    ("Midland","TX"):(31.9973,-102.0779),("Amarillo","TX"):(35.2220,-101.8313),
+    ("Big Spring","TX"):(32.2504,-101.4788),("Wichita Falls","TX"):(33.9137,-98.4934),
+    ("San Angelo","TX"):(31.4638,-100.4370),("Abilene","TX"):(32.4487,-99.7331),
+    ("Brownwood","TX"):(31.7093,-98.9912),("Gainesville","TX"):(33.6262,-97.1333),
+    ("Dumas","TX"):(35.8659,-101.9746),("Levelland","TX"):(33.5874,-102.3779),
+    ("Plainview","TX"):(34.1845,-101.7068),("Andrews","TX"):(32.3182,-102.5449),
+    ("Pampa","TX"):(35.5362,-100.9601),("Canyon","TX"):(34.9801,-101.9183),
+    ("Snyder","TX"):(32.7179,-100.9181),("Granbury","TX"):(32.4418,-97.7939),
+    ("Burleson","TX"):(32.5418,-97.3208),("Beverly Hills","TX"):(31.5556,-97.1303),
+    ("Waco","TX"):(31.5493,-97.1467),("Killeen","TX"):(31.1171,-97.7278),
+    ("Belton","TX"):(31.0557,-97.4641),("Temple","TX"):(31.0982,-97.3428),
+    ("Bryan","TX"):(30.6744,-96.3698),("Stephenville","TX"):(32.2207,-98.2023),
+    ("Gatesville","TX"):(31.4360,-97.7436),("Copperas Cove","TX"):(31.1218,-97.9081),
+    ("Mineral Wells","TX"):(32.8087,-98.1120),("Decatur","TX"):(33.2348,-97.5839),
+    ("Benbrook","TX"):(32.6815,-97.4625),("Cleburne","TX"):(32.3501,-97.3861),
+    ("Springtown","TX"):(32.9612,-97.6834),("Weatherford","TX"):(32.7588,-97.7975),
+    ("Garland","TX"):(32.9126,-96.6389),("Mesquite","TX"):(32.7668,-96.5992),
+    ("Dallas","TX"):(32.7767,-96.7970),("Bellmead","TX"):(31.5854,-97.1000),
+    # Oklahoma
+    ("Oklahoma City","OK"):(35.4676,-97.5164),("Yukon","OK"):(35.5067,-97.7625),
+    ("Norman","OK"):(35.2226,-97.4395),("Edmond","OK"):(35.6528,-97.4781),
+    ("Enid","OK"):(36.3956,-97.8784),("Lawton","OK"):(34.6084,-98.3909),
+    ("Ardmore","OK"):(34.1743,-97.1436),("Ada","OK"):(34.7745,-96.6781),
+    ("Duncan","OK"):(34.5023,-97.9578),("Weatherford","OK"):(35.5268,-98.7076),
+    ("Altus","OK"):(34.6381,-99.3337),("El Reno","OK"):(35.5323,-97.9553),
+    ("Mustang","OK"):(35.3840,-97.7242),("Choctaw","OK"):(35.4973,-97.2703),
+    # New Mexico
+    ("Roswell","NM"):(33.3943,-104.5230),("Hobbs","NM"):(32.7026,-103.1360),
+    ("Clovis","NM"):(34.4048,-103.2052),("Carlsbad","NM"):(32.4207,-104.2288),
+    ("Artesia","NM"):(32.8415,-104.4032),
+    # Colorado
+    ("Alamosa","CO"):(37.4695,-105.8700),("Montrose","CO"):(38.4783,-107.8762),
+    # Florida - West Coast / Central
+    ("Bradenton","FL"):(27.4989,-82.5748),("Leesburg","FL"):(28.8114,-81.8779),
+    ("Tampa","FL"):(27.9506,-82.4572),("Port Charlotte","FL"):(26.9756,-82.0906),
+    ("Belleview","FL"):(29.0563,-82.0609),("Spring Hill","FL"):(28.4788,-82.5143),
+    ("Holiday","FL"):(28.1908,-82.7368),("Ocala","FL"):(29.1872,-82.1401),
+    ("North Port","FL"):(27.0442,-82.1360),("Port Richey","FL"):(28.2703,-82.7196),
+    ("Fort Myers","FL"):(26.6406,-81.8723),("Winter Haven","FL"):(28.0222,-81.7329),
+    ("Palmetto","FL"):(27.5231,-82.5768),("Haines City","FL"):(28.1136,-81.6270),
+    ("Mulberry","FL"):(27.8939,-81.9829),("Largo","FL"):(27.9095,-82.7873),
+    ("Brooksville","FL"):(28.5553,-82.3882),("Punta Gorda","FL"):(26.9342,-82.0457),
+    ("Lehigh Acres","FL"):(26.6117,-81.6484),("Seminole","FL"):(27.8409,-82.7876),
+    ("Cape Coral","FL"):(26.5629,-81.9495),("Davenport","FL"):(28.1611,-81.6015),
+    ("Hudson","FL"):(28.3625,-82.6962),("St. Petersburg","FL"):(27.7676,-82.6403),
+    ("Arcadia","FL"):(27.2170,-81.8587),("Sebring","FL"):(27.4975,-81.4509),
+    ("Belton","FL"):(27.3156,-81.4370),
+    # Florida - Panhandle West
+    ("Pensacola","FL"):(30.4213,-87.2169),("Gulf Breeze","FL"):(30.3574,-87.1637),
+    ("Milton","FL"):(30.6327,-87.0397),("Pace","FL"):(30.5985,-87.1614),
+    ("Mary Esther","FL"):(30.4124,-86.6650),
+    # Florida - Panhandle East
+    ("Crestview","FL"):(30.7460,-86.5703),("Niceville","FL"):(30.5188,-86.4780),
+    ("Fort Walton Beach","FL"):(30.4052,-86.6194),("Navarre","FL"):(30.4017,-86.8636),
+    ("Panama City","FL"):(30.1588,-85.6602),("Lynn Haven","FL"):(30.2466,-85.6483),
+    ("Panama City Beach","FL"):(30.1766,-85.8055),("Freeport","FL"):(30.5001,-86.1333),
+    ("Destin","FL"):(30.3935,-86.4958),("Gainesville","FL"): (29.6516,-82.3248),
+}
+
+# Pipeline: phases 2–5 (upcoming openings). Open date from PDF (Apr 1 2026 export).
+# Regions sourced from 7Crew_Stand_Dates.xlsx "Upcoming Stands" tab where available,
+# otherwise assigned by geography.
+_PIPELINE_UPCOMING = [
+    # ── Phase 5: Construction ──────────────────────────────────────────────────
+    {"rsh":"RSH-00068","store":"000711","phase":"5. Construction","address":"1540 N Valley Mills Drive","city":"Waco","state":"TX","region":"South Central TX","cs":"11/03/25","bd":"12/03/25","open":"04/13/26"},
+    {"rsh":"RSH-00082","store":"000987","phase":"5. Construction","address":"3617 Classen Blvd","city":"Norman","state":"OK","region":"Central OK","cs":"12/01/25","bd":"03/04/26","open":"04/13/26"},
+    {"rsh":"RSH-00097","store":"000878","phase":"5. Construction","address":"2105 MLK Blvd","city":"Panama City","state":"FL","region":"FL Panhandle East","cs":"11/19/25","bd":"03/06/26","open":"04/20/26"},
+    {"rsh":"RSH-00096","store":"000968","phase":"5. Construction","address":"6518 NW Cache Road","city":"Lawton","state":"OK","region":"South OK","cs":"02/02/26","bd":"03/19/26","open":"05/18/26"},
+    {"rsh":"RSH-00101","store":"001238","phase":"5. Construction","address":"1707 S Valley Mills Dr","city":"Beverly Hills","state":"TX","region":"South Central TX","cs":"02/23/26","bd":"04/01/26","open":"05/18/26"},
+    {"rsh":"RSH-00091","store":"001122","phase":"5. Construction","address":"3008 W Stan Schlueter Loop","city":"Killeen","state":"TX","region":"South Central TX","cs":"02/18/26","bd":"03/25/26","open":"05/18/26"},
+    {"rsh":"RSH-00081","store":"000986","phase":"5. Construction","address":"490 Mary Esther Blvd","city":"Mary Esther","state":"FL","region":"FL Panhandle East","cs":"01/26/26","bd":"02/26/26","open":"06/01/26"},
+    {"rsh":"RSH-00095","store":"000518","phase":"5. Construction","address":"1420 Ohio Avenue","city":"Lynn Haven","state":"FL","region":"FL Panhandle East","cs":"01/22/26","bd":"02/18/26","open":"06/01/26"},
+    {"rsh":"RSH-00071","store":"000520","phase":"5. Construction","address":"1194 Broad St","city":"Brooksville","state":"FL","region":"FL West Coast","cs":"01/12/26","bd":"03/11/26","open":"06/08/26"},
+    {"rsh":"RSH-00109","store":"001234","phase":"5. Construction","address":"2415 S Country Club Rd","city":"El Reno","state":"OK","region":"North OK","cs":"02/23/26","bd":"04/28/26","open":"06/08/26"},
+    {"rsh":"RSH-00079","store":"000547","phase":"5. Construction","address":"833 W. Edmond Rd","city":"Edmond","state":"OK","region":"North OK","cs":"02/16/26","bd":"03/17/26","open":"06/15/26"},
+    {"rsh":"RSH-00116","store":"001119","phase":"5. Construction","address":"210 23rd St","city":"Canyon","state":"TX","region":"West TX","cs":"03/02/26","bd":"04/16/26","open":"06/22/26"},
+    {"rsh":"RSH-00069","store":"000571","phase":"5. Construction","address":"801 Beal Pkwy N","city":"Fort Walton Beach","state":"FL","region":"FL Panhandle East","cs":"12/17/25","bd":"03/04/26","open":"06/22/26"},
+    {"rsh":"RSH-00089","store":"000327","phase":"5. Construction","address":"401 Gulf Breeze Pkwy","city":"Gulf Breeze","state":"FL","region":"FL Panhandle West","cs":"01/05/26","bd":"Stick Build","open":"08/10/26"},
+    # ── Phase 4: Permitting ────────────────────────────────────────────────────
+    {"rsh":"RSH-00106","store":"001236","phase":"4. Permitting","address":"12902 Indiana Ave","city":"Lubbock","state":"TX","region":"West TX","cs":"04/06/26","bd":"04/20/26","open":"07/27/26"},
+    {"rsh":"RSH-00123","store":"001332","phase":"4. Permitting","address":"108 Sequoyah Ln","city":"Altus","state":"OK","region":"South OK","cs":"04/06/26","bd":"04/20/26","open":"08/03/26"},
+    {"rsh":"RSH-00110","store":"001156","phase":"4. Permitting","address":"955 US-377","city":"Granbury","state":"TX","region":"North Central TX","cs":"04/13/26","bd":"05/20/26","open":"08/10/26"},
+    {"rsh":"RSH-00133","store":"001333","phase":"4. Permitting","address":"2917 SW 104th St","city":"Oklahoma City","state":"OK","region":"North OK","cs":"04/20/26","bd":"05/27/26","open":"08/10/26"},
+    {"rsh":"RSH-00102","store":"001118","phase":"4. Permitting","address":"3700 College Ave","city":"Snyder","state":"TX","region":"Middle Earth","cs":"04/13/26","bd":"Stick Build","open":"08/10/26"},
+    {"rsh":"RSH-00114","store":"001154","phase":"4. Permitting","address":"8106 N Davis Hwy","city":"Pensacola","state":"FL","region":"FL Panhandle West","cs":"04/06/26","bd":"05/06/26","open":"08/10/26"},
+    {"rsh":"RSH-00078","store":"000674","phase":"4. Permitting","address":"1937 US 19 Hwy","city":"Holiday","state":"FL","region":"FL Panhandle East","cs":"04/06/26","bd":"05/13/26","open":"08/10/26"},
+    {"rsh":"RSH-00092","store":"000428","phase":"4. Permitting","address":"9101 College Pkwy","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"04/06/26","bd":"05/06/26","open":"08/17/26"},
+    {"rsh":"RSH-00084","store":"000380","phase":"4. Permitting","address":"1225 Tamiami Trail","city":"Punta Gorda","state":"FL","region":"FL West Coast","cs":"04/27/26","bd":"05/27/26","open":"08/31/26"},
+    {"rsh":"RSH-00094","store":"000757","phase":"4. Permitting","address":"4102 Cleveland Ave","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"04/13/26","bd":"05/20/26","open":"09/28/26"},
+    {"rsh":"RSH-00087","store":"000883","phase":"4. Permitting","address":"1603 3rd St","city":"Winter Haven","state":"FL","region":"FL West Coast","cs":"04/27/26","bd":"06/03/26","open":"09/14/26"},
+    {"rsh":"RSH-00088","store":"000404","phase":"4. Permitting","address":"1201 Homestead Rd N","city":"Lehigh Acres","state":"FL","region":"FL West Coast","cs":"05/06/26","bd":"06/03/26","open":"10/19/26"},
+    {"rsh":"RSH-00083","store":"000874","phase":"4. Permitting","address":"7236 Northwest Expy","city":"Oklahoma City","state":"OK","region":"North OK","cs":"07/27/26","bd":"09/09/26","open":"11/09/26"},
+    {"rsh":"RSH-00229","store":"001344","phase":"4. Permitting","address":"4615 Mobile Hwy","city":"Pensacola","state":"FL","region":"FL Panhandle West","cs":"06/15/26","bd":"07/22/26","open":"11/02/26"},
+    {"rsh":"RSH-00139","store":"001383","phase":"4. Permitting","address":"1811 24th Ave NW","city":"Norman","state":"OK","region":"Central OK","cs":"07/06/26","bd":"08/05/26","open":"11/02/26"},
+    {"rsh":"RSH-00086","store":"000414","phase":"4. Permitting","address":"3100 SW College Rd","city":"Ocala","state":"FL","region":"FL West Coast","cs":"05/25/26","bd":"07/08/26","open":"11/02/26"},
+    {"rsh":"RSH-00113","store":"001120","phase":"4. Permitting","address":"1289 S Sumter Blvd","city":"North Port","state":"FL","region":"FL West Coast","cs":"08/24/26","bd":"09/23/26","open":"12/07/26"},
+    {"rsh":"RSH-00112","store":"001241","phase":"4. Permitting","address":"100 S New Rd","city":"Waco","state":"TX","region":"South Central TX","cs":"06/22/26","bd":"07/15/26","open":"10/05/26"},
+    {"rsh":"RSH-00100","store":"000966","phase":"4. Permitting","address":"3001 W University Blvd","city":"Odessa","state":"TX","region":"Permian Basin","cs":"08/31/26","bd":"09/30/26","open":"01/18/27"},
+    {"rsh":"RSH-00104","store":"001693","phase":"4. Permitting","address":"13500 N Rockwell Ave","city":"Oklahoma City","state":"OK","region":"Central OK","cs":"09/07/26","bd":"Retrofit","open":"01/25/27"},
+    {"rsh":"RSH-00180","store":"001404","phase":"4. Permitting","address":"2602 50th St Suite 300","city":"Lubbock","state":"TX","region":"West TX","cs":"08/31/26","bd":"09/30/26","open":"01/25/27"},
+    {"rsh":"RSH-00147","store":"001405","phase":"4. Permitting","address":"10581 Colonial Blvd","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"11/04/26","bd":"12/09/26","open":"04/19/27"},
+    {"rsh":"RSH-00077","store":"000607","phase":"4. Permitting","address":"160 Mariner Blvd","city":"Spring Hill","state":"FL","region":"FL West Coast","cs":"09/21/26","bd":"10/21/26","open":"02/22/27"},
+    {"rsh":"RSH-00231","store":"001323","phase":"4. Permitting","address":"19017 S Tamiami Trl","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"11/30/26","bd":"01/13/27","open":"05/03/27"},
+    {"rsh":"RSH-00146","store":"001368","phase":"4. Permitting","address":"7725 Moccasin Wallow Road","city":"Palmetto","state":"FL","region":"FL West Coast","cs":"09/28/26","bd":"09/09/26","open":"03/01/27"},
+    {"rsh":"RSH-00117","store":"000967","phase":"4. Permitting","address":"9305 US-19","city":"Port Richey","state":"FL","region":"FL West Coast","cs":"09/14/26","bd":"10/14/26","open":"02/22/27"},
+    {"rsh":"RSH-00085","store":"000428b","phase":"4. Permitting","address":"9101 College Pkwy","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"04/06/26","bd":"05/06/26","open":"08/17/26"},
+    {"rsh":"RSH-00099","store":"000990","phase":"4. Permitting","address":"NWC Alf Coleman & Hwy 98","city":"Panama City Beach","state":"FL","region":"FL Panhandle East","cs":"01/11/27","bd":"04/16/27","open":"08/16/27"},
+    # ── Phase 3: Design ────────────────────────────────────────────────────────
+    {"rsh":"RSH-00134","store":"001686","phase":"3. Design","address":"803 NE Alsbury Blvd","city":"Burleson","state":"TX","region":"South Central TX","cs":"07/20/26","bd":"08/26/26","open":"11/09/26"},
+    {"rsh":"RSH-00129","store":"001714","phase":"3. Design","address":"4227 East US Hwy 377","city":"Granbury","state":"TX","region":"North Central TX","cs":"08/10/26","bd":"09/16/26","open":"12/07/26"},
+    {"rsh":"RSH-00103","store":"001713","phase":"3. Design","address":"736 Hewitt Dr","city":"Waco","state":"TX","region":"South Central TX","cs":"08/10/26","bd":"Retrofit","open":"11/30/26"},
+    {"rsh":"RSH-00149","store":"001673","phase":"3. Design","address":"1020 E State Hwy 152 Ste 100","city":"Mustang","state":"OK","region":"Central OK","cs":"09/07/26","bd":"Stick Build","open":"01/04/27"},
+    {"rsh":"RSH-00111","store":"TBD","phase":"3. Design","address":"35910 US-27","city":"Haines City","state":"FL","region":"FL West Coast","cs":"09/21/26","bd":"10/21/26","open":"02/22/27"},
+    {"rsh":"RSH-00528","store":"TBD","phase":"3. Design","address":"2401 Henney Rd","city":"Choctaw","state":"OK","region":"Central OK","cs":"09/21/26","bd":"11/04/26","open":"02/01/27"},
+    {"rsh":"RSH-00273","store":"001341","phase":"3. Design","address":"6875 N Church Ave","city":"Mulberry","state":"FL","region":"FL West Coast","cs":"11/30/26","bd":"01/06/27","open":"05/03/27"},
+    {"rsh":"RSH-00127","store":"001735","phase":"3. Design","address":"Covell and Sooner","city":"Edmond","state":"OK","region":"North OK","cs":"01/06/27","bd":"02/10/27","open":"05/24/27"},
+    {"rsh":"RSH-00115","store":"001280","phase":"3. Design","address":"1159 Missouri Ave N","city":"Largo","state":"FL","region":"FL West Coast","cs":"01/25/27","bd":"03/03/27","open":"06/14/27"},
+    {"rsh":"RSH-00239","store":"001724","phase":"3. Design","address":"82 & Blackstone","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"03/22/27","bd":"06/16/27","open":"11/01/27"},
+    # ── Phase 2: Due Diligence ─────────────────────────────────────────────────
+    {"rsh":"RSH-00617","store":"001723","phase":"2. Due Diligence","address":"390 TX-199","city":"Springtown","state":"TX","region":"North Central TX","cs":"12/02/26","bd":"01/06/27","open":"05/03/27"},
+    {"rsh":"RSH-00151","store":"TBD","phase":"2. Due Diligence","address":"3514 E Interstate Drive","city":"Amarillo","state":"TX","region":"West TX","cs":"08/24/26","bd":"09/23/26","open":"12/07/26"},
+    {"rsh":"RSH-00205","store":"TBD","phase":"2. Due Diligence","address":"2159 W 9 Mile Rd","city":"Pensacola","state":"FL","region":"FL Panhandle West","cs":"12/14/26","bd":"02/03/27","open":"05/10/27"},
+    {"rsh":"RSH-00266","store":"TBD","phase":"2. Due Diligence","address":"116 Sebring Square","city":"Sebring","state":"FL","region":"FL West Coast","cs":"01/06/27","bd":"02/10/27","open":"05/24/27"},
+    {"rsh":"RSH-00211","store":"001337","phase":"2. Due Diligence","address":"12720 U.S. Hwy 19","city":"Hudson","state":"FL","region":"FL West Coast","cs":"02/01/27","bd":"03/10/27","open":"06/28/27"},
+    {"rsh":"RSH-00108","store":"TBD","phase":"2. Due Diligence","address":"4801 Cortez Blvd","city":"Bradenton","state":"FL","region":"FL West Coast","cs":"02/22/27","bd":"03/24/27","open":"07/19/27"},
+    {"rsh":"RSH-00582","store":"TBD","phase":"2. Due Diligence","address":"Cottonwood & Hwy 27","city":"Davenport","state":"FL","region":"FL West Coast","cs":"01/25/27","bd":"03/10/27","open":"06/14/27"},
+    {"rsh":"RSH-00233","store":"TBD","phase":"2. Due Diligence","address":"15201 N Cleveland Ave","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"06/14/27","bd":"07/14/27","open":"11/01/27"},
+    {"rsh":"RSH-00622","store":"TBD","phase":"2. Due Diligence","address":"1751 66th St N","city":"St. Petersburg","state":"FL","region":"FL West Coast","cs":"05/17/27","bd":"07/14/27","open":"11/01/27"},
+    {"rsh":"RSH-00596","store":"TBD","phase":"2. Due Diligence","address":"6051 Skillman St","city":"Dallas","state":"TX","region":"North Central TX","cs":"05/10/27","bd":"06/16/27","open":"09/20/27"},
+    {"rsh":"RSH-00208","store":"TBD","phase":"2. Due Diligence","address":"2511 Thomas Dr","city":"Panama City Beach","state":"FL","region":"FL Panhandle East","cs":"05/31/27","bd":"10/28/26","open":"10/18/27"},
+    {"rsh":"RSH-00592","store":"TBD","phase":"2. Due Diligence","address":"1080 Fort Hood St","city":"Killeen","state":"TX","region":"South Central TX","cs":"12/02/26","bd":"01/13/27","open":"04/19/27"},
+    {"rsh":"RSH-00606","store":"TBD","phase":"2. Due Diligence","address":"2215 N Big Spring St","city":"Midland","state":"TX","region":"Permian Basin","cs":"12/14/26","bd":"01/27/27","open":"05/03/27"},
+    {"rsh":"RSH-00610","store":"TBD","phase":"2. Due Diligence","address":"16564 US-331","city":"Freeport","state":"FL","region":"FL Panhandle East","cs":"03/01/27","bd":"04/01/27","open":"07/26/27"},
+    {"rsh":"RSH-00579","store":"TBD","phase":"2. Due Diligence","address":"1325 E Oak St","city":"Arcadia","state":"FL","region":"FL West Coast","cs":"03/01/27","bd":"04/01/27","open":"07/26/27"},
+    {"rsh":"RSH-00584","store":"TBD","phase":"2. Due Diligence","address":"1405 W Buckingham Rd","city":"Garland","state":"TX","region":"North Central TX","cs":"05/31/27","bd":"07/07/27","open":"08/30/27"},
+    {"rsh":"RSH-00217","store":"TBD","phase":"2. Due Diligence","address":"7603 Seminole Blvd","city":"Seminole","state":"FL","region":"FL West Coast","cs":"05/17/27","bd":"06/23/27","open":"11/08/27"},
+    {"rsh":"RSH-00601","store":"TBD","phase":"2. Due Diligence","address":"1738 N Town E Blvd","city":"Mesquite","state":"TX","region":"North Central TX","cs":"05/03/27","bd":"06/09/27","open":"09/20/27"},
+    {"rsh":"RSH-00575","store":"TBD","phase":"2. Due Diligence","address":"2805 S 14th St","city":"Abilene","state":"TX","region":"Middle Earth","cs":"05/17/27","bd":"06/21/27","open":"10/18/27"},
+    {"rsh":"RSH-00126","store":"TBD","phase":"2. Due Diligence","address":"3900 E 15th St","city":"Edmond","state":"OK","region":"North OK","cs":"05/17/27","bd":"06/21/27","open":"10/18/27"},
+    {"rsh":"RSH-00634","store":"TBD","phase":"2. Due Diligence","address":"983 US-98","city":"Destin","state":"FL","region":"FL Panhandle East","cs":"05/24/27","bd":"07/07/27","open":"11/08/27"},
+    {"rsh":"RSH-00666","store":"TBD","phase":"2. Due Diligence","address":"1048 S Pine Ave","city":"Ocala","state":"FL","region":"FL West Coast","cs":"06/21/27","bd":"08/04/27","open":"12/06/27"},
+    {"rsh":"RSH-00630","store":"TBD","phase":"2. Due Diligence","address":"201 SW Pine Island Rd","city":"Cape Coral","state":"FL","region":"FL West Coast","cs":"06/28/27","bd":"08/19/27","open":"12/06/27"},
+    {"rsh":"RSH-00119","store":"001121","phase":"2. Due Diligence","address":"SWC of Nine Mile & University","city":"Pensacola","state":"FL","region":"FL Panhandle West","cs":"04/26/27","bd":"03/31/27","open":"11/22/27"},
+]
+
+# Dedup 000428 duplicate from the pipeline list above
+_PIPELINE_UPCOMING = [r for r in _PIPELINE_UPCOMING if r["store"] != "000428b"]
+
+# Phase 6 open stands (from PDF) — used for map only
+_PIPELINE_OPEN_PDF = [
+    {"store":"000711","city":"Waco","state":"TX","region":"South Central TX","open":"04/13/26","address":"1540 N Valley Mills Drive"},
+    {"store":"000987","city":"Norman","state":"OK","region":"Central OK","open":"04/13/26","address":"3617 Classen Blvd"},
+    {"store":"000878","city":"Panama City","state":"FL","region":"FL Panhandle East","open":"04/20/26","address":"2105 MLK Blvd"},
+    {"store":"000872","city":"Oklahoma City","state":"OK","region":"North OK","open":"01/26/26","address":"9281 N May Ave"},
+    {"store":"000877","city":"Pensacola","state":"FL","region":"FL Panhandle West","open":"02/09/26","address":"300 E Nine Mile"},
+    {"store":"000882","city":"Gainesville","state":"TX","region":"North Central TX","open":"01/26/26","address":"403 W US HWY 82"},
+    {"store":"001117","city":"Midland","state":"TX","region":"Permian Basin","open":"01/26/26","address":"6403 W Hwy 158"},
+    {"store":"000570","city":"Belleview","state":"FL","region":"FL West Coast","open":"01/19/26","address":"5530 SE Abshier Blvd"},
+    {"store":"000875","city":"Weatherford","state":"OK","region":"Central OK","open":"01/19/26","address":"945 E Main St"},
+    {"store":"000356","city":"Bradenton","state":"FL","region":"FL West Coast","open":"01/19/26","address":"685 Cortez Rd W"},
+    {"store":"000394","city":"Bradenton","state":"FL","region":"FL West Coast","open":"02/23/26","address":"5787 Manatee Ave W"},
+    {"store":"000573","city":"Spring Hill","state":"FL","region":"FL West Coast","open":"03/09/26","address":"1321 Commercial Way"},
+    {"store":"000758","city":"Belton","state":"TX","region":"South Central TX","open":"03/09/26","address":"2304 N Main St"},
+    {"store":"000516","city":"Cleburne","state":"TX","region":"North Central TX","open":"03/30/26","address":"1211 W Henderson St"},
+    {"store":"000709","city":"Pampa","state":"TX","region":"West TX","open":"03/30/26","address":"1050 N Hobart St"},
+    {"store":"000968","city":"Lawton","state":"OK","region":"South OK","open":"05/18/26","address":"6518 NW Cache Road"},
+    {"store":"001238","city":"Beverly Hills","state":"TX","region":"South Central TX","open":"05/18/26","address":"1707 S Valley Mills Dr"},
+    {"store":"001122","city":"Killeen","state":"TX","region":"South Central TX","open":"05/18/26","address":"3008 W Stan Schlueter Loop"},
+    {"store":"000986","city":"Mary Esther","state":"FL","region":"FL Panhandle East","open":"06/01/26","address":"490 Mary Esther Blvd"},
+    {"store":"000518","city":"Lynn Haven","state":"FL","region":"FL Panhandle East","open":"06/01/26","address":"1420 Ohio Avenue"},
+    {"store":"000520","city":"Brooksville","state":"FL","region":"FL West Coast","open":"06/08/26","address":"1194 Broad St"},
+    {"store":"001234","city":"El Reno","state":"OK","region":"North OK","open":"06/08/26","address":"2415 S Country Club Rd"},
+    {"store":"000547","city":"Edmond","state":"OK","region":"North OK","open":"06/15/26","address":"833 W. Edmond Rd"},
+    {"store":"001119","city":"Canyon","state":"TX","region":"West TX","open":"06/22/26","address":"210 23rd St"},
+    {"store":"000571","city":"Fort Walton Beach","state":"FL","region":"FL Panhandle East","open":"06/22/26","address":"801 Beal Pkwy N"},
+]
+
+
+def _pl_coords(city, state):
+    """Return (lat, lon) or None from the city/state lookup."""
+    return _CITY_COORDS.get((city, state))
+
+
+def _phase_color_hex(phase):
+    if "5." in phase:   return "#FF6B00"   # orange
+    if "4." in phase:   return "#F5A623"   # amber
+    if "3." in phase:   return "#4A90E2"   # blue
+    if "2." in phase:   return "#9B59B6"   # purple
+    return "#27AE60"                         # green (open)
+
+
+def _phase_label(phase):
+    mapping = {
+        "5. Construction": "🔨 Under Construction",
+        "4. Permitting":   "📋 Permitting",
+        "3. Design":       "📐 Design",
+        "2. Due Diligence":"🔍 Due Diligence",
+    }
+    return mapping.get(phase, phase)
+
+
+def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
+    """Build a self-contained Leaflet.js HTML map string."""
+    import json as _json
+
+    markers = []
+
+    # Existing open stands from data.json (green, smaller)
+    seen_cities = {}
+    for s in existing_stands:
+        raw = s.get("Stand", "")
+        # parse "000134 Lubbock, TX - 1" → city="Lubbock", state="TX"
+        parts = raw.split(" ", 1)
+        if len(parts) < 2:
+            continue
+        loc = parts[1]  # "Lubbock, TX - 1"
+        loc_parts = loc.split(",")
+        if len(loc_parts) < 2:
+            continue
+        city = loc_parts[0].strip()
+        st_part = loc_parts[1].strip().split()[0] if loc_parts[1].strip() else ""
+        key = (city, st_part)
+        if key in seen_cities:
+            continue
+        seen_cities[key] = True
+        coords = _pl_coords(city, st_part)
+        if not coords:
+            continue
+        lat, lon = coords
+        # jitter slightly so multiple stands in same city don't stack
+        markers.append({
+            "lat": lat + (hash(raw) % 100) * 0.003,
+            "lon": lon + (hash(raw) % 73) * 0.003,
+            "color": "#27AE60",
+            "radius": 7,
+            "popup": f"<b>{raw.split(' - ')[0].strip()}</b><br>{city}, {st_part}<br><i>Open</i>",
+            "legend": "Open"
+        })
+
+    # Recently opened from PDF phase 6
+    for r in open_rows:
+        coords = _pl_coords(r["city"], r["state"])
+        if not coords:
+            continue
+        lat, lon = coords
+        store_id = r.get("store","")
+        markers.append({
+            "lat": lat + (hash(store_id) % 50) * 0.004,
+            "lon": lon + (hash(store_id + "x") % 50) * 0.004,
+            "color": "#27AE60",
+            "radius": 7,
+            "popup": (f"<b>#{store_id}</b><br>{r['address']}<br>{r['city']}, {r['state']}<br>"
+                      f"<i>Region: {r.get('region','')}</i><br>Opened: {r.get('open','')}"),
+            "legend": "Open"
+        })
+
+    # Upcoming (phases 2-5)
+    for r in upcoming_rows:
+        coords = _pl_coords(r["city"], r["state"])
+        if not coords:
+            continue
+        lat, lon = coords
+        store_id = r.get("store","TBD")
+        color = _phase_color_hex(r["phase"])
+        label = _phase_label(r["phase"])
+        markers.append({
+            "lat": lat + (hash(store_id + "u") % 80) * 0.004,
+            "lon": lon + (hash(store_id + "v") % 80) * 0.004,
+            "color": color,
+            "radius": 9,
+            "popup": (f"<b>{r['city']}, {r['state']}</b> — #{store_id}<br>"
+                      f"{r['address']}<br>"
+                      f"<i>Region: {r.get('region','')}</i><br>"
+                      f"Phase: {label}<br>"
+                      f"Const. Start: {r.get('cs','—')}<br>"
+                      f"Building Drop: {r.get('bd','—')}<br>"
+                      f"<b>Est. Opening: {r.get('open','—')}</b>"),
+            "legend": label
+        })
+
+    markers_json = _json.dumps(markers)
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html,body{{height:100%;margin:0;padding:0;background:#1a1a2e;}}
+  #map{{height:100%;width:100%;}}
+  .legend{{background:rgba(20,20,40,0.92);color:#eee;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.8;}}
+  .legend-dot{{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle;}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+var map = L.map('map',{{zoomControl:true}}).setView([32.5,-95],5);
+L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png',{{
+  attribution:'&copy; OpenStreetMap &amp; CARTO',maxZoom:19
+}}).addTo(map);
+
+var markers = {markers_json};
+markers.forEach(function(m){{
+  var circle = L.circleMarker([m.lat,m.lon],{{
+    radius:m.radius,color:m.color,fillColor:m.color,
+    fillOpacity:0.85,weight:2,opacity:1
+  }}).addTo(map);
+  circle.bindPopup(m.popup,{{maxWidth:240}});
+}});
+
+var legend = L.control({{position:'bottomleft'}});
+legend.onAdd = function(){{
+  var div = L.DomUtil.create('div','legend');
+  div.innerHTML = '<b style="font-size:13px;">7BREW Locations</b><br/>' +
+    '<span class="legend-dot" style="background:#27AE60;"></span>Open<br/>' +
+    '<span class="legend-dot" style="background:#FF6B00;"></span>Under Construction<br/>' +
+    '<span class="legend-dot" style="background:#F5A623;"></span>Permitting<br/>' +
+    '<span class="legend-dot" style="background:#4A90E2;"></span>Design<br/>' +
+    '<span class="legend-dot" style="background:#9B59B6;"></span>Due Diligence';
+  return div;
+}};
+legend.addTo(map);
+</script>
+</body>
+</html>"""
+    return html
+
+
+def tab_pipeline(dash):
+    import streamlit.components.v1 as components
+
+    st.markdown("### 🏗️ Stand Pipeline")
+    st.caption("Data sourced from Permit to Open Dates report · Regions from 7Crew Stand Dates")
+
+    df = pd.DataFrame(_PIPELINE_UPCOMING)
+    df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
+    df = df.sort_values("open_dt").reset_index(drop=True)
+
+    # ── Filters ───────────────────────────────────────────────────────────────
+    fc1, fc2, fc3 = st.columns([1, 1, 1])
+    with fc1:
+        phase_opts = ["All Phases"] + [
+            "5. Construction", "4. Permitting", "3. Design", "2. Due Diligence"
+        ]
+        sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase")
+    with fc2:
+        state_opts = ["All States"] + sorted(df["state"].unique().tolist())
+        sel_state = st.selectbox("State", state_opts, key="pipe_state")
+    with fc3:
+        region_opts = ["All Regions"] + sorted(df["region"].dropna().unique().tolist())
+        sel_region = st.selectbox("Region", region_opts, key="pipe_region")
+
+    dff = df.copy()
+    if sel_phase != "All Phases":
+        dff = dff[dff["phase"] == sel_phase]
+    if sel_state != "All States":
+        dff = dff[dff["state"] == sel_state]
+    if sel_region != "All Regions":
+        dff = dff[dff["region"] == sel_region]
+
+    # ── Summary metrics ───────────────────────────────────────────────────────
+    mc = st.columns(5)
+    mc[0].metric("Total Pipeline", len(dff))
+    mc[1].metric("Under Construction", len(dff[dff["phase"] == "5. Construction"]))
+    mc[2].metric("Permitting", len(dff[dff["phase"] == "4. Permitting"]))
+    mc[3].metric("Design", len(dff[dff["phase"] == "3. Design"]))
+    mc[4].metric("Due Diligence", len(dff[dff["phase"] == "2. Due Diligence"]))
+
+    st.divider()
+
+    # ── Table ─────────────────────────────────────────────────────────────────
+    st.markdown("#### Upcoming Openings")
+    table_df = dff[["phase", "address", "city", "state", "region", "cs", "bd", "open", "store", "rsh"]].copy()
+    table_df.columns = [
+        "Phase", "Address", "City", "State", "Region",
+        "Const. Start", "Building Drop", "Est. Opening", "Store #", "RSH"
+    ]
+    table_df["Phase"] = table_df["Phase"].map(_phase_label)
+    table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
+
+    def _row_style(row):
+        phase_raw = row["Phase"]
+        if "Construction" in phase_raw: bg = "rgba(255,107,0,0.08)"
+        elif "Permitting"  in phase_raw: bg = "rgba(245,166,35,0.08)"
+        elif "Design"      in phase_raw: bg = "rgba(74,144,226,0.08)"
+        else: bg = "rgba(155,89,182,0.08)"
+        return [f"background-color:{bg}"] * len(row)
+
+    st.dataframe(
+        table_df.style.apply(_row_style, axis=1),
+        use_container_width=True,
+        hide_index=True,
+        height=min(50 + len(table_df) * 35, 500),
+    )
+
+    st.divider()
+
+    # ── Map ───────────────────────────────────────────────────────────────────
+    st.markdown("#### 📍 All 7BREW Locations")
+    st.caption("Green = Open  ·  Orange = Under Construction  ·  Amber = Permitting  ·  Blue = Design  ·  Purple = Due Diligence")
+
+    # Pull existing open stands from the dash data
+    stands_df_pipe = get_stands_df(dash)
+    existing_rows = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
+
+    map_html = _build_pipeline_map_html(_PIPELINE_UPCOMING, _PIPELINE_OPEN_PDF, existing_rows)
+    components.html(map_html, height=560, scrolling=False)
+
+
+# ─────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────
 def main():
@@ -3758,6 +4176,7 @@ def main():
         "💡 Wins & Opportunities",
         "🔮 Forecast",
         "⚡ Utilities & R&M",
+        "🏗️ Pipeline",
     ]
     tabs = st.tabs(tab_names)
 
@@ -3768,6 +4187,7 @@ def main():
     with tabs[4]: tab_insights(dash)
     with tabs[5]: tab_forecast(dash)
     with tabs[6]: tab_utilities(dash)
+    with tabs[7]: tab_pipeline(dash)
 
 
 main()
