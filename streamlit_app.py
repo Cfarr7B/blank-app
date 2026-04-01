@@ -2701,7 +2701,7 @@ def tab_insights(dash):
 # TAB: FORECAST
 # ─────────────────────────────────────────────
 def tab_forecast(dash):
-    section("FORECAST P4–P13 2026", "P1–P3 actuals locked · P4–P13 projected · 3 scenarios · Seasonal watch notes")
+    section("FORECAST P4–P13 2026 (Draft)", "P1–P3 actuals locked · P4–P13 projected · 3 scenarios · Seasonal watch notes")
 
     fc = dash.get("forecast_26", [])
     if not fc:
@@ -4262,9 +4262,9 @@ def main():
         "📈 Period Comparison",
         "🗺 Regions & Stands",
         "💡 Wins & Opportunities",
-        "🔮 Forecast",
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
+        "🔮 Forecast (Draft)",
     ]
     tabs = st.tabs(tab_names)
 
@@ -4273,9 +4273,9 @@ def main():
     with tabs[2]: tab_comparison(dash)
     with tabs[3]: tab_regions(dash)
     with tabs[4]: tab_insights(dash)
-    with tabs[5]: tab_forecast(dash)
-    with tabs[6]: tab_utilities(dash)
-    with tabs[7]: tab_pipeline(dash)
+    with tabs[5]: tab_utilities(dash)
+    with tabs[6]: tab_pipeline(dash)
+    with tabs[7]: tab_forecast(dash)
 
 
 main()
