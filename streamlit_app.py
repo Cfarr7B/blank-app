@@ -645,6 +645,17 @@ def _assign_age_bucket(open_date_str, period_key):
     except Exception:
         return "Unknown"
 
+def _age_yrs_from_period(open_date_str, period_key):
+    """Return numeric age in years for a stand at a given period end. Returns None on failure."""
+    try:
+        open_dt    = pd.to_datetime(str(open_date_str)).date()
+        period_end = _period_end_date(str(period_key))
+        if period_end is None:
+            return None
+        return max(0.0, (period_end - open_dt).days / 365.25)
+    except Exception:
+        return None
+
 def get_stands_df(dash, period_key=None):
     df = pd.DataFrame(dash["stand_records"])
 
@@ -1435,6 +1446,7 @@ def tab_ceo(dash):
         insight_card(alert["title"], alert["body"],
                      tag=alert.get("cls", "").upper(), tag_cls=alert.get("tag_cls", "amber"),
                      card_cls=alert.get("cls", "watch"))
+
 
 
 # ─────────────────────────────────────────────
@@ -2282,64 +2294,71 @@ def tab_regions(dash):
 
     # ── 🌱 Store Cohort / Ramp Analysis ─────────────────────────────────────
     st.html('<hr class="brew">')
+    period_lbl = ps["label"] if hasattr(ps, "__getitem__") else str(pk)
     section("🌱 STORE COHORT ANALYSIS",
-            "Separates ramp-stage stands from mature stands so blended averages tell the real story")
+            f"Avg performance by stand maturity — {period_lbl} · uses the period selected above")
 
-    all_stands = get_stands_df(dash).copy()
-    all_stands = all_stands[all_stands["Age_Bucket"].notna() & all_stands["Net_Sales"].notna()]
+    # KPI strip + bar charts: use ONLY the selected period so the blended avg
+    # matches what you see in the period summary above (fixes the mature≈blended quirk
+    # caused by mature stands having far more historical data rows than new ones).
+    period_stands = stands_df[stands_df["Period_Key"] == pk].copy()
+    period_stands = period_stands[period_stands["Age_Bucket"].notna() & period_stands["Net_Sales"].notna()]
 
-    bucket_order   = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
-    bucket_colors  = {"New (<6mo)": "#FF6B00", "Young (6-12mo)": "#F5A623",
-                      "Developing (1-2yr)": "#4A90E2", "Mature (2yr+)": "#12a06e"}
+    # Ramp curve needs all periods to trace the opening-week trajectory
+    ramp_stands = stands_df[stands_df["Age_Bucket"].notna() & stands_df["Net_Sales"].notna()].copy()
+
+    bucket_order  = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+    bucket_colors = {"New (<6mo)": "#FF6B00", "Young (6-12mo)": "#F5A623",
+                     "Developing (1-2yr)": "#4A90E2", "Mature (2yr+)": "#12a06e"}
 
     # ── Cohort KPI strip ─────────────────────────────────────────────────────
-    cohort_agg = (all_stands.groupby("Age_Bucket")
+    cohort_agg = (period_stands.groupby("Age_Bucket")
                   .agg(avg_sales=("Net_Sales","mean"),
                        avg_ebitda=("Store_EBITDA_pct","mean"),
                        avg_labor=("Total_Labor_pct","mean"),
-                       n_records=("Stand","count"))
+                       n_stands=("Stand","nunique"))
                   .reindex(bucket_order).reset_index())
 
-    mature_row = cohort_agg[cohort_agg["Age_Bucket"] == "Mature (2yr+)"]
-    blend_avg  = all_stands["Net_Sales"].mean()
-    mature_avg = mature_row["avg_sales"].values[0] if not mature_row.empty else blend_avg
-    dilution   = mature_avg - blend_avg
+    mature_row  = cohort_agg[cohort_agg["Age_Bucket"] == "Mature (2yr+)"]
+    blend_avg   = period_stands["Net_Sales"].mean()
+    mature_avg  = mature_row["avg_sales"].values[0] if not mature_row.empty else blend_avg
+    dilution    = mature_avg - blend_avg
 
     ck1, ck2, ck3, ck4 = st.columns(4)
     ck1.metric("Mature Store Avg Sales", f"${mature_avg:,.0f}",
-               help="Average per-period net sales for stands open 2+ years")
-    ck2.metric("Blended System Avg Sales", f"${blend_avg:,.0f}",
-               delta=f"${dilution:+,.0f} ramp drag",
+               help=f"Avg net sales for 2yr+ stands in {period_lbl}")
+    ck2.metric(f"{period_lbl} System Avg", f"${blend_avg:,.0f}",
+               delta=f"${dilution:+,.0f} vs mature",
                delta_color="inverse" if dilution < 0 else "normal",
-               help="All-in average across every stand and period")
+               help="Blended average across all stands this period — matches Period Summary above")
     if not mature_row.empty:
         ck3.metric("Mature Store Avg EBITDA%",
                    f"{mature_row['avg_ebitda'].values[0]*100:.1f}%",
-                   help="EBITDA margin for 2yr+ stands only")
+                   help="EBITDA margin for 2yr+ stands this period")
+        new_row = cohort_agg[cohort_agg["Age_Bucket"] == "New (<6mo)"]
         ck4.metric("New Stand Avg EBITDA%",
-                   f"{cohort_agg[cohort_agg['Age_Bucket']=='New (<6mo)']['avg_ebitda'].mean()*100:.1f}%"
-                   if not cohort_agg[cohort_agg['Age_Bucket']=='New (<6mo)'].empty else "—",
-                   help="EBITDA margin for stands in first 6 months")
+                   f"{new_row['avg_ebitda'].mean()*100:.1f}%" if not new_row.empty else "—",
+                   help="EBITDA margin for stands in first 6 months this period")
 
-    st.caption("Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
+    st.caption(f"All metrics above reflect {period_lbl} only. Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
 
     # ── Side-by-side cohort charts ────────────────────────────────────────────
     ch1, ch2 = st.columns(2)
 
     with ch1:
-        st.markdown("**Avg Net Sales by Cohort** *(all periods)*")
+        st.markdown(f"**Avg Net Sales by Cohort** *({period_lbl})*")
         fig_sales = go.Figure()
-        for _, row in cohort_agg.dropna(subset=["avg_sales"]).iterrows():
-            bkt = row["Age_Bucket"]
+        for _, crow in cohort_agg.dropna(subset=["avg_sales"]).iterrows():
+            bkt = crow["Age_Bucket"]
             fig_sales.add_bar(
-                x=[bkt], y=[row["avg_sales"]],
+                x=[bkt], y=[crow["avg_sales"]],
                 name=bkt, marker_color=bucket_colors.get(bkt, "#999"),
-                text=[f"${row['avg_sales']:,.0f}"], textposition="outside",
-                showlegend=False,
+                text=[f"${crow['avg_sales']:,.0f}<br>({int(crow['n_stands'])} stands)"],
+                textposition="outside", showlegend=False,
             )
         fig_sales.add_hline(y=blend_avg, line_dash="dash",
                             line_color="rgba(255,255,255,0.4)",
-                            annotation_text=f"Blended avg ${blend_avg:,.0f}",
+                            annotation_text=f"Period avg ${blend_avg:,.0f}",
                             annotation_position="top right",
                             annotation_font_color="rgba(255,255,255,0.5)")
         fig_sales.update_layout(template="plotly_dark", height=300,
@@ -2348,21 +2367,21 @@ def tab_regions(dash):
         st.plotly_chart(fig_sales, use_container_width=True)
 
     with ch2:
-        st.markdown("**Avg EBITDA% & Labor% by Cohort** *(all periods)*")
+        st.markdown(f"**Avg EBITDA% & Labor% by Cohort** *({period_lbl})*")
         fig_pct = go.Figure()
-        for _, row in cohort_agg.dropna(subset=["avg_ebitda"]).iterrows():
-            bkt = row["Age_Bucket"]
+        for _, crow in cohort_agg.dropna(subset=["avg_ebitda"]).iterrows():
+            bkt = crow["Age_Bucket"]
             fig_pct.add_bar(
-                x=[bkt], y=[row["avg_ebitda"] * 100],
+                x=[bkt], y=[crow["avg_ebitda"] * 100],
                 name="EBITDA%", marker_color=bucket_colors.get(bkt, "#999"),
                 opacity=0.9, showlegend=False,
-                text=[f"{row['avg_ebitda']*100:.1f}%"], textposition="outside",
+                text=[f"{crow['avg_ebitda']*100:.1f}%"], textposition="outside",
             )
         fig_pct.add_scatter(
             x=cohort_agg.dropna(subset=["avg_labor"])["Age_Bucket"].tolist(),
             y=(cohort_agg.dropna(subset=["avg_labor"])["avg_labor"] * 100).tolist(),
             name="Labor%", mode="lines+markers",
-            line=dict(color="#F5A623", width=2), yaxis="y",
+            line=dict(color="#F5A623", width=2),
             showlegend=True,
         )
         fig_pct.update_layout(template="plotly_dark", height=300,
@@ -2371,10 +2390,15 @@ def tab_regions(dash):
                               legend=dict(orientation="h", y=1.1), bargap=0.35)
         st.plotly_chart(fig_pct, use_container_width=True)
 
-    # ── Revenue ramp curve (period-by-period trajectory) ─────────────────────
-    st.markdown("**Revenue Ramp Curve** — Average net sales by period since opening")
-    all_stands["periods_since_open"] = (all_stands["Age (Yrs)"].fillna(0) * 13).round().astype(int).clip(0, 39)
-    ramp_curve = (all_stands.groupby("periods_since_open")
+    # ── Revenue ramp curve (all-time — needs multiple periods to trace trajectory) ──
+    st.markdown("**Revenue Ramp Curve** — Average net sales by period since opening *(all-time data)*")
+    ramp_stands["age_yrs_num"] = ramp_stands.apply(
+        lambda r: _age_yrs_from_period(r.get("Open Date", ""), r.get("Period_Key", "")), axis=1
+    )
+    ramp_stands["periods_since_open"] = (
+        ramp_stands["age_yrs_num"].fillna(0) * 13
+    ).round().astype(int).clip(0, 39)
+    ramp_curve = (ramp_stands.groupby("periods_since_open")
                   .agg(avg_sales=("Net_Sales","mean"),
                        stand_count=("Stand","nunique"))
                   .reset_index())
@@ -2409,7 +2433,7 @@ def tab_regions(dash):
         xaxis=dict(dtick=2),
     )
     st.plotly_chart(fig_ramp, use_container_width=True)
-    st.caption("Each point = average net sales for all stands at that exact period-since-opening. The ramp plateau (where the curve flattens) shows when a typical 7BREW stand reaches full volume.")
+    st.caption("Ramp curve uses all historical periods so each point reflects the average sales of every stand at exactly that period-since-opening. The point where the curve flattens marks full-volume maturity.")
 
 
 # ─────────────────────────────────────────────
@@ -3858,7 +3882,11 @@ def tab_utilities(dash):
             "a spike at 18–24 months often signals warranty expiry on equipment")
 
     rm_df = get_stands_df(dash).copy()
-    rm_df = rm_df[rm_df["Total_RM"].notna() & rm_df["Age (Yrs)"].notna()
+    # Compute numeric stand age in years from Open Date + Period_Key
+    rm_df["age_yrs"] = rm_df.apply(
+        lambda r: _age_yrs_from_period(r.get("Open Date", ""), r.get("Period_Key", "")), axis=1
+    )
+    rm_df = rm_df[rm_df["Total_RM"].notna() & rm_df["age_yrs"].notna()
                   & (rm_df["Net_Sales"].fillna(0) > 0)].copy()
     rm_df["RM_pct_display"] = rm_df["Total_RM_pct"].fillna(
         rm_df["Total_RM"] / rm_df["Net_Sales"])
@@ -3896,12 +3924,12 @@ def tab_utilities(dash):
         # Use the most recent record per stand for the scatter to avoid overplotting
         latest_rm = rm_df.sort_values("Period_Key").groupby("Stand").last().reset_index()
         fig_scatter = px.scatter(
-            latest_rm.dropna(subset=["Age (Yrs)", "RM_pct_display", "Region"]),
-            x="Age (Yrs)", y="RM_pct_display",
+            latest_rm.dropna(subset=["age_yrs", "RM_pct_display", "Region"]),
+            x="age_yrs", y="RM_pct_display",
             color="Region",
             hover_data={"Stand": True, "Total_RM": ":$,.0f",
-                        "Net_Sales": ":$,.0f", "Age (Yrs)": ":.2f"},
-            labels={"Age (Yrs)": "Stand Age (Years)",
+                        "Net_Sales": ":$,.0f", "age_yrs": ":.2f"},
+            labels={"age_yrs": "Stand Age (Years)",
                     "RM_pct_display": "R&M % of Net Sales",
                     "Region": "Region"},
             color_discrete_map={k: v for k, v in {
