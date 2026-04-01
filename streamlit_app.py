@@ -2559,6 +2559,143 @@ def tab_insights(dash):
         else:
             _ramp_charts(ramp_nonfl, "NON-FLORIDA", RED)
 
+    # ── CRITICAL ISSUES + FORWARD-LOOKING RISKS ───────────────────────────────
+    st.html('<hr class="brew">')
+
+    # Alias maturity buckets to match pothole variable names
+    est_stands  = mature
+    new_stands  = ramping
+    n_new       = n_ramping
+    n_est       = n_mature
+    NEW_BUCKETS = ["New (<6mo)"]
+    EST_BUCKETS = ["Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+
+    if n_new > 0:
+        avg_new_labor = new_stands["Total_Labor_pct"].mean() if "Total_Labor_pct" in new_stands.columns else 0
+        avg_est_labor = est_stands["Total_Labor_pct"].mean() if n_est and "Total_Labor_pct" in est_stands.columns else 0
+        st.html(f"""
+        <div style="background:#fff8e1;border-left:4px solid #e8940a;border-radius:6px;
+                    padding:12px 16px;margin-bottom:14px;font-family:'DM Mono',monospace;font-size:12px;">
+          <strong>📋 Maturity Filter Active:</strong> {n_new} new stand(s) (&lt;6 months) are excluded from Critical Issues
+          — their elevated labor ({_fmt_p(avg_new_labor)} avg) and lower EBITDA are expected during ramp.
+          Established stands ({n_est}) avg labor: {_fmt_p(avg_est_labor)}.
+        </div>""")
+
+    pot_col1, pot_col2 = st.columns(2)
+
+    with pot_col1:
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
+                'color:#AC2430;margin-bottom:10px;">🚨 CRITICAL ISSUES — ESTABLISHED STANDS</div>')
+
+        if est_stands.empty:
+            st.info("No established stands in this period.")
+        else:
+            top_disc  = ps_stands.nlargest(1, "Discounts_pct").iloc[0]
+            disc_age  = top_disc.get("Age_Bucket", "")
+            disc_note = f" ({disc_age})" if disc_age else ""
+            insight_card(
+                f"🚨 Highest Discount: {top_disc['Stand'].split(',')[0]}{disc_note}",
+                f"{_fmt_p(top_disc['Discounts_pct'])} discount rate — "
+                f"{top_disc['Discounts_pct']/0.028:.1f}× the 2.8% system avg. "
+                f"Discount issues aren't ramp-related — check POS config and promo authorization.",
+                tag=_fmt_p(top_disc['Discounts_pct']), tag_cls="red",
+            )
+
+            top_labor    = est_stands.nlargest(1, "Total_Labor_pct").iloc[0]
+            avg_sys_labor = ps["labor_pct"]
+            labor_gap    = top_labor["Total_Labor_pct"] - avg_sys_labor
+            insight_card(
+                f"🚨 High Labor (Est.): {top_labor['Stand'].split(',')[0]}",
+                f"{_fmt_p(top_labor['Total_Labor_pct'])} Total Labor — "
+                f"{_fmt_bps(labor_gap)} above the {_fmt_p(avg_sys_labor)} system avg. "
+                f"This stand is past ramp — scheduling inefficiency or staffing model issue. "
+                f"EBITDA: {_fmt_p(top_labor['Store_EBITDA_pct'])}.",
+                tag=_fmt_p(top_labor['Total_Labor_pct']), tag_cls="red",
+            )
+
+            worst_ebi = est_stands.nsmallest(1, "Store_EBITDA_pct").iloc[0]
+            insight_card(
+                f"🚨 Lowest EBITDA (Est.): {worst_ebi['Stand'].split(',')[0]}",
+                f"{_fmt_p(worst_ebi['Store_EBITDA_pct'])} EBITDA on {_fmt_d(worst_ebi['Net_Sales'])} sales. "
+                f"This is an established location — underperformance is a real issue, not ramp noise. "
+                f"Labor {_fmt_p(worst_ebi['Total_Labor_pct'])}, COGS {_fmt_p(worst_ebi['Total_COGS_pct'])}.",
+                tag=_fmt_p(worst_ebi['Store_EBITDA_pct']), tag_cls="red",
+            )
+
+            top_rm = est_stands.nlargest(1, "Total_RM_pct").iloc[0]
+            if top_rm["Total_RM_pct"] > 0.02:
+                insight_card(
+                    f"🚨 High R&M (Est.): {top_rm['Stand'].split(',')[0]}",
+                    f"{_fmt_p(top_rm['Total_RM_pct'])} R&M — {top_rm['Total_RM_pct']/0.011:.1f}× system avg. "
+                    f"Established stands with high R&M signal equipment aging or deferred maintenance. "
+                    f"Schedule a condition audit.",
+                    tag=_fmt_p(top_rm['Total_RM_pct']), tag_cls="amber",
+                )
+
+            multi_issue = est_stands[
+                (est_stands["Total_Labor_pct"] > 0.27) &
+                (est_stands["Store_EBITDA_pct"] < 0.12)
+            ]
+            if len(multi_issue) > 1:
+                names = ", ".join(multi_issue["Stand"].str.split(",").str[0].tolist()[:4])
+                insight_card(
+                    f"🚨 Multi-Issue Cluster: {len(multi_issue)} Established Stands",
+                    f"These stands have both high labor (>27%) AND low EBITDA (<12%): {names}. "
+                    f"Cluster pattern suggests a systemic issue — staffing model, market, or management.",
+                    tag=f"{len(multi_issue)} Stands", tag_cls="red",
+                )
+
+    with pot_col2:
+        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
+                'color:#e8940a;margin-bottom:10px;">⚠ FORWARD-LOOKING RISKS</div>')
+
+        reg_df_pot = get_regions_df(dash, pk)
+        high_labor_regions = []
+        if not reg_df_pot.empty and "labor_pct" in reg_df_pot.columns:
+            sys_labor = float(ps.get("labor_pct", 0))
+            for _, rrow in reg_df_pot.iterrows():
+                if rrow.get("labor_pct", 0) > sys_labor + 0.04:
+                    high_labor_regions.append((rrow["region"], rrow["labor_pct"]))
+        if high_labor_regions:
+            reg_list = ", ".join(f"{r} ({_fmt_p(l)})" for r, l in sorted(high_labor_regions, key=lambda x: -x[1]))
+            insight_card(
+                f"⚠ Regional Labor Gap: {len(high_labor_regions)} Region(s) 400bps+ Above Avg",
+                f"{reg_list} are running 400bps+ above system avg labor. "
+                f"Regional labor creep compounds quickly — investigate scheduling and staffing ratios.",
+                tag="Labor Risk", tag_cls="amber", card_cls="watch",
+            )
+
+        low_sales = est_stands[est_stands["Net_Sales"] < est_stands["Net_Sales"].quantile(0.15)]
+        if len(low_sales) >= 2:
+            names = ", ".join(low_sales.nsmallest(3, "Net_Sales")["Stand"].str.split(",").str[0].tolist())
+            insight_card(
+                f"⚠ Low-Volume Established Stands ({len(low_sales)} in bottom 15%)",
+                f"Bottom performers by sales: {names}. "
+                f"For established locations, low volume may indicate market saturation, location issues, "
+                f"or operational problems — not just ramp lag.",
+                tag="Volume Risk", tag_cls="amber", card_cls="watch",
+            )
+
+        for title, body, tag, tag_cls in [
+            ("⚠ Summer Labor P6–P8",
+             "Historical data shows P6–P8 EBITDA compresses 300–500bps vs spring. Vacation coverage, "
+             "call-outs, and training overlap for summer new opens create labor creep. Build the schedule now.",
+             "Seasonal Risk", "amber"),
+            ("⚠ P12–P13 Year-End Pattern",
+             "P12–P13 historically run 600–900bps below peak EBITDA. Holiday fixed cost absorption + "
+             "traffic slowdown. No deferred expenses into year-end — plan cost controls in P11.",
+             "Seasonal Risk", "amber"),
+            ("⚠ New Stand Pipeline Dilution",
+             "Each new opening carries 25–35% labor for 60–90 days and compresses system EBITDA% by "
+             "~150–200bps per cohort. Factor into board-level EBITDA guidance.",
+             "~150–200bps dilution", "grey"),
+            ("⚠ Aging Equipment — 2022–2023 Vintage",
+             "Stands opened 2022–2023 are now 2–4 years old. R&M% tends to spike after year 3. "
+             "Any stand over 2.0% R&M should get a proactive equipment condition audit before P6.",
+             "Equipment Risk", "grey"),
+        ]:
+            insight_card(title, body, tag, tag_cls, "watch")
+
 
 # ─────────────────────────────────────────────
 # TAB: FORECAST
@@ -3620,7 +3757,6 @@ def main():
         "🗺 Regions & Stands",
         "💡 Wins & Opportunities",
         "🔮 Forecast",
-        "⚠️ Pothole Watch",
         "⚡ Utilities & R&M",
     ]
     tabs = st.tabs(tab_names)
@@ -3631,8 +3767,7 @@ def main():
     with tabs[3]: tab_regions(dash)
     with tabs[4]: tab_insights(dash)
     with tabs[5]: tab_forecast(dash)
-    with tabs[6]: tab_potholes(dash)
-    with tabs[7]: tab_utilities(dash)
+    with tabs[6]: tab_utilities(dash)
 
 
 main()
