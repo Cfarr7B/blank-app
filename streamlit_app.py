@@ -3931,85 +3931,90 @@ def _phase_label(phase):
 
 
 def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
-    """Build a self-contained Leaflet.js HTML map string."""
+    """Build a self-contained Leaflet.js HTML map with clickable legend toggles."""
     import json as _json
 
     markers = []
 
-    # Existing open stands from data.json (green, smaller)
-    seen_cities = {}
+    # Existing open stands from data.json
+    seen_stands = set()
     for s in existing_stands:
         raw = s.get("Stand", "")
-        # parse "000134 Lubbock, TX - 1" → city="Lubbock", state="TX"
+        if raw in seen_stands:
+            continue
+        seen_stands.add(raw)
         parts = raw.split(" ", 1)
         if len(parts) < 2:
             continue
-        loc = parts[1]  # "Lubbock, TX - 1"
+        loc = parts[1]
         loc_parts = loc.split(",")
         if len(loc_parts) < 2:
             continue
         city = loc_parts[0].strip()
         st_part = loc_parts[1].strip().split()[0] if loc_parts[1].strip() else ""
-        key = (city, st_part)
-        if key in seen_cities:
-            continue
-        seen_cities[key] = True
         coords = _pl_coords(city, st_part)
         if not coords:
             continue
         lat, lon = coords
-        # jitter slightly so multiple stands in same city don't stack
         markers.append({
-            "lat": lat + (hash(raw) % 100) * 0.003,
-            "lon": lon + (hash(raw) % 73) * 0.003,
-            "color": "#27AE60",
-            "radius": 7,
-            "popup": f"<b>{raw.split(' - ')[0].strip()}</b><br>{city}, {st_part}<br><i>Open</i>",
-            "legend": "Open"
+            "lat": round(lat + (hash(raw) % 100) * 0.003, 5),
+            "lon": round(lon + (hash(raw) % 73)  * 0.003, 5),
+            "color": "#27AE60", "radius": 7, "group": "Open",
+            "popup": f"<b>{raw.split(' - ')[0].strip()}</b><br>{city}, {st_part}<br><i>Currently Open</i>",
         })
 
-    # Recently opened from PDF phase 6
+    # Recently opened (phase 6 from PDF) — avoids double-plotting with data.json
+    open_store_ids = {r.get("store","") for r in open_rows}
     for r in open_rows:
         coords = _pl_coords(r["city"], r["state"])
         if not coords:
             continue
         lat, lon = coords
-        store_id = r.get("store","")
+        sid = r.get("store","")
         markers.append({
-            "lat": lat + (hash(store_id) % 50) * 0.004,
-            "lon": lon + (hash(store_id + "x") % 50) * 0.004,
-            "color": "#27AE60",
-            "radius": 7,
-            "popup": (f"<b>#{store_id}</b><br>{r['address']}<br>{r['city']}, {r['state']}<br>"
-                      f"<i>Region: {r.get('region','')}</i><br>Opened: {r.get('open','')}"),
-            "legend": "Open"
+            "lat": round(lat + (hash(sid)       % 50) * 0.004, 5),
+            "lon": round(lon + (hash(sid + "x") % 50) * 0.004, 5),
+            "color": "#27AE60", "radius": 7, "group": "Open",
+            "popup": (f"<b>#{sid}</b> · {r['city']}, {r['state']}<br>"
+                      f"{r['address']}<br>Region: {r.get('region','')}<br>"
+                      f"Opened: {r.get('open','')}"),
         })
 
-    # Upcoming (phases 2-5)
+    # Upcoming stands (phases 2–5)
     for r in upcoming_rows:
         coords = _pl_coords(r["city"], r["state"])
         if not coords:
             continue
         lat, lon = coords
-        store_id = r.get("store","TBD")
+        sid = r.get("store", "TBD")
         color = _phase_color_hex(r["phase"])
         label = _phase_label(r["phase"])
+        # strip emoji for group key so JS object key stays clean
+        group_key = label.split(" ", 1)[1] if " " in label else label
         markers.append({
-            "lat": lat + (hash(store_id + "u") % 80) * 0.004,
-            "lon": lon + (hash(store_id + "v") % 80) * 0.004,
-            "color": color,
-            "radius": 9,
-            "popup": (f"<b>{r['city']}, {r['state']}</b> — #{store_id}<br>"
-                      f"{r['address']}<br>"
-                      f"<i>Region: {r.get('region','')}</i><br>"
+            "lat": round(lat + (hash(sid + "u") % 80) * 0.004, 5),
+            "lon": round(lon + (hash(sid + "v") % 80) * 0.004, 5),
+            "color": color, "radius": 9, "group": group_key,
+            "popup": (f"<b>{r['city']}, {r['state']}</b> — #{sid}<br>"
+                      f"{r['address']}<br>Region: {r.get('region','')}<br>"
                       f"Phase: {label}<br>"
                       f"Const. Start: {r.get('cs','—')}<br>"
                       f"Building Drop: {r.get('bd','—')}<br>"
                       f"<b>Est. Opening: {r.get('open','—')}</b>"),
-            "legend": label
         })
 
     markers_json = _json.dumps(markers)
+
+    # Legend items: [label, hex-color, group-key]
+    legend_items = [
+        ["Open",                "#27AE60", "Open"],
+        ["Under Construction",  "#FF6B00", "Under Construction"],
+        ["Permitting",          "#F5A623", "Permitting"],
+        ["Design",              "#4A90E2", "Design"],
+        ["Due Diligence",       "#9B59B6", "Due Diligence"],
+    ]
+    legend_json = _json.dumps(legend_items)
+
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -4019,8 +4024,29 @@ def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
 <style>
   html,body{{height:100%;margin:0;padding:0;background:#1a1a2e;}}
   #map{{height:100%;width:100%;}}
-  .legend{{background:rgba(20,20,40,0.92);color:#eee;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.8;}}
-  .legend-dot{{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle;}}
+  .legend-box{{
+    background:rgba(15,15,30,0.93);color:#e8e8e8;
+    padding:12px 16px;border-radius:10px;
+    font-family:sans-serif;font-size:13px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    min-width:180px;
+  }}
+  .legend-box b{{font-size:14px;display:block;margin-bottom:6px;color:#fff;}}
+  .leg-row{{
+    display:flex;align-items:center;gap:8px;
+    padding:5px 8px;border-radius:6px;
+    cursor:pointer;user-select:none;
+    transition:background 0.15s;
+    margin-bottom:2px;
+  }}
+  .leg-row:hover{{background:rgba(255,255,255,0.08);}}
+  .leg-row.off{{opacity:0.35;}}
+  .leg-dot{{
+    flex-shrink:0;width:14px;height:14px;
+    border-radius:50%;border:2px solid rgba(255,255,255,0.3);
+  }}
+  .leg-label{{flex:1;}}
+  .leg-count{{font-size:11px;color:#aaa;}}
 </style>
 </head>
 <body>
@@ -4031,27 +4057,73 @@ L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}
   attribution:'&copy; OpenStreetMap &amp; CARTO',maxZoom:19
 }}).addTo(map);
 
-var markers = {markers_json};
-markers.forEach(function(m){{
+var allMarkers = {markers_json};
+var legendDefs  = {legend_json};
+
+// Build a LayerGroup per category
+var groups = {{}};
+legendDefs.forEach(function(d){{ groups[d[2]] = L.layerGroup().addTo(map); }});
+
+// Count per group for the legend badge
+var counts = {{}};
+legendDefs.forEach(function(d){{ counts[d[2]] = 0; }});
+
+allMarkers.forEach(function(m){{
+  var grp = groups[m.group];
+  if(!grp) return;
+  counts[m.group] = (counts[m.group]||0) + 1;
   var circle = L.circleMarker([m.lat,m.lon],{{
-    radius:m.radius,color:m.color,fillColor:m.color,
-    fillOpacity:0.85,weight:2,opacity:1
-  }}).addTo(map);
-  circle.bindPopup(m.popup,{{maxWidth:240}});
+    radius:m.radius, color:m.color, fillColor:m.color,
+    fillOpacity:0.85, weight:2, opacity:1
+  }});
+  circle.bindPopup(m.popup,{{maxWidth:260}});
+  grp.addLayer(circle);
 }});
 
+// Custom clickable legend
 var legend = L.control({{position:'bottomleft'}});
 legend.onAdd = function(){{
-  var div = L.DomUtil.create('div','legend');
-  div.innerHTML = '<b style="font-size:13px;">7BREW Locations</b><br/>' +
-    '<span class="legend-dot" style="background:#27AE60;"></span>Open<br/>' +
-    '<span class="legend-dot" style="background:#FF6B00;"></span>Under Construction<br/>' +
-    '<span class="legend-dot" style="background:#F5A623;"></span>Permitting<br/>' +
-    '<span class="legend-dot" style="background:#4A90E2;"></span>Design<br/>' +
-    '<span class="legend-dot" style="background:#9B59B6;"></span>Due Diligence';
+  var div = L.DomUtil.create('div','legend-box');
+  var html = '<b>7BREW Locations</b>';
+  legendDefs.forEach(function(d){{
+    var label=d[0], color=d[1], key=d[2];
+    var cnt = counts[key]||0;
+    html += '<div class="leg-row" id="leg-'+key.replace(/ /g,'-')+'" '+
+            'onclick="toggleGroup(\''+key+'\')" '+
+            'title="Click to show/hide">' +
+            '<div class="leg-dot" style="background:'+color+';"></div>'+
+            '<span class="leg-label">'+label+'</span>'+
+            '<span class="leg-count">'+cnt+'</span>'+
+            '</div>';
+  }});
+  div.innerHTML = html;
+  // Prevent map clicks propagating through legend
+  L.DomEvent.disableClickPropagation(div);
   return div;
 }};
 legend.addTo(map);
+
+// Toggle function
+var visibility = {{}};
+legendDefs.forEach(function(d){{ visibility[d[2]] = true; }});
+
+function toggleGroup(key){{
+  var grp = groups[key];
+  if(!grp) return;
+  visibility[key] = !visibility[key];
+  if(visibility[key]){{
+    grp.addTo(map);
+  }} else {{
+    map.removeLayer(grp);
+  }}
+  // Update row style
+  var rowId = 'leg-'+key.replace(/ /g,'-');
+  var row = document.getElementById(rowId);
+  if(row){{
+    if(visibility[key]) row.classList.remove('off');
+    else                row.classList.add('off');
+  }}
+}}
 </script>
 </body>
 </html>"""
