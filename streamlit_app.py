@@ -2231,6 +2231,55 @@ def tab_regions(dash):
         brew_fig(fig2, height=420, margin=dict(t=60, b=100, l=8, r=8))
         st.plotly_chart(fig2, config={"displayModeBar": False})
 
+    # ── STAND DETAIL ──────────────────────────────────────────────────────────
+    st.html('<hr class="brew">')
+    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {sel_lbl}")
+
+    sd_c1, sd_c2, sd_c3 = st.columns([1.5, 1.5, 2])
+    with sd_c1:
+        try:
+            if "Region" in stands_df.columns and len(stands_df) > 0:
+                sd_regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
+            else:
+                sd_regions = ["All Regions"]
+        except Exception:
+            sd_regions = ["All Regions"]
+        sd_reg = st.selectbox("Region", sd_regions, key="reg_sd_region")
+    with sd_c2:
+        sd_ages = ["All Ages", "New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+        sd_age  = st.selectbox("Age Bucket", sd_ages, key="reg_sd_age")
+    with sd_c3:
+        sd_search = st.text_input("Search Stands", placeholder="Type stand name...", key="reg_sd_search")
+
+    sd_df = stands_df[stands_df["Period_Key"] == pk].copy()
+    if sd_reg != "All Regions" and "Region" in sd_df.columns:
+        sd_df = sd_df[sd_df["Region"] == sd_reg]
+    if sd_age != "All Ages" and "Age_Bucket" in sd_df.columns:
+        sd_df = sd_df[sd_df["Age_Bucket"] == sd_age]
+    if sd_search and "Stand" in sd_df.columns:
+        sd_df = sd_df[sd_df["Stand"].str.contains(sd_search, case=False, na=False)]
+
+    st.caption(f"Showing {len(sd_df)} stands")
+
+    display_cols = {
+        "Stand": "Stand", "Region": "Region", "Age_Bucket": "Age",
+        "Net_Sales": "Net Sales", "Total_COGS_pct": "COGS%",
+        "Total_Hourly_pct": "Hourly%", "Total_Labor_pct": "Labor%",
+        "Total_RM_pct": "R&M%", "Controllable_pct": "Ctrl%",
+        "Total_Utilities_pct": "Util%", "Total_Fixed_pct": "Fixed%",
+        "Unit_EBITDAR_pct": "EBITDAR%", "Total_Rent_pct": "Rent%",
+        "Store_EBITDA_pct": "EBITDA%", "Discounts_pct": "Disc%",
+    }
+    avail = [c for c in display_cols if c in sd_df.columns]
+    disp  = sd_df[avail].rename(columns={k: v for k, v in display_cols.items() if k in avail}).copy()
+    for col in ["COGS%","Hourly%","Labor%","R&M%","Ctrl%","Util%",
+                "Fixed%","EBITDAR%","Rent%","EBITDA%","Disc%"]:
+        if col in disp.columns:
+            disp[col] = disp[col].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
+    if "Net Sales" in disp.columns:
+        disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
+    render_table(disp)
+
 
 # ─────────────────────────────────────────────
 # TAB: WINS & OPPORTUNITIES
@@ -3568,8 +3617,7 @@ def main():
         "📊 CEO Snapshot",
         "🏠 Overview",
         "📈 Period Comparison",
-        "🏪 Stand Detail",
-        "🗺 Regions",
+        "🗺 Regions & Stands",
         "💡 Wins & Opportunities",
         "🔮 Forecast",
         "⚠️ Pothole Watch",
@@ -3580,12 +3628,11 @@ def main():
     with tabs[0]: tab_ceo(dash)
     with tabs[1]: tab_overview(dash)
     with tabs[2]: tab_comparison(dash)
-    with tabs[3]: tab_stands(dash)
-    with tabs[4]: tab_regions(dash)
-    with tabs[5]: tab_insights(dash)
-    with tabs[6]: tab_forecast(dash)
-    with tabs[7]: tab_potholes(dash)
-    with tabs[8]: tab_utilities(dash)
+    with tabs[3]: tab_regions(dash)
+    with tabs[4]: tab_insights(dash)
+    with tabs[5]: tab_forecast(dash)
+    with tabs[6]: tab_potholes(dash)
+    with tabs[7]: tab_utilities(dash)
 
 
 main()
