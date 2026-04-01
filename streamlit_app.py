@@ -3907,6 +3907,61 @@ _PIPELINE_OPEN_PDF = [
 ]
 
 
+# ── Schedule shift comparison: Jan 15 report vs Apr 1 report ─────────────────
+# delta_days > 0 = pushed out (later), < 0 = pulled in (earlier)
+_DATE_SHIFTS = [
+    # Pushed out — sorted largest to smallest slip
+    {"rsh":"RSH-00596","city":"Dallas",            "state":"TX","store":"TBD",   "jan15":"12/07/26","apr1":"09/20/27","delta_days": 287},
+    {"rsh":"RSH-00208","city":"Panama City Beach", "state":"FL","store":"TBD",   "jan15":"03/29/27","apr1":"10/18/27","delta_days": 203},
+    {"rsh":"RSH-00099","city":"Panama City Beach", "state":"FL","store":"000990","jan15":"04/12/27","apr1":"08/16/27","delta_days": 126},
+    {"rsh":"RSH-00108","city":"Bradenton",         "state":"FL","store":"TBD",   "jan15":"03/15/27","apr1":"07/19/27","delta_days": 126},
+    {"rsh":"RSH-00119","city":"Pensacola",         "state":"FL","store":"001121","jan15":"08/02/27","apr1":"11/22/27","delta_days": 112},
+    {"rsh":"RSH-00205","city":"Pensacola",         "state":"FL","store":"TBD",   "jan15":"01/25/27","apr1":"05/10/27","delta_days": 105},
+    {"rsh":"RSH-00211","city":"Hudson",            "state":"FL","store":"001337","jan15":"03/22/27","apr1":"06/28/27","delta_days":  98},
+    {"rsh":"RSH-00266","city":"Sebring",           "state":"FL","store":"TBD",   "jan15":"03/01/27","apr1":"05/24/27","delta_days":  84},
+    {"rsh":"RSH-00273","city":"Mulberry",          "state":"FL","store":"001341","jan15":"02/15/27","apr1":"05/03/27","delta_days":  77},
+    {"rsh":"RSH-00239","city":"Fort Myers",        "state":"FL","store":"001724","jan15":"08/16/27","apr1":"11/01/27","delta_days":  77},
+    {"rsh":"RSH-00115","city":"Largo",             "state":"FL","store":"001280","jan15":"04/05/27","apr1":"06/14/27","delta_days":  70},
+    {"rsh":"RSH-00069","city":"Fort Walton Beach", "state":"FL","store":"000571","jan15":"04/27/26","apr1":"06/22/26","delta_days":  56},
+    {"rsh":"RSH-00102","city":"Snyder",            "state":"TX","store":"001118","jan15":"06/15/26","apr1":"08/10/26","delta_days":  56},
+    {"rsh":"RSH-00094","city":"Fort Myers",        "state":"FL","store":"000757","jan15":"08/03/26","apr1":"09/28/26","delta_days":  56},
+    {"rsh":"RSH-00068","city":"Waco",              "state":"TX","store":"000711","jan15":"02/23/26","apr1":"04/13/26","delta_days":  49},
+    {"rsh":"RSH-00088","city":"Lehigh Acres",      "state":"FL","store":"000404","jan15":"09/07/26","apr1":"10/19/26","delta_days":  42},
+    {"rsh":"RSH-00112","city":"Waco",              "state":"TX","store":"001241","jan15":"08/24/26","apr1":"10/05/26","delta_days":  42},
+    {"rsh":"RSH-00134","city":"Burleson",          "state":"TX","store":"001686","jan15":"09/28/26","apr1":"11/09/26","delta_days":  42},
+    {"rsh":"RSH-00103","city":"Waco",              "state":"TX","store":"001713","jan15":"10/19/26","apr1":"11/30/26","delta_days":  42},
+    {"rsh":"RSH-00149","city":"Mustang",           "state":"OK","store":"001673","jan15":"11/23/26","apr1":"01/04/27","delta_days":  42},
+    {"rsh":"RSH-00078","city":"Holiday",           "state":"FL","store":"000674","jan15":"07/06/26","apr1":"08/10/26","delta_days":  35},
+    {"rsh":"RSH-00127","city":"Edmond",            "state":"OK","store":"001735","jan15":"04/19/27","apr1":"05/24/27","delta_days":  35},
+    {"rsh":"RSH-00079","city":"Edmond",            "state":"OK","store":"000547","jan15":"05/18/26","apr1":"06/15/26","delta_days":  28},
+    {"rsh":"RSH-00089","city":"Gulf Breeze",       "state":"FL","store":"000327","jan15":"07/13/26","apr1":"08/10/26","delta_days":  28},
+    {"rsh":"RSH-00106","city":"Lubbock",           "state":"TX","store":"001236","jan15":"06/29/26","apr1":"07/27/26","delta_days":  28},
+    {"rsh":"RSH-00092","city":"Fort Myers",        "state":"FL","store":"000428","jan15":"07/20/26","apr1":"08/17/26","delta_days":  28},
+    {"rsh":"RSH-00087","city":"Winter Haven",      "state":"FL","store":"000883","jan15":"08/17/26","apr1":"09/14/26","delta_days":  28},
+    {"rsh":"RSH-00110","city":"Granbury",          "state":"TX","store":"001156","jan15":"07/20/26","apr1":"08/10/26","delta_days":  21},
+    {"rsh":"RSH-00111","city":"Haines City",       "state":"FL","store":"TBD",   "jan15":"02/01/27","apr1":"02/22/27","delta_days":  21},
+    {"rsh":"RSH-00081","city":"Mary Esther",       "state":"FL","store":"000986","jan15":"05/18/26","apr1":"06/01/26","delta_days":  14},
+    {"rsh":"RSH-00116","city":"Canyon",            "state":"TX","store":"001119","jan15":"06/08/26","apr1":"06/22/26","delta_days":  14},
+    {"rsh":"RSH-00084","city":"Punta Gorda",       "state":"FL","store":"000380","jan15":"08/17/26","apr1":"08/31/26","delta_days":  14},
+    {"rsh":"RSH-00083","city":"Oklahoma City",     "state":"OK","store":"000874","jan15":"10/26/26","apr1":"11/09/26","delta_days":  14},
+    {"rsh":"RSH-00086","city":"Ocala",             "state":"FL","store":"000414","jan15":"10/19/26","apr1":"11/02/26","delta_days":  14},
+    # Pulled in (negative = earlier than Jan 15)
+    {"rsh":"RSH-00101","city":"Beverly Hills",     "state":"TX","store":"001238","jan15":"06/15/26","apr1":"05/18/26","delta_days": -28},
+    {"rsh":"RSH-00114","city":"Pensacola",         "state":"FL","store":"001154","jan15":"09/07/26","apr1":"08/10/26","delta_days": -28},
+    {"rsh":"RSH-00229","city":"Pensacola",         "state":"FL","store":"001344","jan15":"11/30/26","apr1":"11/02/26","delta_days": -28},
+    {"rsh":"RSH-00091","city":"Killeen",           "state":"TX","store":"001122","jan15":"06/01/26","apr1":"05/18/26","delta_days": -14},
+    {"rsh":"RSH-00113","city":"North Port",        "state":"FL","store":"001120","jan15":"12/14/26","apr1":"12/07/26","delta_days":  -7},
+    {"rsh":"RSH-00100","city":"Odessa",            "state":"TX","store":"000966","jan15":"01/25/27","apr1":"01/18/27","delta_days":  -7},
+]
+
+# Stands new to pipeline since Jan 15 report
+_NEW_SINCE_JAN15 = [
+    "RSH-00104","RSH-00617","RSH-00233","RSH-00622","RSH-00592","RSH-00606",
+    "RSH-00610","RSH-00579","RSH-00584","RSH-00217","RSH-00601","RSH-00575",
+    "RSH-00126","RSH-00634","RSH-00666","RSH-00630",
+]
+
+
 def _pl_coords(city, state):
     """Return (lat, lon) or None from the city/state lookup."""
     return _CITY_COORDS.get((city, state))
@@ -4150,18 +4205,20 @@ def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
-    st.caption("Data sourced from Permit to Open Dates report · Regions from 7Crew Stand Dates")
+    st.caption("Apr 1 2026 report vs Jan 15 2026 baseline · Regions from 7Crew Stand Dates · $45K avg revenue/period assumed")
 
     df = pd.DataFrame(_PIPELINE_UPCOMING)
     df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
+    df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
     df = df.sort_values("open_dt").reset_index(drop=True)
+
+    AVG_REV_PER_PERIOD = 45_000   # $ per stand per 4-week period
+    REV_PER_DAY = AVG_REV_PER_PERIOD / 28.0
 
     # ── Filters ───────────────────────────────────────────────────────────────
     fc1, fc2, fc3 = st.columns([1, 1, 1])
     with fc1:
-        phase_opts = ["All Phases"] + [
-            "5. Construction", "4. Permitting", "3. Design", "2. Due Diligence"
-        ]
+        phase_opts = ["All Phases", "5. Construction", "4. Permitting", "3. Design", "2. Due Diligence"]
         sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase")
     with fc2:
         state_opts = ["All States"] + sorted(df["state"].unique().tolist())
@@ -4171,58 +4228,231 @@ def tab_pipeline(dash):
         sel_region = st.selectbox("Region", region_opts, key="pipe_region")
 
     dff = df.copy()
-    if sel_phase != "All Phases":
-        dff = dff[dff["phase"] == sel_phase]
-    if sel_state != "All States":
-        dff = dff[dff["state"] == sel_state]
-    if sel_region != "All Regions":
-        dff = dff[dff["region"] == sel_region]
+    if sel_phase != "All Phases":  dff = dff[dff["phase"] == sel_phase]
+    if sel_state != "All States":  dff = dff[dff["state"] == sel_state]
+    if sel_region != "All Regions": dff = dff[dff["region"] == sel_region]
 
     # ── Summary metrics ───────────────────────────────────────────────────────
     mc = st.columns(5)
-    mc[0].metric("Total Pipeline", len(dff))
-    mc[1].metric("Under Construction", len(dff[dff["phase"] == "5. Construction"]))
-    mc[2].metric("Permitting", len(dff[dff["phase"] == "4. Permitting"]))
-    mc[3].metric("Design", len(dff[dff["phase"] == "3. Design"]))
-    mc[4].metric("Due Diligence", len(dff[dff["phase"] == "2. Due Diligence"]))
+    mc[0].metric("Total Pipeline", len(df))
+    mc[1].metric("🔨 Under Construction", len(df[df["phase"] == "5. Construction"]))
+    mc[2].metric("📋 Permitting",          len(df[df["phase"] == "4. Permitting"]))
+    mc[3].metric("📐 Design",              len(df[df["phase"] == "3. Design"]))
+    mc[4].metric("🔍 Due Diligence",       len(df[df["phase"] == "2. Due Diligence"]))
 
+    # ── Revenue projection from pipeline ──────────────────────────────────────
     st.divider()
+    st.markdown("#### 💰 Revenue Projection — New Stand Ramp")
 
-    # ── Table ─────────────────────────────────────────────────────────────────
-    st.markdown("#### Upcoming Openings")
-    table_df = dff[["phase", "address", "city", "state", "region", "cs", "bd", "open", "store", "rsh"]].copy()
-    table_df.columns = [
-        "Phase", "Address", "City", "State", "Region",
-        "Const. Start", "Building Drop", "Est. Opening", "Store #", "RSH"
-    ]
-    table_df["Phase"] = table_df["Phase"].map(_phase_label)
+    import datetime as _dt
+    today = _dt.date.today()
+
+    # Build monthly revenue adds from upcoming openings
+    # Each stand = $45K/period (~4 weeks) starting at open date, ramping to full in ~6 months
+    # Simplified: treat each stand as adding $45K/period from open date onward
+    rev_rows = []
+    for _, row in df.iterrows():
+        if pd.isna(row["open_dt"]):
+            continue
+        open_d = row["open_dt"].date()
+        for mo in range(24):  # 24 months forward
+            period_start = today.replace(day=1) if mo == 0 else None
+            # use relativedelta-style monthly offset
+            year  = today.year + (today.month - 1 + mo) // 12
+            month = (today.month - 1 + mo) % 12 + 1
+            period_dt = _dt.date(year, month, 1)
+            if open_d <= period_dt:
+                rev_rows.append({"month": period_dt, "revenue": AVG_REV_PER_PERIOD})
+
+    if rev_rows:
+        rev_df = pd.DataFrame(rev_rows)
+        rev_monthly = rev_df.groupby("month")["revenue"].sum().reset_index()
+        rev_monthly["cumulative"] = rev_monthly["revenue"].cumsum()
+        rev_monthly["month_str"] = rev_monthly["month"].apply(lambda d: d.strftime("%b %Y"))
+
+        rc1, rc2, rc3 = st.columns(3)
+        next_12_rev = rev_monthly.head(12)["revenue"].sum()
+        next_24_rev = rev_monthly["revenue"].sum()
+        stands_2026  = len(df[df["open_dt"].dt.year == 2026])
+        rc1.metric("Proj. Revenue Added — Next 12 Mo", f"${next_12_rev/1e6:.1f}M")
+        rc2.metric("Proj. Revenue Added — Next 24 Mo", f"${next_24_rev/1e6:.1f}M")
+        rc3.metric("Stands Opening in 2026", stands_2026)
+
+        fig_rev = go.Figure()
+        fig_rev.add_bar(
+            x=rev_monthly["month_str"], y=rev_monthly["revenue"] / 1000,
+            name="Monthly Add", marker_color="#4A90E2", opacity=0.7,
+        )
+        fig_rev.add_scatter(
+            x=rev_monthly["month_str"], y=rev_monthly["cumulative"] / 1000,
+            name="Cumulative", mode="lines+markers",
+            line=dict(color="#FF6B00", width=2), yaxis="y2",
+        )
+        fig_rev.update_layout(
+            template="plotly_dark", height=280, margin=dict(t=20, b=40, l=0, r=0),
+            yaxis=dict(title="Monthly $ Added (000s)", tickprefix="$"),
+            yaxis2=dict(title="Cumulative (000s)", overlaying="y", side="right",
+                        tickprefix="$", showgrid=False),
+            legend=dict(orientation="h", y=1.05), bargap=0.2,
+        )
+        st.plotly_chart(fig_rev, use_container_width=True)
+
+    # ── Schedule Intelligence: date shifts vs Jan 15 ──────────────────────────
+    st.divider()
+    st.markdown("#### 📅 Schedule Intelligence — Jan 15 vs Apr 1 Report")
+
+    shifts_df = pd.DataFrame(_DATE_SHIFTS)
+    pushed = shifts_df[shifts_df["delta_days"] > 0].sort_values("delta_days", ascending=False)
+    pulled = shifts_df[shifts_df["delta_days"] < 0].sort_values("delta_days")
+    new_count = len(_NEW_SINCE_JAN15)
+
+    si1, si2, si3, si4 = st.columns(4)
+    total_slip_days = pushed["delta_days"].sum()
+    total_rev_risk  = total_slip_days * REV_PER_DAY
+    si1.metric("Stands Pushed Out",  len(pushed), delta=f"{len(pushed)} vs baseline", delta_color="inverse")
+    si2.metric("Stands Pulled In",   len(pulled), delta=f"{len(pulled)} vs baseline", delta_color="normal")
+    si3.metric("New to Pipeline",    new_count)
+    si4.metric("Revenue at Risk (Delays)", f"${total_rev_risk/1e6:.2f}M",
+               help="Sum of delayed days × $45K/28 days per stand")
+
+    sc1, sc2 = st.columns(2)
+
+    with sc1:
+        st.markdown("**🔴 Pushed Out**")
+        pushed_display = pushed.copy()
+        pushed_display["Stand"] = pushed_display.apply(
+            lambda r: f"{r['city']}, {r['state']}", axis=1)
+        pushed_display["Slip"] = pushed_display["delta_days"].apply(
+            lambda d: f"+{d//7}w {d%7}d" if d % 7 else f"+{d//7}w")
+        pushed_display["Rev Impact"] = pushed_display["delta_days"].apply(
+            lambda d: f"${d * REV_PER_DAY:,.0f}")
+        pushed_display["Jan 15"]  = pushed_display["jan15"]
+        pushed_display["Apr 1"]   = pushed_display["apr1"]
+        st.dataframe(
+            pushed_display[["Stand","Jan 15","Apr 1","Slip","Rev Impact"]],
+            use_container_width=True, hide_index=True,
+            height=min(50 + len(pushed_display) * 35, 420),
+        )
+
+    with sc2:
+        st.markdown("**🟢 Pulled In  ·  🆕 New Stands**")
+        pulled_display = pulled.copy()
+        pulled_display["Stand"] = pulled_display.apply(
+            lambda r: f"{r['city']}, {r['state']}", axis=1)
+        pulled_display["Early"] = pulled_display["delta_days"].apply(
+            lambda d: f"{abs(d)//7}w {abs(d)%7}d early" if abs(d) % 7 else f"{abs(d)//7}w early")
+        pulled_display["Rev Gain"] = pulled_display["delta_days"].apply(
+            lambda d: f"${abs(d) * REV_PER_DAY:,.0f}")
+        pulled_display["Jan 15"]  = pulled_display["jan15"]
+        pulled_display["Apr 1"]   = pulled_display["apr1"]
+        st.dataframe(
+            pulled_display[["Stand","Jan 15","Apr 1","Early","Rev Gain"]],
+            use_container_width=True, hide_index=True,
+        )
+        st.markdown("**New since Jan 15:**")
+        new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in _NEW_SINCE_JAN15]
+        if new_stands_info:
+            new_df = pd.DataFrame(new_stands_info)[["city","state","open"]].copy()
+            new_df.columns = ["City","State","Est. Opening"]
+            st.dataframe(new_df, use_container_width=True, hide_index=True)
+
+    # ── Delay sensitivity ─────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
+    st.caption("Revenue impact per stand if opening slips beyond current estimate")
+
+    sense_df = dff[dff["open_dt"].notna()].copy()
+    sense_df = sense_df[sense_df["open_dt"].dt.date >= today].head(20)
+    if not sense_df.empty:
+        sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
+        sense_df["Est. Open"] = sense_df["open"].astype(str)
+        sense_df["+4 Wks"]  = sense_df["open_dt"].apply(lambda d: f"${28  * REV_PER_DAY:,.0f}")
+        sense_df["+8 Wks"]  = sense_df["open_dt"].apply(lambda d: f"${56  * REV_PER_DAY:,.0f}")
+        sense_df["+12 Wks"] = sense_df["open_dt"].apply(lambda d: f"${84  * REV_PER_DAY:,.0f}")
+        sense_df["+26 Wks"] = sense_df["open_dt"].apply(lambda d: f"${182 * REV_PER_DAY:,.0f}")
+        st.dataframe(
+            sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
+            use_container_width=True, hide_index=True,
+            height=min(50 + len(sense_df) * 35, 400),
+        )
+
+    # ── Gantt chart ───────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 📊 Construction Timeline — Phases 3–5")
+
+    gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design"])].copy()
+    gantt_df = gantt_df[gantt_df["open_dt"].notna() & gantt_df["cs_dt"].notna()].copy()
+    if not gantt_df.empty:
+        gantt_df["Label"] = gantt_df.apply(
+            lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""),
+            axis=1)
+        gantt_df = gantt_df.sort_values("open_dt")
+        phase_colors = {
+            "5. Construction": "#FF6B00",
+            "4. Permitting":   "#F5A623",
+            "3. Design":       "#4A90E2",
+        }
+        fig_gantt = px.timeline(
+            gantt_df,
+            x_start="cs_dt", x_end="open_dt",
+            y="Label", color="phase",
+            color_discrete_map=phase_colors,
+            labels={"phase": "Phase", "Label": "Stand"},
+            category_orders={"Label": gantt_df["Label"].tolist()},
+        )
+        fig_gantt.update_yaxes(autorange="reversed")
+        fig_gantt.update_layout(
+            template="plotly_dark",
+            height=max(350, len(gantt_df) * 22 + 80),
+            margin=dict(t=20, b=40, l=0, r=0),
+            legend=dict(orientation="h", y=1.02),
+            xaxis_title="",
+        )
+        # Mark today
+        fig_gantt.add_vline(
+            x=str(today), line_dash="dash",
+            line_color="rgba(255,255,255,0.4)", line_width=1.5,
+            annotation_text="Today", annotation_position="top right",
+            annotation_font_color="rgba(255,255,255,0.6)",
+        )
+        st.plotly_chart(fig_gantt, use_container_width=True)
+    else:
+        st.info("No stands with both Construction Start and Open Date in current filter.")
+
+    # ── Upcoming openings table ────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 📋 Upcoming Openings")
+    table_df = dff[["phase","address","city","state","region","cs","bd","open","store","rsh"]].copy()
+    table_df.columns = ["Phase","Address","City","State","Region",
+                        "Const. Start","Building Drop","Est. Opening","Store #","RSH"]
+    table_df["Phase"]   = table_df["Phase"].map(_phase_label)
     table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
+    # Flag shifted stands
+    shifted_rsh = set(shifts_df["rsh"].tolist())
+    table_df["⚑ Shifted"] = table_df["RSH"].apply(lambda r: "↑ Pushed" if r in set(
+        pushed["rsh"].tolist()) else ("↓ Pulled" if r in set(pulled["rsh"].tolist()) else
+        ("🆕 New" if r in set(_NEW_SINCE_JAN15) else "")))
 
     def _row_style(row):
-        phase_raw = row["Phase"]
-        if "Construction" in phase_raw: bg = "rgba(255,107,0,0.08)"
-        elif "Permitting"  in phase_raw: bg = "rgba(245,166,35,0.08)"
-        elif "Design"      in phase_raw: bg = "rgba(74,144,226,0.08)"
+        if "Construction" in row["Phase"]: bg = "rgba(255,107,0,0.08)"
+        elif "Permitting"  in row["Phase"]: bg = "rgba(245,166,35,0.08)"
+        elif "Design"      in row["Phase"]: bg = "rgba(74,144,226,0.08)"
         else: bg = "rgba(155,89,182,0.08)"
         return [f"background-color:{bg}"] * len(row)
 
     st.dataframe(
         table_df.style.apply(_row_style, axis=1),
-        use_container_width=True,
-        hide_index=True,
+        use_container_width=True, hide_index=True,
         height=min(50 + len(table_df) * 35, 500),
     )
 
-    st.divider()
-
     # ── Map ───────────────────────────────────────────────────────────────────
+    st.divider()
     st.markdown("#### 📍 All 7BREW Locations")
-    st.caption("Green = Open  ·  Orange = Under Construction  ·  Amber = Permitting  ·  Blue = Design  ·  Purple = Due Diligence")
+    st.caption("Green = Open  ·  Orange = Under Construction  ·  Amber = Permitting  ·  Blue = Design  ·  Purple = Due Diligence  ·  Click legend to toggle")
 
-    # Pull existing open stands from the dash data
     stands_df_pipe = get_stands_df(dash)
-    existing_rows = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
-
+    existing_rows  = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
     map_html = _build_pipeline_map_html(_PIPELINE_UPCOMING, _PIPELINE_OPEN_PDF, existing_rows)
     components.html(map_html, height=560, scrolling=False)
 
