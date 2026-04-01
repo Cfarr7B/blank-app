@@ -4205,7 +4205,12 @@ def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
-    st.caption("Apr 1 2026 report vs Jan 15 2026 baseline · Regions from 7Crew Stand Dates · $45K avg revenue/week assumed")
+    st.caption(
+        "**Data source:** Drew Deagan's weekly opening schedule (last updated Apr 1, 2026). "
+        "To refresh this tab, upload the latest spreadsheet from Drew's weekly update — "
+        "pipeline dates, phases, and shift comparisons will recalculate automatically. "
+        "Jan 15, 2026 report used as baseline for schedule shift analysis · $45K avg revenue/week assumed."
+    )
 
     df = pd.DataFrame(_PIPELINE_UPCOMING)
     df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
@@ -4234,11 +4239,11 @@ def tab_pipeline(dash):
 
     # ── Summary metrics ───────────────────────────────────────────────────────
     mc = st.columns(5)
-    mc[0].metric("Total Pipeline", len(df))
-    mc[1].metric("🔨 Under Construction", len(df[df["phase"] == "5. Construction"]))
-    mc[2].metric("📋 Permitting",          len(df[df["phase"] == "4. Permitting"]))
-    mc[3].metric("📐 Design",              len(df[df["phase"] == "3. Design"]))
-    mc[4].metric("🔍 Due Diligence",       len(df[df["phase"] == "2. Due Diligence"]))
+    mc[0].metric("Total Pipeline", len(dff))
+    mc[1].metric("🔨 Under Construction", len(dff[dff["phase"] == "5. Construction"]))
+    mc[2].metric("📋 Permitting",          len(dff[dff["phase"] == "4. Permitting"]))
+    mc[3].metric("📐 Design",              len(dff[dff["phase"] == "3. Design"]))
+    mc[4].metric("🔍 Due Diligence",       len(dff[dff["phase"] == "2. Due Diligence"]))
 
     # ── Revenue projection from pipeline ──────────────────────────────────────
     st.divider()
@@ -4251,12 +4256,11 @@ def tab_pipeline(dash):
     # Each stand = $45K/period (~4 weeks) starting at open date, ramping to full in ~6 months
     # Simplified: treat each stand as adding $45K/period from open date onward
     rev_rows = []
-    for _, row in df.iterrows():
+    for _, row in dff.iterrows():
         if pd.isna(row["open_dt"]):
             continue
         open_d = row["open_dt"].date()
         for mo in range(24):  # 24 months forward
-            period_start = today.replace(day=1) if mo == 0 else None
             # use relativedelta-style monthly offset
             year  = today.year + (today.month - 1 + mo) // 12
             month = (today.month - 1 + mo) % 12 + 1
@@ -4274,7 +4278,7 @@ def tab_pipeline(dash):
         rc1, rc2, rc3 = st.columns(3)
         next_12_rev = rev_monthly.head(12)["revenue"].sum()
         next_24_rev = rev_monthly["revenue"].sum()
-        stands_2026  = len(df[df["open_dt"].dt.year == 2026])
+        stands_2026  = len(dff[dff["open_dt"].dt.year == 2026])
         rc1.metric("Proj. Revenue Added — Next 12 Mo", f"${next_12_rev/1e6:.1f}M")
         rc2.metric("Proj. Revenue Added — Next 24 Mo", f"${next_24_rev/1e6:.1f}M")
         rc3.metric("Stands Opening in 2026", stands_2026)
@@ -4303,9 +4307,15 @@ def tab_pipeline(dash):
     st.markdown("#### 📅 Schedule Intelligence — Jan 15 vs Apr 1 Report")
 
     shifts_df = pd.DataFrame(_DATE_SHIFTS)
+    # Apply same state/region filters to schedule intelligence data
+    if sel_state != "All States":
+        shifts_df = shifts_df[shifts_df["state"] == sel_state]
+    # _DATE_SHIFTS doesn't have region, so filter new_stands by matching dff RSH IDs
+    dff_rshs = set(dff["rsh"].tolist())
+    filtered_new_since = [r for r in _NEW_SINCE_JAN15 if r in dff_rshs]
     pushed = shifts_df[shifts_df["delta_days"] > 0].sort_values("delta_days", ascending=False)
     pulled = shifts_df[shifts_df["delta_days"] < 0].sort_values("delta_days")
-    new_count = len(_NEW_SINCE_JAN15)
+    new_count = len(filtered_new_since)
 
     si1, si2, si3, si4 = st.columns(4)
     total_slip_days = pushed["delta_days"].sum()
@@ -4351,7 +4361,7 @@ def tab_pipeline(dash):
             use_container_width=True, hide_index=True,
         )
         st.markdown("**New since Jan 15:**")
-        new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in _NEW_SINCE_JAN15]
+        new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in filtered_new_since]
         if new_stands_info:
             new_df = pd.DataFrame(new_stands_info)[["city","state","open"]].copy()
             new_df.columns = ["City","State","Est. Opening"]
