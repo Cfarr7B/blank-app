@@ -4080,7 +4080,10 @@ allMarkers.forEach(function(m){{
   grp.addLayer(circle);
 }});
 
-// Custom clickable legend
+// Custom clickable legend — uses data-key to avoid quoting issues with spaced keys
+var visibility = {{}};
+legendDefs.forEach(function(d){{ visibility[d[2]] = true; }});
+
 var legend = L.control({{position:'bottomleft'}});
 legend.onAdd = function(){{
   var div = L.DomUtil.create('div','legend-box');
@@ -4088,37 +4091,31 @@ legend.onAdd = function(){{
   legendDefs.forEach(function(d){{
     var label=d[0], color=d[1], key=d[2];
     var cnt = counts[key]||0;
-    html += '<div class="leg-row" id="leg-'+key.replace(/ /g,'-')+'" '+
-            'onclick="toggleGroup(\''+key+'\')" '+
-            'title="Click to show/hide">' +
-            '<div class="leg-dot" style="background:'+color+';"></div>'+
-            '<span class="leg-label">'+label+'</span>'+
-            '<span class="leg-count">'+cnt+'</span>'+
+    // Use data-key attribute — avoids any JS string-quoting issues
+    html += '<div class="leg-row" data-key="' + key + '" title="Click to show/hide">' +
+            '<div class="leg-dot" style="background:' + color + ';"></div>' +
+            '<span class="leg-label">' + label + '</span>' +
+            '<span class="leg-count">' + cnt + '</span>' +
             '</div>';
   }});
   div.innerHTML = html;
-  // Prevent map clicks propagating through legend
+  // Single delegated click listener — works for any key regardless of spaces
+  div.addEventListener('click', function(e){{
+    var row = e.target.closest('.leg-row');
+    if(row){{ toggleGroup(row.getAttribute('data-key')); }}
+  }});
   L.DomEvent.disableClickPropagation(div);
   return div;
 }};
 legend.addTo(map);
 
-// Toggle function
-var visibility = {{}};
-legendDefs.forEach(function(d){{ visibility[d[2]] = true; }});
-
 function toggleGroup(key){{
   var grp = groups[key];
   if(!grp) return;
   visibility[key] = !visibility[key];
-  if(visibility[key]){{
-    grp.addTo(map);
-  }} else {{
-    map.removeLayer(grp);
-  }}
-  // Update row style
-  var rowId = 'leg-'+key.replace(/ /g,'-');
-  var row = document.getElementById(rowId);
+  if(visibility[key]){{ grp.addTo(map); }} else {{ map.removeLayer(grp); }}
+  // Find the row by data-key and toggle the .off class
+  var row = document.querySelector('.leg-row[data-key="' + key + '"]');
   if(row){{
     if(visibility[key]) row.classList.remove('off');
     else                row.classList.add('off');
