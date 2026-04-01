@@ -4205,15 +4205,15 @@ def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
-    st.caption("Apr 1 2026 report vs Jan 15 2026 baseline · Regions from 7Crew Stand Dates · $45K avg revenue/period assumed")
+    st.caption("Apr 1 2026 report vs Jan 15 2026 baseline · Regions from 7Crew Stand Dates · $45K avg revenue/week assumed")
 
     df = pd.DataFrame(_PIPELINE_UPCOMING)
     df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
     df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
     df = df.sort_values("open_dt").reset_index(drop=True)
 
-    AVG_REV_PER_PERIOD = 45_000   # $ per stand per 4-week period
-    REV_PER_DAY = AVG_REV_PER_PERIOD / 28.0
+    AVG_REV_PER_WEEK = 45_000   # $ per stand per week
+    REV_PER_DAY = AVG_REV_PER_WEEK / 7.0
 
     # ── Filters ───────────────────────────────────────────────────────────────
     fc1, fc2, fc3 = st.columns([1, 1, 1])
@@ -4262,7 +4262,8 @@ def tab_pipeline(dash):
             month = (today.month - 1 + mo) % 12 + 1
             period_dt = _dt.date(year, month, 1)
             if open_d <= period_dt:
-                rev_rows.append({"month": period_dt, "revenue": AVG_REV_PER_PERIOD})
+                # ~4.345 weeks per month on average
+                rev_rows.append({"month": period_dt, "revenue": REV_PER_DAY * 30.44})
 
     if rev_rows:
         rev_df = pd.DataFrame(rev_rows)
@@ -4313,7 +4314,7 @@ def tab_pipeline(dash):
     si2.metric("Stands Pulled In",   len(pulled), delta=f"{len(pulled)} vs baseline", delta_color="normal")
     si3.metric("New to Pipeline",    new_count)
     si4.metric("Revenue at Risk (Delays)", f"${total_rev_risk/1e6:.2f}M",
-               help="Sum of delayed days × $45K/28 days per stand")
+               help="Sum of delayed days × $45K/7 days per stand")
 
     sc1, sc2 = st.columns(2)
 
@@ -4408,9 +4409,10 @@ def tab_pipeline(dash):
             legend=dict(orientation="h", y=1.02),
             xaxis_title="",
         )
-        # Mark today
+        # Mark today — px.timeline uses datetime internally, must pass Timestamp (not str)
         fig_gantt.add_vline(
-            x=str(today), line_dash="dash",
+            x=pd.Timestamp(today).value / 1e6,  # milliseconds since epoch
+            line_dash="dash",
             line_color="rgba(255,255,255,0.4)", line_width=1.5,
             annotation_text="Today", annotation_position="top right",
             annotation_font_color="rgba(255,255,255,0.6)",
