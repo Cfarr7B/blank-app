@@ -2280,6 +2280,137 @@ def tab_regions(dash):
         disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
     render_table(disp)
 
+    # ── 🌱 Store Cohort / Ramp Analysis ─────────────────────────────────────
+    st.html('<hr class="brew">')
+    section("🌱 STORE COHORT ANALYSIS",
+            "Separates ramp-stage stands from mature stands so blended averages tell the real story")
+
+    all_stands = get_stands_df(dash).copy()
+    all_stands = all_stands[all_stands["Age_Bucket"].notna() & all_stands["Net_Sales"].notna()]
+
+    bucket_order   = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+    bucket_colors  = {"New (<6mo)": "#FF6B00", "Young (6-12mo)": "#F5A623",
+                      "Developing (1-2yr)": "#4A90E2", "Mature (2yr+)": "#12a06e"}
+
+    # ── Cohort KPI strip ─────────────────────────────────────────────────────
+    cohort_agg = (all_stands.groupby("Age_Bucket")
+                  .agg(avg_sales=("Net_Sales","mean"),
+                       avg_ebitda=("Store_EBITDA_pct","mean"),
+                       avg_labor=("Total_Labor_pct","mean"),
+                       n_records=("Stand","count"))
+                  .reindex(bucket_order).reset_index())
+
+    mature_row = cohort_agg[cohort_agg["Age_Bucket"] == "Mature (2yr+)"]
+    blend_avg  = all_stands["Net_Sales"].mean()
+    mature_avg = mature_row["avg_sales"].values[0] if not mature_row.empty else blend_avg
+    dilution   = mature_avg - blend_avg
+
+    ck1, ck2, ck3, ck4 = st.columns(4)
+    ck1.metric("Mature Store Avg Sales", f"${mature_avg:,.0f}",
+               help="Average per-period net sales for stands open 2+ years")
+    ck2.metric("Blended System Avg Sales", f"${blend_avg:,.0f}",
+               delta=f"${dilution:+,.0f} ramp drag",
+               delta_color="inverse" if dilution < 0 else "normal",
+               help="All-in average across every stand and period")
+    if not mature_row.empty:
+        ck3.metric("Mature Store Avg EBITDA%",
+                   f"{mature_row['avg_ebitda'].values[0]*100:.1f}%",
+                   help="EBITDA margin for 2yr+ stands only")
+        ck4.metric("New Stand Avg EBITDA%",
+                   f"{cohort_agg[cohort_agg['Age_Bucket']=='New (<6mo)']['avg_ebitda'].mean()*100:.1f}%"
+                   if not cohort_agg[cohort_agg['Age_Bucket']=='New (<6mo)'].empty else "—",
+                   help="EBITDA margin for stands in first 6 months")
+
+    st.caption("Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
+
+    # ── Side-by-side cohort charts ────────────────────────────────────────────
+    ch1, ch2 = st.columns(2)
+
+    with ch1:
+        st.markdown("**Avg Net Sales by Cohort** *(all periods)*")
+        fig_sales = go.Figure()
+        for _, row in cohort_agg.dropna(subset=["avg_sales"]).iterrows():
+            bkt = row["Age_Bucket"]
+            fig_sales.add_bar(
+                x=[bkt], y=[row["avg_sales"]],
+                name=bkt, marker_color=bucket_colors.get(bkt, "#999"),
+                text=[f"${row['avg_sales']:,.0f}"], textposition="outside",
+                showlegend=False,
+            )
+        fig_sales.add_hline(y=blend_avg, line_dash="dash",
+                            line_color="rgba(255,255,255,0.4)",
+                            annotation_text=f"Blended avg ${blend_avg:,.0f}",
+                            annotation_position="top right",
+                            annotation_font_color="rgba(255,255,255,0.5)")
+        fig_sales.update_layout(template="plotly_dark", height=300,
+                                margin=dict(t=30,b=20,l=0,r=0),
+                                yaxis_title="Avg Net Sales ($)", bargap=0.35)
+        st.plotly_chart(fig_sales, use_container_width=True)
+
+    with ch2:
+        st.markdown("**Avg EBITDA% & Labor% by Cohort** *(all periods)*")
+        fig_pct = go.Figure()
+        for _, row in cohort_agg.dropna(subset=["avg_ebitda"]).iterrows():
+            bkt = row["Age_Bucket"]
+            fig_pct.add_bar(
+                x=[bkt], y=[row["avg_ebitda"] * 100],
+                name="EBITDA%", marker_color=bucket_colors.get(bkt, "#999"),
+                opacity=0.9, showlegend=False,
+                text=[f"{row['avg_ebitda']*100:.1f}%"], textposition="outside",
+            )
+        fig_pct.add_scatter(
+            x=cohort_agg.dropna(subset=["avg_labor"])["Age_Bucket"].tolist(),
+            y=(cohort_agg.dropna(subset=["avg_labor"])["avg_labor"] * 100).tolist(),
+            name="Labor%", mode="lines+markers",
+            line=dict(color="#F5A623", width=2), yaxis="y",
+            showlegend=True,
+        )
+        fig_pct.update_layout(template="plotly_dark", height=300,
+                              margin=dict(t=30,b=20,l=0,r=0),
+                              yaxis_title="% of Net Sales",
+                              legend=dict(orientation="h", y=1.1), bargap=0.35)
+        st.plotly_chart(fig_pct, use_container_width=True)
+
+    # ── Revenue ramp curve (period-by-period trajectory) ─────────────────────
+    st.markdown("**Revenue Ramp Curve** — Average net sales by period since opening")
+    all_stands["periods_since_open"] = (all_stands["Age (Yrs)"].fillna(0) * 13).round().astype(int).clip(0, 39)
+    ramp_curve = (all_stands.groupby("periods_since_open")
+                  .agg(avg_sales=("Net_Sales","mean"),
+                       stand_count=("Stand","nunique"))
+                  .reset_index())
+    ramp_curve = ramp_curve[ramp_curve["periods_since_open"] <= 30]
+
+    fig_ramp = go.Figure()
+    fig_ramp.add_vrect(x0=0, x1=6.5, fillcolor="rgba(255,107,0,0.08)",
+                       line_width=0, annotation_text="New (<6mo)",
+                       annotation_position="top left",
+                       annotation_font_color="rgba(255,107,0,0.7)")
+    fig_ramp.add_vrect(x0=6.5, x1=13, fillcolor="rgba(245,166,35,0.06)",
+                       line_width=0, annotation_text="Young",
+                       annotation_position="top left",
+                       annotation_font_color="rgba(245,166,35,0.7)")
+    fig_ramp.add_vrect(x0=13, x1=26, fillcolor="rgba(74,144,226,0.05)",
+                       line_width=0, annotation_text="Developing",
+                       annotation_position="top left",
+                       annotation_font_color="rgba(74,144,226,0.7)")
+    fig_ramp.add_scatter(
+        x=ramp_curve["periods_since_open"], y=ramp_curve["avg_sales"],
+        mode="lines+markers", name="Avg Net Sales",
+        line=dict(color="#12a06e", width=2.5),
+        marker=dict(size=5),
+        customdata=ramp_curve["stand_count"],
+        hovertemplate="Period %{x} since open<br>Avg Sales: $%{y:,.0f}<br>Stands: %{customdata}<extra></extra>",
+    )
+    fig_ramp.update_layout(
+        template="plotly_dark", height=280,
+        margin=dict(t=20,b=40,l=0,r=0),
+        xaxis_title="Periods Since Opening (1 period ≈ 4 weeks)",
+        yaxis_title="Avg Net Sales ($)",
+        xaxis=dict(dtick=2),
+    )
+    st.plotly_chart(fig_ramp, use_container_width=True)
+    st.caption("Each point = average net sales for all stands at that exact period-since-opening. The ramp plateau (where the curve flattens) shows when a typical 7BREW stand reaches full volume.")
+
 
 # ─────────────────────────────────────────────
 # TAB: WINS & OPPORTUNITIES
@@ -3719,6 +3850,108 @@ def tab_utilities(dash):
             tag_cls="green" if has_waste else "grey",
             card_cls="win" if has_waste else "watch",
         )
+
+    # ── 🔩 R&M vs Stand Age ──────────────────────────────────────────────────
+    st.html('<hr class="brew">')
+    section("🔩 R&M vs STAND AGE",
+            "Identifies whether maintenance costs cluster at predictable age milestones — "
+            "a spike at 18–24 months often signals warranty expiry on equipment")
+
+    rm_df = get_stands_df(dash).copy()
+    rm_df = rm_df[rm_df["Total_RM"].notna() & rm_df["Age (Yrs)"].notna()
+                  & (rm_df["Net_Sales"].fillna(0) > 0)].copy()
+    rm_df["RM_pct_display"] = rm_df["Total_RM_pct"].fillna(
+        rm_df["Total_RM"] / rm_df["Net_Sales"])
+
+    # ── KPI strip ────────────────────────────────────────────────────────────
+    ra1, ra2, ra3, ra4 = st.columns(4)
+    bucket_rm = (rm_df.groupby("Age_Bucket")["RM_pct_display"]
+                 .mean().reindex(["New (<6mo)","Young (6-12mo)","Developing (1-2yr)","Mature (2yr+)"]))
+
+    new_rm      = bucket_rm.get("New (<6mo)", 0) or 0
+    young_rm    = bucket_rm.get("Young (6-12mo)", 0) or 0
+    dev_rm      = bucket_rm.get("Developing (1-2yr)", 0) or 0
+    mature_rm   = bucket_rm.get("Mature (2yr+)", 0) or 0
+
+    warranty_cliff = dev_rm - young_rm   # positive = R&M rose in 1-2yr bracket
+
+    ra1.metric("Avg R&M% — New Stands",   f"{new_rm*100:.2f}%",   help="<6 months open")
+    ra2.metric("Avg R&M% — Young Stands", f"{young_rm*100:.2f}%", help="6-12 months open")
+    ra3.metric("Avg R&M% — Developing",   f"{dev_rm*100:.2f}%",
+               delta=f"{warranty_cliff*100:+.2f}% vs young",
+               delta_color="inverse" if warranty_cliff > 0 else "normal",
+               help="1-2 years open — warranty expiry zone")
+    ra4.metric("Avg R&M% — Mature",       f"{mature_rm*100:.2f}%", help="2+ years open")
+
+    if warranty_cliff > 0.002:
+        st.warning(f"⚠️ R&M% rises {warranty_cliff*100:.2f}pp from Young → Developing stands — consistent with equipment warranty expiry around the 12–24 month mark. Consider a preventive maintenance program at the 12-month mark.")
+    else:
+        st.success("✅ R&M% is stable across age cohorts — no evidence of a warranty-cliff pattern.")
+
+    # ── Scatter: Age vs R&M% ──────────────────────────────────────────────────
+    sc1, sc2 = st.columns([3, 2])
+
+    with sc1:
+        st.markdown("**R&M% vs Stand Age — All Stand-Period Records**")
+        # Use the most recent record per stand for the scatter to avoid overplotting
+        latest_rm = rm_df.sort_values("Period_Key").groupby("Stand").last().reset_index()
+        fig_scatter = px.scatter(
+            latest_rm.dropna(subset=["Age (Yrs)", "RM_pct_display", "Region"]),
+            x="Age (Yrs)", y="RM_pct_display",
+            color="Region",
+            hover_data={"Stand": True, "Total_RM": ":$,.0f",
+                        "Net_Sales": ":$,.0f", "Age (Yrs)": ":.2f"},
+            labels={"Age (Yrs)": "Stand Age (Years)",
+                    "RM_pct_display": "R&M % of Net Sales",
+                    "Region": "Region"},
+            color_discrete_map={k: v for k, v in {
+                "North Central TX":"#1d6fcf","South Central TX":"#2980b9",
+                "FL Panhandle East":"#12a06e","FL Panhandle West":"#1a8c5c",
+                "FL West Coast":"#0e7a6e","Middle Earth":"#7c3aed",
+                "West TX":"#e8940a","Permian Basin":"#d4600a",
+                "Central OK":"#AC2430","North OK":"#c0392b","South OK":"#922b21",
+            }.items()},
+        )
+        # Highlight 1–2 year zone
+        fig_scatter.add_vrect(x0=1.0, x1=2.0,
+                              fillcolor="rgba(255,200,0,0.08)", line_width=0,
+                              annotation_text="Warranty zone (1-2yr)",
+                              annotation_position="top left",
+                              annotation_font_color="rgba(255,200,0,0.7)")
+        fig_scatter.update_layout(
+            template="plotly_dark", height=340,
+            margin=dict(t=20,b=40,l=0,r=0),
+            yaxis_tickformat=".1%",
+            legend=dict(orientation="v", x=1.01, y=1),
+        )
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+    with sc2:
+        st.markdown("**Avg R&M% by Age Cohort**")
+        bucket_order_rm = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+        bucket_colors_rm = {"New (<6mo)": "#FF6B00", "Young (6-12mo)": "#F5A623",
+                            "Developing (1-2yr)": "#4A90E2", "Mature (2yr+)": "#12a06e"}
+        fig_bar_rm = go.Figure()
+        for bkt in bucket_order_rm:
+            val = bucket_rm.get(bkt, 0) or 0
+            fig_bar_rm.add_bar(
+                x=[bkt.split(" (")[0]], y=[val * 100],
+                name=bkt, marker_color=bucket_colors_rm.get(bkt, "#999"),
+                text=[f"{val*100:.2f}%"], textposition="outside",
+                showlegend=False,
+            )
+        fig_bar_rm.update_layout(
+            template="plotly_dark", height=340,
+            margin=dict(t=20,b=60,l=0,r=0),
+            yaxis_title="Avg R&M % of Sales",
+            xaxis_tickangle=-20, bargap=0.35,
+        )
+        st.plotly_chart(fig_bar_rm, use_container_width=True)
+
+    st.caption(
+        "Scatter uses each stand's most recent period. A cluster of high-R&M points in the 1–2 year zone "
+        "suggests equipment warranty expiry is driving cost. Outliers above 3% in any cohort warrant investigation."
+    )
 
 
 # ─────────────────────────────────────────────
