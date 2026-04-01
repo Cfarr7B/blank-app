@@ -3391,6 +3391,80 @@ def tab_utilities(dash):
                     f'</div>'
                 )
 
+    # ── LANDSCAPING CHART ─────────────────────────────────────────────────────
+    has_landscaping = (
+        "Landscaping" in stands_df.columns and
+        stands_df["Landscaping"].fillna(0).sum() > 0
+    )
+    if has_landscaping:
+        st.html('<hr class="brew">')
+        section("LANDSCAPING", "Period-over-period cost trend · % of Net Sales · under Total R&M")
+
+        land_rows = []
+        for _, row in pct_df.iterrows():
+            pk_l   = row["period_key"]
+            grp_l  = stands_df[stands_df["Period_Key"] == pk_l]
+            sales_l = grp_l["Net_Sales"].sum()
+            land_l  = grp_l["Landscaping"].fillna(0).sum()
+            n_l     = max(grp_l["Stand"].nunique(), 1)
+            land_rows.append({
+                "label":             row["label"],
+                "period_key":        pk_l,
+                "land_$":            land_l,
+                "land_pct":          (land_l / sales_l * 100) if sales_l > 0 else 0,
+                "land_per_std_day":  (land_l / (n_l * PERIOD_DAYS)) if n_l > 0 else 0,
+            })
+        land_df = pd.DataFrame(land_rows)
+
+        if land_df["land_$"].sum() > 0:
+            fig_l = go.Figure()
+            fig_l.add_bar(
+                x=land_df["label"], y=land_df["land_$"] / 1000,
+                name="Landscaping ($k)", marker_color="#2e7d32", opacity=0.7,
+            )
+            fig_l.add_scatter(
+                x=land_df["label"], y=land_df["land_pct"],
+                name="Landscaping %", mode="lines+markers+text",
+                text=land_df["land_pct"].map(lambda v: f"{v:.2f}%"),
+                textposition="top center", textfont=dict(size=8),
+                line=dict(color=GREEN, width=2), marker=dict(size=6),
+                yaxis="y2",
+            )
+            land_day_avg = land_df["land_per_std_day"].mean()
+            fig_l.add_hline(
+                y=land_day_avg, line_dash="dot", line_color=DARK, line_width=1,
+                annotation_text=f"Avg ${land_day_avg:.2f}/std/day",
+                annotation_position="bottom right",
+                annotation_font_size=9,
+                yref="y",
+            )
+            fig_l.update_layout(
+                yaxis=dict(title="Landscaping ($k)", tickprefix="$", ticksuffix="k"),
+                yaxis2=dict(title="% of Net Sales", overlaying="y", side="right",
+                            ticksuffix="%", tickfont=dict(size=9, color=GREEN)),
+            )
+            brew_fig(fig_l, height=350)
+            fig_l.update_layout(
+                title_text="LANDSCAPING — PERIOD OVER PERIOD",
+                xaxis=dict(tickangle=-35),
+            )
+            st.plotly_chart(fig_l, config={"displayModeBar": False})
+
+            # Seasonal note — landscaping typically spikes spring/summer
+            land_median = land_df["land_$"].median()
+            spikes_l = land_df[land_df["land_$"] > land_median * 1.75]
+            if not spikes_l.empty:
+                spike_lbls_l = ", ".join(spikes_l["label"].tolist())
+                st.html(
+                    f'<div style="background:rgba(18,160,110,0.07);border-left:4px solid #12a06e;'
+                    f'border-radius:6px;padding:8px 14px;font-family:DM Mono,monospace;font-size:13px;'
+                    f'color:#595959;margin-bottom:8px;">'
+                    f'🌿 <strong>Seasonal Spike:</strong> {spike_lbls_l} ran >1.75× median '
+                    f'(${land_median:,.0f}). Typical for spring/summer mowing & trimming cycles — '
+                    f'verify against contract schedule.'
+                    f'</div>'
+                )
+
     # ── OPPORTUNITY FLAGS ─────────────────────────────────────────────────────
     st.html('<hr class="brew">')
     section("OPPORTUNITY FLAGS", "Data-driven cost reduction opportunities")
