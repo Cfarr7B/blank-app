@@ -3936,22 +3936,36 @@ def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
 
     markers = []
 
-    # Existing open stands from data.json
-    seen_stands = set()
+    # Store IDs already represented by upcoming_rows — these win over open markers
+    upcoming_store_ids = {r.get("store","") for r in upcoming_rows
+                         if r.get("store","") not in ("TBD", "")}
+
+    # Track every store ID plotted so far to prevent any cross-source duplicates
+    plotted_store_ids = set()
+
+    # ── Existing open stands from data.json ───────────────────────────────────
+    seen_stand_names = set()
     for s in existing_stands:
         raw = s.get("Stand", "")
-        if raw in seen_stands:
+        if raw in seen_stand_names:
             continue
-        seen_stands.add(raw)
+        seen_stand_names.add(raw)
         parts = raw.split(" ", 1)
         if len(parts) < 2:
             continue
-        loc = parts[1]
+        store_id = parts[0].strip()          # e.g. "000356"
+        loc = parts[1]                        # e.g. "Bradenton, FL - 2"
         loc_parts = loc.split(",")
         if len(loc_parts) < 2:
             continue
         city = loc_parts[0].strip()
         st_part = loc_parts[1].strip().split()[0] if loc_parts[1].strip() else ""
+        # Skip if this store is shown as an upcoming (colored) marker
+        if store_id in upcoming_store_ids:
+            continue
+        if store_id in plotted_store_ids:
+            continue
+        plotted_store_ids.add(store_id)
         coords = _pl_coords(city, st_part)
         if not coords:
             continue
@@ -3963,14 +3977,19 @@ def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
             "popup": f"<b>{raw.split(' - ')[0].strip()}</b><br>{city}, {st_part}<br><i>Currently Open</i>",
         })
 
-    # Recently opened (phase 6 from PDF) — avoids double-plotting with data.json
-    open_store_ids = {r.get("store","") for r in open_rows}
+    # ── Phase-6 stands from PDF not yet in data.json ─────────────────────────
+    # (skip any store already plotted above or reserved for upcoming layer)
     for r in open_rows:
+        sid = r.get("store", "")
+        if sid in upcoming_store_ids:
+            continue
+        if sid in plotted_store_ids:
+            continue
         coords = _pl_coords(r["city"], r["state"])
         if not coords:
             continue
+        plotted_store_ids.add(sid)
         lat, lon = coords
-        sid = r.get("store","")
         markers.append({
             "lat": round(lat + (hash(sid)       % 50) * 0.004, 5),
             "lon": round(lon + (hash(sid + "x") % 50) * 0.004, 5),
