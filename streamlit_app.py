@@ -3319,6 +3319,78 @@ def tab_utilities(dash):
                          xaxis=dict(tickangle=-35))
     st.plotly_chart(fig_s2, config={"displayModeBar": False})
 
+    # ── WASTE REMOVAL CHART ───────────────────────────────────────────────────
+    if sub_avail.get("Waste_Removal", False):
+        st.html('<hr class="brew">')
+        section("WASTE REMOVAL", "Period-over-period cost trend · % of Net Sales · $/Stand/Day")
+
+        # Build per-period waste aggregates from stand records
+        waste_rows = []
+        for _, row in pct_df.iterrows():
+            pk_w = row["period_key"]
+            grp_w = stands_df[stands_df["Period_Key"] == pk_w]
+            sales_w = grp_w["Net_Sales"].sum()
+            waste_w = grp_w["Waste_Removal"].sum() if "Waste_Removal" in grp_w.columns else 0
+            n_w = max(grp_w["Stand"].nunique(), 1)
+            waste_rows.append({
+                "label":        row["label"],
+                "period_key":   pk_w,
+                "waste_$":      waste_w,
+                "waste_pct":    (waste_w / sales_w * 100) if sales_w > 0 else 0,
+                "waste_per_std_day": (waste_w / (n_w * PERIOD_DAYS)) if n_w > 0 else 0,
+            })
+        waste_df = pd.DataFrame(waste_rows)
+
+        if waste_df["waste_$"].sum() > 0:
+            # Dual-axis: bars = total $k, line = % of sales
+            fig_w = go.Figure()
+            fig_w.add_bar(
+                x=waste_df["label"], y=waste_df["waste_$"] / 1000,
+                name="Waste Removal ($k)", marker_color="#6c757d", opacity=0.7,
+            )
+            fig_w.add_scatter(
+                x=waste_df["label"], y=waste_df["waste_pct"],
+                name="Waste %", mode="lines+markers+text",
+                text=waste_df["waste_pct"].map(lambda v: f"{v:.2f}%"),
+                textposition="top center", textfont=dict(size=8),
+                line=dict(color=RED, width=2), marker=dict(size=6),
+                yaxis="y2",
+            )
+            # $/stand/day overlay (secondary line — same axis as %)
+            waste_day_avg = waste_df["waste_per_std_day"].mean()
+            fig_w.add_hline(
+                y=waste_day_avg, line_dash="dot", line_color=DARK, line_width=1,
+                annotation_text=f"Avg ${waste_day_avg:.2f}/std/day",
+                annotation_position="bottom right",
+                annotation_font_size=9,
+                yref="y",
+            )
+            fig_w.update_layout(
+                yaxis=dict(title="Waste Removal ($k)", tickprefix="$", ticksuffix="k"),
+                yaxis2=dict(title="% of Net Sales", overlaying="y", side="right",
+                            ticksuffix="%", tickfont=dict(size=9, color=RED)),
+            )
+            brew_fig(fig_w, height=350)
+            fig_w.update_layout(
+                title_text="WASTE REMOVAL — PERIOD OVER PERIOD",
+                xaxis=dict(tickangle=-35),
+            )
+            st.plotly_chart(fig_w, config={"displayModeBar": False})
+
+            # Spike detector — flag any period > 1.5× median
+            waste_median = waste_df["waste_$"].median()
+            spikes = waste_df[waste_df["waste_$"] > waste_median * 1.5]
+            if not spikes.empty:
+                spike_lbls = ", ".join(spikes["label"].tolist())
+                st.html(
+                    f'<div style="background:rgba(172,36,48,0.07);border-left:4px solid #AC2430;'
+                    f'border-radius:6px;padding:8px 14px;font-family:DM Mono,monospace;font-size:13px;'
+                    f'color:#595959;margin-bottom:8px;">'
+                    f'⚠ <strong>Waste Spike Detected:</strong> {spike_lbls} ran >1.5× median '
+                    f'(${waste_median:,.0f}). Likely extra pickup cycle or overage fee — verify invoice.'
+                    f'</div>'
+                )
+
     # ── OPPORTUNITY FLAGS ─────────────────────────────────────────────────────
     st.html('<hr class="brew">')
     section("OPPORTUNITY FLAGS", "Data-driven cost reduction opportunities")
