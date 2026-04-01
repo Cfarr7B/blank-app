@@ -4149,7 +4149,7 @@ function toggleGroup(key){{
 def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
-    st.markdown("### 🏗️ Stand Pipeline")
+    st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
     st.caption("Data sourced from Permit to Open Dates report · Regions from 7Crew Stand Dates")
 
     df = pd.DataFrame(_PIPELINE_UPCOMING)
@@ -4264,7 +4264,7 @@ def main():
         "💡 Wins & Opportunities",
         "🔮 Forecast",
         "⚡ Utilities & R&M",
-        "🏗️ Pipeline",
+        "🏗️ Pipeline (Draft)",
     ]
     tabs = st.tabs(tab_names)
 
