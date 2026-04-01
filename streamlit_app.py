@@ -515,7 +515,7 @@ def _build_quarterly_stands(stands_df):
 
     # Sum dollar columns, weighted-avg pct columns
     dollar_cols = [c for c in df.columns if c in ["Net_Sales", "Store_EBITDA", "Electricity",
-                   "Water_Sewer", "Waste_Removal", "RM_Equipment", "RM_Building"]]
+                   "Water_Sewer", "Waste_Removal", "Landscaping", "RM_Equipment", "RM_Building"]]
     pct_cols = [c for c in df.columns if c.endswith("_pct")]
 
     rows = []
@@ -2861,6 +2861,7 @@ def tab_utilities(dash):
         "Waste_Removal": "Waste_Removal" in stands_df.columns and stands_df["Waste_Removal"].fillna(0).sum() > 0,
         "RM_Equipment":  "RM_Equipment"  in stands_df.columns and stands_df["RM_Equipment"].fillna(0).sum() > 0,
         "RM_Building":   "RM_Building"   in stands_df.columns and stands_df["RM_Building"].fillna(0).sum() > 0,
+        "Landscaping":   "Landscaping"   in stands_df.columns and stands_df["Landscaping"].fillna(0).sum() > 0,
     }
     has_detail = any(sub_avail.values())
 
@@ -2917,6 +2918,8 @@ def tab_utilities(dash):
     overlay_rm_map       = {}
     overlay_util_day_map = {}   # period_key -> util $/stand/day
     overlay_rm_day_map   = {}
+    overlay_waste_map    = {}   # period_key -> waste fraction of sales
+    overlay_land_map     = {}   # period_key -> landscaping fraction of sales
 
     if sel_stand != "All Stands":
         overlay_label = sel_stand
@@ -2929,6 +2932,10 @@ def tab_utilities(dash):
                 overlay_rm_map[pk_iter]       = r / s
                 overlay_util_day_map[pk_iter] = u / PERIOD_DAYS          # 1 stand
                 overlay_rm_day_map[pk_iter]   = r / PERIOD_DAYS
+                if "Waste_Removal" in grp.columns:
+                    overlay_waste_map[pk_iter] = grp["Waste_Removal"].fillna(0).sum() / s
+                if "Landscaping" in grp.columns:
+                    overlay_land_map[pk_iter]  = grp["Landscaping"].fillna(0).sum() / s
     elif sel_region != "All Regions":
         overlay_label = sel_region
         for pk_iter, grp in stands_df[stands_df["Region"] == sel_region].groupby("Period_Key"):
@@ -2941,6 +2948,10 @@ def tab_utilities(dash):
                 overlay_rm_map[pk_iter]       = r / s
                 overlay_util_day_map[pk_iter] = u / (n * PERIOD_DAYS)
                 overlay_rm_day_map[pk_iter]   = r / (n * PERIOD_DAYS)
+                if "Waste_Removal" in grp.columns:
+                    overlay_waste_map[pk_iter] = grp["Waste_Removal"].fillna(0).sum() / s
+                if "Landscaping" in grp.columns:
+                    overlay_land_map[pk_iter]  = grp["Landscaping"].fillna(0).sum() / s
 
     ov_labels, ov_util, ov_rm = [], [], []
     ov_util_day, ov_rm_day    = [], []
@@ -3322,49 +3333,55 @@ def tab_utilities(dash):
     # ── WASTE REMOVAL CHART ───────────────────────────────────────────────────
     if sub_avail.get("Waste_Removal", False):
         st.html('<hr class="brew">')
-        section("WASTE REMOVAL", "Period-over-period cost trend · % of Net Sales · $/Stand/Day")
+        _waste_title_sfx = f" · {overlay_label}" if overlay_label else ""
+        section("WASTE REMOVAL", f"Period-over-period cost trend · % of Net Sales{_waste_title_sfx}")
 
-        # Build per-period waste aggregates from stand records
+        # Build per-period system-wide waste aggregates
         waste_rows = []
         for _, row in pct_df.iterrows():
-            pk_w = row["period_key"]
-            grp_w = stands_df[stands_df["Period_Key"] == pk_w]
+            pk_w   = row["period_key"]
+            grp_w  = stands_df[stands_df["Period_Key"] == pk_w]
             sales_w = grp_w["Net_Sales"].sum()
-            waste_w = grp_w["Waste_Removal"].sum() if "Waste_Removal" in grp_w.columns else 0
-            n_w = max(grp_w["Stand"].nunique(), 1)
+            waste_w = grp_w["Waste_Removal"].fillna(0).sum() if "Waste_Removal" in grp_w.columns else 0
+            n_w     = max(grp_w["Stand"].nunique(), 1)
             waste_rows.append({
-                "label":        row["label"],
-                "period_key":   pk_w,
-                "waste_$":      waste_w,
-                "waste_pct":    (waste_w / sales_w * 100) if sales_w > 0 else 0,
+                "label":      row["label"],
+                "period_key": pk_w,
+                "waste_$":    waste_w,
+                "waste_pct":  (waste_w / sales_w * 100) if sales_w > 0 else 0,
                 "waste_per_std_day": (waste_w / (n_w * PERIOD_DAYS)) if n_w > 0 else 0,
             })
         waste_df = pd.DataFrame(waste_rows)
 
+        # Build overlay series
+        ov_waste_labels, ov_waste_pct = [], []
+        for _, row in waste_df.iterrows():
+            if row["period_key"] in overlay_waste_map:
+                ov_waste_labels.append(row["label"])
+                ov_waste_pct.append(overlay_waste_map[row["period_key"]] * 100)
+
         if waste_df["waste_$"].sum() > 0:
-            # Dual-axis: bars = total $k, line = % of sales
             fig_w = go.Figure()
             fig_w.add_bar(
                 x=waste_df["label"], y=waste_df["waste_$"] / 1000,
-                name="Waste Removal ($k)", marker_color="#6c757d", opacity=0.7,
+                name="System Waste ($k)", marker_color="#6c757d", opacity=0.7,
             )
             fig_w.add_scatter(
                 x=waste_df["label"], y=waste_df["waste_pct"],
-                name="Waste %", mode="lines+markers+text",
+                name="System Waste %", mode="lines+markers+text",
                 text=waste_df["waste_pct"].map(lambda v: f"{v:.2f}%"),
                 textposition="top center", textfont=dict(size=8),
                 line=dict(color=RED, width=2), marker=dict(size=6),
                 yaxis="y2",
             )
-            # $/stand/day overlay (secondary line — same axis as %)
-            waste_day_avg = waste_df["waste_per_std_day"].mean()
-            fig_w.add_hline(
-                y=waste_day_avg, line_dash="dot", line_color=DARK, line_width=1,
-                annotation_text=f"Avg ${waste_day_avg:.2f}/std/day",
-                annotation_position="bottom right",
-                annotation_font_size=9,
-                yref="y",
-            )
+            if ov_waste_labels:
+                fig_w.add_scatter(
+                    x=ov_waste_labels, y=ov_waste_pct,
+                    name=f"{overlay_label} Waste %", mode="lines+markers",
+                    line=dict(color=AMBER, width=2, dash="dot"),
+                    marker=dict(size=7, symbol="diamond"),
+                    yaxis="y2",
+                )
             fig_w.update_layout(
                 yaxis=dict(title="Waste Removal ($k)", tickprefix="$", ticksuffix="k"),
                 yaxis2=dict(title="% of Net Sales", overlaying="y", side="right",
@@ -3372,7 +3389,7 @@ def tab_utilities(dash):
             )
             brew_fig(fig_w, height=350)
             fig_w.update_layout(
-                title_text="WASTE REMOVAL — PERIOD OVER PERIOD",
+                title_text=f"WASTE REMOVAL — PERIOD OVER PERIOD{_waste_title_sfx}",
                 xaxis=dict(tickangle=-35),
             )
             st.plotly_chart(fig_w, config={"displayModeBar": False})
@@ -3392,52 +3409,56 @@ def tab_utilities(dash):
                 )
 
     # ── LANDSCAPING CHART ─────────────────────────────────────────────────────
-    has_landscaping = (
-        "Landscaping" in stands_df.columns and
-        stands_df["Landscaping"].fillna(0).sum() > 0
-    )
-    if has_landscaping:
+    if sub_avail.get("Landscaping", False):
         st.html('<hr class="brew">')
-        section("LANDSCAPING", "Period-over-period cost trend · % of Net Sales · under Total R&M")
+        _land_title_sfx = f" · {overlay_label}" if overlay_label else ""
+        section("LANDSCAPING", f"Period-over-period cost trend · % of Net Sales · under Total R&M{_land_title_sfx}")
 
         land_rows = []
         for _, row in pct_df.iterrows():
-            pk_l   = row["period_key"]
-            grp_l  = stands_df[stands_df["Period_Key"] == pk_l]
+            pk_l    = row["period_key"]
+            grp_l   = stands_df[stands_df["Period_Key"] == pk_l]
             sales_l = grp_l["Net_Sales"].sum()
             land_l  = grp_l["Landscaping"].fillna(0).sum()
             n_l     = max(grp_l["Stand"].nunique(), 1)
             land_rows.append({
-                "label":             row["label"],
-                "period_key":        pk_l,
-                "land_$":            land_l,
-                "land_pct":          (land_l / sales_l * 100) if sales_l > 0 else 0,
-                "land_per_std_day":  (land_l / (n_l * PERIOD_DAYS)) if n_l > 0 else 0,
+                "label":      row["label"],
+                "period_key": pk_l,
+                "land_$":     land_l,
+                "land_pct":   (land_l / sales_l * 100) if sales_l > 0 else 0,
+                "land_per_std_day": (land_l / (n_l * PERIOD_DAYS)) if n_l > 0 else 0,
             })
         land_df = pd.DataFrame(land_rows)
+
+        # Build overlay series
+        ov_land_labels, ov_land_pct = [], []
+        for _, row in land_df.iterrows():
+            if row["period_key"] in overlay_land_map:
+                ov_land_labels.append(row["label"])
+                ov_land_pct.append(overlay_land_map[row["period_key"]] * 100)
 
         if land_df["land_$"].sum() > 0:
             fig_l = go.Figure()
             fig_l.add_bar(
                 x=land_df["label"], y=land_df["land_$"] / 1000,
-                name="Landscaping ($k)", marker_color="#2e7d32", opacity=0.7,
+                name="System Landscaping ($k)", marker_color="#2e7d32", opacity=0.7,
             )
             fig_l.add_scatter(
                 x=land_df["label"], y=land_df["land_pct"],
-                name="Landscaping %", mode="lines+markers+text",
+                name="System Landscaping %", mode="lines+markers+text",
                 text=land_df["land_pct"].map(lambda v: f"{v:.2f}%"),
                 textposition="top center", textfont=dict(size=8),
                 line=dict(color=GREEN, width=2), marker=dict(size=6),
                 yaxis="y2",
             )
-            land_day_avg = land_df["land_per_std_day"].mean()
-            fig_l.add_hline(
-                y=land_day_avg, line_dash="dot", line_color=DARK, line_width=1,
-                annotation_text=f"Avg ${land_day_avg:.2f}/std/day",
-                annotation_position="bottom right",
-                annotation_font_size=9,
-                yref="y",
-            )
+            if ov_land_labels:
+                fig_l.add_scatter(
+                    x=ov_land_labels, y=ov_land_pct,
+                    name=f"{overlay_label} Landscaping %", mode="lines+markers",
+                    line=dict(color=AMBER, width=2, dash="dot"),
+                    marker=dict(size=7, symbol="diamond"),
+                    yaxis="y2",
+                )
             fig_l.update_layout(
                 yaxis=dict(title="Landscaping ($k)", tickprefix="$", ticksuffix="k"),
                 yaxis2=dict(title="% of Net Sales", overlaying="y", side="right",
@@ -3445,12 +3466,12 @@ def tab_utilities(dash):
             )
             brew_fig(fig_l, height=350)
             fig_l.update_layout(
-                title_text="LANDSCAPING — PERIOD OVER PERIOD",
+                title_text=f"LANDSCAPING — PERIOD OVER PERIOD{_land_title_sfx}",
                 xaxis=dict(tickangle=-35),
             )
             st.plotly_chart(fig_l, config={"displayModeBar": False})
 
-            # Seasonal note — landscaping typically spikes spring/summer
+            # Seasonal spike alert
             land_median = land_df["land_$"].median()
             spikes_l = land_df[land_df["land_$"] > land_median * 1.75]
             if not spikes_l.empty:
