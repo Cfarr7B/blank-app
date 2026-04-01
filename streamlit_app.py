@@ -851,12 +851,13 @@ def tab_ceo(dash):
             if pace_target == 0:
                 return "—", MID
             ratio = actual / pace_target
+            delta_pct = (ratio - 1) * 100
             if ratio >= 1 + tolerance:
-                return f"▲ AHEAD  ({ratio*100:.0f}% of pace)", GREEN
+                return f"▲ AHEAD  (+{delta_pct:.0f}% vs pace)", GREEN
             elif ratio >= 1 - tolerance:
-                return f"→ ON PACE ({ratio*100:.0f}% of pace)", BLUE
+                return f"→ ON PACE ({delta_pct:+.0f}% vs pace)", BLUE
             else:
-                return f"▼ BEHIND  ({ratio*100:.0f}% of pace)", RED
+                return f"▼ BEHIND  ({delta_pct:.0f}% vs pace)", RED
 
         def _pct_status(actual, target, lower_is_better=False):
             """Return (status_text, color) for a % metric."""
