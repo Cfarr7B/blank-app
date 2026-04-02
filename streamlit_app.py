@@ -2298,14 +2298,52 @@ def tab_regions(dash):
     section("🌱 STORE COHORT ANALYSIS",
             f"Avg performance by stand maturity — {period_lbl} · uses the period selected above")
 
-    # KPI strip + bar charts: use ONLY the selected period so the blended avg
-    # matches what you see in the period summary above (fixes the mature≈blended quirk
-    # caused by mature stands having far more historical data rows than new ones).
-    period_stands = stands_df[stands_df["Period_Key"] == pk].copy()
-    period_stands = period_stands[period_stands["Age_Bucket"].notna() & period_stands["Net_Sales"].notna()]
+    # ── Opening-year filter ───────────────────────────────────────────────────
+    # Derive the opening year for every stand from its "Open Date" field
+    all_period_stands = stands_df[stands_df["Period_Key"] == pk].copy()
+    all_period_stands = all_period_stands[
+        all_period_stands["Age_Bucket"].notna() & all_period_stands["Net_Sales"].notna()
+    ]
+    if "Open Date" in all_period_stands.columns:
+        all_period_stands["_open_year"] = (
+            pd.to_datetime(all_period_stands["Open Date"], errors="coerce").dt.year
+        )
+    else:
+        all_period_stands["_open_year"] = None
+
+    open_years = sorted([
+        y for y in all_period_stands["_open_year"].dropna().unique().astype(int)
+    ])
+    year_options = ["All"] + [str(y) for y in open_years]
+
+    dc1, dc2 = st.columns([1, 3])
+    with dc1:
+        sel_open_yr = st.selectbox(
+            "Filter by opening year",
+            year_options,
+            index=0,
+            key="cohort_open_year",
+            help="Show only stands that first opened in the selected year",
+        )
+
+    if sel_open_yr == "All":
+        period_stands = all_period_stands.copy()
+        yr_label = "all opening years"
+    else:
+        period_stands = all_period_stands[
+            all_period_stands["_open_year"] == int(sel_open_yr)
+        ].copy()
+        yr_label = f"opened {sel_open_yr}"
 
     # Ramp curve needs all periods to trace the opening-week trajectory
-    ramp_stands = stands_df[stands_df["Age_Bucket"].notna() & stands_df["Net_Sales"].notna()].copy()
+    # (also apply the same year filter so the ramp reflects that cohort only)
+    ramp_all = stands_df[stands_df["Age_Bucket"].notna() & stands_df["Net_Sales"].notna()].copy()
+    if "Open Date" in ramp_all.columns:
+        ramp_all["_open_year"] = pd.to_datetime(ramp_all["Open Date"], errors="coerce").dt.year
+    if sel_open_yr == "All":
+        ramp_stands = ramp_all.copy()
+    else:
+        ramp_stands = ramp_all[ramp_all["_open_year"] == int(sel_open_yr)].copy()
 
     bucket_order  = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
     bucket_colors = {"New (<6mo)": "#FF6B00", "Young (6-12mo)": "#F5A623",
@@ -2340,13 +2378,13 @@ def tab_regions(dash):
                    f"{new_row['avg_ebitda'].mean()*100:.1f}%" if not new_row.empty else "—",
                    help="EBITDA margin for stands in first 6 months this period")
 
-    st.caption(f"All metrics above reflect {period_lbl} only. Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
+    st.caption(f"All metrics above reflect {period_lbl} · {yr_label}. Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
 
     # ── Side-by-side cohort charts ────────────────────────────────────────────
     ch1, ch2 = st.columns(2)
 
     with ch1:
-        st.markdown(f"**Avg Net Sales by Cohort** *({period_lbl})*")
+        st.markdown(f"**Avg Net Sales by Cohort** *({period_lbl} · {yr_label})*")
         fig_sales = go.Figure()
         for _, crow in cohort_agg.dropna(subset=["avg_sales"]).iterrows():
             bkt = crow["Age_Bucket"]
@@ -2367,7 +2405,7 @@ def tab_regions(dash):
         st.plotly_chart(fig_sales, use_container_width=True)
 
     with ch2:
-        st.markdown(f"**Avg EBITDA% & Labor% by Cohort** *({period_lbl})*")
+        st.markdown(f"**Avg EBITDA% & Labor% by Cohort** *({period_lbl} · {yr_label})*")
         fig_pct = go.Figure()
         for _, crow in cohort_agg.dropna(subset=["avg_ebitda"]).iterrows():
             bkt = crow["Age_Bucket"]
@@ -2391,7 +2429,7 @@ def tab_regions(dash):
         st.plotly_chart(fig_pct, use_container_width=True)
 
     # ── Revenue ramp curve (all-time — needs multiple periods to trace trajectory) ──
-    st.markdown("**Revenue Ramp Curve** — Average net sales by period since opening *(all-time data)*")
+    st.markdown(f"**Revenue Ramp Curve** — Average net sales by period since opening *({yr_label})*")
     ramp_stands["age_yrs_num"] = ramp_stands.apply(
         lambda r: _age_yrs_from_period(r.get("Open Date", ""), r.get("Period_Key", "")), axis=1
     )
