@@ -2429,49 +2429,149 @@ def tab_regions(dash):
         st.plotly_chart(fig_pct, use_container_width=True)
 
     # ── Revenue ramp curve (all-time — needs multiple periods to trace trajectory) ──
-    st.markdown(f"**Revenue Ramp Curve** — Average net sales by period since opening *({yr_label})*")
+    rc1, rc2 = st.columns([3, 1])
+    with rc1:
+        st.markdown(f"**Revenue Ramp Curve** — Average net sales by period since opening *({yr_label})*")
+    with rc2:
+        ramp_view = st.selectbox(
+            "Break out by",
+            ["System Average", "By State", "Individual Stands"],
+            key="ramp_view_mode",
+            label_visibility="collapsed",
+        )
+
+    # Compute periods-since-open for all ramp stands
     ramp_stands["age_yrs_num"] = ramp_stands.apply(
         lambda r: _age_yrs_from_period(r.get("Open Date", ""), r.get("Period_Key", "")), axis=1
     )
     ramp_stands["periods_since_open"] = (
         ramp_stands["age_yrs_num"].fillna(0) * 13
     ).round().astype(int).clip(0, 39)
-    ramp_curve = (ramp_stands.groupby("periods_since_open")
-                  .agg(avg_sales=("Net_Sales","mean"),
-                       stand_count=("Stand","nunique"))
-                  .reset_index())
-    ramp_curve = ramp_curve[ramp_curve["periods_since_open"] <= 30]
+
+    # Derive state from Region column (FL / OK / TX)
+    def _state_from_region(region):
+        r = str(region).upper()
+        if "FL" in r or "FLORIDA" in r or "PANHANDLE" in r or "WEST COAST" in r:
+            return "FL"
+        if "OK" in r or "OKLAHOMA" in r:
+            return "OK"
+        if "TX" in r or "TEXAS" in r or "CENTRAL" in r or "PERMIAN" in r or "MIDDLE EARTH" in r:
+            return "TX"
+        return "Other"
+
+    if "Region" in ramp_stands.columns:
+        ramp_stands["_state"] = ramp_stands["Region"].apply(_state_from_region)
+    else:
+        ramp_stands["_state"] = "Unknown"
+
+    # System-average curve (used as reference line in all views)
+    sys_curve = (ramp_stands.groupby("periods_since_open")
+                 .agg(avg_sales=("Net_Sales","mean"), stand_count=("Stand","nunique"))
+                 .reset_index())
+    sys_curve = sys_curve[sys_curve["periods_since_open"] <= 30]
+
+    # State color palette
+    state_colors = {"TX": "#F5A623", "FL": "#12a06e", "OK": "#AC2430", "Other": "#888888"}
 
     fig_ramp = go.Figure()
-    fig_ramp.add_vrect(x0=0, x1=6.5, fillcolor="rgba(255,107,0,0.08)",
-                       line_width=0, annotation_text="New (<6mo)",
-                       annotation_position="top left",
-                       annotation_font_color="rgba(255,107,0,0.7)")
-    fig_ramp.add_vrect(x0=6.5, x1=13, fillcolor="rgba(245,166,35,0.06)",
-                       line_width=0, annotation_text="Young",
-                       annotation_position="top left",
-                       annotation_font_color="rgba(245,166,35,0.7)")
-    fig_ramp.add_vrect(x0=13, x1=26, fillcolor="rgba(74,144,226,0.05)",
-                       line_width=0, annotation_text="Developing",
-                       annotation_position="top left",
-                       annotation_font_color="rgba(74,144,226,0.7)")
-    fig_ramp.add_scatter(
-        x=ramp_curve["periods_since_open"], y=ramp_curve["avg_sales"],
-        mode="lines+markers", name="Avg Net Sales",
-        line=dict(color="#12a06e", width=2.5),
-        marker=dict(size=5),
-        customdata=ramp_curve["stand_count"],
-        hovertemplate="Period %{x} since open<br>Avg Sales: $%{y:,.0f}<br>Stands: %{customdata}<extra></extra>",
-    )
+
+    # Background age-zone shading
+    for x0, x1, color, label in [
+        (0,   6.5, "rgba(255,107,0,0.08)",  "New (<6mo)"),
+        (6.5, 13,  "rgba(245,166,35,0.06)", "Young"),
+        (13,  26,  "rgba(74,144,226,0.05)", "Developing"),
+    ]:
+        fig_ramp.add_vrect(x0=x0, x1=x1, fillcolor=color, line_width=0,
+                           annotation_text=label, annotation_position="top left",
+                           annotation_font_color=color.replace("0.0", "0.7").replace("0.08","0.7").replace("0.06","0.7").replace("0.05","0.7"))
+
+    if ramp_view == "System Average":
+        fig_ramp.add_scatter(
+            x=sys_curve["periods_since_open"], y=sys_curve["avg_sales"],
+            mode="lines+markers", name="System Avg",
+            line=dict(color="#12a06e", width=2.5), marker=dict(size=5),
+            customdata=sys_curve["stand_count"],
+            hovertemplate="Period %{x}<br>Avg Sales: $%{y:,.0f}<br>Stands: %{customdata}<extra></extra>",
+        )
+
+    elif ramp_view == "By State":
+        for state, scolor in state_colors.items():
+            sub = ramp_stands[ramp_stands["_state"] == state]
+            if sub.empty:
+                continue
+            sc = (sub.groupby("periods_since_open")
+                  .agg(avg_sales=("Net_Sales","mean"), stand_count=("Stand","nunique"))
+                  .reset_index())
+            sc = sc[sc["periods_since_open"] <= 30]
+            fig_ramp.add_scatter(
+                x=sc["periods_since_open"], y=sc["avg_sales"],
+                mode="lines+markers", name=state,
+                line=dict(color=scolor, width=2.5), marker=dict(size=5),
+                customdata=sc["stand_count"],
+                hovertemplate=f"{state} · Period %{{x}}<br>Avg Sales: $%{{y:,.0f}}<br>Stands: %{{customdata}}<extra></extra>",
+            )
+        # System avg as a dashed reference
+        fig_ramp.add_scatter(
+            x=sys_curve["periods_since_open"], y=sys_curve["avg_sales"],
+            mode="lines", name="System Avg",
+            line=dict(color="rgba(255,255,255,0.25)", width=1.5, dash="dot"),
+            hoverinfo="skip",
+        )
+
+    else:  # Individual Stands
+        # Identify the stand name (first token before city name)
+        stand_ids = ramp_stands["Stand"].unique()
+        for sid in sorted(stand_ids):
+            sdf = ramp_stands[ramp_stands["Stand"] == sid].sort_values("periods_since_open")
+            if len(sdf) < 2:
+                continue
+            state = sdf["_state"].iloc[0]
+            scolor = state_colors.get(state, "#888")
+            # Extract a short label (RSH-XXXXX)
+            short_lbl = str(sid).split(" ")[0] if " " in str(sid) else str(sid)
+            city_lbl  = str(sid).split(" ", 1)[1] if " " in str(sid) else ""
+            fig_ramp.add_scatter(
+                x=sdf["periods_since_open"], y=sdf["Net_Sales"],
+                mode="lines", name=short_lbl,
+                line=dict(color=scolor, width=1),
+                opacity=0.45,
+                legendgroup=state,
+                legendgrouptitle_text=state if sdf.index[0] == ramp_stands[ramp_stands["_state"]==state].index[0] else None,
+                hovertemplate=f"{short_lbl} {city_lbl}<br>Period %{{x}} since open<br>Sales: $%{{y:,.0f}}<extra></extra>",
+                showlegend=False,
+            )
+        # Bold system average on top
+        fig_ramp.add_scatter(
+            x=sys_curve["periods_since_open"], y=sys_curve["avg_sales"],
+            mode="lines", name="System Avg",
+            line=dict(color="#ffffff", width=2.5, dash="dash"),
+            hovertemplate="System Avg · Period %{x}<br>$%{y:,.0f}<extra></extra>",
+        )
+        # Add one visible legend entry per state so user knows the colors
+        for state, scolor in state_colors.items():
+            if not ramp_stands[ramp_stands["_state"] == state].empty:
+                fig_ramp.add_scatter(
+                    x=[None], y=[None], mode="lines", name=state,
+                    line=dict(color=scolor, width=2), showlegend=True,
+                )
+
     fig_ramp.update_layout(
-        template="plotly_dark", height=280,
-        margin=dict(t=20,b=40,l=0,r=0),
+        template="plotly_dark",
+        height=340 if ramp_view == "Individual Stands" else 300,
+        margin=dict(t=20, b=40, l=0, r=0),
         xaxis_title="Periods Since Opening (1 period ≈ 4 weeks)",
-        yaxis_title="Avg Net Sales ($)",
+        yaxis_title="Net Sales ($)" if ramp_view == "Individual Stands" else "Avg Net Sales ($)",
         xaxis=dict(dtick=2),
+        legend=dict(orientation="v", x=1.01, y=1),
     )
     st.plotly_chart(fig_ramp, use_container_width=True)
-    st.caption("Ramp curve uses all historical periods so each point reflects the average sales of every stand at exactly that period-since-opening. The point where the curve flattens marks full-volume maturity.")
+
+    caption_map = {
+        "System Average": "Each point = average net sales across all matching stands at that exact period-since-opening. The ramp plateau shows when a typical 7BREW stand reaches full volume.",
+        "By State":        "Each line = state average ramp. Dashed white = system average. Useful for spotting whether FL, TX, or OK stands ramp faster.",
+        "Individual Stands": "Each thin line = one stand's actual weekly-period trajectory. White dashed = system average. Hover any line for stand details.",
+    }
+    st.caption(caption_map[ramp_view])
 
 
 # ─────────────────────────────────────────────
