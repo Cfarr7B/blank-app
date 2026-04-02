@@ -4805,8 +4805,9 @@ def tab_pipeline(dash):
         if not d_val or not d_jan15:
             return str(val)
         delta = (d_val - d_jan15).days
-        if delta > 0:   arrow = f" 🔴+{delta}d"
-        elif delta < 0: arrow = f" 🟢{delta}d"
+        wks = delta // 7
+        if delta > 0:   arrow = f" 🔴+{wks}wk" if wks else f" 🔴+{delta}d"
+        elif delta < 0: arrow = f" 🟢{wks}wk"  if wks else f" 🟢{delta}d"
         else:           arrow = ""
         return f"{val}{arrow}"
 
@@ -4820,12 +4821,15 @@ def tab_pipeline(dash):
             row_dict[snap["label"]] = _fmt_cell(snap["key"], r, r.get("jan15",""))
         # Week-over-week badge
         wow = r["_wow"]
-        if wow > 0:   row_dict["vs Last Wk"] = f"🔴 +{wow}d"
-        elif wow < 0: row_dict["vs Last Wk"] = f"🟢 {wow}d"
+        wow_wks = wow // 7
+        if wow > 0:   row_dict["vs Last Wk"] = f"🔴 +{wow_wks}wk" if wow_wks else f"🔴 +{wow}d"
+        elif wow < 0: row_dict["vs Last Wk"] = f"🟢 {wow_wks}wk"  if wow_wks else f"🟢 {wow}d"
         else:         row_dict["vs Last Wk"] = "—"
+        net = r["delta_days"]
+        net_wks = net // 7
         row_dict["Net vs Jan 15"] = (
-            f"+{r['delta_days']}d" if r["delta_days"] > 0
-            else (f"{r['delta_days']}d" if r["delta_days"] < 0 else "±0")
+            f"+{net_wks}wk" if net > 0
+            else (f"{net_wks}wk" if net < 0 else "±0")
         )
         hist_rows.append(row_dict)
 
