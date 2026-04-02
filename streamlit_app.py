@@ -2853,9 +2853,50 @@ def tab_insights(dash):
 
 
 # ─────────────────────────────────────────────
+# TAB PASSWORD GATE
+# ─────────────────────────────────────────────
+_TAB_PASSWORD = "7brew2026"   # ← change this to whatever you want
+
+def _require_password(tab_key: str) -> bool:
+    """
+    Show a password prompt for a work-in-progress tab.
+    Returns True if the user is authenticated (content should render),
+    False if the gate should block rendering.
+    """
+    auth_key = f"_auth_{tab_key}"
+    if st.session_state.get(auth_key):
+        return True
+
+    st.markdown("")
+    cc = st.columns([1, 2, 1])
+    with cc[1]:
+        st.markdown(
+            '<div style="text-align:center;padding:40px 0 10px;">'
+            '<span style="font-size:48px;">🔒</span><br>'
+            '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;'
+            'letter-spacing:2px;color:#1A1919;">WORK IN PROGRESS</span><br>'
+            '<span style="font-size:13px;color:#888;">This tab is still being built. '
+            'Enter the access code to preview.</span>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        pw = st.text_input("Access code", type="password", key=f"_pw_{tab_key}",
+                           label_visibility="collapsed", placeholder="Enter access code…")
+        if st.button("Unlock", key=f"_btn_{tab_key}", use_container_width=True):
+            if pw == _TAB_PASSWORD:
+                st.session_state[auth_key] = True
+                st.rerun()
+            else:
+                st.error("Incorrect code — try again.")
+    return False
+
+
+# ─────────────────────────────────────────────
 # TAB: FORECAST
 # ─────────────────────────────────────────────
 def tab_forecast(dash):
+    if not _require_password("forecast"):
+        return
     section("FORECAST P4–P13 2026 (Draft)", "P1–P3 actuals locked · P4–P13 projected · 3 scenarios · Seasonal watch notes")
 
     fc = dash.get("forecast_26", [])
@@ -4430,6 +4471,8 @@ function toggleGroup(key){{
 
 
 def tab_pipeline(dash):
+    if not _require_password("pipeline"):
+        return
     import streamlit.components.v1 as components
 
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
