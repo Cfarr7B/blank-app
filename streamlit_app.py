@@ -4232,32 +4232,31 @@ _CITY_COORDS = {
 # Regions mapped from spreadsheet abbreviations to full names used throughout the dashboard.
 _PIPELINE_UPCOMING = [
     # ── Phase 5: Construction ──────────────────────────────────────────────────
-    {"rsh":"RSH-00075","store":"000516","phase":"5. Construction","address":"1211 W Henderson St","city":"Cleburne","state":"TX","region":"North Central TX","cs":"11/03/25","bd":"12/10/25","open":"03/30/26"},
-    {"rsh":"RSH-00066","store":"000709","phase":"5. Construction","address":"1050 N Hobart St","city":"Pampa","state":"TX","region":"West TX","cs":"10/20/25","bd":"Retrofit","open":"03/30/26"},
+    # RSH-00075 Cleburne TX and RSH-00066 Pampa TX opened 03/30/26 → moved to _PIPELINE_OPEN_PDF
     {"rsh":"RSH-00068","store":"000711","phase":"5. Construction","address":"1540 N Valley Mills Drive","city":"Waco","state":"TX","region":"South Central TX","cs":"11/03/25","bd":"12/03/25","open":"04/13/26"},
     {"rsh":"RSH-00082","store":"000987","phase":"5. Construction","address":"3617 Classen Blvd","city":"Norman","state":"OK","region":"Central OK","cs":"12/01/25","bd":"03/04/26","open":"04/13/26"},
     {"rsh":"RSH-00097","store":"000878","phase":"5. Construction","address":"2105 MLK Blvd","city":"Panama City","state":"FL","region":"FL Panhandle East","cs":"11/19/25","bd":"03/06/26","open":"04/20/26"},
-    {"rsh":"RSH-00069","store":"000571","phase":"5. Construction","address":"801 Beal Pkwy N","city":"Fort Walton Beach","state":"FL","region":"FL Panhandle East","cs":"12/17/25","bd":"03/04/26","open":"04/27/26"},
-    {"rsh":"RSH-00081","store":"000986","phase":"5. Construction","address":"490 Mary Esther Blvd","city":"Mary Esther","state":"FL","region":"FL Panhandle East","cs":"01/26/26","bd":"02/26/26","open":"05/18/26"},
     {"rsh":"RSH-00096","store":"000968","phase":"5. Construction","address":"6518 NW Cache Road","city":"Lawton","state":"OK","region":"South OK","cs":"02/02/26","bd":"03/19/26","open":"05/18/26"},
+    {"rsh":"RSH-00091","store":"001122","phase":"5. Construction","address":"3008 W Stan Schlueter Loop","city":"Killeen","state":"TX","region":"South Central TX","cs":"02/18/26","bd":"03/27/26","open":"05/18/26"},
+    {"rsh":"RSH-00101","store":"001238","phase":"5. Construction","address":"1707 S Valley Mills Dr","city":"Beverly Hills","state":"TX","region":"South Central TX","cs":"02/23/26","bd":"04/01/26","open":"05/18/26"},
+    {"rsh":"RSH-00081","store":"000986","phase":"5. Construction","address":"490 Mary Esther Blvd","city":"Mary Esther","state":"FL","region":"FL Panhandle East","cs":"01/26/26","bd":"02/26/26","open":"06/01/26"},
     {"rsh":"RSH-00095","store":"000518","phase":"5. Construction","address":"1420 Ohio Avenue","city":"Lynn Haven","state":"FL","region":"FL Panhandle East","cs":"01/22/26","bd":"02/18/26","open":"06/01/26"},
-    {"rsh":"RSH-00091","store":"001122","phase":"5. Construction","address":"3008 W Stan Schlueter Loop","city":"Killeen","state":"TX","region":"South Central TX","cs":"02/18/26","bd":"03/27/26","open":"06/01/26"},
     {"rsh":"RSH-00109","store":"001234","phase":"5. Construction","address":"2415 S Country Club Rd","city":"El Reno","state":"OK","region":"North OK","cs":"02/23/26","bd":"04/08/26","open":"06/08/26"},
     {"rsh":"RSH-00071","store":"000520","phase":"5. Construction","address":"1194 Broad St","city":"Brooksville","state":"FL","region":"FL West Coast","cs":"01/12/26","bd":"03/11/26","open":"06/08/26"},
-    {"rsh":"RSH-00101","store":"001238","phase":"5. Construction","address":"1707 S Valley Mills Dr","city":"Beverly Hills","state":"TX","region":"South Central TX","cs":"02/23/26","bd":"04/01/26","open":"06/15/26"},
     {"rsh":"RSH-00079","store":"000547","phase":"5. Construction","address":"833 W. Edmond Rd","city":"Edmond","state":"OK","region":"North OK","cs":"02/16/26","bd":"03/17/26","open":"06/15/26"},
+    {"rsh":"RSH-00069","store":"000571","phase":"5. Construction","address":"801 Beal Pkwy N","city":"Fort Walton Beach","state":"FL","region":"FL Panhandle East","cs":"12/17/25","bd":"03/04/26","open":"06/22/26"},
     {"rsh":"RSH-00116","store":"001119","phase":"5. Construction","address":"210 23rd St","city":"Canyon","state":"TX","region":"West TX","cs":"03/02/26","bd":"04/16/26","open":"06/22/26"},
-    {"rsh":"RSH-00089","store":"000327","phase":"5. Construction","address":"401 Gulf Breeze Pkwy","city":"Gulf Breeze","state":"FL","region":"FL Panhandle West","cs":"01/05/26","bd":"Stick Build","open":"07/13/26"},
+    {"rsh":"RSH-00078","store":"000674","phase":"5. Construction","address":"1937 US 19 Hwy","city":"Holiday","state":"FL","region":"FL West Coast","cs":"03/25/26","bd":"04/22/26","open":"08/10/26"},
+    {"rsh":"RSH-00089","store":"000327","phase":"5. Construction","address":"401 Gulf Breeze Pkwy","city":"Gulf Breeze","state":"FL","region":"FL Panhandle West","cs":"01/05/26","bd":"Stick Build","open":"08/10/26"},
     # ── Phase 4: Permitting ────────────────────────────────────────────────────
     {"rsh":"RSH-00106","store":"001236","phase":"4. Permitting","address":"12902 Indiana Ave","city":"Lubbock","state":"TX","region":"West TX","cs":"04/06/26","bd":"05/13/26","open":"07/27/26"},
-    {"rsh":"RSH-00078","store":"000674","phase":"4. Permitting","address":"1937 US 19 Hwy","city":"Holiday","state":"FL","region":"FL West Coast","cs":"03/25/26","bd":"04/22/26","open":"08/03/26"},
     {"rsh":"RSH-00123","store":"001332","phase":"4. Permitting","address":"108 Sequoyah Ln","city":"Altus","state":"OK","region":"South OK","cs":"04/13/26","bd":"05/13/26","open":"08/03/26"},
     {"rsh":"RSH-00102","store":"001118","phase":"4. Permitting","address":"3700 College Ave","city":"Snyder","state":"TX","region":"Middle Earth","cs":"04/13/26","bd":"Stick Build","open":"08/10/26"},
     {"rsh":"RSH-00114","store":"001154","phase":"4. Permitting","address":"8106 N Davis Hwy","city":"Pensacola","state":"FL","region":"FL Panhandle West","cs":"04/06/26","bd":"05/06/26","open":"08/10/26"},
     {"rsh":"RSH-00110","store":"001156","phase":"4. Permitting","address":"955 US-377","city":"Granbury","state":"TX","region":"North Central TX","cs":"04/13/26","bd":"05/20/26","open":"08/10/26"},
     {"rsh":"RSH-00133","store":"001333","phase":"4. Permitting","address":"2917 SW 104th St","city":"Oklahoma City","state":"OK","region":"North OK","cs":"04/20/26","bd":"05/27/26","open":"08/10/26"},
     {"rsh":"RSH-00092","store":"000428","phase":"4. Permitting","address":"9101 College Pkwy","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"04/06/26","bd":"05/06/26","open":"08/17/26"},
-    {"rsh":"RSH-00084","store":"000380","phase":"4. Permitting","address":"1225 Tamiami Trail","city":"Punta Gorda","state":"FL","region":"FL West Coast","cs":"04/27/26","bd":"05/27/26","open":"08/31/26"},
+    {"rsh":"RSH-00084","store":"000380","phase":"4. Permitting","address":"1225 Tamiami Trail","city":"Punta Gorda","state":"FL","region":"FL West Coast","cs":"04/27/26","bd":"05/27/26","open":"09/28/26"},
     {"rsh":"RSH-00087","store":"000883","phase":"4. Permitting","address":"1603 3rd St","city":"Winter Haven","state":"FL","region":"FL West Coast","cs":"04/16/26","bd":"05/20/26","open":"09/14/26"},
     {"rsh":"RSH-00094","store":"000757","phase":"4. Permitting","address":"4102 Cleveland Ave","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"04/13/26","bd":"05/20/26","open":"09/28/26"},
     {"rsh":"RSH-00088","store":"000404","phase":"4. Permitting","address":"1201 Homestead Rd N","city":"Lehigh Acres","state":"FL","region":"FL West Coast","cs":"05/06/26","bd":"06/03/26","open":"10/19/26"},
@@ -4272,17 +4271,17 @@ _PIPELINE_UPCOMING = [
     {"rsh":"RSH-00146","store":"001368","phase":"4. Permitting","address":"7725 Moccasin Wallow Road","city":"Palmetto","state":"FL","region":"FL West Coast","cs":"09/28/26","bd":"09/09/26","open":"03/01/27"},
     {"rsh":"RSH-00231","store":"001323","phase":"4. Permitting","address":"19017 S Tamiami Trl","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"11/30/26","bd":"01/13/27","open":"05/03/27"},
     # ── Phase 3: Design ────────────────────────────────────────────────────────
-    {"rsh":"RSH-00112","store":"001241","phase":"3. Design","address":"100 S New Rd","city":"Waco","state":"TX","region":"South Central TX","cs":"06/22/26","bd":"07/15/26","open":"10/05/26"},
-    {"rsh":"RSH-00134","store":"001686","phase":"3. Design","address":"855 NE Alsbury Blvd","city":"Burleson","state":"TX","region":"South Central TX","cs":"07/20/26","bd":"08/26/26","open":"11/09/26"},
+    {"rsh":"RSH-00112","store":"001241","phase":"4. Permitting","address":"100 S New Rd","city":"Waco","state":"TX","region":"South Central TX","cs":"06/22/26","bd":"07/15/26","open":"10/05/26"},
+    {"rsh":"RSH-00134","store":"001686","phase":"4. Permitting","address":"855 NE Alsbury Blvd","city":"Burleson","state":"TX","region":"South Central TX","cs":"07/20/26","bd":"08/26/26","open":"11/09/26"},
     {"rsh":"RSH-00103","store":"001713","phase":"3. Design","address":"736 Hewitt Dr","city":"Waco","state":"TX","region":"South Central TX","cs":"08/10/26","bd":"Retrofit","open":"11/30/26"},
     {"rsh":"RSH-00149","store":"001673","phase":"3. Design","address":"1020 E State Hwy 152","city":"Mustang","state":"OK","region":"Central OK","cs":"09/07/26","bd":"10/07/26","open":"01/04/27"},
     {"rsh":"RSH-00129","store":"001714","phase":"3. Design","address":"4227 East US Hwy 377","city":"Granbury","state":"TX","region":"North Central TX","cs":"08/10/26","bd":"09/16/26","open":"12/07/26"},
-    {"rsh":"RSH-00104","store":"001693","phase":"3. Design","address":"13500 N Rockwell Ave","city":"Oklahoma City","state":"OK","region":"Central OK","cs":"09/07/26","bd":"Retrofit","open":"01/25/27"},
-    {"rsh":"RSH-00180","store":"001404","phase":"3. Design","address":"2602 50th St Suite 300","city":"Lubbock","state":"TX","region":"West TX","cs":"08/31/26","bd":"09/30/26","open":"01/25/27"},
+    {"rsh":"RSH-00104","store":"001693","phase":"4. Permitting","address":"13500 N Rockwell Ave","city":"Oklahoma City","state":"OK","region":"Central OK","cs":"09/07/26","bd":"Retrofit","open":"01/25/27"},
+    {"rsh":"RSH-00180","store":"001404","phase":"4. Permitting","address":"2602 50th St Suite 300","city":"Lubbock","state":"TX","region":"West TX","cs":"08/31/26","bd":"09/30/26","open":"01/25/27"},
     {"rsh":"RSH-00528","store":"TBD","phase":"3. Design","address":"2401 Henney Rd","city":"Choctaw","state":"OK","region":"Central OK","cs":"09/21/26","bd":"11/04/26","open":"02/01/27"},
     {"rsh":"RSH-00111","store":"TBD","phase":"3. Design","address":"35910 US-27","city":"Haines City","state":"FL","region":"FL West Coast","cs":"09/21/26","bd":"10/21/26","open":"02/22/27"},
     {"rsh":"RSH-00127","store":"TBD","phase":"3. Design","address":"Covell and Sooner","city":"Edmond","state":"OK","region":"North OK","cs":"01/06/27","bd":"02/10/27","open":"05/24/27"},
-    {"rsh":"RSH-00147","store":"001405","phase":"3. Design","address":"10581 Colonial Blvd","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"11/04/26","bd":"12/09/26","open":"04/19/27"},
+    {"rsh":"RSH-00147","store":"001405","phase":"4. Permitting","address":"10581 Colonial Blvd","city":"Fort Myers","state":"FL","region":"FL West Coast","cs":"11/04/26","bd":"12/09/26","open":"04/19/27"},
     {"rsh":"RSH-00273","store":"001341","phase":"3. Design","address":"6875 N Church Ave","city":"Mulberry","state":"FL","region":"FL West Coast","cs":"11/30/26","bd":"01/06/27","open":"05/03/27"},
     {"rsh":"RSH-00115","store":"001280","phase":"3. Design","address":"1159 Missouri Ave N","city":"Largo","state":"FL","region":"FL West Coast","cs":"01/25/27","bd":"03/03/27","open":"06/14/27"},
     {"rsh":"RSH-00099","store":"000990","phase":"3. Design","address":"NWC Alf Coleman & Hwy 98","city":"Panama City Beach","state":"FL","region":"FL Panhandle East","cs":"01/11/27","bd":"04/16/27","open":"08/16/27"},
@@ -4315,50 +4314,69 @@ _PIPELINE_UPCOMING = [
 ]
 
 # Phase 6 open stands (from Drew's Mar 26 report) — used for map only where not in data.json
+# Phase 6 open stands per Apr 2, 2026 Drew report — 12 total
 _PIPELINE_OPEN_PDF = [
-    {"store":"000570","city":"Belleview",     "state":"FL","region":"FL West Coast",      "open":"01/19/26","address":"5530 SE Abshier Blvd"},
-    {"store":"000875","city":"Weatherford",   "state":"OK","region":"Central OK",          "open":"01/19/26","address":"945 E Main St"},
-    {"store":"000356","city":"Bradenton",     "state":"FL","region":"FL West Coast",      "open":"01/19/26","address":"685 Cortez Rd W"},
-    {"store":"000872","city":"Oklahoma City", "state":"OK","region":"North OK",            "open":"01/26/26","address":"9281 N May Ave"},
-    {"store":"000882","city":"Gainesville",   "state":"TX","region":"North Central TX",    "open":"01/26/26","address":"403 W US HWY 82"},
-    {"store":"001117","city":"Midland",       "state":"TX","region":"Permian Basin",       "open":"01/26/26","address":"6403 W Hwy 158"},
-    {"store":"000877","city":"Pensacola",     "state":"FL","region":"FL Panhandle West",   "open":"02/09/26","address":"300 E Nine Mile"},
-    {"store":"000394","city":"Bradenton",     "state":"FL","region":"FL West Coast",      "open":"02/23/26","address":"5787 Manatee Ave W"},
-    {"store":"000573","city":"Spring Hill",   "state":"FL","region":"FL West Coast",      "open":"03/09/26","address":"1321 Commercial Way"},
-    {"store":"000758","city":"Belton",        "state":"TX","region":"South Central TX",    "open":"03/09/26","address":"2304 N Main St"},
+    {"store":"000570","city":"Belleview",     "state":"FL","region":"FL West Coast",    "open":"01/19/26","address":"5530 SE Abshier Blvd"},
+    {"store":"000875","city":"Weatherford",   "state":"OK","region":"Central OK",        "open":"01/19/26","address":"945 E Main St"},
+    {"store":"000356","city":"Bradenton",     "state":"FL","region":"FL West Coast",    "open":"01/19/26","address":"685 Cortez Rd W"},
+    {"store":"000872","city":"Oklahoma City", "state":"OK","region":"North OK",          "open":"01/26/26","address":"9281 N May Ave"},
+    {"store":"000882","city":"Gainesville",   "state":"TX","region":"North Central TX",  "open":"01/26/26","address":"403 W US HWY 82"},
+    {"store":"001117","city":"Midland",       "state":"TX","region":"Permian Basin",     "open":"01/26/26","address":"6403 W Hwy 158"},
+    {"store":"000877","city":"Pensacola",     "state":"FL","region":"FL Panhandle West", "open":"02/09/26","address":"300 E Nine Mile"},
+    {"store":"000394","city":"Bradenton",     "state":"FL","region":"FL West Coast",    "open":"02/23/26","address":"5787 Manatee Ave W"},
+    {"store":"000573","city":"Spring Hill",   "state":"FL","region":"FL West Coast",    "open":"03/09/26","address":"1321 Commercial Way"},
+    {"store":"000758","city":"Belton",        "state":"TX","region":"South Central TX",  "open":"03/09/26","address":"2304 N Main St"},
+    # Newly opened Apr 2 report
+    {"store":"000516","city":"Cleburne",      "state":"TX","region":"North Central TX",  "open":"03/30/26","address":"1211 W Henderson St"},
+    {"store":"000709","city":"Pampa",         "state":"TX","region":"West TX",           "open":"03/30/26","address":"1050 N Hobart St"},
 ]
 
 # Count of Phase 6 (open) stands per the latest Drew report — used for summary metric
-_PIPELINE_OPEN_COUNT_FROM_REPORT = 10
+_PIPELINE_OPEN_COUNT_FROM_REPORT = 12
 
+# ── Weekly snapshot tracking ──────────────────────────────────────────────────
+# Each entry lists every report date key in chronological order.
+# The Schedule Intelligence section uses this to build the date-drift table.
+_REPORT_SNAPSHOTS = [
+    {"key": "jan15", "label": "Jan 15"},
+    {"key": "mar26", "label": "Mar 26"},
+    {"key": "apr2",  "label": "Apr 2"},
+]
 
-# ── Schedule shift comparison: Jan 15 report vs Mar 26 report ────────────────
-# delta_days > 0 = pushed out (later), < 0 = pulled in (earlier)
-# Note: stands where Mar 26 date matches Jan 15 date are excluded (no net shift).
-# 2027 dates are soft/indicative — shift analysis focuses on 2026 opens only.
+# ── Open-date history: Jan 15 baseline → weekly snapshots ────────────────────
+# Only 2026 opens are tracked (2027 dates are soft/indicative).
+# delta_days = apr2 vs jan15 (cumulative drift from baseline)
+# Stands that bounced back to jan15 in a later report are still included
+# so the full oscillation history is preserved.
 _DATE_SHIFTS = [
-    # Pushed out — sorted largest to smallest slip (2026 opens)
-    {"rsh":"RSH-00102","city":"Snyder",            "state":"TX","store":"001118","jan15":"06/15/26","mar26":"08/10/26","delta_days":  56},
-    {"rsh":"RSH-00094","city":"Fort Myers",        "state":"FL","store":"000757","jan15":"08/03/26","mar26":"09/28/26","delta_days":  56},
-    {"rsh":"RSH-00068","city":"Waco",              "state":"TX","store":"000711","jan15":"02/23/26","mar26":"04/13/26","delta_days":  49},
-    {"rsh":"RSH-00088","city":"Lehigh Acres",      "state":"FL","store":"000404","jan15":"09/07/26","mar26":"10/19/26","delta_days":  42},
-    {"rsh":"RSH-00112","city":"Waco",              "state":"TX","store":"001241","jan15":"08/24/26","mar26":"10/05/26","delta_days":  42},
-    {"rsh":"RSH-00134","city":"Burleson",          "state":"TX","store":"001686","jan15":"09/28/26","mar26":"11/09/26","delta_days":  42},
-    {"rsh":"RSH-00103","city":"Waco",              "state":"TX","store":"001713","jan15":"10/19/26","mar26":"11/30/26","delta_days":  42},
-    {"rsh":"RSH-00078","city":"Holiday",           "state":"FL","store":"000674","jan15":"07/06/26","mar26":"08/03/26","delta_days":  28},
-    {"rsh":"RSH-00079","city":"Edmond",            "state":"OK","store":"000547","jan15":"05/18/26","mar26":"06/15/26","delta_days":  28},
-    {"rsh":"RSH-00106","city":"Lubbock",           "state":"TX","store":"001236","jan15":"06/29/26","mar26":"07/27/26","delta_days":  28},
-    {"rsh":"RSH-00092","city":"Fort Myers",        "state":"FL","store":"000428","jan15":"07/20/26","mar26":"08/17/26","delta_days":  28},
-    {"rsh":"RSH-00087","city":"Winter Haven",      "state":"FL","store":"000883","jan15":"08/17/26","mar26":"09/14/26","delta_days":  28},
-    {"rsh":"RSH-00110","city":"Granbury",          "state":"TX","store":"001156","jan15":"07/20/26","mar26":"08/10/26","delta_days":  21},
-    {"rsh":"RSH-00116","city":"Canyon",            "state":"TX","store":"001119","jan15":"06/08/26","mar26":"06/22/26","delta_days":  14},
-    {"rsh":"RSH-00084","city":"Punta Gorda",       "state":"FL","store":"000380","jan15":"08/17/26","mar26":"08/31/26","delta_days":  14},
-    {"rsh":"RSH-00083","city":"Oklahoma City",     "state":"OK","store":"000874","jan15":"10/26/26","mar26":"11/09/26","delta_days":  14},
-    {"rsh":"RSH-00086","city":"Ocala",             "state":"FL","store":"000414","jan15":"10/19/26","mar26":"11/02/26","delta_days":  14},
-    # Pulled in (negative = earlier than Jan 15) — 2026 opens
-    {"rsh":"RSH-00114","city":"Pensacola",         "state":"FL","store":"001154","jan15":"09/07/26","mar26":"08/10/26","delta_days": -28},
-    {"rsh":"RSH-00229","city":"Pensacola",         "state":"FL","store":"001344","jan15":"11/30/26","mar26":"11/02/26","delta_days": -28},
-    {"rsh":"RSH-00113","city":"North Port",        "state":"FL","store":"001120","jan15":"12/14/26","mar26":"12/07/26","delta_days":  -7},
+    # ── Still pushed out vs Jan 15 ────────────────────────────────────────────
+    {"rsh":"RSH-00102","city":"Snyder",        "state":"TX","store":"001118","jan15":"06/15/26","mar26":"08/10/26","apr2":"08/10/26","delta_days":  56},
+    {"rsh":"RSH-00094","city":"Fort Myers",    "state":"FL","store":"000757","jan15":"08/03/26","mar26":"09/28/26","apr2":"09/28/26","delta_days":  56},
+    {"rsh":"RSH-00068","city":"Waco",          "state":"TX","store":"000711","jan15":"02/23/26","mar26":"04/13/26","apr2":"04/13/26","delta_days":  49},
+    {"rsh":"RSH-00088","city":"Lehigh Acres",  "state":"FL","store":"000404","jan15":"09/07/26","mar26":"10/19/26","apr2":"10/19/26","delta_days":  42},
+    {"rsh":"RSH-00112","city":"Waco",          "state":"TX","store":"001241","jan15":"08/24/26","mar26":"10/05/26","apr2":"10/05/26","delta_days":  42},
+    {"rsh":"RSH-00134","city":"Burleson",      "state":"TX","store":"001686","jan15":"09/28/26","mar26":"11/09/26","apr2":"11/09/26","delta_days":  42},
+    {"rsh":"RSH-00103","city":"Waco",          "state":"TX","store":"001713","jan15":"10/19/26","mar26":"11/30/26","apr2":"11/30/26","delta_days":  42},
+    {"rsh":"RSH-00084","city":"Punta Gorda",   "state":"FL","store":"000380","jan15":"08/17/26","mar26":"08/31/26","apr2":"09/28/26","delta_days":  42},
+    {"rsh":"RSH-00079","city":"Edmond",        "state":"OK","store":"000547","jan15":"05/18/26","mar26":"06/15/26","apr2":"06/15/26","delta_days":  28},
+    {"rsh":"RSH-00078","city":"Holiday",       "state":"FL","store":"000674","jan15":"07/06/26","mar26":"08/03/26","apr2":"08/10/26","delta_days":  35},
+    {"rsh":"RSH-00106","city":"Lubbock",       "state":"TX","store":"001236","jan15":"06/29/26","mar26":"07/27/26","apr2":"07/27/26","delta_days":  28},
+    {"rsh":"RSH-00092","city":"Fort Myers",    "state":"FL","store":"000428","jan15":"07/20/26","mar26":"08/17/26","apr2":"08/17/26","delta_days":  28},
+    {"rsh":"RSH-00087","city":"Winter Haven",  "state":"FL","store":"000883","jan15":"08/17/26","mar26":"09/14/26","apr2":"09/14/26","delta_days":  28},
+    {"rsh":"RSH-00110","city":"Granbury",      "state":"TX","store":"001156","jan15":"07/20/26","mar26":"08/10/26","apr2":"08/10/26","delta_days":  21},
+    {"rsh":"RSH-00116","city":"Canyon",        "state":"TX","store":"001119","jan15":"06/08/26","mar26":"06/22/26","apr2":"06/22/26","delta_days":  14},
+    {"rsh":"RSH-00083","city":"Oklahoma City", "state":"OK","store":"000874","jan15":"10/26/26","mar26":"11/09/26","apr2":"11/09/26","delta_days":  14},
+    {"rsh":"RSH-00086","city":"Ocala",         "state":"FL","store":"000414","jan15":"10/19/26","mar26":"11/02/26","apr2":"11/02/26","delta_days":  14},
+    # ── Still pulled in vs Jan 15 ─────────────────────────────────────────────
+    {"rsh":"RSH-00114","city":"Pensacola",     "state":"FL","store":"001154","jan15":"09/07/26","mar26":"08/10/26","apr2":"08/10/26","delta_days": -28},
+    {"rsh":"RSH-00229","city":"Pensacola",     "state":"FL","store":"001344","jan15":"11/30/26","mar26":"11/02/26","apr2":"11/02/26","delta_days": -28},
+    {"rsh":"RSH-00113","city":"North Port",    "state":"FL","store":"001120","jan15":"12/14/26","mar26":"12/07/26","apr2":"12/07/26","delta_days":  -7},
+    # ── Bounced back to Jan 15 (net zero drift but oscillated) ────────────────
+    {"rsh":"RSH-00069","city":"Fort Walton Beach","state":"FL","store":"000571","jan15":"06/22/26","mar26":"04/27/26","apr2":"06/22/26","delta_days":   0},
+    {"rsh":"RSH-00081","city":"Mary Esther",   "state":"FL","store":"000986","jan15":"06/01/26","mar26":"05/18/26","apr2":"06/01/26","delta_days":   0},
+    {"rsh":"RSH-00089","city":"Gulf Breeze",   "state":"FL","store":"000327","jan15":"08/10/26","mar26":"07/13/26","apr2":"08/10/26","delta_days":   0},
+    {"rsh":"RSH-00091","city":"Killeen",       "state":"TX","store":"001122","jan15":"05/18/26","mar26":"06/01/26","apr2":"05/18/26","delta_days":   0},
+    {"rsh":"RSH-00101","city":"Beverly Hills", "state":"TX","store":"001238","jan15":"05/18/26","mar26":"06/15/26","apr2":"05/18/26","delta_days":   0},
 ]
 
 # Stands new to pipeline since Jan 15 report
@@ -4724,70 +4742,105 @@ def tab_pipeline(dash):
         )
         st.plotly_chart(fig_rev, use_container_width=True)
 
-    # ── Schedule Intelligence: date shifts vs Jan 15 ──────────────────────────
+    # ── Schedule Intelligence: weekly date-drift tracker ─────────────────────
     st.divider()
-    st.markdown("#### 📅 Schedule Intelligence — Jan 15 vs Mar 26 Report  *(2026 opens only)*")
-    st.caption("2027 dates are soft/indicative and excluded from shift analysis.")
+    snap_labels = [s["label"] for s in _REPORT_SNAPSHOTS]
+    latest_snap = _REPORT_SNAPSHOTS[-1]
+    st.markdown(f"#### 📅 Schedule Intelligence — Opening Date Tracker  *(2026 opens · indexed to Jan 15 baseline)*")
+    st.caption(f"Tracks how opening dates move week-over-week vs the Jan 15 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
 
     shifts_df = pd.DataFrame(_DATE_SHIFTS)
-    # Apply same state/region filters to schedule intelligence data
     if sel_state != "All States":
         shifts_df = shifts_df[shifts_df["state"] == sel_state]
-    # _DATE_SHIFTS doesn't have region, so filter new_stands by matching dff RSH IDs
     dff_rshs = set(dff["rsh"].tolist())
     filtered_new_since = [r for r in _NEW_SINCE_JAN15 if r in dff_rshs]
-    pushed = shifts_df[shifts_df["delta_days"] > 0].sort_values("delta_days", ascending=False)
-    pulled = shifts_df[shifts_df["delta_days"] < 0].sort_values("delta_days")
+
+    # Compute week-over-week delta (latest vs previous snapshot)
+    prev_snap = _REPORT_SNAPSHOTS[-2]["key"] if len(_REPORT_SNAPSHOTS) >= 2 else "jan15"
+    curr_snap = latest_snap["key"]
+    def _parse_d(s):
+        if not s or str(s) in ("","nan","None"): return None
+        for fmt in ["%m/%d/%y","%m/%d/%Y"]:
+            try:
+                import datetime as _dt
+                return _dt.datetime.strptime(str(s), fmt).date()
+            except: pass
+        return None
+
+    def _wow(row):
+        d_prev = _parse_d(row.get(prev_snap,""))
+        d_curr = _parse_d(row.get(curr_snap,""))
+        if d_prev and d_curr: return (d_curr - d_prev).days
+        return 0
+
+    shifts_df["_wow"] = shifts_df.apply(_wow, axis=1)
+
+    pushed  = shifts_df[shifts_df["delta_days"] > 0].sort_values("delta_days", ascending=False)
+    pulled  = shifts_df[shifts_df["delta_days"] < 0].sort_values("delta_days")
+    bounced = shifts_df[shifts_df["delta_days"] == 0]
     new_count = len(filtered_new_since)
 
     si1, si2, si3, si4 = st.columns(4)
     total_slip_days = pushed["delta_days"].sum()
     total_rev_risk  = total_slip_days * REV_PER_DAY
-    si1.metric("Stands Pushed Out",  len(pushed), delta=f"{len(pushed)} vs baseline", delta_color="inverse")
-    si2.metric("Stands Pulled In",   len(pulled), delta=f"{len(pulled)} vs baseline", delta_color="normal")
-    si3.metric("New to Pipeline",    new_count)
-    si4.metric("Revenue at Risk (Delays)", f"${total_rev_risk/1e6:.2f}M",
-               help="Sum of delayed days × $45K/7 days per stand")
+    wow_movers = shifts_df[shifts_df["_wow"] != 0]
+    si1.metric("Stands Pushed Out (vs Jan 15)",  len(pushed),   delta=f"+{len(pushed)} delayed",   delta_color="inverse")
+    si2.metric("Stands Pulled In (vs Jan 15)",   len(pulled),   delta=f"{len(pulled)} accelerated", delta_color="normal")
+    si3.metric(f"Moved This Week ({snap_labels[-2]}→{snap_labels[-1]})", len(wow_movers),
+               help="Stands whose date changed since the previous report")
+    si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
+               help="Sum of pushed-out days × $45K/7 per stand vs Jan 15")
 
-    sc1, sc2 = st.columns(2)
+    # ── Full date history table ───────────────────────────────────────────────
+    st.markdown("**📋 Full Date History** — every snapshot vs Jan 15 baseline")
+    st.caption("🔴 pushed out · 🟢 pulled in · ⬜ no change · ↕ bounced back to baseline")
 
-    with sc1:
-        st.markdown("**🔴 Pushed Out**")
-        pushed_display = pushed.copy()
-        pushed_display["Stand"] = pushed_display.apply(
-            lambda r: f"{r['city']}, {r['state']}", axis=1)
-        pushed_display["Slip"] = pushed_display["delta_days"].apply(
-            lambda d: f"+{d//7}w {d%7}d" if d % 7 else f"+{d//7}w")
-        pushed_display["Rev Impact"] = pushed_display["delta_days"].apply(
-            lambda d: f"${d * REV_PER_DAY:,.0f}")
-        pushed_display["Jan 15"]  = pushed_display["jan15"]
-        pushed_display["Mar 26"]  = pushed_display["mar26"]
-        st.dataframe(
-            pushed_display[["Stand","Jan 15","Mar 26","Slip","Rev Impact"]],
-            use_container_width=True, hide_index=True,
-            height=min(50 + len(pushed_display) * 35, 420),
+    def _fmt_cell(snap_key, row, jan15_date):
+        """Return display string with movement indicator."""
+        val  = row.get(snap_key, "")
+        if not val or str(val) in ("","nan","None"):
+            return "—"
+        d_val  = _parse_d(val)
+        d_jan15 = _parse_d(jan15_date)
+        if not d_val or not d_jan15:
+            return str(val)
+        delta = (d_val - d_jan15).days
+        if delta > 0:   arrow = f" 🔴+{delta}d"
+        elif delta < 0: arrow = f" 🟢{delta}d"
+        else:           arrow = ""
+        return f"{val}{arrow}"
+
+    hist_rows = []
+    for _, r in shifts_df.sort_values("delta_days", ascending=False).iterrows():
+        row_dict = {
+            "Stand": f"{r['city']}, {r['state']}",
+            "Store": r.get("store",""),
+        }
+        for snap in _REPORT_SNAPSHOTS:
+            row_dict[snap["label"]] = _fmt_cell(snap["key"], r, r.get("jan15",""))
+        # Week-over-week badge
+        wow = r["_wow"]
+        if wow > 0:   row_dict["vs Last Wk"] = f"🔴 +{wow}d"
+        elif wow < 0: row_dict["vs Last Wk"] = f"🟢 {wow}d"
+        else:         row_dict["vs Last Wk"] = "—"
+        row_dict["Net vs Jan 15"] = (
+            f"+{r['delta_days']}d" if r["delta_days"] > 0
+            else (f"{r['delta_days']}d" if r["delta_days"] < 0 else "±0")
         )
+        hist_rows.append(row_dict)
 
-    with sc2:
-        st.markdown("**🟢 Pulled In  ·  🆕 New Stands**")
-        pulled_display = pulled.copy()
-        pulled_display["Stand"] = pulled_display.apply(
-            lambda r: f"{r['city']}, {r['state']}", axis=1)
-        pulled_display["Early"] = pulled_display["delta_days"].apply(
-            lambda d: f"{abs(d)//7}w {abs(d)%7}d early" if abs(d) % 7 else f"{abs(d)//7}w early")
-        pulled_display["Rev Gain"] = pulled_display["delta_days"].apply(
-            lambda d: f"${abs(d) * REV_PER_DAY:,.0f}")
-        pulled_display["Jan 15"]  = pulled_display["jan15"]
-        pulled_display["Mar 26"]  = pulled_display["mar26"]
-        st.dataframe(
-            pulled_display[["Stand","Jan 15","Mar 26","Early","Rev Gain"]],
-            use_container_width=True, hide_index=True,
-        )
-        st.markdown("**New since Jan 15:**")
+    if hist_rows:
+        hist_df = pd.DataFrame(hist_rows)
+        st.dataframe(hist_df, use_container_width=True, hide_index=True,
+                     height=min(60 + len(hist_df) * 35, 520))
+
+    # ── New stands since Jan 15 ───────────────────────────────────────────────
+    if filtered_new_since:
+        st.markdown("**🆕 New to Pipeline Since Jan 15**")
         new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in filtered_new_since]
         if new_stands_info:
-            new_df = pd.DataFrame(new_stands_info)[["city","state","open"]].copy()
-            new_df.columns = ["City","State","Est. Opening"]
+            new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
+            new_df.columns = ["City","State","Phase","Est. Opening"]
             st.dataframe(new_df, use_container_width=True, hide_index=True)
 
     # ── Delay sensitivity ─────────────────────────────────────────────────────
