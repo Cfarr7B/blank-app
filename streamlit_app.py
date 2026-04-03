@@ -3057,7 +3057,10 @@ _SOS_PERIODS = {
         "file":     "sos_p2_2026.csv",
         "midpoint": "2026-02-09",
     },
-    # "P3 2026 (Feb 23 – Mar 22)": {"file": "sos_p3_2026.csv", "midpoint": "2026-03-07"},
+    "P3 2026 (Feb 23 – Mar 22)": {
+        "file":     "sos_p3_2026.csv",
+        "midpoint": "2026-03-07",
+    },
     # "P4 2026 (Mar 23 – Apr 19)": {"file": "sos_p4_2026.csv", "midpoint": "2026-04-05"},
 }
 
@@ -3365,7 +3368,6 @@ def tab_sos(dash):
         trend_df = pd.DataFrame(trend_rows)
 
         # Line chart: system avg + prime time avg by period
-        import plotly.graph_objects as go
         fig_trend = go.Figure()
         fig_trend.add_trace(go.Scatter(
             x=trend_df["Period"], y=trend_df["_sys"],
