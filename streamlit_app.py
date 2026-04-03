@@ -3030,6 +3030,249 @@ def _require_password(tab_key: str) -> bool:
 
 
 # ─────────────────────────────────────────────
+# TAB: SPEED OF SERVICE
+# ─────────────────────────────────────────────
+
+# SOS benchmarks by stand age (in minutes)
+_SOS_GOALS = {
+    "0-2 months":  5.00,   # first two months
+    "3 months":    4.50,
+    "4 months":    4.00,
+    "5 months":    3.75,
+    "6+ months":   3.50,
+}
+
+@st.cache_data
+def _load_sos_data():
+    """Load and parse the Speed of Service CSV."""
+    import os
+    sos_path = os.path.join(os.path.dirname(__file__), "sos_p3.csv")
+    df = pd.read_csv(sos_path)
+
+    # Parse Site into components: store number, city, state
+    df["Store_Num"] = df["Site"].str.extract(r"^(\d+)").fillna("")
+    df["City_State"] = df["Site"].str.extract(r"^\d+\s*-\s*(.+?)\s*-\s*\d+$").fillna(df["Site"])
+
+    # Business Date
+    df["Business Date"] = pd.to_datetime(df["Business Date"], errors="coerce")
+    df["Date"] = df["Business Date"].dt.date
+    df["DayOfWeek"] = df["Business Date"].dt.day_name()
+    df["WeekLabel"] = df["Business Date"].dt.to_period("W").astype(str)
+
+    # SOS column – convert seconds → minutes
+    sos_col = "SOS: Order Created to Served"
+    if sos_col in df.columns:
+        df["SOS_sec"] = pd.to_numeric(df[sos_col], errors="coerce")
+        df["SOS_min"] = df["SOS_sec"] / 60.0
+    else:
+        df["SOS_sec"] = None
+        df["SOS_min"] = None
+
+    # Hour slot
+    df["Hour"] = pd.to_numeric(df["Time"], errors="coerce") if "Time" in df.columns else None
+
+    # State from City_State
+    df["State"] = df["City_State"].str.extract(r",\s*([A-Z]{2})$").fillna("Unknown")
+
+    # Filter valid SOS rows (exclude 0 and extreme outliers >10 min)
+    df = df[df["SOS_min"].notna() & (df["SOS_min"] > 0) & (df["SOS_min"] <= 10)].copy()
+
+    return df
+
+
+def _sos_goal_for_age(age_months: float) -> float:
+    """Return the SOS goal in minutes for a given stand age in months."""
+    if age_months < 2:
+        return _SOS_GOALS["0-2 months"]
+    elif age_months < 3:
+        return _SOS_GOALS["3 months"]
+    elif age_months < 4:
+        return _SOS_GOALS["4 months"]
+    elif age_months < 5:
+        return _SOS_GOALS["5 months"]
+    else:
+        return _SOS_GOALS["6+ months"]
+
+
+def tab_sos(dash):
+    if not _require_password("sos"):
+        return
+
+    section("⏱️ SPEED OF SERVICE — P3 2026",
+            "Feb 23 – Mar 9 · Hourly wait times by stand · Source: 7Brew SOS Report · Draft")
+
+    try:
+        df = _load_sos_data()
+    except Exception as e:
+        st.error(f"Could not load SOS data: {e}")
+        return
+
+    if df.empty:
+        st.warning("No SOS data found.")
+        return
+
+    # ── Region / cohort mapping from main dash ──────────────────────────────
+    stands_info = {}
+    for rec in dash.get("stand_records", []):
+        sn = str(rec.get("Store Number", "")).strip().zfill(6)
+        if sn:
+            stands_info[sn] = {
+                "Region":    rec.get("Region", "Unknown"),
+                "Age_Bucket": rec.get("Age_Bucket", "Unknown"),
+                "Open Date": rec.get("Open Date", ""),
+            }
+
+    df["Region"] = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Region", "Unknown"))
+    df["Cohort"]  = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Age_Bucket", "Unknown"))
+
+    # ── Controls row ──────────────────────────────────────────────────────────
+    c1, c2, c3 = st.columns(3)
+    view_mode  = c1.selectbox("View",     ["Hourly", "Daily", "Weekly"], key="sos_view")
+    group_mode = c2.selectbox("Group by", ["Stand", "State", "Region", "Cohort"], key="sos_group")
+    target_filter = c3.selectbox("Stands", ["All", "Above Goal", "Below Goal"], key="sos_target")
+
+    # ── KPI Strip ─────────────────────────────────────────────────────────────
+    sys_avg = df["SOS_min"].mean()
+    best_stand_row = df.groupby("Store_Num")["SOS_min"].mean().idxmin()
+    worst_stand_row = df.groupby("Store_Num")["SOS_min"].mean().idxmax()
+    best_val  = df.groupby("Store_Num")["SOS_min"].mean().min()
+    worst_val = df.groupby("Store_Num")["SOS_min"].mean().max()
+
+    # % of transactions under 3:30 (mature goal)
+    pct_under_goal = (df["SOS_min"] < 3.5).sum() / len(df) * 100
+
+    ka, kb, kc, kd = st.columns(4)
+    ka.metric("System Avg", f"{sys_avg:.2f} min")
+    kb.metric("Best Stand", f"{best_val:.2f} min", help=f"Store {best_stand_row}")
+    kc.metric("Worst Stand", f"{worst_val:.2f} min", help=f"Store {worst_stand_row}")
+    kd.metric("Txns Under 3:30", f"{pct_under_goal:.1f}%")
+
+    st.markdown("---")
+
+    # ── Goals reference ───────────────────────────────────────────────────────
+    with st.expander("📋 SOS Goals by Stand Age"):
+        goal_cols = st.columns(len(_SOS_GOALS))
+        for i, (label, target) in enumerate(_SOS_GOALS.items()):
+            goal_cols[i].metric(label, f"{target:.2f} min")
+
+    # ── Group-by helper ───────────────────────────────────────────────────────
+    def _group_col():
+        if group_mode == "Stand":   return "City_State"
+        if group_mode == "State":   return "State"
+        if group_mode == "Region":  return "Region"
+        if group_mode == "Cohort":  return "Cohort"
+        return "City_State"
+
+    gcol = _group_col()
+
+    # ── Main chart ────────────────────────────────────────────────────────────
+    st.subheader(f"{view_mode} SOS — by {group_mode}")
+
+    if view_mode == "Hourly":
+        if "Hour" in df.columns and df["Hour"].notna().any():
+            hour_df = df.groupby([gcol, "Hour"])["SOS_min"].mean().reset_index()
+            hour_df.columns = [gcol, "Hour", "SOS_min"]
+            fig = px.line(
+                hour_df, x="Hour", y="SOS_min", color=gcol,
+                labels={"SOS_min": "Avg SOS (min)", "Hour": "Hour of Day"},
+                title=f"Avg SOS by Hour — grouped by {group_mode}",
+            )
+            fig.add_hline(y=3.5, line_dash="dash", line_color="green",
+                          annotation_text="3:30 Mature Goal", annotation_position="bottom right")
+            fig.update_layout(height=420, legend_title=group_mode)
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Heatmap: hour × day of week
+            st.subheader("Heatmap — Hour × Day of Week")
+            heat_df = df.groupby(["DayOfWeek", "Hour"])["SOS_min"].mean().reset_index()
+            day_order = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+            heat_pivot = heat_df.pivot(index="DayOfWeek", columns="Hour", values="SOS_min").reindex(day_order)
+            fig_h = px.imshow(
+                heat_pivot,
+                color_continuous_scale="RdYlGn_r",
+                labels={"color": "Avg SOS (min)", "x": "Hour", "y": "Day"},
+                title="Avg SOS (min) — Hour of Day × Day of Week",
+                aspect="auto",
+            )
+            fig_h.update_layout(height=350)
+            st.plotly_chart(fig_h, use_container_width=True)
+        else:
+            st.info("Hour data not available.")
+
+    elif view_mode == "Daily":
+        day_df = df.groupby([gcol, "Date"])["SOS_min"].mean().reset_index()
+        day_df.columns = [gcol, "Date", "SOS_min"]
+        day_df["Date"] = pd.to_datetime(day_df["Date"])
+        fig = px.line(
+            day_df, x="Date", y="SOS_min", color=gcol,
+            labels={"SOS_min": "Avg SOS (min)", "Date": "Date"},
+            title=f"Daily Avg SOS — grouped by {group_mode}",
+        )
+        fig.add_hline(y=3.5, line_dash="dash", line_color="green",
+                      annotation_text="3:30 Mature Goal", annotation_position="bottom right")
+        fig.update_layout(height=420, legend_title=group_mode)
+        st.plotly_chart(fig, use_container_width=True)
+
+    elif view_mode == "Weekly":
+        wk_df = df.groupby([gcol, "WeekLabel"])["SOS_min"].mean().reset_index()
+        wk_df.columns = [gcol, "Week", "SOS_min"]
+        fig = px.bar(
+            wk_df, x="Week", y="SOS_min", color=gcol, barmode="group",
+            labels={"SOS_min": "Avg SOS (min)", "Week": "Week"},
+            title=f"Weekly Avg SOS — grouped by {group_mode}",
+        )
+        fig.add_hline(y=3.5, line_dash="dash", line_color="green",
+                      annotation_text="3:30 Mature Goal", annotation_position="bottom right")
+        fig.update_layout(height=420, legend_title=group_mode)
+        st.plotly_chart(fig, use_container_width=True)
+
+    # ── Ranking table ─────────────────────────────────────────────────────────
+    st.subheader(f"📊 {group_mode} Ranking — Avg SOS")
+    rank_df = df.groupby(gcol)["SOS_min"].agg(["mean", "median", "count"]).reset_index()
+    rank_df.columns = [group_mode, "Avg SOS (min)", "Median SOS (min)", "Transactions"]
+    rank_df["Avg SOS (min)"]    = rank_df["Avg SOS (min)"].round(2)
+    rank_df["Median SOS (min)"] = rank_df["Median SOS (min)"].round(2)
+    rank_df["vs 3:30 Goal"]     = (rank_df["Avg SOS (min)"] - 3.5).round(2)
+    rank_df = rank_df.sort_values("Avg SOS (min)")
+    rank_df.insert(0, "Rank", range(1, len(rank_df) + 1))
+
+    # Colour rows: green if below 3:30, red if above
+    def _colour_sos(val):
+        try:
+            return "color: #12a06e; font-weight:bold" if float(val) < 3.5 else "color: #AC2430; font-weight:bold"
+        except Exception:
+            return ""
+
+    st.dataframe(
+        rank_df.style.applymap(_colour_sos, subset=["Avg SOS (min)"]),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # ── Stand-level detail ────────────────────────────────────────────────────
+    st.subheader("🔍 Individual Stand Detail")
+    stand_options = sorted(df["City_State"].dropna().unique().tolist())
+    sel_stand = st.selectbox("Select stand", stand_options, key="sos_stand_sel")
+    stand_df = df[df["City_State"] == sel_stand].copy()
+
+    if not stand_df.empty:
+        col_a, col_b = st.columns(2)
+        col_a.metric("Avg SOS", f"{stand_df['SOS_min'].mean():.2f} min")
+        col_b.metric("Transactions", f"{len(stand_df):,}")
+
+        detail_fig = px.line(
+            stand_df.groupby("Date")["SOS_min"].mean().reset_index(),
+            x="Date", y="SOS_min",
+            title=f"Daily SOS — {sel_stand}",
+            labels={"SOS_min": "Avg SOS (min)"},
+        )
+        detail_fig.add_hline(y=3.5, line_dash="dash", line_color="green",
+                             annotation_text="3:30 Goal")
+        detail_fig.update_layout(height=320)
+        st.plotly_chart(detail_fig, use_container_width=True)
+
+
+# ─────────────────────────────────────────────
 # TAB: FORECAST
 # ─────────────────────────────────────────────
 def tab_forecast(dash):
@@ -4985,6 +5228,7 @@ def main():
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
         "🔮 Forecast (Draft)",
+        "⏱️ Speed of Service (Draft)",
     ]
     tabs = st.tabs(tab_names)
 
@@ -4996,6 +5240,7 @@ def main():
     with tabs[5]: tab_utilities(dash)
     with tabs[6]: tab_pipeline(dash)
     with tabs[7]: tab_forecast(dash)
+    with tabs[8]: tab_sos(dash)
 
 
 main()
