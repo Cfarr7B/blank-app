@@ -3049,11 +3049,16 @@ _PERIOD_DAYS = 28   # one 7Brew accounting period
 # Add one entry per period as new CSVs become available.
 # midpoint is used to compute stand age → goal tier.
 _SOS_PERIODS = {
-    "P3 2026 (Feb 23 – Mar 9)": {
-        "file":     "sos_p3.csv",
-        "midpoint": "2026-03-01",
+    "P1 2026 (Dec 29 – Jan 25)": {
+        "file":     "sos_p1_2026.csv",
+        "midpoint": "2026-01-12",
     },
-    # "P4 2026 (Mar 10 – Mar 23)": {"file": "sos_p4.csv", "midpoint": "2026-03-16"},
+    "P2 2026 (Jan 26 – Feb 22)": {
+        "file":     "sos_p2_2026.csv",
+        "midpoint": "2026-02-09",
+    },
+    # "P3 2026 (Feb 23 – Mar 22)": {"file": "sos_p3_2026.csv", "midpoint": "2026-03-07"},
+    # "P4 2026 (Mar 23 – Apr 19)": {"file": "sos_p4_2026.csv", "midpoint": "2026-04-05"},
 }
 
 def _fmt_sos(minutes) -> str:
