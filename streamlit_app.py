@@ -3035,12 +3035,22 @@ def _require_password(tab_key: str) -> bool:
 
 # SOS benchmarks by stand age (in minutes)
 _SOS_GOALS = {
-    "0-2 months":  5.00,   # first two months
-    "3 months":    4.50,
-    "4 months":    4.00,
-    "5 months":    3.75,
-    "6+ months":   3.50,
+    "0-2 months":  5.00,   # first two months  (5:00)
+    "3 months":    4.50,   # 4:30
+    "4 months":    4.00,   # 4:00
+    "5 months":    3.75,   # 3:45
+    "6+ months":   3.50,   # 3:30
 }
+
+def _fmt_sos(minutes) -> str:
+    """Convert decimal minutes to M:SS format.  4.5 → '4:30',  3.75 → '3:45'."""
+    try:
+        total_sec = round(float(minutes) * 60)
+        m, s = divmod(abs(total_sec), 60)
+        sign = "-" if total_sec < 0 else ""
+        return f"{sign}{m}:{s:02d}"
+    except Exception:
+        return "—"
 
 @st.cache_data
 def _load_sos_data():
@@ -3142,9 +3152,9 @@ def tab_sos(dash):
     pct_under_goal = (df["SOS_min"] < 3.5).sum() / len(df) * 100
 
     ka, kb, kc, kd = st.columns(4)
-    ka.metric("System Avg", f"{sys_avg:.2f} min")
-    kb.metric("Best Stand", f"{best_val:.2f} min", help=f"Store {best_stand_row}")
-    kc.metric("Worst Stand", f"{worst_val:.2f} min", help=f"Store {worst_stand_row}")
+    ka.metric("System Avg", _fmt_sos(sys_avg))
+    kb.metric("Best Stand", _fmt_sos(best_val), help=f"Store {best_stand_row}")
+    kc.metric("Worst Stand", _fmt_sos(worst_val), help=f"Store {worst_stand_row}")
     kd.metric("Txns Under 3:30", f"{pct_under_goal:.1f}%")
 
     st.markdown("---")
@@ -3153,7 +3163,7 @@ def tab_sos(dash):
     with st.expander("📋 SOS Goals by Stand Age"):
         goal_cols = st.columns(len(_SOS_GOALS))
         for i, (label, target) in enumerate(_SOS_GOALS.items()):
-            goal_cols[i].metric(label, f"{target:.2f} min")
+            goal_cols[i].metric(label, _fmt_sos(target))
 
     # ── Group-by helper ───────────────────────────────────────────────────────
     def _group_col():
@@ -3229,22 +3239,34 @@ def tab_sos(dash):
     # ── Ranking table ─────────────────────────────────────────────────────────
     st.subheader(f"📊 {group_mode} Ranking — Avg SOS")
     rank_df = df.groupby(gcol)["SOS_min"].agg(["mean", "median", "count"]).reset_index()
-    rank_df.columns = [group_mode, "Avg SOS (min)", "Median SOS (min)", "Transactions"]
-    rank_df["Avg SOS (min)"]    = rank_df["Avg SOS (min)"].round(2)
-    rank_df["Median SOS (min)"] = rank_df["Median SOS (min)"].round(2)
-    rank_df["vs 3:30 Goal"]     = (rank_df["Avg SOS (min)"] - 3.5).round(2)
-    rank_df = rank_df.sort_values("Avg SOS (min)")
+    rank_df.columns = [group_mode, "_avg_raw", "_med_raw", "Transactions"]
+    rank_df = rank_df.sort_values("_avg_raw")
     rank_df.insert(0, "Rank", range(1, len(rank_df) + 1))
 
-    # Colour rows: green if below 3:30, red if above
+    # Format display columns as M:SS
+    rank_df["Avg SOS"]    = rank_df["_avg_raw"].apply(_fmt_sos)
+    rank_df["Median SOS"] = rank_df["_med_raw"].apply(_fmt_sos)
+
+    # vs 3:30 goal — show signed M:SS delta
+    def _vs_goal(v):
+        delta = v - 3.5
+        sign = "+" if delta >= 0 else "-"
+        return f"{sign}{_fmt_sos(abs(delta))}"
+    rank_df["vs 3:30 Goal"] = rank_df["_avg_raw"].apply(_vs_goal)
+
+    # Colour Avg SOS cell: green if below 3:30, red if above
     def _colour_sos(val):
+        """val is already a M:SS string like '3:45'."""
         try:
-            return "color: #12a06e; font-weight:bold" if float(val) < 3.5 else "color: #AC2430; font-weight:bold"
+            parts = str(val).lstrip("-").split(":")
+            minutes = int(parts[0]) + int(parts[1]) / 60
+            return "color: #12a06e; font-weight:bold" if minutes < 3.5 else "color: #AC2430; font-weight:bold"
         except Exception:
             return ""
 
+    display_cols = ["Rank", group_mode, "Avg SOS", "Median SOS", "vs 3:30 Goal", "Transactions"]
     st.dataframe(
-        rank_df.style.applymap(_colour_sos, subset=["Avg SOS (min)"]),
+        rank_df[display_cols].style.map(_colour_sos, subset=["Avg SOS"]),
         use_container_width=True,
         hide_index=True,
     )
@@ -3257,7 +3279,7 @@ def tab_sos(dash):
 
     if not stand_df.empty:
         col_a, col_b = st.columns(2)
-        col_a.metric("Avg SOS", f"{stand_df['SOS_min'].mean():.2f} min")
+        col_a.metric("Avg SOS", _fmt_sos(stand_df["SOS_min"].mean()))
         col_b.metric("Transactions", f"{len(stand_df):,}")
 
         detail_fig = px.line(
