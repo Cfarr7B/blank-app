@@ -3034,13 +3034,17 @@ def _require_password(tab_key: str) -> bool:
 # ─────────────────────────────────────────────
 
 # SOS benchmarks by stand age (in minutes)
+# Goals are defined by 28-day periods since a stand's opening date.
+# "First 2 periods" = 0-55 days open, "3rd period" = 56-83 days, etc.
 _SOS_GOALS = {
-    "0-2 months":  5.00,   # 5:00
-    "3 months":    4.50,   # 4:30
-    "4 months":    4.00,   # 4:00
-    "5 months":    3.75,   # 3:45
-    "6+ months":   3.50,   # 3:30
+    "P1–P2  (first 2 periods)":  5.00,   # 5:00  ·  days 0–55
+    "P3     (3rd period)":        4.50,   # 4:30  ·  days 56–83
+    "P4     (4th period)":        4.00,   # 4:00  ·  days 84–111
+    "P5     (5th period)":        3.75,   # 3:45  ·  days 112–139
+    "P6+    (6th period & on)":   3.50,   # 3:30  ·  days 140+
 }
+
+_PERIOD_DAYS = 28   # one 7Brew accounting period
 
 # Add one entry per period as new CSVs become available.
 # midpoint is used to compute stand age → goal tier.
@@ -3120,18 +3124,49 @@ def _load_sos_data(csv_filename: str):
     return df
 
 
-def _sos_goal_for_age(age_months: float) -> float:
-    """Return the SOS goal in minutes for a given stand age in months."""
-    if age_months < 2:
-        return _SOS_GOALS["0-2 months"]
-    elif age_months < 3:
-        return _SOS_GOALS["3 months"]
-    elif age_months < 4:
-        return _SOS_GOALS["4 months"]
-    elif age_months < 5:
-        return _SOS_GOALS["5 months"]
-    else:
-        return _SOS_GOALS["6+ months"]
+def _sos_goal_for_period(days_since_open) -> float:
+    """Return SOS goal in minutes based on days open (28-day period boundaries)."""
+    try:
+        d = int(days_since_open)
+    except (TypeError, ValueError):
+        return 3.50   # default to mature goal if unknown
+    periods = d // _PERIOD_DAYS   # 0-indexed: 0=P1, 1=P2, 2=P3 …
+    if periods < 2:   return _SOS_GOALS["P1–P2  (first 2 periods)"]
+    if periods == 2:  return _SOS_GOALS["P3     (3rd period)"]
+    if periods == 3:  return _SOS_GOALS["P4     (4th period)"]
+    if periods == 4:  return _SOS_GOALS["P5     (5th period)"]
+    return                 _SOS_GOALS["P6+    (6th period & on)"]
+
+def _goal_tier_label(days_since_open) -> str:
+    """Human-readable tier label for a stand's age."""
+    try:
+        d = int(days_since_open)
+    except (TypeError, ValueError):
+        return "P6+"
+    p = d // _PERIOD_DAYS
+    if p < 2:   return "P1–P2"
+    if p == 2:  return "P3"
+    if p == 3:  return "P4"
+    if p == 4:  return "P5"
+    return "P6+"
+
+# Keep old name as alias for any remaining call sites
+_sos_goal_for_age = _sos_goal_for_period
+
+
+@st.cache_data
+def _load_all_sos_periods_raw() -> dict:
+    """Return {period_label: df} for every period CSV that exists on disk."""
+    import os
+    result = {}
+    for label, meta in _SOS_PERIODS.items():
+        path = os.path.join(os.path.dirname(__file__), meta["file"])
+        if os.path.exists(path):
+            try:
+                result[label] = _load_sos_data(meta["file"])
+            except Exception:
+                pass
+    return result
 
 
 def tab_sos(dash):
@@ -3172,22 +3207,29 @@ def tab_sos(dash):
                 "Open Date":  rec.get("Open Date", ""),
             }
 
-    def _age_months(store_num):
+    def _days_open(store_num, as_of=None):
+        """Days the stand had been open as of 'as_of' date (defaults to period_mid)."""
         od = stands_info.get(store_num, {}).get("Open Date", "")
+        ref = as_of or period_mid
         try:
             open_dt = pd.to_datetime(od).date()
-            return max(0.0, (period_mid - open_dt).days / 30.44)
+            return max(0, (ref - open_dt).days)
         except Exception:
             return None
 
-    def _stand_goal(store_num):
-        am = _age_months(store_num)
-        return _sos_goal_for_age(am) if am is not None else 3.50   # default mature goal
+    def _stand_goal(store_num, as_of=None):
+        d = _days_open(store_num, as_of)
+        return _sos_goal_for_period(d if d is not None else 999)
+
+    def _stand_tier(store_num, as_of=None):
+        d = _days_open(store_num, as_of)
+        return _goal_tier_label(d if d is not None else 999)
 
     df["Region"]     = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Region",     "Unknown"))
     df["Cohort"]     = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Age_Bucket", "Unknown"))
-    df["Stand_Goal"] = df["Store_Num"].map(_stand_goal)   # per-stand age-based goal (minutes)
-    df["At_Goal"]    = df["SOS_min"] <= df["Stand_Goal"]  # True = at or beating goal
+    df["Stand_Goal"] = df["Store_Num"].map(_stand_goal)
+    df["Goal_Tier"]  = df["Store_Num"].map(_stand_tier)
+    df["At_Goal"]    = df["SOS_min"] <= df["Stand_Goal"]
 
     # ── Shared helpers ────────────────────────────────────────────────────────
     _sos_ticks      = [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
@@ -3257,10 +3299,188 @@ def tab_sos(dash):
     st.markdown("---")
 
     # ── Goals reference ───────────────────────────────────────────────────────
-    with st.expander("📋 SOS Goals by Stand Age"):
+    with st.expander("📋 SOS Goals by Period (28-day periods since opening)"):
         goal_cols = st.columns(len(_SOS_GOALS))
         for i, (label, target) in enumerate(_SOS_GOALS.items()):
-            goal_cols[i].metric(label, _fmt_sos(target))
+            goal_cols[i].metric(label.split("(")[0].strip(), _fmt_sos(target),
+                                help=label)
+
+    # ═════════════════════════════════════════════════════════════════════════
+    # SECTION 0 — PERIOD-OVER-PERIOD TREND
+    # (auto-populates as more period CSVs are added to _SOS_PERIODS)
+    # ═════════════════════════════════════════════════════════════════════════
+    st.subheader("📈 Period-over-Period Trend")
+
+    all_period_data = _load_all_sos_periods_raw()
+    available_periods = list(all_period_data.keys())   # in dict-insertion order
+
+    if len(available_periods) < 2:
+        st.info(
+            f"Currently showing **{available_periods[0] if available_periods else 'no data'}**. "
+            "Add the next period's CSV to `_SOS_PERIODS` in the code to start tracking improvement over time."
+        )
+    else:
+        # Build one summary row per period
+        trend_rows = []
+        for plabel in available_periods:
+            pmeta  = _SOS_PERIODS[plabel]
+            pmid   = pd.to_datetime(pmeta["midpoint"]).date()
+            pdata  = all_period_data[plabel].copy()
+
+            # Attach goals for this period's midpoint
+            pdata["Stand_Goal"] = pdata["Store_Num"].map(
+                lambda sn, _pmid=pmid: _sos_goal_for_period(_days_open(sn, _pmid) or 999)
+            )
+            pdata["IsPrimeTime_p"] = pdata.apply(
+                lambda r: (7 <= r["Hour"] <= 9) if not r["IsWeekend"] else (9 <= r["Hour"] <= 12), axis=1
+            ) if "Hour" in pdata.columns else False
+
+            p_prime  = pdata[pdata["IsPrimeTime_p"]]["SOS_min"].mean()
+            p_sys    = pdata["SOS_min"].mean()
+            p_at_goal = pdata["SOS_min"].le(pdata["Stand_Goal"]).sum() / len(pdata) * 100
+
+            # Stand-level: # at / over goal
+            s_avg  = pdata.groupby("Stand_Label")["SOS_min"].mean()
+            s_goal = pdata.groupby("Stand_Label")["Stand_Goal"].first()
+            n_at   = sum(s_avg[s] <= s_goal[s] for s in s_avg.index if s in s_goal)
+            n_ov   = len(s_avg) - n_at
+
+            trend_rows.append({
+                "Period":             plabel,
+                "_sys":               p_sys,
+                "_prime":             p_prime,
+                "_pct":               p_at_goal,
+                "System Avg":         _fmt_sos(p_sys),
+                "Prime Time Avg":     _fmt_sos(p_prime),
+                "Txns At Goal":       f"{p_at_goal:.1f}%",
+                "Stands Meeting Goal": n_at,
+                "Stands Over Goal":   n_ov,
+            })
+
+        trend_df = pd.DataFrame(trend_rows)
+
+        # Line chart: system avg + prime time avg by period
+        import plotly.graph_objects as go
+        fig_trend = go.Figure()
+        fig_trend.add_trace(go.Scatter(
+            x=trend_df["Period"], y=trend_df["_sys"],
+            mode="lines+markers+text",
+            name="System Avg",
+            line=dict(color="#4C78A8", width=2),
+            text=trend_df["System Avg"], textposition="top center",
+        ))
+        fig_trend.add_trace(go.Scatter(
+            x=trend_df["Period"], y=trend_df["_prime"],
+            mode="lines+markers+text",
+            name="Prime Time Avg",
+            line=dict(color="#F58518", width=2),
+            text=trend_df["Prime Time Avg"], textposition="bottom center",
+        ))
+        # Mature goal reference
+        fig_trend.add_hline(y=3.5, line_dash="dot", line_color="green",
+                            annotation_text="3:30 Mature Goal")
+        fig_trend.update_yaxes(
+            tickvals=[2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
+            ticktext=[_fmt_sos(v) for v in [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]],
+            title_text="Avg SOS",
+        )
+        fig_trend.update_layout(
+            title="System-wide SOS Trend — Period over Period",
+            height=380, legend=dict(orientation="h", y=-0.15),
+        )
+        st.plotly_chart(fig_trend, use_container_width=True)
+
+        # Summary table
+        st.dataframe(
+            trend_df[["Period", "System Avg", "Prime Time Avg",
+                       "Txns At Goal", "Stands Meeting Goal", "Stands Over Goal"]],
+            use_container_width=True, hide_index=True,
+        )
+
+    st.markdown("---")
+
+    # ═════════════════════════════════════════════════════════════════════════
+    # SECTION 0b — GOAL TIER BREAKDOWN (current period)
+    # ═════════════════════════════════════════════════════════════════════════
+    st.subheader("🎯 Goal Tier Breakdown — Current Period")
+    st.caption("Each stand's goal is set by its age at the period midpoint (28-day periods).")
+
+    tier_order = ["P1–P2", "P3", "P4", "P5", "P6+"]
+    tier_goals = {"P1–P2": 5.0, "P3": 4.5, "P4": 4.0, "P5": 3.75, "P6+": 3.5}
+
+    # One row per stand
+    stand_tier_df = (
+        df.groupby("Stand_Label")
+        .agg(
+            _avg   =("SOS_min",    "mean"),
+            _goal  =("Stand_Goal", "first"),
+            _tier  =("Goal_Tier",  "first"),
+            _prime =("SOS_min",    lambda x: x[df.loc[x.index, "IsPrimeTime"]].mean()
+                     if df.loc[x.index, "IsPrimeTime"].any() else float("nan")),
+        )
+        .reset_index()
+    )
+
+    tier_rows = []
+    for tier in tier_order:
+        sub = stand_tier_df[stand_tier_df["_tier"] == tier]
+        if sub.empty:
+            continue
+        goal      = tier_goals[tier]
+        n_stands  = len(sub)
+        n_meeting = (sub["_avg"] <= goal).sum()
+        n_missing = n_stands - n_meeting
+        avg_sos   = sub["_avg"].mean()
+        tier_rows.append({
+            "Tier":          tier,
+            "Goal":          _fmt_sos(goal),
+            "# Stands":      n_stands,
+            "Avg SOS":       _fmt_sos(avg_sos),
+            "vs Goal":       ("+" if avg_sos - goal >= 0 else "-") + _fmt_sos(abs(avg_sos - goal)),
+            "✅ Meeting":    n_meeting,
+            "❌ Missing":    n_missing,
+            "% Meeting":     f"{n_meeting / n_stands * 100:.0f}%",
+        })
+
+    if tier_rows:
+        tier_summary_df = pd.DataFrame(tier_rows)
+
+        # Bar chart: avg SOS per tier vs their goal
+        fig_tier = go.Figure()
+        for _, row in tier_summary_df.iterrows():
+            goal_val = tier_goals[row["Tier"]]
+            avg_val  = stand_tier_df[stand_tier_df["_tier"] == row["Tier"]]["_avg"].mean()
+            colour   = "#12a06e" if avg_val <= goal_val else "#AC2430"
+            fig_tier.add_trace(go.Bar(
+                name=row["Tier"],
+                x=[row["Tier"]],
+                y=[avg_val],
+                marker_color=colour,
+                text=[_fmt_sos(avg_val)],
+                textposition="outside",
+                showlegend=False,
+            ))
+            # Goal line for this tier
+            fig_tier.add_shape(type="line",
+                x0=row["Tier"], x1=row["Tier"],
+                y0=0, y1=goal_val,
+                line=dict(color="white", dash="dash", width=2),
+            )
+
+        fig_tier.update_yaxes(
+            tickvals=[2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
+            ticktext=[_fmt_sos(v) for v in [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]],
+            title_text="Avg SOS",
+        )
+        fig_tier.update_layout(
+            title="Avg SOS vs Goal — by Tier",
+            height=360, barmode="overlay",
+        )
+        st.plotly_chart(fig_tier, use_container_width=True)
+
+        st.dataframe(tier_summary_df, use_container_width=True, hide_index=True)
+
+    st.markdown("---")
 
     # ═════════════════════════════════════════════════════════════════════════
     # SECTION 1 — PRIME TIME BY DAY
@@ -3576,9 +3796,11 @@ def tab_sos(dash):
     stand_df      = df[df["Stand_Label"] == sel_stand].copy()
 
     if not stand_df.empty:
+        this_sn       = stand_df["Store_Num"].iloc[0]
         this_goal     = stand_df["Stand_Goal"].iloc[0]
-        this_age_mo   = _age_months(stand_df["Store_Num"].iloc[0])
-        age_str       = f"{this_age_mo:.1f} months old" if this_age_mo is not None else "age unknown"
+        this_tier     = stand_df["Goal_Tier"].iloc[0]
+        this_days     = _days_open(this_sn)
+        age_str       = f"{this_days} days open ({this_tier})" if this_days is not None else "age unknown"
         prime_stand   = stand_df[stand_df["IsPrimeTime"]]["SOS_min"].mean()
 
         st.caption(f"Stand age at period midpoint: {age_str} · Goal: {_fmt_sos(this_goal)}")
