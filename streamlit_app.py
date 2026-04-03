@@ -3207,8 +3207,9 @@ def tab_sos(dash):
 
     stands_info = {}
     for rec in dash.get("stand_records", []):
-        sn = str(rec.get("Store Number", "")).strip().zfill(6)
-        if sn:
+        # stand_records uses Store_ID (int, e.g. 134) — zero-pad to match SOS Store_Num ("000134")
+        sn = str(rec.get("Store_ID", rec.get("Store Number", ""))).strip().zfill(6)
+        if sn and sn != "000000":
             stands_info[sn] = {
                 "Region":     rec.get("Region", "Unknown"),
                 "Age_Bucket": rec.get("Age_Bucket", "Unknown"),
