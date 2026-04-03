@@ -3059,15 +3059,26 @@ def _load_sos_data():
     sos_path = os.path.join(os.path.dirname(__file__), "sos_p3.csv")
     df = pd.read_csv(sos_path)
 
-    # Parse Site into components: store number, city, state
-    df["Store_Num"] = df["Site"].str.extract(r"^(\d+)").fillna("")
-    df["City_State"] = df["Site"].str.extract(r"^\d+\s*-\s*(.+?)\s*-\s*\d+$").fillna(df["Site"])
+    # Parse Site: "000087 - Big Spring, TX - 1"
+    df["Store_Num"]   = df["Site"].str.extract(r"^(\d+)").fillna("")
+    df["City_State"]  = df["Site"].str.extract(r"^\d+\s*-\s*(.+?)\s*-\s*\d+$").fillna(df["Site"])
+    # Unique stand label: store number + city (handles multi-stand cities)
+    df["Stand_Label"] = df["Store_Num"] + " — " + df["City_State"]
 
     # Business Date
     df["Business Date"] = pd.to_datetime(df["Business Date"], errors="coerce")
-    df["Date"] = df["Business Date"].dt.date
+    df["Date"]      = df["Business Date"].dt.date
     df["DayOfWeek"] = df["Business Date"].dt.day_name()
+    df["DayNum"]    = df["Business Date"].dt.dayofweek   # 0=Mon … 6=Sun
     df["WeekLabel"] = df["Business Date"].dt.to_period("W").astype(str)
+    df["IsWeekend"] = df["DayNum"].isin([5, 6])
+
+    # Parse Time: "07:00AM - 08:00AM" → integer hour (0-23)
+    if "Time" in df.columns:
+        time_start = df["Time"].str.extract(r"^(\d+:\d+[AP]M)", expand=False)
+        df["Hour"] = pd.to_datetime(time_start, format="%I:%M%p", errors="coerce").dt.hour
+    else:
+        df["Hour"] = None
 
     # SOS column – convert seconds → minutes
     sos_col = "SOS: Order Created to Served"
@@ -3078,11 +3089,20 @@ def _load_sos_data():
         df["SOS_sec"] = None
         df["SOS_min"] = None
 
-    # Hour slot
-    df["Hour"] = pd.to_numeric(df["Time"], errors="coerce") if "Time" in df.columns else None
-
     # State from City_State
     df["State"] = df["City_State"].str.extract(r",\s*([A-Z]{2})$").fillna("Unknown")
+
+    # Prime-time flag: weekday 7-9am, weekend 9am-12pm
+    def _is_prime(row):
+        h = row["Hour"]
+        if pd.isna(h):
+            return False
+        h = int(h)
+        if not row["IsWeekend"]:
+            return 7 <= h <= 9      # 7am, 8am, 9am slots
+        else:
+            return 9 <= h <= 12     # 9am, 10am, 11am, 12pm slots
+    df["IsPrimeTime"] = df.apply(_is_prime, axis=1)
 
     # Filter valid SOS rows (exclude 0 and extreme outliers >10 min)
     df = df[df["SOS_min"].notna() & (df["SOS_min"] > 0) & (df["SOS_min"] <= 10)].copy()
@@ -3127,35 +3147,42 @@ def tab_sos(dash):
         sn = str(rec.get("Store Number", "")).strip().zfill(6)
         if sn:
             stands_info[sn] = {
-                "Region":    rec.get("Region", "Unknown"),
+                "Region":     rec.get("Region", "Unknown"),
                 "Age_Bucket": rec.get("Age_Bucket", "Unknown"),
-                "Open Date": rec.get("Open Date", ""),
+                "Open Date":  rec.get("Open Date", ""),
             }
 
     df["Region"] = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Region", "Unknown"))
     df["Cohort"]  = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Age_Bucket", "Unknown"))
 
-    # ── Controls row ──────────────────────────────────────────────────────────
-    c1, c2, c3 = st.columns(3)
-    view_mode  = c1.selectbox("View",     ["Hourly", "Daily", "Weekly"], key="sos_view")
-    group_mode = c2.selectbox("Group by", ["Stand", "State", "Region", "Cohort"], key="sos_group")
-    target_filter = c3.selectbox("Stands", ["All", "Above Goal", "Below Goal"], key="sos_target")
+    # ── Shared y-axis tick formatter (M:SS labels on numeric axis) ────────────
+    _sos_ticks     = [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+    _sos_ticklabels = [_fmt_sos(v) for v in _sos_ticks]
+
+    def _apply_sos_yaxis(fig, title="Avg SOS"):
+        fig.update_yaxes(
+            tickvals=_sos_ticks,
+            ticktext=_sos_ticklabels,
+            title_text=title,
+        )
+        return fig
 
     # ── KPI Strip ─────────────────────────────────────────────────────────────
-    sys_avg = df["SOS_min"].mean()
-    best_stand_row = df.groupby("Store_Num")["SOS_min"].mean().idxmin()
-    worst_stand_row = df.groupby("Store_Num")["SOS_min"].mean().idxmax()
-    best_val  = df.groupby("Store_Num")["SOS_min"].mean().min()
-    worst_val = df.groupby("Store_Num")["SOS_min"].mean().max()
-
-    # % of transactions under 3:30 (mature goal)
+    sys_avg       = df["SOS_min"].mean()
+    by_stand_avg  = df.groupby("Stand_Label")["SOS_min"].mean()
+    best_label    = by_stand_avg.idxmin()
+    worst_label   = by_stand_avg.idxmax()
+    best_val      = by_stand_avg.min()
+    worst_val     = by_stand_avg.max()
     pct_under_goal = (df["SOS_min"] < 3.5).sum() / len(df) * 100
+    prime_avg     = df[df["IsPrimeTime"]]["SOS_min"].mean() if df["IsPrimeTime"].any() else sys_avg
 
-    ka, kb, kc, kd = st.columns(4)
-    ka.metric("System Avg", _fmt_sos(sys_avg))
-    kb.metric("Best Stand", _fmt_sos(best_val), help=f"Store {best_stand_row}")
-    kc.metric("Worst Stand", _fmt_sos(worst_val), help=f"Store {worst_stand_row}")
-    kd.metric("Txns Under 3:30", f"{pct_under_goal:.1f}%")
+    ka, kb, kc, kd, ke = st.columns(5)
+    ka.metric("System Avg",        _fmt_sos(sys_avg))
+    kb.metric("Prime Time Avg",    _fmt_sos(prime_avg))
+    kc.metric("Best Stand",        _fmt_sos(best_val),  help=best_label)
+    kd.metric("Worst Stand",       _fmt_sos(worst_val), help=worst_label)
+    ke.metric("Txns Under 3:30",   f"{pct_under_goal:.1f}%")
 
     st.markdown("---")
 
@@ -3165,49 +3192,140 @@ def tab_sos(dash):
         for i, (label, target) in enumerate(_SOS_GOALS.items()):
             goal_cols[i].metric(label, _fmt_sos(target))
 
-    # ── Group-by helper ───────────────────────────────────────────────────────
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 1 — DAY-OF-WEEK × HOUR PATTERN
+    # Average every instance of that day across the period into one curve
+    # ─────────────────────────────────────────────────────────────────────────
+    st.subheader("📅 Day-of-Week SOS Pattern — averaged across all weeks")
+    st.caption("Select a day to see the average hourly SOS curve, blending all instances of that day in the period.")
+
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    dow_sel = st.selectbox("Day of week", day_order, index=5, key="sos_dow_sel")   # default Saturday
+
+    dow_df = df[df["DayOfWeek"] == dow_sel].groupby("Hour")["SOS_min"].mean().reset_index()
+    dow_df.columns = ["Hour", "SOS_min"]
+    dow_df["Hour_Label"] = dow_df["Hour"].apply(
+        lambda h: f"{h % 12 or 12}{'am' if h < 12 else 'pm'}"
+    )
+
+    if not dow_df.empty:
+        # Count how many distinct dates went into this average
+        n_days = df[df["DayOfWeek"] == dow_sel]["Date"].nunique()
+        st.caption(f"Based on {n_days} {dow_sel}(s) in the data.")
+
+        fig_dow = px.line(
+            dow_df, x="Hour", y="SOS_min",
+            title=f"Average SOS by Hour — {dow_sel} (n={n_days})",
+            labels={"SOS_min": "Avg SOS", "Hour": "Hour of Day"},
+            markers=True,
+        )
+        fig_dow.add_hline(y=3.5, line_dash="dash", line_color="green",
+                          annotation_text="3:30 Mature Goal", annotation_position="bottom right")
+
+        # Prime-time shading
+        is_wkend = dow_sel in ["Saturday", "Sunday"]
+        prime_start, prime_end = (9, 13) if is_wkend else (7, 10)
+        fig_dow.add_vrect(
+            x0=prime_start - 0.5, x1=prime_end - 0.5,
+            fillcolor="orange", opacity=0.10,
+            annotation_text="Prime Time", annotation_position="top left",
+        )
+        _apply_sos_yaxis(fig_dow)
+        fig_dow.update_layout(height=400)
+        st.plotly_chart(fig_dow, use_container_width=True)
+
+        # Quick table: each hour, avg SOS, vs goal
+        dow_table = dow_df.copy()
+        dow_table["Avg SOS"] = dow_table["SOS_min"].apply(_fmt_sos)
+        dow_table["vs 3:30"] = dow_table["SOS_min"].apply(
+            lambda v: ("+" if v - 3.5 >= 0 else "-") + _fmt_sos(abs(v - 3.5))
+        )
+        dow_table["Prime Time"] = dow_table["Hour"].apply(
+            lambda h: "✅" if (prime_start <= h < prime_end) else ""
+        )
+        dow_table["Time Slot"] = dow_table["Hour"].apply(
+            lambda h: f"{h % 12 or 12}:00 {'AM' if h < 12 else 'PM'}"
+        )
+
+        def _colour_sos(val):
+            try:
+                parts = str(val).lstrip("-+").split(":")
+                m = int(parts[0]) + int(parts[1]) / 60
+                return "color: #12a06e; font-weight:bold" if m < 3.5 else "color: #AC2430; font-weight:bold"
+            except Exception:
+                return ""
+
+        st.dataframe(
+            dow_table[["Time Slot", "Avg SOS", "vs 3:30", "Prime Time"]]
+            .style.map(_colour_sos, subset=["Avg SOS"]),
+            use_container_width=True, hide_index=True,
+        )
+    else:
+        st.info(f"No hourly data for {dow_sel}.")
+
+    st.markdown("---")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 2 — HEATMAP: Day × Hour
+    # ─────────────────────────────────────────────────────────────────────────
+    st.subheader("🌡️ Heatmap — Hour of Day × Day of Week")
+    st.caption("Darker red = slower service. Prime time bands: Mon–Fri 7–10am, Sat–Sun 9am–1pm.")
+
+    heat_df    = df.groupby(["DayOfWeek", "Hour"])["SOS_min"].mean().reset_index()
+    heat_pivot = heat_df.pivot(index="DayOfWeek", columns="Hour", values="SOS_min").reindex(day_order)
+
+    # Custom colorscale: green at 3:30, red at 5:00+
+    fig_h = px.imshow(
+        heat_pivot,
+        color_continuous_scale="RdYlGn_r",
+        zmin=2.5, zmax=5.5,
+        labels={"color": "Avg SOS (min)", "x": "Hour", "y": "Day of Week"},
+        title="Avg SOS — Hour × Day of Week",
+        aspect="auto",
+    )
+    # Format hover to show M:SS
+    fig_h.update_traces(
+        hovertemplate="<b>%{y} — %{x}:00</b><br>Avg SOS: %{z:.2f} min<extra></extra>"
+    )
+    fig_h.update_layout(height=380, coloraxis_colorbar=dict(
+        tickvals=_sos_ticks,
+        ticktext=_sos_ticklabels,
+        title="Avg SOS",
+    ))
+    st.plotly_chart(fig_h, use_container_width=True)
+
+    st.markdown("---")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 3 — MAIN TREND VIEWS (Hourly / Daily / Weekly)
+    # ─────────────────────────────────────────────────────────────────────────
+    c1, c2 = st.columns(2)
+    view_mode  = c1.selectbox("View",     ["Hourly", "Daily", "Weekly"], key="sos_view")
+    group_mode = c2.selectbox("Group by", ["Stand", "State", "Region", "Cohort"], key="sos_group")
+
     def _group_col():
-        if group_mode == "Stand":   return "City_State"
-        if group_mode == "State":   return "State"
-        if group_mode == "Region":  return "Region"
-        if group_mode == "Cohort":  return "Cohort"
-        return "City_State"
+        if group_mode == "Stand":  return "Stand_Label"
+        if group_mode == "State":  return "State"
+        if group_mode == "Region": return "Region"
+        if group_mode == "Cohort": return "Cohort"
+        return "Stand_Label"
 
     gcol = _group_col()
-
-    # ── Main chart ────────────────────────────────────────────────────────────
     st.subheader(f"{view_mode} SOS — by {group_mode}")
 
     if view_mode == "Hourly":
-        if "Hour" in df.columns and df["Hour"].notna().any():
-            hour_df = df.groupby([gcol, "Hour"])["SOS_min"].mean().reset_index()
-            hour_df.columns = [gcol, "Hour", "SOS_min"]
-            fig = px.line(
-                hour_df, x="Hour", y="SOS_min", color=gcol,
-                labels={"SOS_min": "Avg SOS (min)", "Hour": "Hour of Day"},
-                title=f"Avg SOS by Hour — grouped by {group_mode}",
-            )
-            fig.add_hline(y=3.5, line_dash="dash", line_color="green",
-                          annotation_text="3:30 Mature Goal", annotation_position="bottom right")
-            fig.update_layout(height=420, legend_title=group_mode)
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Heatmap: hour × day of week
-            st.subheader("Heatmap — Hour × Day of Week")
-            heat_df = df.groupby(["DayOfWeek", "Hour"])["SOS_min"].mean().reset_index()
-            day_order = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-            heat_pivot = heat_df.pivot(index="DayOfWeek", columns="Hour", values="SOS_min").reindex(day_order)
-            fig_h = px.imshow(
-                heat_pivot,
-                color_continuous_scale="RdYlGn_r",
-                labels={"color": "Avg SOS (min)", "x": "Hour", "y": "Day"},
-                title="Avg SOS (min) — Hour of Day × Day of Week",
-                aspect="auto",
-            )
-            fig_h.update_layout(height=350)
-            st.plotly_chart(fig_h, use_container_width=True)
-        else:
-            st.info("Hour data not available.")
+        hour_df = df.groupby([gcol, "Hour"])["SOS_min"].mean().reset_index()
+        hour_df.columns = [gcol, "Hour", "SOS_min"]
+        fig = px.line(
+            hour_df, x="Hour", y="SOS_min", color=gcol,
+            title=f"Avg SOS by Hour — {group_mode}",
+            labels={"SOS_min": "Avg SOS", "Hour": "Hour of Day"},
+        )
+        fig.add_hline(y=3.5, line_dash="dash", line_color="green",
+                      annotation_text="3:30 Goal", annotation_position="bottom right")
+        _apply_sos_yaxis(fig)
+        fig.update_layout(height=440, legend_title=group_mode)
+        st.plotly_chart(fig, use_container_width=True)
 
     elif view_mode == "Daily":
         day_df = df.groupby([gcol, "Date"])["SOS_min"].mean().reset_index()
@@ -3215,12 +3333,13 @@ def tab_sos(dash):
         day_df["Date"] = pd.to_datetime(day_df["Date"])
         fig = px.line(
             day_df, x="Date", y="SOS_min", color=gcol,
-            labels={"SOS_min": "Avg SOS (min)", "Date": "Date"},
-            title=f"Daily Avg SOS — grouped by {group_mode}",
+            title=f"Daily Avg SOS — {group_mode}",
+            labels={"SOS_min": "Avg SOS", "Date": "Date"},
         )
         fig.add_hline(y=3.5, line_dash="dash", line_color="green",
-                      annotation_text="3:30 Mature Goal", annotation_position="bottom right")
-        fig.update_layout(height=420, legend_title=group_mode)
+                      annotation_text="3:30 Goal", annotation_position="bottom right")
+        _apply_sos_yaxis(fig)
+        fig.update_layout(height=440, legend_title=group_mode)
         st.plotly_chart(fig, use_container_width=True)
 
     elif view_mode == "Weekly":
@@ -3228,70 +3347,174 @@ def tab_sos(dash):
         wk_df.columns = [gcol, "Week", "SOS_min"]
         fig = px.bar(
             wk_df, x="Week", y="SOS_min", color=gcol, barmode="group",
-            labels={"SOS_min": "Avg SOS (min)", "Week": "Week"},
-            title=f"Weekly Avg SOS — grouped by {group_mode}",
+            title=f"Weekly Avg SOS — {group_mode}",
+            labels={"SOS_min": "Avg SOS", "Week": "Week"},
         )
         fig.add_hline(y=3.5, line_dash="dash", line_color="green",
-                      annotation_text="3:30 Mature Goal", annotation_position="bottom right")
-        fig.update_layout(height=420, legend_title=group_mode)
+                      annotation_text="3:30 Goal", annotation_position="bottom right")
+        _apply_sos_yaxis(fig)
+        fig.update_layout(height=440, legend_title=group_mode)
         st.plotly_chart(fig, use_container_width=True)
 
     # ── Ranking table ─────────────────────────────────────────────────────────
-    st.subheader(f"📊 {group_mode} Ranking — Avg SOS")
+    st.subheader(f"📊 {group_mode} Ranking — Avg SOS (all hours)")
     rank_df = df.groupby(gcol)["SOS_min"].agg(["mean", "median", "count"]).reset_index()
     rank_df.columns = [group_mode, "_avg_raw", "_med_raw", "Transactions"]
     rank_df = rank_df.sort_values("_avg_raw")
     rank_df.insert(0, "Rank", range(1, len(rank_df) + 1))
-
-    # Format display columns as M:SS
     rank_df["Avg SOS"]    = rank_df["_avg_raw"].apply(_fmt_sos)
     rank_df["Median SOS"] = rank_df["_med_raw"].apply(_fmt_sos)
+    rank_df["vs 3:30 Goal"] = rank_df["_avg_raw"].apply(
+        lambda v: ("+" if v - 3.5 >= 0 else "-") + _fmt_sos(abs(v - 3.5))
+    )
 
-    # vs 3:30 goal — show signed M:SS delta
-    def _vs_goal(v):
-        delta = v - 3.5
-        sign = "+" if delta >= 0 else "-"
-        return f"{sign}{_fmt_sos(abs(delta))}"
-    rank_df["vs 3:30 Goal"] = rank_df["_avg_raw"].apply(_vs_goal)
-
-    # Colour Avg SOS cell: green if below 3:30, red if above
-    def _colour_sos(val):
-        """val is already a M:SS string like '3:45'."""
+    def _colour_sos_cell(val):
         try:
-            parts = str(val).lstrip("-").split(":")
-            minutes = int(parts[0]) + int(parts[1]) / 60
-            return "color: #12a06e; font-weight:bold" if minutes < 3.5 else "color: #AC2430; font-weight:bold"
+            parts = str(val).lstrip("-+").split(":")
+            m = int(parts[0]) + int(parts[1]) / 60
+            return "color: #12a06e; font-weight:bold" if m < 3.5 else "color: #AC2430; font-weight:bold"
         except Exception:
             return ""
 
     display_cols = ["Rank", group_mode, "Avg SOS", "Median SOS", "vs 3:30 Goal", "Transactions"]
     st.dataframe(
-        rank_df[display_cols].style.map(_colour_sos, subset=["Avg SOS"]),
-        use_container_width=True,
-        hide_index=True,
+        rank_df[display_cols].style.map(_colour_sos_cell, subset=["Avg SOS"]),
+        use_container_width=True, hide_index=True,
     )
 
-    # ── Stand-level detail ────────────────────────────────────────────────────
+    st.markdown("---")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 4 — WINS & OPPORTUNITIES
+    # ─────────────────────────────────────────────────────────────────────────
+    st.subheader("🏆 Wins & Opportunities")
+
+    prime_df   = df[df["IsPrimeTime"]].copy()
+    offpeak_df = df[~df["IsPrimeTime"]].copy()
+
+    p_avg   = prime_df["SOS_min"].mean()   if len(prime_df)   > 0 else None
+    op_avg  = offpeak_df["SOS_min"].mean() if len(offpeak_df) > 0 else None
+
+    wc1, wc2 = st.columns(2)
+    with wc1:
+        st.markdown("**Prime Time (7–10am weekday / 9am–1pm weekend)**")
+        wc1.metric("Prime Time Avg SOS",   _fmt_sos(p_avg)  if p_avg  else "—")
+    with wc2:
+        st.markdown("**Off-Peak**")
+        wc2.metric("Off-Peak Avg SOS", _fmt_sos(op_avg) if op_avg else "—")
+
+    if p_avg and op_avg:
+        delta_str = _fmt_sos(abs(p_avg - op_avg))
+        direction = "slower" if p_avg > op_avg else "faster"
+        colour    = "#AC2430" if p_avg > op_avg else "#12a06e"
+        st.markdown(
+            f"<span style='color:{colour};font-weight:bold'>Prime time is {delta_str} {direction} than off-peak system-wide.</span>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("")
+
+    # Worst hour of day (system avg)
+    if df["Hour"].notna().any():
+        hour_sys = df.groupby("Hour")["SOS_min"].mean()
+        worst_hour_num = int(hour_sys.idxmax())
+        best_hour_num  = int(hour_sys.idxmin())
+        def _fmt_hour(h):
+            return f"{h % 12 or 12}:00 {'AM' if h < 12 else 'PM'}"
+
+        wo1, wo2 = st.columns(2)
+        wo1.metric("🔴 Slowest Hour (system)", _fmt_sos(hour_sys[worst_hour_num]),
+                   help=_fmt_hour(worst_hour_num))
+        wo1.caption(f"Occurs at {_fmt_hour(worst_hour_num)}")
+        wo2.metric("🟢 Fastest Hour (system)", _fmt_sos(hour_sys[best_hour_num]),
+                   help=_fmt_hour(best_hour_num))
+        wo2.caption(f"Occurs at {_fmt_hour(best_hour_num)}")
+
+    st.markdown("#### Top 5 Stands — Prime Time 🟢")
+    st.caption("Fastest average SOS during peak hours.")
+    if len(prime_df) > 0:
+        top5 = (prime_df.groupby("Stand_Label")["SOS_min"]
+                .mean().sort_values().head(5).reset_index())
+        top5.columns = ["Stand", "_avg"]
+        top5["Prime Time SOS"] = top5["_avg"].apply(_fmt_sos)
+        top5["vs 3:30"] = top5["_avg"].apply(
+            lambda v: ("+" if v - 3.5 >= 0 else "-") + _fmt_sos(abs(v - 3.5))
+        )
+        top5.insert(0, "Rank", range(1, 6))
+        st.dataframe(
+            top5[["Rank", "Stand", "Prime Time SOS", "vs 3:30"]]
+            .style.map(_colour_sos_cell, subset=["Prime Time SOS"]),
+            use_container_width=True, hide_index=True,
+        )
+
+    st.markdown("#### Bottom 5 Stands — Prime Time 🔴")
+    st.caption("Stands with the most room to improve during peak hours.")
+    if len(prime_df) > 0:
+        bot5 = (prime_df.groupby("Stand_Label")["SOS_min"]
+                .mean().sort_values(ascending=False).head(5).reset_index())
+        bot5.columns = ["Stand", "_avg"]
+        bot5["Prime Time SOS"] = bot5["_avg"].apply(_fmt_sos)
+        bot5["vs 3:30"] = bot5["_avg"].apply(
+            lambda v: ("+" if v - 3.5 >= 0 else "-") + _fmt_sos(abs(v - 3.5))
+        )
+        bot5.insert(0, "Rank", range(1, 6))
+        st.dataframe(
+            bot5[["Rank", "Stand", "Prime Time SOS", "vs 3:30"]]
+            .style.map(_colour_sos_cell, subset=["Prime Time SOS"]),
+            use_container_width=True, hide_index=True,
+        )
+
+    # Stands beating 3:30 in prime time
+    if len(prime_df) > 0:
+        prime_by_stand = prime_df.groupby("Stand_Label")["SOS_min"].mean()
+        n_beating = (prime_by_stand < 3.5).sum()
+        n_total   = len(prime_by_stand)
+        st.metric("Stands beating 3:30 during prime time",
+                  f"{n_beating} / {n_total}",
+                  f"{n_beating/n_total*100:.0f}% of system")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECTION 5 — INDIVIDUAL STAND DETAIL
+    # ─────────────────────────────────────────────────────────────────────────
+    st.markdown("---")
     st.subheader("🔍 Individual Stand Detail")
-    stand_options = sorted(df["City_State"].dropna().unique().tolist())
+    stand_options = sorted(df["Stand_Label"].dropna().unique().tolist())
     sel_stand = st.selectbox("Select stand", stand_options, key="sos_stand_sel")
-    stand_df = df[df["City_State"] == sel_stand].copy()
+    stand_df  = df[df["Stand_Label"] == sel_stand].copy()
 
     if not stand_df.empty:
-        col_a, col_b = st.columns(2)
-        col_a.metric("Avg SOS", _fmt_sos(stand_df["SOS_min"].mean()))
-        col_b.metric("Transactions", f"{len(stand_df):,}")
+        sa, sb, sc = st.columns(3)
+        sa.metric("Avg SOS (all hours)", _fmt_sos(stand_df["SOS_min"].mean()))
+        prime_stand = stand_df[stand_df["IsPrimeTime"]]["SOS_min"].mean()
+        sb.metric("Prime Time Avg",     _fmt_sos(prime_stand) if not pd.isna(prime_stand) else "—")
+        sc.metric("Transactions",       f"{len(stand_df):,}")
 
+        # Daily trend
         detail_fig = px.line(
             stand_df.groupby("Date")["SOS_min"].mean().reset_index(),
             x="Date", y="SOS_min",
             title=f"Daily SOS — {sel_stand}",
-            labels={"SOS_min": "Avg SOS (min)"},
+            markers=True,
         )
         detail_fig.add_hline(y=3.5, line_dash="dash", line_color="green",
                              annotation_text="3:30 Goal")
+        _apply_sos_yaxis(detail_fig)
         detail_fig.update_layout(height=320)
         st.plotly_chart(detail_fig, use_container_width=True)
+
+        # Hourly profile for this stand
+        if stand_df["Hour"].notna().any():
+            hr_stand = stand_df.groupby("Hour")["SOS_min"].mean().reset_index()
+            hr_stand.columns = ["Hour", "SOS_min"]
+            fig_hr = px.bar(
+                hr_stand, x="Hour", y="SOS_min",
+                title=f"Hourly Profile — {sel_stand}",
+            )
+            fig_hr.add_hline(y=3.5, line_dash="dash", line_color="green",
+                             annotation_text="3:30 Goal")
+            _apply_sos_yaxis(fig_hr)
+            fig_hr.update_layout(height=300)
+            st.plotly_chart(fig_hr, use_container_width=True)
 
 
 # ─────────────────────────────────────────────
