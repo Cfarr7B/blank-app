@@ -3768,7 +3768,10 @@ def tab_sos(dash):
         top5["Goal"]          = top5["Stand"].map(pt_goal).apply(_fmt_sos)
         top5["Prime Time SOS"]= top5["Stand"].map(pt_by_stand).apply(_fmt_sos)
         top5["vs Goal"]       = top5.apply(
-            lambda r: _vs_goal_str(pt_by_stand[r["Stand"]], pt_goal[r["Stand"]]), axis=1
+            lambda r: _vs_goal_str(
+                pt_by_stand.get(r["Stand"], float("nan")),
+                pt_goal.get(r["Stand"], float("nan")),
+            ), axis=1
         )
         top5.insert(0, "Rank", range(1, 6))
         st.dataframe(
@@ -3784,7 +3787,10 @@ def tab_sos(dash):
         bot5["Goal"]          = bot5["Stand"].map(pt_goal).apply(_fmt_sos)
         bot5["Prime Time SOS"]= bot5["Stand"].map(pt_by_stand).apply(_fmt_sos)
         bot5["vs Goal"]       = bot5.apply(
-            lambda r: _vs_goal_str(pt_by_stand[r["Stand"]], pt_goal[r["Stand"]]), axis=1
+            lambda r: _vs_goal_str(
+                pt_by_stand.get(r["Stand"], float("nan")),
+                pt_goal.get(r["Stand"], float("nan")),
+            ), axis=1
         )
         bot5.insert(0, "Rank", range(1, 6))
         st.dataframe(
