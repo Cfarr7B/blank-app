@@ -3194,29 +3194,44 @@ def _load_all_sos_periods_raw() -> dict:
 
 
 def tab_sos(dash):
-    # ── Period selector ───────────────────────────────────────────────────────
+    # ── Period selector (multi — pick 1 period OR multiple to see a quarter) ──
     period_options = list(_SOS_PERIODS.keys())
-    sel_period_key = st.selectbox(
-        "Select period", period_options, key="sos_period_sel",
-        label_visibility="collapsed" if len(period_options) == 1 else "visible",
+    sel_periods = st.multiselect(
+        "Select period(s) — pick multiple to roll up a quarter",
+        period_options,
+        default=[period_options[-1]],   # default to most recent period
+        key="sos_period_sel",
     )
-    period_meta = _SOS_PERIODS[sel_period_key]
-
-    section(f"⏱️ SPEED OF SERVICE — {sel_period_key}",
-            "Hourly wait times by stand · Source: 7Brew SOS Report · Draft")
-
-    try:
-        df = _load_sos_data(period_meta["file"])
-    except Exception as e:
-        st.error(f"Could not load SOS data: {e}")
+    if not sel_periods:
+        st.info("Select at least one period above.")
         return
 
+    # Sort selection in dict-insertion order
+    sel_periods = [p for p in period_options if p in sel_periods]
+
+    # Title: single period label or "P1 + P2 + P3"
+    sel_label = " + ".join(p.split(" (")[0] for p in sel_periods)
+    section(f"⏱️ SPEED OF SERVICE — {sel_label}",
+            "Hourly wait times by stand · Source: 7Brew SOS Report")
+
+    # Load & concatenate all selected periods
+    frames = []
+    for pk in sel_periods:
+        try:
+            frames.append(_load_sos_data(_SOS_PERIODS[pk]["file"]))
+        except Exception as e:
+            st.error(f"Could not load {pk}: {e}")
+            return
+    df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
     if df.empty:
-        st.warning("No SOS data found.")
+        st.warning("No SOS data found for the selected period(s).")
         return
 
     # ── Stand metadata & age-based goals ─────────────────────────────────────
-    period_mid = pd.to_datetime(period_meta["midpoint"]).date()
+    # Use midpoint of the LAST selected period for age-based goal assignment
+    period_meta = _SOS_PERIODS[sel_periods[-1]]
+    period_mid  = pd.to_datetime(period_meta["midpoint"]).date()
 
     stands_info = {}
     for rec in dash.get("stand_records", []):
@@ -3290,13 +3305,20 @@ def tab_sos(dash):
     available_periods = list(all_period_data.keys())
 
     # ── Identify prior period for PoP deltas ──────────────────────────────────
-    period_order = list(_SOS_PERIODS.keys())
-    sel_idx      = period_order.index(sel_period_key) if sel_period_key in period_order else -1
-    prior_key    = next(
-        (period_order[i] for i in range(sel_idx - 1, -1, -1)
-         if period_order[i] in all_period_data),
-        None
-    )
+    # "Prior" = the period immediately before the earliest selected period.
+    # When multiple periods are selected (quarter view) we compare vs the
+    # equivalent number of periods ending just before the selection window.
+    period_order  = list(_SOS_PERIODS.keys())
+    earliest_idx  = period_order.index(sel_periods[0]) if sel_periods[0] in period_order else -1
+    n_sel         = len(sel_periods)   # how many periods are selected
+
+    # Collect up to n_sel loaded periods immediately before the selection
+    prior_keys = [period_order[i]
+                  for i in range(earliest_idx - 1, -1, -1)
+                  if period_order[i] in all_period_data][:n_sel]
+    prior_keys.reverse()   # chronological order
+
+    prior_key = prior_keys[-1] if len(prior_keys) == 1 else (prior_keys[0] if prior_keys else None)
 
     def _prior_stats(pk):
         """Compute summary stats for a prior period, with age-correct goals."""
@@ -3493,120 +3515,6 @@ def tab_sos(dash):
         st.dataframe(
             trend_df[["Period", "System Avg", "Prime Time Avg",
                        "Txns At Goal", "Stands Meeting Goal", "Stands Over Goal"]],
-            use_container_width=True, hide_index=True,
-        )
-
-    st.markdown("---")
-
-    # ═════════════════════════════════════════════════════════════════════════
-    # SECTION 0c — QUARTER-OVER-QUARTER TREND
-    # Auto-populates as Q2, Q3, Q4 period CSVs are added to _SOS_PERIODS.
-    # ═════════════════════════════════════════════════════════════════════════
-    st.subheader("📊 Quarter-over-Quarter Trend")
-
-    # Group all known periods by their quarter label
-    qtr_map = {}   # {quarter_label: [period_label, ...]}
-    for plabel, pmeta in _SOS_PERIODS.items():
-        q = pmeta.get("quarter", "Unknown")
-        qtr_map.setdefault(q, []).append(plabel)
-
-    # Only keep quarters that have at least one loaded CSV
-    loaded_qtrs = {q: plist for q, plist in qtr_map.items()
-                   if any(p in all_period_data for p in plist)}
-
-    def _build_qtr_row(q_label, period_labels):
-        """Aggregate all loaded periods in a quarter into one summary row."""
-        frames = []
-        for plabel in period_labels:
-            if plabel not in all_period_data:
-                continue
-            pdata = all_period_data[plabel].copy()
-            pmid  = pd.to_datetime(_SOS_PERIODS[plabel]["midpoint"]).date()
-            pdata["Stand_Goal"] = pdata["Store_Num"].map(
-                lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
-            )
-            pdata["IsPrimeTime_q"] = pdata.apply(
-                lambda r: (7 <= int(r["Hour"]) <= 9) if not r["IsWeekend"]
-                           else (9 <= int(r["Hour"]) <= 12)
-                if pd.notna(r.get("Hour")) else False, axis=1
-            ) if "Hour" in pdata.columns else False
-            frames.append(pdata)
-
-        if not frames:
-            return None
-        q_df = pd.concat(frames, ignore_index=True)
-
-        q_sys    = q_df["SOS_min"].mean()
-        q_prime  = q_df[q_df["IsPrimeTime_q"]]["SOS_min"].mean() if "IsPrimeTime_q" in q_df.columns else float("nan")
-        q_at_pct = q_df["SOS_min"].le(q_df["Stand_Goal"]).sum() / len(q_df) * 100
-
-        s_avg  = q_df.groupby("Stand_Label")["SOS_min"].mean()
-        s_goal = q_df.groupby("Stand_Label")["Stand_Goal"].first()
-        n_at   = sum(s_avg[s] <= s_goal[s] for s in s_avg.index if s in s_goal.index)
-        n_ov   = len(s_avg) - n_at
-
-        periods_loaded = sum(1 for p in period_labels if p in all_period_data)
-        return {
-            "Quarter":             q_label,
-            "_sys":                q_sys,
-            "_prime":              q_prime,
-            "System Avg":          _fmt_sos(q_sys),
-            "Prime Time Avg":      _fmt_sos(q_prime),
-            "Txns At Goal":        f"{q_at_pct:.1f}%",
-            "Stands Meeting Goal": n_at,
-            "Stands Over Goal":    n_ov,
-            "Periods Loaded":      f"{periods_loaded}/{len(period_labels)}",
-        }
-
-    if len(loaded_qtrs) == 0:
-        st.info("No quarter data available yet.")
-    elif len(loaded_qtrs) == 1:
-        q_label = list(loaded_qtrs.keys())[0]
-        row = _build_qtr_row(q_label, list(loaded_qtrs.values())[0])
-        if row:
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("System Avg",      row["System Avg"])
-            c2.metric("Prime Time Avg",  row["Prime Time Avg"])
-            c3.metric("Txns At Goal",    row["Txns At Goal"])
-            c4.metric("Periods Loaded",  row["Periods Loaded"])
-        st.info(
-            f"**{q_label}** is the only quarter with data. "
-            "Upload Q2 periods (P4–P6) to start comparing quarters."
-        )
-    else:
-        qoq_rows = [_build_qtr_row(q, plist) for q, plist in loaded_qtrs.items()]
-        qoq_rows = [r for r in qoq_rows if r is not None]
-        qoq_df   = pd.DataFrame(qoq_rows)
-
-        # Line chart: QoQ system avg + prime time avg
-        fig_qoq = go.Figure()
-        fig_qoq.add_trace(go.Bar(
-            name="System Avg",
-            x=qoq_df["Quarter"], y=qoq_df["_sys"],
-            marker_color="#4C78A8",
-            text=qoq_df["System Avg"], textposition="outside",
-        ))
-        fig_qoq.add_trace(go.Bar(
-            name="Prime Time Avg",
-            x=qoq_df["Quarter"], y=qoq_df["_prime"],
-            marker_color="#F58518",
-            text=qoq_df["Prime Time Avg"], textposition="outside",
-        ))
-        fig_qoq.update_yaxes(
-            tickvals=[2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
-            ticktext=[_fmt_sos(v) for v in [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]],
-            title_text="Avg SOS",
-        )
-        fig_qoq.update_layout(
-            title="Quarter-over-Quarter SOS",
-            barmode="group", height=360,
-            legend=dict(orientation="h", y=-0.15),
-        )
-        st.plotly_chart(fig_qoq, use_container_width=True)
-
-        st.dataframe(
-            qoq_df[["Quarter", "System Avg", "Prime Time Avg",
-                     "Txns At Goal", "Stands Meeting Goal", "Stands Over Goal", "Periods Loaded"]],
             use_container_width=True, hide_index=True,
         )
 
