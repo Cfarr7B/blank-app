@@ -3033,18 +3033,21 @@ def _require_password(tab_key: str) -> bool:
 # TAB: SPEED OF SERVICE
 # ─────────────────────────────────────────────
 
-# SOS benchmarks by stand age (in minutes)
-# Goals are defined by 28-day periods since a stand's opening date.
-# "First 2 periods" = 0-55 days open, "3rd period" = 56-83 days, etc.
+# SOS benchmarks by stand age (in minutes).
+# Goals are based on full 28-day periods completed AFTER the opening partial
+# period.  The opening partial period (< 28 days open) is "Period 0" and is
+# excluded from goal calculations — the first FULL 28-day period is P1.
 _SOS_GOALS = {
-    "P1–P2  (first 2 periods)":  5.00,   # 5:00  ·  days 0–55
-    "P3     (3rd period)":        4.50,   # 4:30  ·  days 56–83
-    "P4     (4th period)":        4.00,   # 4:00  ·  days 84–111
-    "P5     (5th period)":        3.75,   # 3:45  ·  days 112–139
-    "P6+    (6th period & on)":   3.50,   # 3:30  ·  days 140+
+    "P1  (1st full period, days 28–55)":  5.00,   # 5:00
+    "P2  (2nd full period, days 56–83)":  5.00,   # 5:00
+    "P3  (3rd full period, days 84–111)": 4.50,   # 4:30
+    "P4  (4th full period, days 112–139)":4.00,   # 4:00
+    "P5  (5th full period, days 140–167)":3.75,   # 3:45
+    "P6+ (6th period & on, days 168+)":   3.50,   # 3:30
 }
 
 _PERIOD_DAYS = 28   # one 7Brew accounting period
+_P0_DAYS     = 28   # stands open < 28 days are in "Period 0" (opening partial period)
 
 # Add one entry per period as new CSVs become available.
 # midpoint is used to compute stand age → goal tier.
@@ -3145,30 +3148,41 @@ def _load_sos_data(csv_filename: str):
     return df
 
 
-def _sos_goal_for_period(days_since_open) -> float:
-    """Return SOS goal in minutes based on days open (28-day period boundaries)."""
+def _sos_goal_for_period(days_since_open):
+    """Return SOS goal (float, minutes) based on days open.
+
+    Stands open < _P0_DAYS days are in 'Period 0' (opening partial period);
+    returns None so those rows are excluded from At-Goal calculations.
+    P1 = first FULL 28-day period (days 28–55), P2 = days 56–83, etc.
+    """
     try:
         d = int(days_since_open)
     except (TypeError, ValueError):
         return 3.50   # default to mature goal if unknown
-    periods = d // _PERIOD_DAYS   # 0-indexed: 0=P1, 1=P2, 2=P3 …
-    if periods < 2:   return _SOS_GOALS["P1–P2  (first 2 periods)"]
-    if periods == 2:  return _SOS_GOALS["P3     (3rd period)"]
-    if periods == 3:  return _SOS_GOALS["P4     (4th period)"]
-    if periods == 4:  return _SOS_GOALS["P5     (5th period)"]
-    return                 _SOS_GOALS["P6+    (6th period & on)"]
+    if d < _P0_DAYS:
+        return None   # Period 0 — opening partial period, no goal assigned
+    p = (d - _P0_DAYS) // _PERIOD_DAYS   # 0 = P1, 1 = P2, 2 = P3 …
+    if p < 1:   return _SOS_GOALS["P1  (1st full period, days 28–55)"]
+    if p < 2:   return _SOS_GOALS["P2  (2nd full period, days 56–83)"]
+    if p < 3:   return _SOS_GOALS["P3  (3rd full period, days 84–111)"]
+    if p < 4:   return _SOS_GOALS["P4  (4th full period, days 112–139)"]
+    if p < 5:   return _SOS_GOALS["P5  (5th full period, days 140–167)"]
+    return             _SOS_GOALS["P6+ (6th period & on, days 168+)"]
 
 def _goal_tier_label(days_since_open) -> str:
-    """Human-readable tier label for a stand's age."""
+    """Human-readable tier label for a stand's age (P0 = opening partial period)."""
     try:
         d = int(days_since_open)
     except (TypeError, ValueError):
         return "P6+"
-    p = d // _PERIOD_DAYS
-    if p < 2:   return "P1–P2"
-    if p == 2:  return "P3"
-    if p == 3:  return "P4"
-    if p == 4:  return "P5"
+    if d < _P0_DAYS:
+        return "P0"
+    p = (d - _P0_DAYS) // _PERIOD_DAYS
+    if p < 1:   return "P1"
+    if p < 2:   return "P2"
+    if p < 3:   return "P3"
+    if p < 4:   return "P4"
+    if p < 5:   return "P5"
     return "P6+"
 
 # Keep old name as alias for any remaining call sites
@@ -3237,11 +3251,10 @@ def tab_sos(dash):
     default_sel = [p for p in default_sel if p in year_period_options] or [year_period_options[-1]]
 
     sel_periods = st.multiselect(
-        "Periods",
+        "View Period(s)",
         year_period_options,
         default=default_sel,
         key="sos_period_sel",
-        label_visibility="collapsed",
     )
     # Sync back so buttons stay consistent
     st.session_state["sos_sel_periods"] = sel_periods
@@ -3249,6 +3262,25 @@ def tab_sos(dash):
     if not sel_periods:
         st.info("Select at least one period above.")
         return
+
+    # "Compare To" dropdown — all periods NOT in the current selection
+    cmp_options = [p for p in period_options if p not in sel_periods]
+    if cmp_options:
+        # Default: period immediately before the earliest selected one
+        sorted_sel = [p for p in period_options if p in sel_periods]
+        earliest_idx_for_cmp = period_options.index(sorted_sel[0]) if sorted_sel else 0
+        prior_candidates = [p for p in cmp_options if period_options.index(p) < earliest_idx_for_cmp]
+        default_cmp = prior_candidates[-1] if prior_candidates else cmp_options[0]
+        default_cmp_idx = cmp_options.index(default_cmp)
+        cmp_to_key = st.selectbox(
+            "Compare To",
+            cmp_options,
+            index=default_cmp_idx,
+            key="sos_cmp_to",
+        )
+    else:
+        cmp_to_key = None
+        st.caption("ℹ️ All periods selected — no comparison period available.")
 
     # Sort in dict-insertion order
     sel_periods = [p for p in period_options if p in sel_periods]
@@ -3316,9 +3348,11 @@ def tab_sos(dash):
 
     df["Region"]     = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Region",     "Unknown"))
     df["Cohort"]     = df["Store_Num"].map(lambda s: stands_info.get(s, {}).get("Age_Bucket", "Unknown"))
-    df["Stand_Goal"] = df["Store_Num"].map(_stand_goal)
-    df["Goal_Tier"]  = df["Store_Num"].map(_stand_tier)
+    df["Stand_Goal"] = df["Store_Num"].map(_stand_goal)   # None for P0 stands
+    df["Goal_Tier"]  = df["Store_Num"].map(_stand_tier)   # "P0" for opening partial period
+    # At_Goal: False for P0 rows (Stand_Goal is None/NaN → comparison returns False)
     df["At_Goal"]    = df["SOS_min"] <= df["Stand_Goal"]
+    df["Is_P0"]      = df["Goal_Tier"] == "P0"
 
     # ── Shared helpers ────────────────────────────────────────────────────────
     _sos_ticks      = [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
@@ -3358,21 +3392,10 @@ def tab_sos(dash):
     # guards against stale @st.cache_data returning old period labels
     available_periods = [p for p in all_period_data.keys() if p in _SOS_PERIODS]
 
-    # ── Identify prior period for PoP deltas ──────────────────────────────────
-    # "Prior" = the period immediately before the earliest selected period.
-    # When multiple periods are selected (quarter view) we compare vs the
-    # equivalent number of periods ending just before the selection window.
-    period_order  = list(_SOS_PERIODS.keys())
-    earliest_idx  = period_order.index(sel_periods[0]) if sel_periods[0] in period_order else -1
-    n_sel         = len(sel_periods)   # how many periods are selected
-
-    # Collect up to n_sel loaded periods immediately before the selection
-    prior_keys = [period_order[i]
-                  for i in range(earliest_idx - 1, -1, -1)
-                  if period_order[i] in all_period_data][:n_sel]
-    prior_keys.reverse()   # chronological order
-
-    prior_key = prior_keys[-1] if len(prior_keys) == 1 else (prior_keys[0] if prior_keys else None)
+    # ── Identify comparison period for PoP deltas ────────────────────────────
+    # Uses the "Compare To" selectbox selection (set by user at top of tab).
+    period_order = list(_SOS_PERIODS.keys())
+    prior_key    = cmp_to_key  # driven by the "Compare To" dropdown
 
     def _prior_stats(pk):
         """Compute summary stats for a prior period, with age-correct goals."""
@@ -3383,17 +3406,27 @@ def tab_sos(dash):
         praw["Stand_Goal"] = praw["Store_Num"].map(
             lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
         )
-        praw["At_Goal"]    = praw["SOS_min"] <= praw["Stand_Goal"]
-        pr_prime = praw[praw["IsPrimeTime"]]["SOS_min"]
-        pr_savg  = praw.groupby("Stand_Label")["SOS_min"].mean()
-        pr_sgoal = praw.groupby("Stand_Label")["Stand_Goal"].first()
-        pr_beat  = sum(pr_savg[s] <= pr_sgoal[s] for s in pr_savg.index if s in pr_sgoal.index)
+        praw["Is_P0"]   = praw["Stand_Goal"].isna()
+        praw["At_Goal"] = praw["SOS_min"] <= praw["Stand_Goal"]
+        pr_prime  = praw[praw["IsPrimeTime"]]["SOS_min"]
+        pr_savg   = praw.groupby("Stand_Label")["SOS_min"].mean()
+        pr_sgoal  = praw.groupby("Stand_Label")["Stand_Goal"].first()
+        pr_tiers  = praw.groupby("Stand_Label")["Is_P0"].first()
+        # Count only stands that have a goal (not P0)
+        pr_beat   = sum(pr_savg[s] <= pr_sgoal[s]
+                        for s in pr_savg.index
+                        if s in pr_sgoal.index and not pr_tiers.get(s, True))
+        pr_with_goal = sum(1 for s in pr_savg.index if not pr_tiers.get(s, True))
+        # pct_at excludes P0 rows
+        pr_goal_rows = praw[~praw["Is_P0"]]
+        pr_pct = (pr_goal_rows["At_Goal"].sum() / len(pr_goal_rows) * 100
+                  if len(pr_goal_rows) > 0 else 0.0)
         return {
             "sys_avg":    praw["SOS_min"].mean(),
             "prime_avg":  pr_prime.mean() if len(pr_prime) > 0 else float("nan"),
-            "pct_at":     praw["At_Goal"].sum() / len(praw) * 100,
+            "pct_at":     pr_pct,
             "n_beating":  pr_beat,
-            "n_missing":  len(pr_savg) - pr_beat,
+            "n_missing":  pr_with_goal - pr_beat,
         }
 
     prior = _prior_stats(prior_key)
@@ -3442,10 +3475,18 @@ def tab_sos(dash):
     best_val     = by_stand.min()
     worst_val    = by_stand.max()
 
-    pct_at_goal  = df["At_Goal"].sum() / len(df) * 100
+    # Exclude P0 rows (opening partial period) from goal-based metrics
+    df_goal = df[~df["Is_P0"]]
+    n_goal_rows = len(df_goal)
+    pct_at_goal  = (df_goal["At_Goal"].sum() / n_goal_rows * 100) if n_goal_rows > 0 else 0.0
     stand_avgs   = df.groupby("Stand_Label")["SOS_min"].mean()
-    n_beating    = sum(stand_avgs[s] <= stand_goal_map[s] for s in stand_avgs.index if s in stand_goal_map)
-    n_missing    = len(stand_avgs) - n_beating
+    # For meeting/over goal, only count stands that have a goal (not P0)
+    stand_tiers  = df.groupby("Stand_Label")["Goal_Tier"].first()
+    n_p0_stands  = (stand_tiers == "P0").sum()
+    n_beating    = sum(stand_avgs[s] <= stand_goal_map[s]
+                       for s in stand_avgs.index
+                       if s in stand_goal_map and stand_goal_map[s] is not None)
+    n_missing    = (len(stand_avgs) - n_p0_stands) - n_beating
 
     kpi_row([
         {"label": "SYSTEM AVG",       "value": _fmt_sos(sys_avg),
@@ -3459,24 +3500,28 @@ def tab_sos(dash):
         {"label": "WORST STAND",      "value": _fmt_sos(worst_val),
          "sub": worst_label,                 "color": "red"},
         {"label": "TXNS AT/UNDER GOAL", "value": f"{pct_at_goal:.1f}%",
-         "sub": "hourly rows ≤ age-based goal", "color": "green" if pct_at_goal >= 50 else "amber",
+         "sub": "P1+ stands · excl. P0 opening period",
+         "color": "green" if pct_at_goal >= 50 else "amber",
          "delta": _pct_d(pct_at_goal, prior["pct_at"], prior_lbl) if prior else None},
     ])
     kpi_row([
         {"label": "STANDS MEETING GOAL", "value": str(n_beating),
-         "sub": "avg SOS ≤ their goal",   "color": "green",
+         "sub": "avg SOS ≤ their goal (excl. P0)",   "color": "green",
          "delta": _cnt_d(n_beating, prior["n_beating"], prior_lbl, higher_better=True) if prior else None},
         {"label": "STANDS OVER GOAL",    "value": str(n_missing),
-         "sub": "avg SOS > their goal",   "color": "red",
+         "sub": "avg SOS > their goal (excl. P0)",   "color": "red",
          "delta": _cnt_d(n_missing, prior["n_missing"], prior_lbl, higher_better=False) if prior else None},
         {"label": "STANDS IN DATASET",   "value": str(len(stand_avgs)),
-         "sub": sel_label, "color": "grey"},
+         "sub": f"{n_p0_stands} P0 (opening) · {len(stand_avgs) - n_p0_stands} with goals",
+         "color": "grey"},
     ])
 
     st.markdown("---")
 
     # ── Goals reference ───────────────────────────────────────────────────────
-    with st.expander("📋 SOS Goals by Period (28-day periods since opening)"):
+    with st.expander("📋 SOS Goals by Stand Age (P0 = opening partial period, excluded from goal calc)"):
+        st.caption("P0 = stand open < 28 days (opening partial period) — no goal assigned. "
+                   "P1 = first full 28-day period, P2 = second, … P6+ = 6th period onward.")
         goal_cols = st.columns(len(_SOS_GOALS))
         for i, (label, target) in enumerate(_SOS_GOALS.items()):
             goal_cols[i].metric(label.split("(")[0].strip(), _fmt_sos(target),
@@ -3507,12 +3552,20 @@ def tab_sos(dash):
             )
         else:
             pdata["_pt"] = False
+        pdata["Is_P0"] = pdata["Stand_Goal"].isna()
         p_sys   = pdata["SOS_min"].mean()
         p_prime = pdata[pdata["_pt"]]["SOS_min"].mean() if pdata["_pt"].any() else float("nan")
-        p_pct   = pdata["SOS_min"].le(pdata["Stand_Goal"]).sum() / len(pdata) * 100
+        # pct_at excludes P0 rows
+        p_goal_rows = pdata[~pdata["Is_P0"]]
+        p_pct = (p_goal_rows["SOS_min"].le(p_goal_rows["Stand_Goal"]).sum()
+                 / len(p_goal_rows) * 100) if len(p_goal_rows) > 0 else 0.0
         s_avg   = pdata.groupby("Stand_Label")["SOS_min"].mean()
         s_goal  = pdata.groupby("Stand_Label")["Stand_Goal"].first()
-        n_at    = sum(s_avg[s] <= s_goal[s] for s in s_avg.index if s in s_goal.index)
+        s_is_p0 = pdata.groupby("Stand_Label")["Is_P0"].first()
+        n_at    = sum(s_avg[s] <= s_goal[s]
+                      for s in s_avg.index
+                      if s in s_goal.index and not s_is_p0.get(s, True))
+        n_with_goal = sum(1 for s in s_avg.index if not s_is_p0.get(s, True))
         return {
             "Period": plabel,
             "_sys": p_sys, "_prime": p_prime, "_pct": p_pct,
@@ -3520,22 +3573,28 @@ def tab_sos(dash):
             "Prime Time Avg":      _fmt_sos(p_prime),
             "Txns At Goal":        f"{p_pct:.1f}%",
             "Stands Meeting Goal": n_at,
-            "Stands Over Goal":    len(s_avg) - n_at,
+            "Stands Over Goal":    n_with_goal - n_at,
         }
 
     # ── Head-to-head picker (only when 2+ periods loaded) ────────────────────
     if len(available_periods) >= 2:
-        st.caption("Pick two periods to compare head-to-head:")
+        st.caption("Comparing periods head-to-head — use the selectors above to change.")
+        # Default Period A = first selected period; Period B = "Compare To" selection
+        _default_a = sel_periods[0] if sel_periods[0] in available_periods else available_periods[0]
+        _default_b = (cmp_to_key if cmp_to_key and cmp_to_key in available_periods
+                      else available_periods[-1])
+        _idx_a = available_periods.index(_default_a) if _default_a in available_periods else 0
+        _idx_b = available_periods.index(_default_b) if _default_b in available_periods else len(available_periods) - 1
         cA, cVS, cB = st.columns([5, 1, 5])
         with cA:
             lbl_a = st.selectbox("Period A", available_periods,
-                                 index=0, key="sos_cmp_a")
+                                 index=_idx_a, key="sos_cmp_a")
         with cVS:
             st.html('<div style="text-align:center;font-family:\'Bebas Neue\',sans-serif;'
                     'font-size:28px;color:#AC2430;padding-top:26px;letter-spacing:2px;">VS</div>')
         with cB:
             lbl_b = st.selectbox("Period B", available_periods,
-                                 index=len(available_periods) - 1, key="sos_cmp_b")
+                                 index=_idx_b, key="sos_cmp_b")
 
         sA = _period_summary(lbl_a)
         sB = _period_summary(lbl_b)
