@@ -3130,17 +3130,14 @@ def _load_sos_data(csv_filename: str):
     # State from City_State
     df["State"] = df["City_State"].str.extract(r",\s*([A-Z]{2})$").fillna("Unknown")
 
-    # Prime-time flag: weekday 7-9am, weekend 9am-12pm
-    def _is_prime(row):
-        h = row["Hour"]
-        if pd.isna(h):
-            return False
-        h = int(h)
-        if not row["IsWeekend"]:
-            return 7 <= h <= 9      # 7am, 8am, 9am slots
-        else:
-            return 9 <= h <= 12     # 9am, 10am, 11am, 12pm slots
-    df["IsPrimeTime"] = df.apply(_is_prime, axis=1)
+    # Prime-time flag: weekday 7–9am, weekend 9am–12pm  (vectorized — no apply)
+    _h = df["Hour"]
+    df["IsPrimeTime"] = (
+        _h.notna() & (
+            (~df["IsWeekend"] & _h.between(7, 9)) |
+            ( df["IsWeekend"] & _h.between(9, 12))
+        )
+    )
 
     # Filter valid SOS rows (exclude 0 and extreme outliers >10 min)
     df = df[df["SOS_min"].notna() & (df["SOS_min"] > 0) & (df["SOS_min"] <= 10)].copy()
@@ -3471,7 +3468,7 @@ def tab_sos(dash):
          "sub": "avg SOS > their goal",   "color": "red",
          "delta": _cnt_d(n_missing, prior["n_missing"], prior_lbl, higher_better=False) if prior else None},
         {"label": "STANDS IN DATASET",   "value": str(len(stand_avgs)),
-         "sub": f"{sel_period_key.split('(')[0].strip()}", "color": "grey"},
+         "sub": sel_label, "color": "grey"},
     ])
 
     st.markdown("---")
@@ -3508,9 +3505,16 @@ def tab_sos(dash):
             pdata["Stand_Goal"] = pdata["Store_Num"].map(
                 lambda sn, _pmid=pmid: _sos_goal_for_period(_days_open(sn, _pmid) or 999)
             )
-            pdata["IsPrimeTime_p"] = pdata.apply(
-                lambda r: (7 <= r["Hour"] <= 9) if not r["IsWeekend"] else (9 <= r["Hour"] <= 12), axis=1
-            ) if "Hour" in pdata.columns else False
+            if "Hour" in pdata.columns:
+                _ph = pdata["Hour"]
+                pdata["IsPrimeTime_p"] = (
+                    _ph.notna() & (
+                        (~pdata["IsWeekend"] & _ph.between(7, 9)) |
+                        ( pdata["IsWeekend"] & _ph.between(9, 12))
+                    )
+                )
+            else:
+                pdata["IsPrimeTime_p"] = False
 
             p_prime  = pdata[pdata["IsPrimeTime_p"]]["SOS_min"].mean()
             p_sys    = pdata["SOS_min"].mean()
@@ -3584,18 +3588,20 @@ def tab_sos(dash):
     tier_order = ["P1–P2", "P3", "P4", "P5", "P6+"]
     tier_goals = {"P1–P2": 5.0, "P3": 4.5, "P4": 4.0, "P5": 3.75, "P6+": 3.5}
 
-    # One row per stand
+    # One row per stand — vectorized prime avg (no cross-df lambda)
+    _prime_by_stand = (
+        df[df["IsPrimeTime"]].groupby("Stand_Label")["SOS_min"].mean()
+    )
     stand_tier_df = (
         df.groupby("Stand_Label")
         .agg(
-            _avg   =("SOS_min",    "mean"),
-            _goal  =("Stand_Goal", "first"),
-            _tier  =("Goal_Tier",  "first"),
-            _prime =("SOS_min",    lambda x: x[df.loc[x.index, "IsPrimeTime"]].mean()
-                     if df.loc[x.index, "IsPrimeTime"].any() else float("nan")),
+            _avg  =("SOS_min",    "mean"),
+            _goal =("Stand_Goal", "first"),
+            _tier =("Goal_Tier",  "first"),
         )
         .reset_index()
     )
+    stand_tier_df["_prime"] = stand_tier_df["Stand_Label"].map(_prime_by_stand)
 
     tier_rows = []
     for tier in tier_order:
