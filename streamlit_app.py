@@ -3284,6 +3284,75 @@ def tab_sos(dash):
     )   # one goal per stand
 
     # ═════════════════════════════════════════════════════════════════════════
+    # Load all period data early — needed for PoP deltas in KPI strip
+    # ═════════════════════════════════════════════════════════════════════════
+    all_period_data   = _load_all_sos_periods_raw()
+    available_periods = list(all_period_data.keys())
+
+    # ── Identify prior period for PoP deltas ──────────────────────────────────
+    period_order = list(_SOS_PERIODS.keys())
+    sel_idx      = period_order.index(sel_period_key) if sel_period_key in period_order else -1
+    prior_key    = next(
+        (period_order[i] for i in range(sel_idx - 1, -1, -1)
+         if period_order[i] in all_period_data),
+        None
+    )
+
+    def _prior_stats(pk):
+        """Compute summary stats for a prior period, with age-correct goals."""
+        if pk is None or pk not in all_period_data:
+            return None
+        praw  = all_period_data[pk].copy()
+        pmid  = pd.to_datetime(_SOS_PERIODS[pk]["midpoint"]).date()
+        praw["Stand_Goal"] = praw["Store_Num"].map(
+            lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
+        )
+        praw["At_Goal"]    = praw["SOS_min"] <= praw["Stand_Goal"]
+        pr_prime = praw[praw["IsPrimeTime"]]["SOS_min"]
+        pr_savg  = praw.groupby("Stand_Label")["SOS_min"].mean()
+        pr_sgoal = praw.groupby("Stand_Label")["Stand_Goal"].first()
+        pr_beat  = sum(pr_savg[s] <= pr_sgoal[s] for s in pr_savg.index if s in pr_sgoal.index)
+        return {
+            "sys_avg":    praw["SOS_min"].mean(),
+            "prime_avg":  pr_prime.mean() if len(pr_prime) > 0 else float("nan"),
+            "pct_at":     praw["At_Goal"].sum() / len(praw) * 100,
+            "n_beating":  pr_beat,
+            "n_missing":  len(pr_savg) - pr_beat,
+        }
+
+    prior = _prior_stats(prior_key)
+    prior_lbl = (prior_key.split("(")[0].strip()         # e.g. "P2 2026"
+                 if prior_key else "prior period")
+
+    def _sos_d(curr, prev, lbl):
+        """Delta badge for SOS time metrics — lower is better (green = faster)."""
+        try:
+            diff = float(curr) - float(prev)
+        except (TypeError, ValueError):
+            return None
+        sign = "+" if diff > 0 else ""
+        return {"str": f"{sign}{_fmt_sos(diff)} vs {lbl}", "cls": "up" if diff < 0 else "down"}
+
+    def _pct_d(curr, prev, lbl):
+        """Delta badge for percentage metrics — higher is better."""
+        try:
+            diff = float(curr) - float(prev)
+        except (TypeError, ValueError):
+            return None
+        sign = "+" if diff > 0 else ""
+        return {"str": f"{sign}{diff:.1f}% vs {lbl}", "cls": "up" if diff > 0 else "down"}
+
+    def _cnt_d(curr, prev, lbl, higher_better=True):
+        """Delta badge for count metrics."""
+        try:
+            diff = int(curr) - int(prev)
+        except (TypeError, ValueError):
+            return None
+        sign = "+" if diff > 0 else ""
+        good = (diff > 0) == higher_better
+        return {"str": f"{sign}{diff} vs {lbl}", "cls": "up" if good else "down"}
+
+    # ═════════════════════════════════════════════════════════════════════════
     # KPI STRIP
     # ═════════════════════════════════════════════════════════════════════════
     sys_avg      = df["SOS_min"].mean()
@@ -3297,26 +3366,36 @@ def tab_sos(dash):
     best_val     = by_stand.min()
     worst_val    = by_stand.max()
 
-    # % of transaction rows at or beating their stand's goal
     pct_at_goal  = df["At_Goal"].sum() / len(df) * 100
-
-    # Stands by goal status (all-hour avg vs their age-based goal)
     stand_avgs   = df.groupby("Stand_Label")["SOS_min"].mean()
     n_beating    = sum(stand_avgs[s] <= stand_goal_map[s] for s in stand_avgs.index if s in stand_goal_map)
     n_missing    = len(stand_avgs) - n_beating
 
-    ka, kb, kc, kd, ke = st.columns(5)
-    ka.metric("System Avg",       _fmt_sos(sys_avg))
-    kb.metric("Prime Time Avg",   _fmt_sos(prime_avg))
-    kc.metric("Best Stand",       _fmt_sos(best_val),  help=best_label)
-    kd.metric("Worst Stand",      _fmt_sos(worst_val), help=worst_label)
-    ke.metric("Txns At/Under Goal", f"{pct_at_goal:.1f}%",
-              help="% of hourly rows at or beating each stand's age-based goal")
-
-    g1, g2, g3 = st.columns(3)
-    g1.metric("Stands Meeting Goal",  str(n_beating))
-    g2.metric("Stands Over Goal",     str(n_missing))
-    g3.metric("Stands in Dataset",    str(len(stand_avgs)))
+    kpi_row([
+        {"label": "SYSTEM AVG",       "value": _fmt_sos(sys_avg),
+         "sub": "all hours · all stands",   "color": "blue",
+         "delta": _sos_d(sys_avg,   prior["sys_avg"],   prior_lbl) if prior else None},
+        {"label": "PRIME TIME AVG",   "value": _fmt_sos(prime_avg),
+         "sub": "peak hours only",           "color": "amber",
+         "delta": _sos_d(prime_avg, prior["prime_avg"], prior_lbl) if prior else None},
+        {"label": "BEST STAND",       "value": _fmt_sos(best_val),
+         "sub": best_label,                  "color": "green"},
+        {"label": "WORST STAND",      "value": _fmt_sos(worst_val),
+         "sub": worst_label,                 "color": "red"},
+        {"label": "TXNS AT/UNDER GOAL", "value": f"{pct_at_goal:.1f}%",
+         "sub": "hourly rows ≤ age-based goal", "color": "green" if pct_at_goal >= 50 else "amber",
+         "delta": _pct_d(pct_at_goal, prior["pct_at"], prior_lbl) if prior else None},
+    ])
+    kpi_row([
+        {"label": "STANDS MEETING GOAL", "value": str(n_beating),
+         "sub": "avg SOS ≤ their goal",   "color": "green",
+         "delta": _cnt_d(n_beating, prior["n_beating"], prior_lbl, higher_better=True) if prior else None},
+        {"label": "STANDS OVER GOAL",    "value": str(n_missing),
+         "sub": "avg SOS > their goal",   "color": "red",
+         "delta": _cnt_d(n_missing, prior["n_missing"], prior_lbl, higher_better=False) if prior else None},
+        {"label": "STANDS IN DATASET",   "value": str(len(stand_avgs)),
+         "sub": f"{sel_period_key.split('(')[0].strip()}", "color": "grey"},
+    ])
 
     st.markdown("---")
 
@@ -3333,8 +3412,7 @@ def tab_sos(dash):
     # ═════════════════════════════════════════════════════════════════════════
     st.subheader("📈 Period-over-Period Trend")
 
-    all_period_data = _load_all_sos_periods_raw()
-    available_periods = list(all_period_data.keys())   # in dict-insertion order
+    # all_period_data / available_periods already loaded above
 
     if len(available_periods) < 2:
         st.info(
