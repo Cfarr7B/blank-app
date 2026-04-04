@@ -3354,7 +3354,9 @@ def tab_sos(dash):
     # Load all period data early — needed for PoP deltas in KPI strip
     # ═════════════════════════════════════════════════════════════════════════
     all_period_data   = _load_all_sos_periods_raw()
-    available_periods = list(all_period_data.keys())
+    # Filter to keys that exist in the current _SOS_PERIODS dict —
+    # guards against stale @st.cache_data returning old period labels
+    available_periods = [p for p in all_period_data.keys() if p in _SOS_PERIODS]
 
     # ── Identify prior period for PoP deltas ──────────────────────────────────
     # "Prior" = the period immediately before the earliest selected period.
@@ -3487,6 +3489,8 @@ def tab_sos(dash):
 
     # Helper: compute one summary row for any period label
     def _period_summary(plabel):
+        if plabel not in _SOS_PERIODS or plabel not in all_period_data:
+            return None
         pmeta  = _SOS_PERIODS[plabel]
         pmid   = pd.to_datetime(pmeta["midpoint"]).date()
         pdata  = all_period_data[plabel].copy()
@@ -3582,8 +3586,12 @@ def tab_sos(dash):
 
     # ── Trend chart + table (all available periods) ───────────────────────────
     if available_periods:
-        trend_rows = [_period_summary(p) for p in available_periods]
-        trend_df   = pd.DataFrame(trend_rows)
+        trend_rows = [r for p in available_periods
+                      if (r := _period_summary(p)) is not None]
+        if not trend_rows:
+            st.info("No period data available.")
+            return
+        trend_df = pd.DataFrame(trend_rows)
 
         fig_trend = go.Figure()
         fig_trend.add_trace(go.Scatter(
