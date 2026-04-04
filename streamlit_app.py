@@ -3049,19 +3049,35 @@ _PERIOD_DAYS = 28   # one 7Brew accounting period
 # Add one entry per period as new CSVs become available.
 # midpoint is used to compute stand age → goal tier.
 _SOS_PERIODS = {
+    # ── Q1 2026 : P1 · P2 · P3 ──────────────────────────────────────────────
     "P1 2026 (Dec 29 – Jan 25)": {
         "file":     "sos_p1_2026.csv",
         "midpoint": "2026-01-12",
+        "quarter":  "Q1 2026",
     },
     "P2 2026 (Jan 26 – Feb 22)": {
         "file":     "sos_p2_2026.csv",
         "midpoint": "2026-02-09",
+        "quarter":  "Q1 2026",
     },
     "P3 2026 (Feb 23 – Mar 22)": {
         "file":     "sos_p3_2026.csv",
         "midpoint": "2026-03-07",
+        "quarter":  "Q1 2026",
     },
-    # "P4 2026 (Mar 23 – Apr 19)": {"file": "sos_p4_2026.csv", "midpoint": "2026-04-05"},
+    # ── Q2 2026 : P4 · P5 · P6 ──────────────────────────────────────────────
+    # "P4 2026 (Mar 23 – Apr 19)": {"file": "sos_p4_2026.csv", "midpoint": "2026-04-05", "quarter": "Q2 2026"},
+    # "P5 2026 (Apr 20 – May 17)": {"file": "sos_p5_2026.csv", "midpoint": "2026-05-03", "quarter": "Q2 2026"},
+    # "P6 2026 (May 18 – Jun 14)": {"file": "sos_p6_2026.csv", "midpoint": "2026-06-01", "quarter": "Q2 2026"},
+    # ── Q3 2026 : P7 · P8 · P9 ──────────────────────────────────────────────
+    # "P7 2026 (Jun 15 – Jul 12)": {"file": "sos_p7_2026.csv", "midpoint": "2026-06-29", "quarter": "Q3 2026"},
+    # "P8 2026 (Jul 13 – Aug  9)": {"file": "sos_p8_2026.csv", "midpoint": "2026-07-27", "quarter": "Q3 2026"},
+    # "P9 2026 (Aug 10 – Sep  6)": {"file": "sos_p9_2026.csv", "midpoint": "2026-08-24", "quarter": "Q3 2026"},
+    # ── Q4 2026 : P10 · P11 · P12 · P13 ────────────────────────────────────
+    # "P10 2026 (Sep  7 – Oct  4)": {"file": "sos_p10_2026.csv", "midpoint": "2026-09-21", "quarter": "Q4 2026"},
+    # "P11 2026 (Oct  5 – Nov  1)": {"file": "sos_p11_2026.csv", "midpoint": "2026-10-19", "quarter": "Q4 2026"},
+    # "P12 2026 (Nov  2 – Nov 29)": {"file": "sos_p12_2026.csv", "midpoint": "2026-11-16", "quarter": "Q4 2026"},
+    # "P13 2026 (Nov 30 – Dec 27)": {"file": "sos_p13_2026.csv", "midpoint": "2026-12-14", "quarter": "Q4 2026"},
 }
 
 def _fmt_sos(minutes) -> str:
@@ -3178,9 +3194,6 @@ def _load_all_sos_periods_raw() -> dict:
 
 
 def tab_sos(dash):
-    if not _require_password("sos"):
-        return
-
     # ── Period selector ───────────────────────────────────────────────────────
     period_options = list(_SOS_PERIODS.keys())
     sel_period_key = st.selectbox(
@@ -3402,6 +3415,120 @@ def tab_sos(dash):
         st.dataframe(
             trend_df[["Period", "System Avg", "Prime Time Avg",
                        "Txns At Goal", "Stands Meeting Goal", "Stands Over Goal"]],
+            use_container_width=True, hide_index=True,
+        )
+
+    st.markdown("---")
+
+    # ═════════════════════════════════════════════════════════════════════════
+    # SECTION 0c — QUARTER-OVER-QUARTER TREND
+    # Auto-populates as Q2, Q3, Q4 period CSVs are added to _SOS_PERIODS.
+    # ═════════════════════════════════════════════════════════════════════════
+    st.subheader("📊 Quarter-over-Quarter Trend")
+
+    # Group all known periods by their quarter label
+    qtr_map = {}   # {quarter_label: [period_label, ...]}
+    for plabel, pmeta in _SOS_PERIODS.items():
+        q = pmeta.get("quarter", "Unknown")
+        qtr_map.setdefault(q, []).append(plabel)
+
+    # Only keep quarters that have at least one loaded CSV
+    loaded_qtrs = {q: plist for q, plist in qtr_map.items()
+                   if any(p in all_period_data for p in plist)}
+
+    def _build_qtr_row(q_label, period_labels):
+        """Aggregate all loaded periods in a quarter into one summary row."""
+        frames = []
+        for plabel in period_labels:
+            if plabel not in all_period_data:
+                continue
+            pdata = all_period_data[plabel].copy()
+            pmid  = pd.to_datetime(_SOS_PERIODS[plabel]["midpoint"]).date()
+            pdata["Stand_Goal"] = pdata["Store_Num"].map(
+                lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
+            )
+            pdata["IsPrimeTime_q"] = pdata.apply(
+                lambda r: (7 <= int(r["Hour"]) <= 9) if not r["IsWeekend"]
+                           else (9 <= int(r["Hour"]) <= 12)
+                if pd.notna(r.get("Hour")) else False, axis=1
+            ) if "Hour" in pdata.columns else False
+            frames.append(pdata)
+
+        if not frames:
+            return None
+        q_df = pd.concat(frames, ignore_index=True)
+
+        q_sys    = q_df["SOS_min"].mean()
+        q_prime  = q_df[q_df["IsPrimeTime_q"]]["SOS_min"].mean() if "IsPrimeTime_q" in q_df.columns else float("nan")
+        q_at_pct = q_df["SOS_min"].le(q_df["Stand_Goal"]).sum() / len(q_df) * 100
+
+        s_avg  = q_df.groupby("Stand_Label")["SOS_min"].mean()
+        s_goal = q_df.groupby("Stand_Label")["Stand_Goal"].first()
+        n_at   = sum(s_avg[s] <= s_goal[s] for s in s_avg.index if s in s_goal.index)
+        n_ov   = len(s_avg) - n_at
+
+        periods_loaded = sum(1 for p in period_labels if p in all_period_data)
+        return {
+            "Quarter":             q_label,
+            "_sys":                q_sys,
+            "_prime":              q_prime,
+            "System Avg":          _fmt_sos(q_sys),
+            "Prime Time Avg":      _fmt_sos(q_prime),
+            "Txns At Goal":        f"{q_at_pct:.1f}%",
+            "Stands Meeting Goal": n_at,
+            "Stands Over Goal":    n_ov,
+            "Periods Loaded":      f"{periods_loaded}/{len(period_labels)}",
+        }
+
+    if len(loaded_qtrs) == 0:
+        st.info("No quarter data available yet.")
+    elif len(loaded_qtrs) == 1:
+        q_label = list(loaded_qtrs.keys())[0]
+        row = _build_qtr_row(q_label, list(loaded_qtrs.values())[0])
+        if row:
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("System Avg",      row["System Avg"])
+            c2.metric("Prime Time Avg",  row["Prime Time Avg"])
+            c3.metric("Txns At Goal",    row["Txns At Goal"])
+            c4.metric("Periods Loaded",  row["Periods Loaded"])
+        st.info(
+            f"**{q_label}** is the only quarter with data. "
+            "Upload Q2 periods (P4–P6) to start comparing quarters."
+        )
+    else:
+        qoq_rows = [_build_qtr_row(q, plist) for q, plist in loaded_qtrs.items()]
+        qoq_rows = [r for r in qoq_rows if r is not None]
+        qoq_df   = pd.DataFrame(qoq_rows)
+
+        # Line chart: QoQ system avg + prime time avg
+        fig_qoq = go.Figure()
+        fig_qoq.add_trace(go.Bar(
+            name="System Avg",
+            x=qoq_df["Quarter"], y=qoq_df["_sys"],
+            marker_color="#4C78A8",
+            text=qoq_df["System Avg"], textposition="outside",
+        ))
+        fig_qoq.add_trace(go.Bar(
+            name="Prime Time Avg",
+            x=qoq_df["Quarter"], y=qoq_df["_prime"],
+            marker_color="#F58518",
+            text=qoq_df["Prime Time Avg"], textposition="outside",
+        ))
+        fig_qoq.update_yaxes(
+            tickvals=[2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
+            ticktext=[_fmt_sos(v) for v in [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]],
+            title_text="Avg SOS",
+        )
+        fig_qoq.update_layout(
+            title="Quarter-over-Quarter SOS",
+            barmode="group", height=360,
+            legend=dict(orientation="h", y=-0.15),
+        )
+        st.plotly_chart(fig_qoq, use_container_width=True)
+
+        st.dataframe(
+            qoq_df[["Quarter", "System Avg", "Prime Time Avg",
+                     "Txns At Goal", "Stands Meeting Goal", "Stands Over Goal", "Periods Loaded"]],
             use_container_width=True, hide_index=True,
         )
 
@@ -5808,7 +5935,7 @@ def main():
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
         "🔮 Forecast (Draft)",
-        "⏱️ Speed of Service (Draft)",
+        "⏱️ Speed of Service",
     ]
     tabs = st.tabs(tab_names)
 
