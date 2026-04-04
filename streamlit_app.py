@@ -3194,25 +3194,80 @@ def _load_all_sos_periods_raw() -> dict:
 
 
 def tab_sos(dash):
-    # ── Period selector (multi — pick 1 period OR multiple to see a quarter) ──
+    # ── Period / Quarter selector ─────────────────────────────────────────────
     period_options = list(_SOS_PERIODS.keys())
+
+    # Build quarter groupings from the "quarter" key in _SOS_PERIODS
+    qtr_groups = {}   # {"Q1 2026": ["P1 2026 ...", ...], ...}
+    for plabel, pmeta in _SOS_PERIODS.items():
+        q = pmeta.get("quarter", "")
+        if q:
+            qtr_groups.setdefault(q, []).append(plabel)
+
+    # Year selector (derived from available quarters)
+    avail_years = sorted({q.split()[-1] for q in qtr_groups}, reverse=True)
+    scol1, scol2 = st.columns([1, 5])
+    with scol1:
+        sel_year = st.selectbox("Year", avail_years, key="sos_year_sel")
+
+    # Q preset buttons — only show quarters that belong to the selected year
+    year_qtrs = {q: plist for q, plist in qtr_groups.items() if q.endswith(sel_year)}
+    with scol2:
+        btn_cols = st.columns(len(year_qtrs) + 1)   # +1 for "All"
+        for i, (qname, qperiods) in enumerate(year_qtrs.items()):
+            with btn_cols[i]:
+                if st.button(qname, key=f"sos_q_{qname}", use_container_width=True):
+                    # Keep only periods that exist in _SOS_PERIODS
+                    st.session_state["sos_sel_periods"] = [
+                        p for p in qperiods if p in period_options
+                    ]
+                    st.rerun()
+        with btn_cols[len(year_qtrs)]:
+            if st.button("All", key="sos_q_all", use_container_width=True):
+                st.session_state["sos_sel_periods"] = [
+                    p for p in period_options if any(p in pl for pl in year_qtrs.values())
+                ]
+                st.rerun()
+
+    # Fine-grained multi-select (syncs with button state)
+    year_period_options = [
+        p for p in period_options
+        if any(p in pl for pl in year_qtrs.values())
+    ] or period_options   # fallback: show all if no year grouping
+
+    default_sel = st.session_state.get("sos_sel_periods", [year_period_options[-1]])
+    # Ensure defaults are valid for current year
+    default_sel = [p for p in default_sel if p in year_period_options] or [year_period_options[-1]]
+
     sel_periods = st.multiselect(
-        "Select period(s) — pick multiple to roll up a quarter",
-        period_options,
-        default=[period_options[-1]],   # default to most recent period
+        "Periods",
+        year_period_options,
+        default=default_sel,
         key="sos_period_sel",
+        label_visibility="collapsed",
     )
+    # Sync back so buttons stay consistent
+    st.session_state["sos_sel_periods"] = sel_periods
+
     if not sel_periods:
         st.info("Select at least one period above.")
         return
 
-    # Sort selection in dict-insertion order
+    # Sort in dict-insertion order
     sel_periods = [p for p in period_options if p in sel_periods]
 
-    # Title: single period label or "P1 + P2 + P3"
-    sel_label = " + ".join(p.split(" (")[0] for p in sel_periods)
+    # Header label: "P3 2026" for single, "Q1 2026 (P1 + P2 + P3)" for multi
+    p_short = [p.split(" (")[0] for p in sel_periods]
+    if len(sel_periods) == 1:
+        sel_label = p_short[0]
+    else:
+        # Check if selection matches a named quarter
+        matched_q = next((q for q, pl in qtr_groups.items()
+                          if sorted(pl) == sorted(sel_periods)), None)
+        sel_label = f"{matched_q} ({' + '.join(p_short)})" if matched_q else " + ".join(p_short)
+
     section(f"⏱️ SPEED OF SERVICE — {sel_label}",
-            "Hourly wait times by stand · Source: 7Brew SOS Report")
+            f"Source: 7Brew SOS Report · {len(sel_periods)} period{'s' if len(sel_periods) > 1 else ''} selected")
 
     # Load & concatenate all selected periods
     frames = []
