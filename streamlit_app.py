@@ -3482,81 +3482,122 @@ def tab_sos(dash):
 
     # ═════════════════════════════════════════════════════════════════════════
     # SECTION 0 — PERIOD-OVER-PERIOD TREND
-    # (auto-populates as more period CSVs are added to _SOS_PERIODS)
     # ═════════════════════════════════════════════════════════════════════════
     st.subheader("📈 Period-over-Period Trend")
 
-    # all_period_data / available_periods already loaded above
-
-    if len(available_periods) < 2:
-        st.info(
-            f"Currently showing **{available_periods[0] if available_periods else 'no data'}**. "
-            "Add the next period's CSV to `_SOS_PERIODS` in the code to start tracking improvement over time."
+    # Helper: compute one summary row for any period label
+    def _period_summary(plabel):
+        pmeta  = _SOS_PERIODS[plabel]
+        pmid   = pd.to_datetime(pmeta["midpoint"]).date()
+        pdata  = all_period_data[plabel].copy()
+        pdata["Stand_Goal"] = pdata["Store_Num"].map(
+            lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
         )
-    else:
-        # Build one summary row per period
-        trend_rows = []
-        for plabel in available_periods:
-            pmeta  = _SOS_PERIODS[plabel]
-            pmid   = pd.to_datetime(pmeta["midpoint"]).date()
-            pdata  = all_period_data[plabel].copy()
-
-            # Attach goals for this period's midpoint
-            pdata["Stand_Goal"] = pdata["Store_Num"].map(
-                lambda sn, _pmid=pmid: _sos_goal_for_period(_days_open(sn, _pmid) or 999)
-            )
-            if "Hour" in pdata.columns:
-                _ph = pdata["Hour"]
-                pdata["IsPrimeTime_p"] = (
-                    _ph.notna() & (
-                        (~pdata["IsWeekend"] & _ph.between(7, 9)) |
-                        ( pdata["IsWeekend"] & _ph.between(9, 12))
-                    )
+        _ph = pdata.get("Hour", pd.Series(dtype=float)) if "Hour" in pdata.columns else pd.Series(dtype=float)
+        if "Hour" in pdata.columns:
+            pdata["_pt"] = (
+                _ph.notna() & (
+                    (~pdata["IsWeekend"] & _ph.between(7, 9)) |
+                    ( pdata["IsWeekend"] & _ph.between(9, 12))
                 )
+            )
+        else:
+            pdata["_pt"] = False
+        p_sys   = pdata["SOS_min"].mean()
+        p_prime = pdata[pdata["_pt"]]["SOS_min"].mean() if pdata["_pt"].any() else float("nan")
+        p_pct   = pdata["SOS_min"].le(pdata["Stand_Goal"]).sum() / len(pdata) * 100
+        s_avg   = pdata.groupby("Stand_Label")["SOS_min"].mean()
+        s_goal  = pdata.groupby("Stand_Label")["Stand_Goal"].first()
+        n_at    = sum(s_avg[s] <= s_goal[s] for s in s_avg.index if s in s_goal.index)
+        return {
+            "Period": plabel,
+            "_sys": p_sys, "_prime": p_prime, "_pct": p_pct,
+            "System Avg":          _fmt_sos(p_sys),
+            "Prime Time Avg":      _fmt_sos(p_prime),
+            "Txns At Goal":        f"{p_pct:.1f}%",
+            "Stands Meeting Goal": n_at,
+            "Stands Over Goal":    len(s_avg) - n_at,
+        }
+
+    # ── Head-to-head picker (only when 2+ periods loaded) ────────────────────
+    if len(available_periods) >= 2:
+        st.caption("Pick two periods to compare head-to-head:")
+        cA, cVS, cB = st.columns([5, 1, 5])
+        with cA:
+            lbl_a = st.selectbox("Period A", available_periods,
+                                 index=0, key="sos_cmp_a")
+        with cVS:
+            st.html('<div style="text-align:center;font-family:\'Bebas Neue\',sans-serif;'
+                    'font-size:28px;color:#AC2430;padding-top:26px;letter-spacing:2px;">VS</div>')
+        with cB:
+            lbl_b = st.selectbox("Period B", available_periods,
+                                 index=len(available_periods) - 1, key="sos_cmp_b")
+
+        sA = _period_summary(lbl_a)
+        sB = _period_summary(lbl_b)
+
+        # Scorecard: 5 metrics side by side, coloured border = improvement direction
+        GREEN, RED, GREY = "#12a06e", "#AC2430", "#595959"
+        metrics = [
+            ("System Avg",          "_sys",   False),  # lower is better
+            ("Prime Time Avg",      "_prime", False),
+            ("Txns At Goal",        "_pct",   True),   # higher is better
+            ("Stands Meeting Goal", None,     True),
+            ("Stands Over Goal",    None,     False),
+        ]
+        score_cols = st.columns(len(metrics))
+        for col, (m_label, raw_key, higher_good) in zip(score_cols, metrics):
+            if raw_key:
+                va, vb = sA[raw_key], sB[raw_key]
             else:
-                pdata["IsPrimeTime_p"] = False
+                va = float(sA[m_label])
+                vb = float(sB[m_label])
+            try:
+                delta     = va - vb
+                is_better = (delta < 0) if not higher_good else (delta > 0)
+                color     = GREEN if is_better else (RED if delta != 0 else GREY)
+                arrow     = ("▲" if delta > 0 else "▼") if delta != 0 else "—"
+                fmt_delta = f"{arrow} {_fmt_sos(abs(delta))}" if raw_key in ("_sys", "_prime") else \
+                            f"{arrow} {abs(delta):.1f}%" if raw_key == "_pct" else \
+                            f"{arrow} {abs(int(delta))}"
+            except Exception:
+                color, fmt_delta = GREY, "—"
+            with col:
+                st.html(f"""
+                <div style="background:#f8f8f8;border-radius:10px;padding:14px 10px;
+                            text-align:center;border-top:3px solid {color};margin-bottom:8px;">
+                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:#595959;
+                              text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">
+                    {m_label}</div>
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1A1919;">
+                    {sA[m_label]}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:#595959;margin:2px 0;">
+                    vs {sB[m_label]}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:11px;
+                              color:{color};font-weight:600;margin-top:4px;">
+                    {fmt_delta}</div>
+                </div>""")
 
-            p_prime  = pdata[pdata["IsPrimeTime_p"]]["SOS_min"].mean()
-            p_sys    = pdata["SOS_min"].mean()
-            p_at_goal = pdata["SOS_min"].le(pdata["Stand_Goal"]).sum() / len(pdata) * 100
+        st.markdown("")   # spacer
 
-            # Stand-level: # at / over goal
-            s_avg  = pdata.groupby("Stand_Label")["SOS_min"].mean()
-            s_goal = pdata.groupby("Stand_Label")["Stand_Goal"].first()
-            n_at   = sum(s_avg[s] <= s_goal[s] for s in s_avg.index if s in s_goal)
-            n_ov   = len(s_avg) - n_at
+    # ── Trend chart + table (all available periods) ───────────────────────────
+    if available_periods:
+        trend_rows = [_period_summary(p) for p in available_periods]
+        trend_df   = pd.DataFrame(trend_rows)
 
-            trend_rows.append({
-                "Period":             plabel,
-                "_sys":               p_sys,
-                "_prime":             p_prime,
-                "_pct":               p_at_goal,
-                "System Avg":         _fmt_sos(p_sys),
-                "Prime Time Avg":     _fmt_sos(p_prime),
-                "Txns At Goal":       f"{p_at_goal:.1f}%",
-                "Stands Meeting Goal": n_at,
-                "Stands Over Goal":   n_ov,
-            })
-
-        trend_df = pd.DataFrame(trend_rows)
-
-        # Line chart: system avg + prime time avg by period
         fig_trend = go.Figure()
         fig_trend.add_trace(go.Scatter(
             x=trend_df["Period"], y=trend_df["_sys"],
-            mode="lines+markers+text",
-            name="System Avg",
+            mode="lines+markers+text", name="System Avg",
             line=dict(color="#4C78A8", width=2),
             text=trend_df["System Avg"], textposition="top center",
         ))
         fig_trend.add_trace(go.Scatter(
             x=trend_df["Period"], y=trend_df["_prime"],
-            mode="lines+markers+text",
-            name="Prime Time Avg",
+            mode="lines+markers+text", name="Prime Time Avg",
             line=dict(color="#F58518", width=2),
             text=trend_df["Prime Time Avg"], textposition="bottom center",
         ))
-        # Mature goal reference
         fig_trend.add_hline(y=3.5, line_dash="dot", line_color="green",
                             annotation_text="3:30 Mature Goal")
         fig_trend.update_yaxes(
@@ -3565,12 +3606,11 @@ def tab_sos(dash):
             title_text="Avg SOS",
         )
         fig_trend.update_layout(
-            title="System-wide SOS Trend — Period over Period",
-            height=380, legend=dict(orientation="h", y=-0.15),
+            title="System-wide SOS Trend — All Periods",
+            height=360, legend=dict(orientation="h", y=-0.15),
         )
         st.plotly_chart(fig_trend, use_container_width=True)
 
-        # Summary table
         st.dataframe(
             trend_df[["Period", "System Avg", "Prime Time Avg",
                        "Txns At Goal", "Stands Meeting Goal", "Stands Over Goal"]],
