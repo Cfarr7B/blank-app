@@ -656,6 +656,7 @@ def _age_yrs_from_period(open_date_str, period_key):
     except Exception:
         return None
 
+@st.cache_data(show_spinner=False)
 def get_stands_df(dash, period_key=None):
     df = pd.DataFrame(dash["stand_records"])
 
@@ -3204,6 +3205,74 @@ def _load_all_sos_periods_raw() -> dict:
     return result
 
 
+@st.cache_data(show_spinner=False)
+def _sos_period_kpis(plabel: str, stands_info_json: str) -> dict | None:
+    """Compute SOS summary stats for one period label.  Cached for performance.
+
+    Extracts: sys_avg, prime_avg, pct_at, n_beating, n_missing, display strings.
+    stands_info_json is a stable JSON string built from dash['stand_records'].
+    """
+    import json as _json
+    if plabel not in _SOS_PERIODS:
+        return None
+    all_data = _load_all_sos_periods_raw()
+    if plabel not in all_data:
+        return None
+
+    stands_info = _json.loads(stands_info_json)
+    pmeta = _SOS_PERIODS[plabel]
+    pmid  = pd.to_datetime(pmeta["midpoint"]).date()
+    pdata = all_data[plabel].copy()
+
+    # Age-based goals
+    def _days_open_p(sn):
+        od = stands_info.get(sn, {}).get("Open Date", "")
+        try:
+            return max(0, (pmid - pd.to_datetime(od).date()).days)
+        except Exception:
+            return None
+
+    pdata["Stand_Goal"] = pdata["Store_Num"].map(
+        lambda sn: _sos_goal_for_period(_days_open_p(sn) or 999)
+    )
+    pdata["Is_P0"] = pdata["Stand_Goal"].isna()
+
+    p_sys   = pdata["SOS_min"].mean()
+    p_prime = pdata[pdata["IsPrimeTime"]]["SOS_min"].mean() if pdata["IsPrimeTime"].any() else float("nan")
+
+    p_goal_rows = pdata[~pdata["Is_P0"]]
+    p_pct = (p_goal_rows["SOS_min"].le(p_goal_rows["Stand_Goal"]).sum()
+             / len(p_goal_rows) * 100) if len(p_goal_rows) > 0 else 0.0
+
+    s_avg    = pdata.groupby("Stand_Label")["SOS_min"].mean()
+    s_goal   = pdata.groupby("Stand_Label")["Stand_Goal"].first()
+    s_is_p0  = pdata.groupby("Stand_Label")["Is_P0"].first()
+    n_at     = sum(s_avg[s] <= s_goal[s]
+                   for s in s_avg.index
+                   if s in s_goal.index and not s_is_p0.get(s, True))
+    n_with_g = sum(1 for s in s_avg.index if not s_is_p0.get(s, True))
+    pr_prime = pdata[pdata["IsPrimeTime"]]["SOS_min"]
+
+    return {
+        # Raw numerics for KPI deltas
+        "sys_avg":    p_sys,
+        "prime_avg":  pr_prime.mean() if len(pr_prime) > 0 else float("nan"),
+        "pct_at":     p_pct,
+        "n_beating":  n_at,
+        "n_missing":  n_with_g - n_at,
+        # Formatted display strings for trend table
+        "Period":              plabel,
+        "_sys":                p_sys,
+        "_prime":              float("nan") if pd.isna(p_prime) else p_prime,
+        "_pct":                p_pct,
+        "System Avg":          _fmt_sos(p_sys),
+        "Prime Time Avg":      _fmt_sos(p_prime),
+        "Txns At Goal":        f"{p_pct:.1f}%",
+        "Stands Meeting Goal": n_at,
+        "Stands Over Goal":    n_with_g - n_at,
+    }
+
+
 def tab_sos(dash):
     # ── Period / Quarter selector ─────────────────────────────────────────────
     period_options = list(_SOS_PERIODS.keys())
@@ -3328,6 +3397,10 @@ def tab_sos(dash):
                 "Open Date":  rec.get("Open Date", ""),
             }
 
+    # Stable JSON key for the cached period-summary function
+    import json as _json
+    _stands_info_json = _json.dumps(stands_info, sort_keys=True)
+
     def _days_open(store_num, as_of=None):
         """Days the stand had been open as of 'as_of' date (defaults to period_mid)."""
         od = stands_info.get(store_num, {}).get("Open Date", "")
@@ -3397,39 +3470,8 @@ def tab_sos(dash):
     period_order = list(_SOS_PERIODS.keys())
     prior_key    = cmp_to_key  # driven by the "Compare To" dropdown
 
-    def _prior_stats(pk):
-        """Compute summary stats for a prior period, with age-correct goals."""
-        if pk is None or pk not in all_period_data:
-            return None
-        praw  = all_period_data[pk].copy()
-        pmid  = pd.to_datetime(_SOS_PERIODS[pk]["midpoint"]).date()
-        praw["Stand_Goal"] = praw["Store_Num"].map(
-            lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
-        )
-        praw["Is_P0"]   = praw["Stand_Goal"].isna()
-        praw["At_Goal"] = praw["SOS_min"] <= praw["Stand_Goal"]
-        pr_prime  = praw[praw["IsPrimeTime"]]["SOS_min"]
-        pr_savg   = praw.groupby("Stand_Label")["SOS_min"].mean()
-        pr_sgoal  = praw.groupby("Stand_Label")["Stand_Goal"].first()
-        pr_tiers  = praw.groupby("Stand_Label")["Is_P0"].first()
-        # Count only stands that have a goal (not P0)
-        pr_beat   = sum(pr_savg[s] <= pr_sgoal[s]
-                        for s in pr_savg.index
-                        if s in pr_sgoal.index and not pr_tiers.get(s, True))
-        pr_with_goal = sum(1 for s in pr_savg.index if not pr_tiers.get(s, True))
-        # pct_at excludes P0 rows
-        pr_goal_rows = praw[~praw["Is_P0"]]
-        pr_pct = (pr_goal_rows["At_Goal"].sum() / len(pr_goal_rows) * 100
-                  if len(pr_goal_rows) > 0 else 0.0)
-        return {
-            "sys_avg":    praw["SOS_min"].mean(),
-            "prime_avg":  pr_prime.mean() if len(pr_prime) > 0 else float("nan"),
-            "pct_at":     pr_pct,
-            "n_beating":  pr_beat,
-            "n_missing":  pr_with_goal - pr_beat,
-        }
-
-    prior = _prior_stats(prior_key)
+    # Module-level cached function computes prior period stats
+    prior = _sos_period_kpis(prior_key, _stands_info_json) if prior_key else None
     prior_lbl = (prior_key.split("(")[0].strip()         # e.g. "P2 2026"
                  if prior_key else "prior period")
 
@@ -3531,50 +3573,7 @@ def tab_sos(dash):
     # SECTION 0 — PERIOD-OVER-PERIOD TREND
     # ═════════════════════════════════════════════════════════════════════════
     st.subheader("📈 Period-over-Period Trend")
-
-    # Helper: compute one summary row for any period label
-    def _period_summary(plabel):
-        if plabel not in _SOS_PERIODS or plabel not in all_period_data:
-            return None
-        pmeta  = _SOS_PERIODS[plabel]
-        pmid   = pd.to_datetime(pmeta["midpoint"]).date()
-        pdata  = all_period_data[plabel].copy()
-        pdata["Stand_Goal"] = pdata["Store_Num"].map(
-            lambda sn, _m=pmid: _sos_goal_for_period(_days_open(sn, _m) or 999)
-        )
-        _ph = pdata.get("Hour", pd.Series(dtype=float)) if "Hour" in pdata.columns else pd.Series(dtype=float)
-        if "Hour" in pdata.columns:
-            pdata["_pt"] = (
-                _ph.notna() & (
-                    (~pdata["IsWeekend"] & _ph.between(7, 9)) |
-                    ( pdata["IsWeekend"] & _ph.between(9, 12))
-                )
-            )
-        else:
-            pdata["_pt"] = False
-        pdata["Is_P0"] = pdata["Stand_Goal"].isna()
-        p_sys   = pdata["SOS_min"].mean()
-        p_prime = pdata[pdata["_pt"]]["SOS_min"].mean() if pdata["_pt"].any() else float("nan")
-        # pct_at excludes P0 rows
-        p_goal_rows = pdata[~pdata["Is_P0"]]
-        p_pct = (p_goal_rows["SOS_min"].le(p_goal_rows["Stand_Goal"]).sum()
-                 / len(p_goal_rows) * 100) if len(p_goal_rows) > 0 else 0.0
-        s_avg   = pdata.groupby("Stand_Label")["SOS_min"].mean()
-        s_goal  = pdata.groupby("Stand_Label")["Stand_Goal"].first()
-        s_is_p0 = pdata.groupby("Stand_Label")["Is_P0"].first()
-        n_at    = sum(s_avg[s] <= s_goal[s]
-                      for s in s_avg.index
-                      if s in s_goal.index and not s_is_p0.get(s, True))
-        n_with_goal = sum(1 for s in s_avg.index if not s_is_p0.get(s, True))
-        return {
-            "Period": plabel,
-            "_sys": p_sys, "_prime": p_prime, "_pct": p_pct,
-            "System Avg":          _fmt_sos(p_sys),
-            "Prime Time Avg":      _fmt_sos(p_prime),
-            "Txns At Goal":        f"{p_pct:.1f}%",
-            "Stands Meeting Goal": n_at,
-            "Stands Over Goal":    n_with_goal - n_at,
-        }
+    # Period summaries computed via module-level @st.cache_data function (_sos_period_kpis)
 
     # ── Head-to-head picker (only when 2+ periods loaded) ────────────────────
     if len(available_periods) >= 2:
@@ -3596,8 +3595,8 @@ def tab_sos(dash):
             lbl_b = st.selectbox("Period B", available_periods,
                                  index=_idx_b, key="sos_cmp_b")
 
-        sA = _period_summary(lbl_a)
-        sB = _period_summary(lbl_b)
+        sA = _sos_period_kpis(lbl_a, _stands_info_json)
+        sB = _sos_period_kpis(lbl_b, _stands_info_json)
 
         # Scorecard: 5 metrics side by side, coloured border = improvement direction
         GREEN, RED, GREY = "#12a06e", "#AC2430", "#595959"
@@ -3646,7 +3645,7 @@ def tab_sos(dash):
     # ── Trend chart + table (all available periods) ───────────────────────────
     if available_periods:
         trend_rows = [r for p in available_periods
-                      if (r := _period_summary(p)) is not None]
+                      if (r := _sos_period_kpis(p, _stands_info_json)) is not None]
         if not trend_rows:
             st.info("No period data available.")
             return
@@ -5514,6 +5513,7 @@ def _phase_label(phase):
     return mapping.get(phase, phase)
 
 
+@st.cache_data(show_spinner=False)
 def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
     """Build a self-contained Leaflet.js HTML map with clickable legend toggles."""
     import json as _json
@@ -5748,7 +5748,6 @@ def tab_pipeline(dash):
     df = df.sort_values("open_dt").reset_index(drop=True)
 
     AVG_REV_PER_WEEK = 45_000   # $ per stand per week
-    REV_PER_DAY = AVG_REV_PER_WEEK / 7.0
 
     # ── Filters ───────────────────────────────────────────────────────────────
     fc1, fc2, fc3 = st.columns([1, 1, 1])
@@ -5789,62 +5788,8 @@ def tab_pipeline(dash):
     mc[4].metric("📐 Design",              len(dff[dff["phase"] == "3. Design"]))
     mc[5].metric("🔍 Due Diligence",       len(dff[dff["phase"] == "2. Due Diligence"]))
 
-    # ── Revenue projection from pipeline ──────────────────────────────────────
-    st.divider()
-    st.markdown("#### 💰 Revenue Projection — New Stand Ramp")
-
     import datetime as _dt
     today = _dt.date.today()
-
-    # Build monthly revenue adds from upcoming openings
-    # Each stand = $45K/period (~4 weeks) starting at open date, ramping to full in ~6 months
-    # Simplified: treat each stand as adding $45K/period from open date onward
-    rev_rows = []
-    for _, row in dff.iterrows():
-        if pd.isna(row["open_dt"]):
-            continue
-        open_d = row["open_dt"].date()
-        for mo in range(24):  # 24 months forward
-            # use relativedelta-style monthly offset
-            year  = today.year + (today.month - 1 + mo) // 12
-            month = (today.month - 1 + mo) % 12 + 1
-            period_dt = _dt.date(year, month, 1)
-            if open_d <= period_dt:
-                # ~4.345 weeks per month on average
-                rev_rows.append({"month": period_dt, "revenue": REV_PER_DAY * 30.44})
-
-    if rev_rows:
-        rev_df = pd.DataFrame(rev_rows)
-        rev_monthly = rev_df.groupby("month")["revenue"].sum().reset_index()
-        rev_monthly["cumulative"] = rev_monthly["revenue"].cumsum()
-        rev_monthly["month_str"] = rev_monthly["month"].apply(lambda d: d.strftime("%b %Y"))
-
-        rc1, rc2, rc3 = st.columns(3)
-        next_12_rev = rev_monthly.head(12)["revenue"].sum()
-        next_24_rev = rev_monthly["revenue"].sum()
-        stands_2026  = len(dff[dff["open_dt"].dt.year == 2026])
-        rc1.metric("Proj. Revenue Added — Next 12 Mo", f"${next_12_rev/1e6:.1f}M")
-        rc2.metric("Proj. Revenue Added — Next 24 Mo", f"${next_24_rev/1e6:.1f}M")
-        rc3.metric("Stands Opening in 2026", stands_2026)
-
-        fig_rev = go.Figure()
-        fig_rev.add_bar(
-            x=rev_monthly["month_str"], y=rev_monthly["revenue"] / 1000,
-            name="Monthly Add", marker_color="#4A90E2", opacity=0.7,
-        )
-        fig_rev.add_scatter(
-            x=rev_monthly["month_str"], y=rev_monthly["cumulative"] / 1000,
-            name="Cumulative", mode="lines+markers",
-            line=dict(color="#FF6B00", width=2), yaxis="y2",
-        )
-        fig_rev.update_layout(
-            template="plotly_dark", height=280, margin=dict(t=20, b=40, l=0, r=0),
-            yaxis=dict(title="Monthly $ Added (000s)", tickprefix="$"),
-            yaxis2=dict(title="Cumulative (000s)", overlaying="y", side="right",
-                        tickprefix="$", showgrid=False),
-            legend=dict(orientation="h", y=1.05), bargap=0.2,
-        )
-        st.plotly_chart(fig_rev, use_container_width=True)
 
     # ── Schedule Intelligence: weekly date-drift tracker ─────────────────────
     st.divider()
@@ -5885,15 +5830,16 @@ def tab_pipeline(dash):
     new_count = len(filtered_new_since)
 
     si1, si2, si3, si4 = st.columns(4)
-    total_slip_days = pushed["delta_days"].sum()
-    total_rev_risk  = total_slip_days * REV_PER_DAY
+    total_slip_days  = pushed["delta_days"].sum()
+    total_slip_weeks = total_slip_days / 7
+    total_rev_risk   = total_slip_weeks * AVG_REV_PER_WEEK
     wow_movers = shifts_df[shifts_df["_wow"] != 0]
     si1.metric("Stands Pushed Out (vs Jan 15)",  len(pushed),   delta=f"+{len(pushed)} delayed",   delta_color="inverse")
     si2.metric("Stands Pulled In (vs Jan 15)",   len(pulled),   delta=f"{len(pulled)} accelerated", delta_color="normal")
     si3.metric(f"Moved This Week ({snap_labels[-2]}→{snap_labels[-1]})", len(wow_movers),
                help="Stands whose date changed since the previous report")
     si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
-               help="Sum of pushed-out days × $45K/7 per stand vs Jan 15")
+               help=f"Total weeks pushed out ({total_slip_weeks:.1f} wks) × $45K avg weekly revenue vs Jan 15 baseline")
 
     # ── Full date history table ───────────────────────────────────────────────
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 15 baseline")
@@ -5942,15 +5888,6 @@ def tab_pipeline(dash):
         st.dataframe(hist_df, use_container_width=True, hide_index=True,
                      height=min(60 + len(hist_df) * 35, 520))
 
-    # ── New stands since Jan 15 ───────────────────────────────────────────────
-    if filtered_new_since:
-        st.markdown("**🆕 New to Pipeline Since Jan 15**")
-        new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in filtered_new_since]
-        if new_stands_info:
-            new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
-            new_df.columns = ["City","State","Phase","Est. Opening"]
-            st.dataframe(new_df, use_container_width=True, hide_index=True)
-
     # ── Delay sensitivity ─────────────────────────────────────────────────────
     st.divider()
     st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
@@ -5961,15 +5898,24 @@ def tab_pipeline(dash):
     if not sense_df.empty:
         sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
         sense_df["Est. Open"] = sense_df["open"].astype(str)
-        sense_df["+4 Wks"]  = sense_df["open_dt"].apply(lambda d: f"${28  * REV_PER_DAY:,.0f}")
-        sense_df["+8 Wks"]  = sense_df["open_dt"].apply(lambda d: f"${56  * REV_PER_DAY:,.0f}")
-        sense_df["+12 Wks"] = sense_df["open_dt"].apply(lambda d: f"${84  * REV_PER_DAY:,.0f}")
-        sense_df["+26 Wks"] = sense_df["open_dt"].apply(lambda d: f"${182 * REV_PER_DAY:,.0f}")
+        sense_df["+4 Wks"]  = f"${4  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+8 Wks"]  = f"${8  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+12 Wks"] = f"${12 * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+26 Wks"] = f"${26 * AVG_REV_PER_WEEK:,.0f}"
         st.dataframe(
             sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
             use_container_width=True, hide_index=True,
             height=min(50 + len(sense_df) * 35, 400),
         )
+
+    # ── New stands since Jan 15 ───────────────────────────────────────────────
+    if filtered_new_since:
+        st.markdown("**🆕 New to Pipeline Since Jan 15**")
+        new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in filtered_new_since]
+        if new_stands_info:
+            new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
+            new_df.columns = ["City","State","Phase","Est. Opening"]
+            st.dataframe(new_df, use_container_width=True, hide_index=True)
 
     # ── Gantt chart ───────────────────────────────────────────────────────────
     st.divider()
@@ -5981,7 +5927,7 @@ def tab_pipeline(dash):
         gantt_df["Label"] = gantt_df.apply(
             lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""),
             axis=1)
-        gantt_df = gantt_df.sort_values("open_dt")
+        gantt_df = gantt_df.sort_values("open_dt", ascending=False)
         phase_colors = {
             "5. Construction": "#FF6B00",
             "4. Permitting":   "#F5A623",
@@ -5995,7 +5941,7 @@ def tab_pipeline(dash):
             labels={"phase": "Phase", "Label": "Stand"},
             category_orders={"Label": gantt_df["Label"].tolist()},
         )
-        fig_gantt.update_yaxes(autorange="reversed")
+        # No autorange reversal — descending sort puts most recent at top
         fig_gantt.update_layout(
             template="plotly_dark",
             height=max(350, len(gantt_df) * 22 + 80),
@@ -6041,6 +5987,58 @@ def tab_pipeline(dash):
         use_container_width=True, hide_index=True,
         height=min(50 + len(table_df) * 35, 500),
     )
+
+    # ── Revenue projection from pipeline ──────────────────────────────────────
+    st.divider()
+    st.markdown("#### 💰 Revenue Projection — New Stand Ramp")
+
+    # Build monthly revenue adds from upcoming openings
+    # Each stand = $45K/week starting at open date
+    rev_rows = []
+    for _, row in dff.iterrows():
+        if pd.isna(row["open_dt"]):
+            continue
+        open_d = row["open_dt"].date()
+        for mo in range(24):  # 24 months forward
+            year  = today.year + (today.month - 1 + mo) // 12
+            month = (today.month - 1 + mo) % 12 + 1
+            period_dt = _dt.date(year, month, 1)
+            if open_d <= period_dt:
+                # ~4.345 weeks per month on average
+                rev_rows.append({"month": period_dt, "revenue": AVG_REV_PER_WEEK * 4.345})
+
+    if rev_rows:
+        rev_df = pd.DataFrame(rev_rows)
+        rev_monthly = rev_df.groupby("month")["revenue"].sum().reset_index()
+        rev_monthly["cumulative"] = rev_monthly["revenue"].cumsum()
+        rev_monthly["month_str"] = rev_monthly["month"].apply(lambda d: d.strftime("%b %Y"))
+
+        rc1, rc2, rc3 = st.columns(3)
+        next_12_rev = rev_monthly.head(12)["revenue"].sum()
+        next_24_rev = rev_monthly["revenue"].sum()
+        stands_2026  = len(dff[dff["open_dt"].dt.year == 2026])
+        rc1.metric("Proj. Revenue Added — Next 12 Mo", f"${next_12_rev/1e6:.1f}M")
+        rc2.metric("Proj. Revenue Added — Next 24 Mo", f"${next_24_rev/1e6:.1f}M")
+        rc3.metric("Stands Opening in 2026", stands_2026)
+
+        fig_rev = go.Figure()
+        fig_rev.add_bar(
+            x=rev_monthly["month_str"], y=rev_monthly["revenue"] / 1000,
+            name="Monthly Add", marker_color="#4A90E2", opacity=0.7,
+        )
+        fig_rev.add_scatter(
+            x=rev_monthly["month_str"], y=rev_monthly["cumulative"] / 1000,
+            name="Cumulative", mode="lines+markers",
+            line=dict(color="#FF6B00", width=2), yaxis="y2",
+        )
+        fig_rev.update_layout(
+            template="plotly_dark", height=280, margin=dict(t=20, b=40, l=0, r=0),
+            yaxis=dict(title="Monthly $ Added (000s)", tickprefix="$"),
+            yaxis2=dict(title="Cumulative (000s)", overlaying="y", side="right",
+                        tickprefix="$", showgrid=False),
+            legend=dict(orientation="h", y=1.05), bargap=0.2,
+        )
+        st.plotly_chart(fig_rev, use_container_width=True)
 
     # ── Map ───────────────────────────────────────────────────────────────────
     st.divider()
