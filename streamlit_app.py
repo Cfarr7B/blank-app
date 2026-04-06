@@ -5452,6 +5452,8 @@ _REPORT_SNAPSHOTS = [
 # Stands that bounced back to jan15 in a later report are still included
 # so the full oscillation history is preserved.
 _DATE_SHIFTS = [
+    # ── Opening imminently — no shift from Jan 15 ─────────────────────────────
+    {"rsh":"RSH-00082","city":"Norman",         "state":"OK","store":"000987","jan15":"04/13/26","mar26":"04/13/26","apr2":"04/13/26","delta_days":   0},
     # ── Still pushed out vs Jan 15 ────────────────────────────────────────────
     {"rsh":"RSH-00102","city":"Snyder",        "state":"TX","store":"001118","jan15":"06/15/26","mar26":"08/10/26","apr2":"08/10/26","delta_days":  56},
     {"rsh":"RSH-00094","city":"Fort Myers",    "state":"FL","store":"000757","jan15":"08/03/26","mar26":"09/28/26","apr2":"09/28/26","delta_days":  56},
@@ -5480,6 +5482,28 @@ _DATE_SHIFTS = [
     {"rsh":"RSH-00089","city":"Gulf Breeze",   "state":"FL","store":"000327","jan15":"08/10/26","mar26":"07/13/26","apr2":"08/10/26","delta_days":   0},
     {"rsh":"RSH-00091","city":"Killeen",       "state":"TX","store":"001122","jan15":"05/18/26","mar26":"06/01/26","apr2":"05/18/26","delta_days":   0},
     {"rsh":"RSH-00101","city":"Beverly Hills", "state":"TX","store":"001238","jan15":"05/18/26","mar26":"06/15/26","apr2":"05/18/26","delta_days":   0},
+]
+
+# ── Already-opened 2026 stands — complete schedule shift picture ─────────────
+# These stands have opened but may have slipped vs the Jan 15 baseline.
+# UPDATE the "jan15" field for each stand using Drew's Jan 15 report;
+# the delta_days will auto-calculate from the display code.
+# Format: actual open date goes in mar26/apr2; Jan 15 projected date in jan15.
+# Stands where jan15 == actual open = no slip; where jan15 < actual open = slipped.
+_OPENED_SHIFTS = [
+    # store    city                state  jan15 (fill from Jan 15 report) actual open
+    {"store":"000570","city":"Belleview",     "state":"FL","jan15":"01/19/26","actual_open":"01/19/26"},  # ← fill jan15
+    {"store":"000875","city":"Weatherford",   "state":"OK","jan15":"01/19/26","actual_open":"01/19/26"},  # ← fill jan15
+    {"store":"000356","city":"Bradenton",     "state":"FL","jan15":"01/19/26","actual_open":"01/19/26"},  # ← fill jan15
+    {"store":"000872","city":"Oklahoma City", "state":"OK","jan15":"01/26/26","actual_open":"01/26/26"},  # ← fill jan15
+    {"store":"000882","city":"Gainesville",   "state":"TX","jan15":"01/26/26","actual_open":"01/26/26"},  # ← fill jan15
+    {"store":"001117","city":"Midland",       "state":"TX","jan15":"01/26/26","actual_open":"01/26/26"},  # ← fill jan15
+    {"store":"000877","city":"Pensacola",     "state":"FL","jan15":"02/09/26","actual_open":"02/09/26"},  # ← fill jan15
+    {"store":"000394","city":"Bradenton",     "state":"FL","jan15":"02/23/26","actual_open":"02/23/26"},  # ← fill jan15
+    {"store":"000573","city":"Spring Hill",   "state":"FL","jan15":"03/09/26","actual_open":"03/09/26"},  # ← fill jan15
+    {"store":"000758","city":"Belton",        "state":"TX","jan15":"03/09/26","actual_open":"03/09/26"},  # ← fill jan15
+    {"store":"000516","city":"Cleburne",      "state":"TX","jan15":"03/30/26","actual_open":"03/30/26"},  # ← fill jan15
+    {"store":"000709","city":"Pampa",         "state":"TX","jan15":"03/30/26","actual_open":"03/30/26"},  # ← fill jan15
 ]
 
 # Stands new to pipeline since Jan 15 report
@@ -5829,7 +5853,34 @@ def tab_pipeline(dash):
     bounced = shifts_df[shifts_df["delta_days"] == 0]
     new_count = len(filtered_new_since)
 
-    si1, si2, si3, si4 = st.columns(4)
+    # ── Compute opened-stand slippage for metrics ─────────────────────────────
+    import datetime as _dt_mod
+    def _parse_d_simple(s):
+        if not s or str(s) in ("","nan","None"): return None
+        for fmt in ["%m/%d/%y","%m/%d/%Y"]:
+            try:
+                return _dt_mod.datetime.strptime(str(s), fmt).date()
+            except: pass
+        return None
+
+    opened_rows_calc = []
+    for o in _OPENED_SHIFTS:
+        d_jan15  = _parse_d_simple(o.get("jan15",""))
+        d_actual = _parse_d_simple(o.get("actual_open",""))
+        if d_jan15 and d_actual:
+            delta = (d_actual - d_jan15).days
+        else:
+            delta = 0
+        opened_rows_calc.append({**o, "delta_days": delta})
+
+    opened_late  = [r for r in opened_rows_calc if r["delta_days"] > 0]
+    opened_early = [r for r in opened_rows_calc if r["delta_days"] < 0]
+    opened_ontime= [r for r in opened_rows_calc if r["delta_days"] == 0]
+    opened_slip_days  = sum(r["delta_days"] for r in opened_late)
+    opened_slip_weeks = opened_slip_days / 7
+    opened_rev_lost   = opened_slip_weeks * AVG_REV_PER_WEEK
+
+    si1, si2, si3, si4, si5 = st.columns(5)
     total_slip_days  = pushed["delta_days"].sum()
     total_slip_weeks = total_slip_days / 7
     total_rev_risk   = total_slip_weeks * AVG_REV_PER_WEEK
@@ -5840,6 +5891,10 @@ def tab_pipeline(dash):
                help="Stands whose date changed since the previous report")
     si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
                help=f"Total weeks pushed out ({total_slip_weeks:.1f} wks) × $45K avg weekly revenue vs Jan 15 baseline")
+    si5.metric("Opened Late (2026 YTD)", len(opened_late),
+               delta=f"{opened_slip_weeks:.1f} wks lost · ${opened_rev_lost/1e3:.0f}K" if opened_late else "All on time",
+               delta_color="inverse" if opened_late else "normal",
+               help=f"{len(opened_rows_calc)} total opened · {len(opened_ontime)} on time · {len(opened_early)} early")
 
     # ── Full date history table ───────────────────────────────────────────────
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 15 baseline")
@@ -5887,6 +5942,40 @@ def tab_pipeline(dash):
         hist_df = pd.DataFrame(hist_rows)
         st.dataframe(hist_df, use_container_width=True, hide_index=True,
                      height=min(60 + len(hist_df) * 35, 520))
+
+    # ── Already-opened 2026 stands ────────────────────────────────────────────
+    st.markdown("**✅ Already Opened 2026 — Schedule Performance**")
+    st.caption(
+        "Shows every stand that opened in 2026 vs the Jan 15 baseline. "
+        "🔴 = opened late · 🟢 = opened early · ⬜ = on time.  "
+        "*Update the `jan15` dates in `_OPENED_SHIFTS` from Drew's Jan 15 report to see true slippage.*"
+    )
+
+    opened_display_rows = []
+    for r in sorted(opened_rows_calc, key=lambda x: x["delta_days"], reverse=True):
+        delta = r["delta_days"]
+        wks   = abs(delta) // 7
+        days_rem = abs(delta) % 7
+        if delta > 0:
+            slip_str = f"🔴 +{wks}wk" if wks else f"🔴 +{delta}d"
+        elif delta < 0:
+            slip_str = f"🟢 -{wks}wk" if wks else f"🟢 {delta}d"
+        else:
+            slip_str = "⬜ On Time"
+        opened_display_rows.append({
+            "Stand": f"{r['city']}, {r['state']}",
+            "Store #": r.get("store",""),
+            "Jan 15 Projected": r.get("jan15",""),
+            "Actual Open": r.get("actual_open",""),
+            "vs Jan 15": slip_str,
+        })
+
+    if opened_display_rows:
+        opened_df = pd.DataFrame(opened_display_rows)
+        st.dataframe(opened_df, use_container_width=True, hide_index=True,
+                     height=min(60 + len(opened_df) * 35, 480))
+        if all(r["delta_days"] == 0 for r in opened_rows_calc):
+            st.info("⚠️ Jan 15 dates not yet filled in — all deltas show 0. Update `_OPENED_SHIFTS` with the actual projected dates from Drew's Jan 15 report.")
 
     # ── New stands since Jan 15 ───────────────────────────────────────────────
     if filtered_new_since:
