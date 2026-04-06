@@ -5888,26 +5888,6 @@ def tab_pipeline(dash):
         st.dataframe(hist_df, use_container_width=True, hide_index=True,
                      height=min(60 + len(hist_df) * 35, 520))
 
-    # ── Delay sensitivity ─────────────────────────────────────────────────────
-    st.divider()
-    st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
-    st.caption("Revenue impact per stand if opening slips beyond current estimate")
-
-    sense_df = dff[dff["open_dt"].notna()].copy()
-    sense_df = sense_df[sense_df["open_dt"].dt.date >= today].head(20)
-    if not sense_df.empty:
-        sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
-        sense_df["Est. Open"] = sense_df["open"].astype(str)
-        sense_df["+4 Wks"]  = f"${4  * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+8 Wks"]  = f"${8  * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+12 Wks"] = f"${12 * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+26 Wks"] = f"${26 * AVG_REV_PER_WEEK:,.0f}"
-        st.dataframe(
-            sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
-            use_container_width=True, hide_index=True,
-            height=min(50 + len(sense_df) * 35, 400),
-        )
-
     # ── New stands since Jan 15 ───────────────────────────────────────────────
     if filtered_new_since:
         st.markdown("**🆕 New to Pipeline Since Jan 15**")
@@ -5941,7 +5921,8 @@ def tab_pipeline(dash):
             labels={"phase": "Phase", "Label": "Stand"},
             category_orders={"Label": gantt_df["Label"].tolist()},
         )
-        # No autorange reversal — descending sort puts most recent at top
+        # autorange="reversed" + descending sort → most-recent opening at TOP
+        fig_gantt.update_yaxes(autorange="reversed")
         fig_gantt.update_layout(
             template="plotly_dark",
             height=max(350, len(gantt_df) * 22 + 80),
@@ -5987,6 +5968,26 @@ def tab_pipeline(dash):
         use_container_width=True, hide_index=True,
         height=min(50 + len(table_df) * 35, 500),
     )
+
+    # ── Delay sensitivity ─────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
+    st.caption("Revenue impact per stand if opening slips beyond current estimate")
+
+    sense_df = dff[dff["open_dt"].notna()].copy()
+    sense_df = sense_df[sense_df["open_dt"].dt.date >= today].head(20)
+    if not sense_df.empty:
+        sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
+        sense_df["Est. Open"] = sense_df["open"].astype(str)
+        sense_df["+4 Wks"]  = f"${4  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+8 Wks"]  = f"${8  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+12 Wks"] = f"${12 * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+26 Wks"] = f"${26 * AVG_REV_PER_WEEK:,.0f}"
+        st.dataframe(
+            sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
+            use_container_width=True, hide_index=True,
+            height=min(50 + len(sense_df) * 35, 400),
+        )
 
     # ── Revenue projection from pipeline ──────────────────────────────────────
     st.divider()
