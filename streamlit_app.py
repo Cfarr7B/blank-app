@@ -3084,6 +3084,71 @@ _SOS_PERIODS = {
     # "P13 2026 (Nov 30 – Dec 27)": {"file": "sos_p13_2026.csv", "midpoint": "2026-12-14", "quarter": "Q4 2026"},
 }
 
+def _print_button(label: str = "🖨️  Print / Save as PDF", landscape: bool = True):
+    """Inject print-friendly CSS + a one-click print/PDF button for the current tab.
+
+    Uses window.parent.print() because st.components renders inside an iframe.
+    Print CSS hides Streamlit chrome (sidebar, header, toolbar, tab nav) so only
+    the tab content lands on the page.
+    """
+    import streamlit.components.v1 as _comp
+    page_size = "landscape" if landscape else "portrait"
+    st.markdown(f"""
+    <style>
+    @media print {{
+        /* ── Hide all Streamlit UI chrome ───────────────────────────── */
+        [data-testid="stSidebar"],
+        [data-testid="stHeader"],
+        [data-testid="stToolbar"],
+        [data-testid="stDecoration"],
+        [data-testid="stDeployButton"],
+        [data-testid="stStatusWidget"],
+        [data-testid="stBottom"],
+        .stTabs [data-baseweb="tab-list"],
+        footer, header {{ display: none !important; }}
+
+        /* ── Full-width content area ─────────────────────────────────── */
+        .main .block-container {{
+            max-width: 100% !important;
+            padding: 0.5rem 1rem !important;
+        }}
+
+        /* ── Avoid splitting charts/tables across pages ──────────────── */
+        [data-testid="stPlotlyChart"],
+        [data-testid="stDataFrame"],
+        [data-testid="stTable"],
+        [data-testid="element-container"],
+        .stMetric {{
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }}
+
+        /* ── Page setup ──────────────────────────────────────────────── */
+        @page {{ margin: 0.65in; size: {page_size}; }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    _comp.html(f"""
+    <button
+      onclick="window.parent.print()"
+      title="Print this tab or save as PDF using your browser's print dialog"
+      style="
+        background: #FF6B00;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: sans-serif;
+        letter-spacing: 0.02em;
+      "
+    >{label}</button>
+    """, height=42)
+
+
 def _fmt_sos(minutes) -> str:
     """Convert decimal minutes to M:SS format.  4.5 → '4:30',  3.75 → '3:45'."""
     try:
@@ -3363,6 +3428,9 @@ def tab_sos(dash):
         matched_q = next((q for q, pl in qtr_groups.items()
                           if sorted(pl) == sorted(sel_periods)), None)
         sel_label = f"{matched_q} ({' + '.join(p_short)})" if matched_q else " + ".join(p_short)
+
+    # ── Print / PDF button ────────────────────────────────────────────────────
+    _print_button("🖨️  Print / Save as PDF")
 
     section(f"⏱️ SPEED OF SERVICE — {sel_label}",
             f"Source: 7Brew SOS Report · {len(sel_periods)} period{'s' if len(sel_periods) > 1 else ''} selected")
@@ -5765,6 +5833,9 @@ def tab_pipeline(dash):
         "To refresh this tab, upload the latest spreadsheet from Drew's weekly update. "
         "Jan 15, 2026 used as baseline for schedule shift analysis · 2027 dates are soft/indicative · $45K avg revenue/week assumed."
     )
+
+    # ── Print / PDF button ────────────────────────────────────────────────────
+    _print_button("🖨️  Print / Save as PDF")
 
     df = pd.DataFrame(_PIPELINE_UPCOMING)
     df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
