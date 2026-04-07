@@ -6149,65 +6149,7 @@ def tab_pipeline(dash):
             height=min(50 + len(sense_df) * 35, 400),
         )
 
-    # ── Revenue projection from pipeline ──────────────────────────────────────
-    st.divider()
-    st.markdown("#### 💰 Revenue Projection — New Stand Ramp")
-
-    # Build monthly revenue adds from upcoming openings
-    # Each stand = $45K/week starting at open date
-    rev_rows = []
-    for _, row in dff.iterrows():
-        if pd.isna(row["open_dt"]):
-            continue
-        open_d = row["open_dt"].date()
-        for mo in range(24):  # 24 months forward
-            year  = today.year + (today.month - 1 + mo) // 12
-            month = (today.month - 1 + mo) % 12 + 1
-            period_dt = _dt.date(year, month, 1)
-            if open_d <= period_dt:
-                # ~4.345 weeks per month on average
-                rev_rows.append({"month": period_dt, "revenue": AVG_REV_PER_WEEK * 4.345})
-
-    if rev_rows:
-        rev_df = pd.DataFrame(rev_rows)
-        rev_monthly = rev_df.groupby("month")["revenue"].sum().reset_index()
-        rev_monthly["cumulative"] = rev_monthly["revenue"].cumsum()
-        rev_monthly["month_str"] = rev_monthly["month"].apply(lambda d: d.strftime("%b %Y"))
-
-        rc1, rc2, rc3 = st.columns(3)
-        next_12_rev = rev_monthly.head(12)["revenue"].sum()
-        next_24_rev = rev_monthly["revenue"].sum()
-        stands_2026  = len(dff[dff["open_dt"].dt.year == 2026])
-        rc1.metric("Proj. Revenue Added — Next 12 Mo", f"${next_12_rev/1e6:.1f}M")
-        rc2.metric("Proj. Revenue Added — Next 24 Mo", f"${next_24_rev/1e6:.1f}M")
-        rc3.metric("Stands Opening in 2026", stands_2026)
-
-        fig_rev = go.Figure()
-        fig_rev.add_bar(
-            x=rev_monthly["month_str"], y=rev_monthly["revenue"] / 1000,
-            name="Monthly Add", marker_color="#4A90E2", opacity=0.7,
-        )
-        fig_rev.add_scatter(
-            x=rev_monthly["month_str"], y=rev_monthly["cumulative"] / 1000,
-            name="Cumulative", mode="lines+markers",
-            line=dict(color="#FF6B00", width=2), yaxis="y2",
-        )
-        fig_rev.update_layout(
-            template="plotly_dark", height=280, margin=dict(t=20, b=40, l=0, r=0),
-            yaxis=dict(title="Monthly $ Added (000s)", tickprefix="$"),
-            yaxis2=dict(title="Cumulative (000s)", overlaying="y", side="right",
-                        tickprefix="$", showgrid=False),
-            legend=dict(orientation="h", y=1.05), bargap=0.2,
-        )
-        st.plotly_chart(fig_rev, use_container_width=True)
-
-    # ── Map ───────────────────────────────────────────────────────────────────
-    st.divider()
-    st.markdown("#### 📍 All 7BREW Locations")
-    st.caption("Green = Open  ·  Orange = Under Construction  ·  Amber = Permitting  ·  Blue = Design  ·  Purple = Due Diligence  ·  Click legend to toggle")
-
-    map_html = _build_pipeline_map_html(_PIPELINE_UPCOMING, _PIPELINE_OPEN_PDF, existing_rows)
-    components.html(map_html, height=560, scrolling=False)
+    # Revenue Projection and Map removed for performance — can be re-enabled if needed
 
 
 # ─────────────────────────────────────────────
