@@ -6149,23 +6149,14 @@ def tab_pipeline(dash):
 
     # ── Full date history table ───────────────────────────────────────────────
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 15 baseline")
-    st.caption("🔴 pushed out · 🟢 pulled in · ⬜ no change · ↕ bounced back to baseline")
+    st.caption("Date columns show raw opening dates · 🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 15** = total drift from baseline")
 
     def _fmt_cell(snap_key, row, jan15_date):
-        """Return display string with movement indicator."""
-        val  = row.get(snap_key, "")
-        if not val or str(val) in ("","nan","None"):
+        """Return the raw date value — deltas are shown only in the summary columns."""
+        val = row.get(snap_key, "")
+        if not val or str(val) in ("", "nan", "None"):
             return "—"
-        d_val  = _parse_d(val)
-        d_jan15 = _parse_d(jan15_date)
-        if not d_val or not d_jan15:
-            return str(val)
-        delta = (d_val - d_jan15).days
-        wks = delta // 7
-        if delta > 0:   arrow = f" 🔴+{wks}wk" if wks else f" 🔴+{delta}d"
-        elif delta < 0: arrow = f" 🟢{wks}wk"  if wks else f" 🟢{delta}d"
-        else:           arrow = ""
-        return f"{val}{arrow}"
+        return str(val)
 
     # Sort selector — parse actual dates so Oct/Nov sort after Jan, not before
     sort_col1, sort_col2 = st.columns([2, 4])
@@ -6276,6 +6267,22 @@ def tab_pipeline(dash):
         snap_str     = "  ·  ".join(s["label"] for s in _report_snapshots)
         latest_label = _report_snapshots[-1]["label"] if _report_snapshots else ""
 
+        # Load the 7BREW logo for embedding in the print report
+        import base64 as _b64
+        _logo_b64 = ""
+        _logo_path = os.path.join(os.path.dirname(__file__), "ICON LOGO.jpg")
+        if os.path.exists(_logo_path):
+            try:
+                with open(_logo_path, "rb") as _lf:
+                    _logo_b64 = _b64.b64encode(_lf.read()).decode()
+            except Exception:
+                _logo_b64 = ""
+        _logo_tag = (
+            f"<img src='data:image/jpeg;base64,{_logo_b64}' "
+            f"style='height:52px;width:auto;border-radius:4px;margin-right:12px;vertical-align:middle;' alt='7BREW'>"
+            if _logo_b64 else ""
+        )
+
         # ── Metric cards ──────────────────────────────────────────────────────
         def _metric_card(label, value, sub="", color="#FF6B00"):
             sub_html = f"<div class='kpi-sub'>{sub}</div>" if sub else ""
@@ -6340,9 +6347,10 @@ def tab_pipeline(dash):
   body   {{ font-family:Arial,sans-serif; font-size:11.5px; color:#111;
             background:#fff; padding:0.4in 0.5in; }}
   /* ── Header ── */
-  .hdr   {{ background:#FF6B00; color:#fff; padding:10px 14px;
+  .hdr   {{ background:#CC2127; color:#fff; padding:10px 14px;
             border-radius:6px; margin-bottom:14px; display:flex;
             justify-content:space-between; align-items:center; }}
+  .hdr-left {{ display:flex; align-items:center; }}
   .hdr h1{{ font-size:16px; font-weight:700; }}
   .hdr p {{ font-size:10px; opacity:.85; margin-top:3px; }}
   .hdr-right {{ text-align:right; font-size:10px; opacity:.85; }}
@@ -6356,7 +6364,7 @@ def tab_pipeline(dash):
   .kpi-sub{{ font-size:9px; color:#888; margin-top:1px; }}
   /* ── Tables ── */
   .tbl-cap{{ font-size:12px; font-weight:700; margin:18px 0 5px;
-             padding-bottom:4px; border-bottom:2px solid #FF6B00; }}
+             padding-bottom:4px; border-bottom:2px solid #CC2127; }}
   table  {{ border-collapse:collapse; width:100%; margin-bottom:6px; }}
   thead tr{{ background:#2c2c2c; color:#fff; }}
   th     {{ padding:5px 7px; font-size:10px; text-align:left;
@@ -6380,14 +6388,17 @@ def tab_pipeline(dash):
     tr.pulled td  {{ background:#f0fff4 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
     thead tr      {{ background:#2c2c2c !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
     .kpi          {{ background:#fafafa !important; border:1px solid #ddd !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
-    .hdr          {{ background:#FF6B00 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    .hdr          {{ background:#CC2127 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
   }}
 </style>
 </head><body>
 <div class='hdr'>
-  <div>
-    <h1>🏗️ 7BREW — Schedule Intelligence Report</h1>
-    <p>Opening date tracker · 2026 opens · indexed to Jan 15 baseline · {snap_str}</p>
+  <div class='hdr-left'>
+    {_logo_tag}
+    <div>
+      <h1>7BREW — Schedule Intelligence Report</h1>
+      <p>Opening date tracker · 2026 opens · indexed to Jan 15 baseline · {snap_str}</p>
+    </div>
   </div>
   <div class='hdr-right'>Data as of {report_date}<br>🔴 pushed out · 🟢 pulled in</div>
 </div>
