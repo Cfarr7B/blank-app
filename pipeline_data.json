@@ -1379,16 +1379,6 @@
   "open_count_from_report": 12,
   "date_shifts": [
     {
-      "rsh": "RSH-00596",
-      "city": "Dallas",
-      "state": "TX",
-      "store": "TBD",
-      "jan15": "12/7/26",
-      "mar26": "9/20/27",
-      "apr2": "9/20/27",
-      "delta_days": 287
-    },
-    {
       "rsh": "RSH-00069",
       "city": "Fort Walton Beach",
       "state": "FL",
@@ -1476,16 +1466,6 @@
       "jan15": "9/28/26",
       "mar26": "11/9/26",
       "apr2": "11/9/26",
-      "delta_days": 42
-    },
-    {
-      "rsh": "RSH-00149",
-      "city": "Mustang",
-      "state": "OK",
-      "store": "001673",
-      "jan15": "11/23/26",
-      "mar26": "1/4/27",
-      "apr2": "1/4/27",
       "delta_days": 42
     },
     {

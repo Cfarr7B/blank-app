@@ -5933,6 +5933,13 @@ def tab_pipeline(dash):
     st.caption(f"Tracks how opening dates move week-over-week vs the Jan 15 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
 
     shifts_df = shifts_df_base.copy()
+    # Exclude any stand whose latest open date has slipped into 2027
+    _curr_key = _pdata["report_snapshots"][-1]["key"]
+    def _is_2026_open(row):
+        v = row.get(_curr_key, "")
+        d = _parse_d_simple(str(v)) if v else None
+        return d is None or d.year == 2026   # keep if no date or still 2026
+    shifts_df = shifts_df[shifts_df.apply(_is_2026_open, axis=1)]
     if sel_state != "All States":
         shifts_df = shifts_df[shifts_df["state"] == sel_state]
     dff_rshs = set(dff["rsh"].tolist())
