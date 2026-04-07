@@ -6147,65 +6147,152 @@ def tab_pipeline(dash):
     # ── Section print button — both tables now fully built, safe to reference ──
     if hist_rows or opened_display_rows:
         import streamlit.components.v1 as _comp_si
+        import base64 as _b64
 
-        def _html_table(rows, caption=""):
+        report_date  = _pdata.get("_last_updated", "")
+        snap_str     = "  ·  ".join(s["label"] for s in _report_snapshots)
+        latest_label = _report_snapshots[-1]["label"] if _report_snapshots else ""
+
+        # ── Metric cards ──────────────────────────────────────────────────────
+        def _metric_card(label, value, sub="", color="#FF6B00"):
+            sub_html = f"<div class='kpi-sub'>{sub}</div>" if sub else ""
+            return (f"<div class='kpi'>"
+                    f"<div class='kpi-val' style='color:{color}'>{value}</div>"
+                    f"<div class='kpi-lbl'>{label}</div>"
+                    f"{sub_html}"
+                    f"</div>")
+
+        rev_risk_fmt   = f"${total_rev_risk/1e6:.2f}M"
+        opened_rev_fmt = f"${opened_rev_lost/1e3:.0f}K lost" if opened_late else "All on time"
+        metrics_html = (
+            _metric_card("Pushed Out vs Jan 15",   len(pushed),        f"+{len(pushed)} delayed",      "#c0392b") +
+            _metric_card("Pulled In vs Jan 15",    len(pulled),        f"{len(pulled)} accelerated",   "#27ae60") +
+            _metric_card(f"Moved This Week",        len(wow_movers),    f"since last report",           "#e67e22") +
+            _metric_card("Revenue at Risk",         rev_risk_fmt,       f"{total_slip_weeks:.1f} wks × $45K", "#c0392b") +
+            _metric_card("Opened Late (2026 YTD)", len(opened_late),   opened_rev_fmt,                 "#8e44ad" if opened_late else "#27ae60")
+        )
+
+        # ── Build table rows with row-level color coding ───────────────────
+        def _si_table(rows, caption, net_col="Net vs Jan 15"):
             if not rows: return ""
             cols = list(rows[0].keys())
             hdr  = "".join(f"<th>{c}</th>" for c in cols)
             body = ""
             for r in rows:
+                net = str(r.get(net_col, ""))
+                if net.startswith("+"):    row_cls = " class='pushed'"
+                elif net.startswith("-"):  row_cls = " class='pulled'"
+                else:                     row_cls = ""
                 cells = ""
                 for c in cols:
                     v = str(r.get(c, ""))
-                    color = " style='color:#cc0000'" if "🔴" in v else (
-                            " style='color:#006600'" if "🟢" in v else "")
-                    cells += f"<td{color}>{v}</td>"
-                body += f"<tr>{cells}</tr>"
-            cap = f"<caption>{caption}</caption>" if caption else ""
-            return f"<table>{cap}<thead><tr>{hdr}</tr></thead><tbody>{body}</tbody></table>"
+                    # Cell-level coloring for snapshot date cells
+                    if "🔴" in v:   td = f"<td class='red'>{v}</td>"
+                    elif "🟢" in v: td = f"<td class='grn'>{v}</td>"
+                    elif c == net_col and row_cls == " class='pushed'":
+                        td = f"<td><strong style='color:#c0392b'>{v}</strong></td>"
+                    elif c == net_col and row_cls == " class='pulled'":
+                        td = f"<td><strong style='color:#27ae60'>{v}</strong></td>"
+                    else:           td = f"<td>{v}</td>"
+                    cells += td
+                body += f"<tr{row_cls}>{cells}</tr>"
+            return (f"<h3 class='tbl-cap'>{caption}</h3>"
+                    f"<table><thead><tr>{hdr}</tr></thead><tbody>{body}</tbody></table>")
 
-        report_date = _pdata.get("_last_updated", "")
-        snap_str    = "  ·  ".join(s["label"] for s in _report_snapshots)
-        upcoming_tbl = _html_table(hist_rows, "📋 Upcoming 2026 Openings — Date History vs Jan 15 Baseline")
-        opened_tbl   = _html_table(opened_display_rows, "✅ Already Opened 2026 — Schedule Performance")
+        upcoming_tbl = _si_table(
+            hist_rows,
+            f"📋 Upcoming 2026 Openings — Date History vs Jan 15 Baseline  ({len(hist_rows)} stands · as of {latest_label})"
+        )
+        opened_tbl = _si_table(
+            opened_display_rows,
+            f"✅ Already Opened 2026 — Schedule Performance  ({len(opened_display_rows)} stands)",
+            net_col="vs Jan 15"
+        )
 
         html_doc = f"""<!DOCTYPE html>
 <html><head><meta charset='utf-8'>
 <title>7BREW Schedule Intelligence — {report_date}</title>
 <style>
-  body    {{ font-family:Arial,sans-serif; font-size:11px; margin:0.5in; color:#111; }}
-  h1      {{ font-size:15px; margin-bottom:4px; }}
-  p.sub   {{ font-size:10px; color:#555; margin-top:0; }}
-  table   {{ border-collapse:collapse; width:100%; margin-bottom:24px; }}
-  caption {{ text-align:left; font-weight:bold; font-size:12px; padding:6px 0 4px; }}
-  th      {{ background:#222; color:#fff; padding:5px 8px; font-size:10px; text-align:left; }}
-  td      {{ padding:4px 8px; border-bottom:1px solid #ddd; }}
-  tr:nth-child(even) td {{ background:#f9f9f9; }}
-  @media print {{ @page {{ margin:0.5in; size:landscape; }} }}
+  *      {{ box-sizing:border-box; margin:0; padding:0; }}
+  body   {{ font-family:Arial,sans-serif; font-size:11.5px; color:#111;
+            background:#fff; padding:0.4in 0.5in; }}
+  /* ── Header ── */
+  .hdr   {{ background:#FF6B00; color:#fff; padding:10px 14px;
+            border-radius:6px; margin-bottom:14px; display:flex;
+            justify-content:space-between; align-items:center; }}
+  .hdr h1{{ font-size:16px; font-weight:700; }}
+  .hdr p {{ font-size:10px; opacity:.85; margin-top:3px; }}
+  .hdr-right {{ text-align:right; font-size:10px; opacity:.85; }}
+  /* ── KPI strip ── */
+  .kpi-row {{ display:flex; gap:10px; margin-bottom:16px; }}
+  .kpi   {{ flex:1; border:1px solid #ddd; border-radius:5px;
+            padding:8px 10px; background:#fafafa; }}
+  .kpi-val{{ font-size:20px; font-weight:700; line-height:1.1; }}
+  .kpi-lbl{{ font-size:9px; color:#555; margin-top:2px; text-transform:uppercase;
+             letter-spacing:.03em; }}
+  .kpi-sub{{ font-size:9px; color:#888; margin-top:1px; }}
+  /* ── Tables ── */
+  .tbl-cap{{ font-size:12px; font-weight:700; margin:18px 0 5px;
+             padding-bottom:4px; border-bottom:2px solid #FF6B00; }}
+  table  {{ border-collapse:collapse; width:100%; margin-bottom:6px; }}
+  thead tr{{ background:#2c2c2c; color:#fff; }}
+  th     {{ padding:5px 7px; font-size:10px; text-align:left;
+            white-space:nowrap; font-weight:600; }}
+  td     {{ padding:4px 7px; border-bottom:1px solid #e8e8e8;
+            white-space:nowrap; }}
+  tr.pushed td {{ background:#fff5f5; }}
+  tr.pulled td  {{ background:#f0fff4; }}
+  tr:hover td   {{ background:#fffbf0; }}
+  td.red {{ color:#c0392b; font-weight:600; }}
+  td.grn {{ color:#27ae60; font-weight:600; }}
+  /* ── Legend ── */
+  .legend{{ font-size:9.5px; color:#666; margin-top:4px; margin-bottom:14px; }}
+  /* ── Footer ── */
+  .footer{{ font-size:9px; color:#aaa; margin-top:20px;
+            border-top:1px solid #eee; padding-top:6px; }}
+  /* ── Print ── */
+  @media print {{
+    @page {{ margin:0.4in; size:landscape; }}
+    tr.pushed td {{ background:#fff5f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    tr.pulled td  {{ background:#f0fff4 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    thead tr      {{ background:#2c2c2c !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    .kpi          {{ background:#fafafa !important; border:1px solid #ddd !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    .hdr          {{ background:#FF6B00 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+  }}
 </style>
 </head><body>
-<h1>🏗️ 7BREW — Schedule Intelligence Report</h1>
-<p class='sub'>Data as of {report_date} &nbsp;·&nbsp; Snapshots: {snap_str}
-   &nbsp;·&nbsp; 🔴 = pushed out &nbsp;·&nbsp; 🟢 = pulled in / on time</p>
+<div class='hdr'>
+  <div>
+    <h1>🏗️ 7BREW — Schedule Intelligence Report</h1>
+    <p>Opening date tracker · 2026 opens · indexed to Jan 15 baseline · {snap_str}</p>
+  </div>
+  <div class='hdr-right'>Data as of {report_date}<br>🔴 pushed out · 🟢 pulled in</div>
+</div>
+<div class='kpi-row'>{metrics_html}</div>
+<div class='legend'>
+  <span style='background:#fff5f5;padding:2px 6px;border:1px solid #fcc;border-radius:3px'>🔴 Row = pushed out vs Jan 15</span>
+  &nbsp;
+  <span style='background:#f0fff4;padding:2px 6px;border:1px solid #c3e6cb;border-radius:3px'>🟢 Row = pulled in vs Jan 15</span>
+  &nbsp; Cell indicators show movement relative to Jan 15 baseline.
+</div>
 {upcoming_tbl}
 {opened_tbl}
-<p class='sub' style='margin-top:16px'>Generated from 7BREW Pipeline Dashboard</p>
+<div class='footer'>Generated from 7BREW Pipeline Dashboard · {report_date}</div>
 <script>window.onload = function(){{ window.print(); }}</script>
 </body></html>"""
 
-        import base64 as _b64
         data_uri = "data:text/html;base64," + _b64.b64encode(html_doc.encode()).decode()
 
         _comp_si.html(f"""
         <button onclick="window.open('{data_uri}','_blank')"
-          title="Opens a print-ready version of the schedule in a new tab"
+          title="Opens a formatted print-ready report in a new tab"
           style="background:#4A90E2;color:white;border:none;border-radius:6px;
                  padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;
                  font-family:sans-serif;margin-top:6px;">
           🖨️  Print Schedule Intelligence
         </button>
         <span style="font-family:sans-serif;font-size:11px;color:#aaa;margin-left:10px;">
-          Opens a clean print-ready page — use your browser's Print dialog to save as PDF or share.
+          Opens a formatted report — use browser Print dialog to save as PDF or share.
         </span>
         """, height=44)
 
