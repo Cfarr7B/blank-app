@@ -5858,6 +5858,132 @@ function toggleGroup(key){{
     return html
 
 
+@st.cache_data(show_spinner=False)
+def _build_gantt_fig(gantt_df_json: str, today_str: str):
+    """Build the construction timeline Gantt chart — cached until data or filter changes."""
+    import json as _jg
+    import pandas as _pdg
+    import plotly.express as _pxg
+
+    _gantt_df = _pdg.DataFrame(_jg.loads(gantt_df_json))
+    if _gantt_df.empty:
+        return None
+    # Restore datetimes (serialised as ISO strings)
+    _gantt_df["open_dt"] = _pdg.to_datetime(_gantt_df["open_dt"])
+    _gantt_df["cs_dt"]   = _pdg.to_datetime(_gantt_df["cs_dt"])
+
+    phase_colors = {
+        "5. Construction": "#FF6B00",
+        "4. Permitting":   "#F5A623",
+        "3. Design":       "#4A90E2",
+    }
+    fig = _pxg.timeline(
+        _gantt_df,
+        x_start="cs_dt", x_end="open_dt",
+        y="Label", color="phase",
+        color_discrete_map=phase_colors,
+        labels={"phase": "Phase", "Label": "Stand"},
+        category_orders={"Label": _gantt_df["Label"].tolist()},
+    )
+    fig.update_yaxes(autorange="reversed")
+    fig.update_layout(
+        template="plotly_dark",
+        height=max(350, len(_gantt_df) * 22 + 80),
+        margin=dict(t=20, b=40, l=0, r=0),
+        legend=dict(orientation="h", y=1.02),
+        xaxis_title="",
+    )
+    import datetime as _dtg
+    _today = _dtg.date.fromisoformat(today_str)
+    import pandas as _pdg2
+    fig.add_vline(
+        x=_pdg2.Timestamp(_today).value / 1e6,
+        line_dash="dash",
+        line_color="rgba(255,255,255,0.4)", line_width=1.5,
+        annotation_text="Today", annotation_position="top right",
+        annotation_font_color="rgba(255,255,255,0.6)",
+    )
+    return fig
+
+
+@st.cache_data(show_spinner=False)
+def _build_milestone_fig(ms_rows_json: str):
+    """Build the process leakage milestone drift chart — cached until data or filter changes."""
+    import json as _jm
+    import pandas as _pdm
+    import plotly.graph_objects as _gom
+
+    ms_rows = _jm.loads(ms_rows_json)
+    if not ms_rows:
+        return None, None
+
+    milestone_labels = {
+        "permit_sub":  "Permit Submission",
+        "permit_appr": "Permit Approval",
+        "cs":          "Construction Start",
+        "open":        "Open Date",
+    }
+    milestone_colors = {
+        "Permit Submission":  "#9B59B6",
+        "Permit Approval":    "#E74C3C",
+        "Construction Start": "#FF6B00",
+        "Open Date":          "#4A90E2",
+    }
+
+    bar_data = {"Stand": [], "Milestone": [], "Days Drifted": [], "Label": []}
+    for r in ms_rows:
+        stand = f"{r['city']}, {r['state']}"
+        for key, label in milestone_labels.items():
+            delta = r.get(f"{key}_delta")
+            if delta is None:
+                continue
+            bar_data["Stand"].append(stand)
+            bar_data["Milestone"].append(label)
+            bar_data["Days Drifted"].append(delta)
+            sign = f"+{delta}d" if delta > 0 else (f"{delta}d" if delta < 0 else "±0")
+            bar_data["Label"].append(
+                f"{label}: {sign}<br>"
+                f"Jan 15: {r.get(key+'_jan15','?')} → Apr 2: {r.get(key+'_apr2','?')}"
+            )
+
+    ms_df = _pdm.DataFrame(bar_data)
+    stand_order = (
+        ms_df[ms_df["Milestone"] == "Open Date"]
+        .sort_values("Days Drifted", ascending=True)["Stand"]
+        .tolist()
+    )
+    all_stands = list(dict.fromkeys(stand_order + ms_df["Stand"].tolist()))
+
+    fig = _gom.Figure()
+    for label, color in milestone_colors.items():
+        sub = ms_df[ms_df["Milestone"] == label]
+        if sub.empty:
+            continue
+        fig.add_bar(
+            x=sub["Days Drifted"],
+            y=sub["Stand"],
+            name=label,
+            orientation="h",
+            marker_color=[color if d >= 0 else "#27AE60" for d in sub["Days Drifted"]],
+            customdata=sub["Label"],
+            hovertemplate="%{customdata}<extra></extra>",
+        )
+
+    fig.add_vline(x=0, line_color="white", line_width=1, opacity=0.4)
+    fig.update_layout(
+        template="plotly_dark",
+        barmode="group",
+        height=max(320, len(ms_rows) * 28 + 100),
+        margin=dict(t=20, b=40, l=0, r=20),
+        xaxis=dict(title="Days Drifted vs Jan 15 (+ = slipped, − = earlier)",
+                   zeroline=True, zerolinecolor="white", zerolinewidth=1),
+        yaxis=dict(categoryorder="array", categoryarray=all_stands, title=""),
+        legend=dict(orientation="h", y=1.04, x=0),
+        bargap=0.25, bargroupgap=0.05,
+    )
+    return fig, ms_df
+
+
 def tab_pipeline(dash):
     if not _require_password("pipeline"):
         return
@@ -6281,14 +6407,26 @@ def tab_pipeline(dash):
 <script>window.onload = function(){{ window.print(); }}</script>
 </body></html>"""
 
-        data_uri = "data:text/html;base64," + _b64.b64encode(html_doc.encode()).decode()
+        _b64_html = _b64.b64encode(html_doc.encode()).decode()
 
+        # Use a Blob URL instead of a data: URI — avoids blank-page issues caused
+        # by browser popup blockers and iframe sandbox restrictions on data: URIs.
         _comp_si.html(f"""
-        <button onclick="window.open('{data_uri}','_blank')"
+        <button
           title="Opens a formatted print-ready report in a new tab"
           style="background:#4A90E2;color:white;border:none;border-radius:6px;
                  padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;
-                 font-family:sans-serif;margin-top:6px;">
+                 font-family:sans-serif;margin-top:6px;"
+          onclick="(function(){{
+            var html = atob('{_b64_html}');
+            var blob = new Blob([html], {{type:'text/html;charset=utf-8'}});
+            var url  = URL.createObjectURL(blob);
+            var w    = window.open(url, '_blank');
+            if (!w) {{
+              // Popup blocked — fall back: write into current parent window
+              window.parent.location.href = url;
+            }}
+          }})();">
           🖨️  Print Schedule Intelligence
         </button>
         <span style="font-family:sans-serif;font-size:11px;color:#aaa;margin-left:10px;">
@@ -6316,37 +6454,14 @@ def tab_pipeline(dash):
             lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""),
             axis=1)
         gantt_df = gantt_df.sort_values("open_dt", ascending=False)
-        phase_colors = {
-            "5. Construction": "#FF6B00",
-            "4. Permitting":   "#F5A623",
-            "3. Design":       "#4A90E2",
-        }
-        fig_gantt = px.timeline(
-            gantt_df,
-            x_start="cs_dt", x_end="open_dt",
-            y="Label", color="phase",
-            color_discrete_map=phase_colors,
-            labels={"phase": "Phase", "Label": "Stand"},
-            category_orders={"Label": gantt_df["Label"].tolist()},
+        # Serialise to JSON so the cached builder can hash inputs efficiently
+        import json as _json_g
+        _gantt_json = _json_g.dumps(
+            gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records")
         )
-        # autorange="reversed" + descending sort → most-recent opening at TOP
-        fig_gantt.update_yaxes(autorange="reversed")
-        fig_gantt.update_layout(
-            template="plotly_dark",
-            height=max(350, len(gantt_df) * 22 + 80),
-            margin=dict(t=20, b=40, l=0, r=0),
-            legend=dict(orientation="h", y=1.02),
-            xaxis_title="",
-        )
-        # Mark today — px.timeline uses datetime internally, must pass Timestamp (not str)
-        fig_gantt.add_vline(
-            x=pd.Timestamp(today).value / 1e6,  # milliseconds since epoch
-            line_dash="dash",
-            line_color="rgba(255,255,255,0.4)", line_width=1.5,
-            annotation_text="Today", annotation_position="top right",
-            annotation_font_color="rgba(255,255,255,0.6)",
-        )
-        st.plotly_chart(fig_gantt, use_container_width=True)
+        fig_gantt = _build_gantt_fig(_gantt_json, str(today))
+        if fig_gantt is not None:
+            st.plotly_chart(fig_gantt, use_container_width=True)
     else:
         st.info("No stands with both Construction Start and Open Date in current filter.")
 
@@ -6378,88 +6493,25 @@ def tab_pipeline(dash):
     if not ms_rows:
         st.info("No milestone data available for the current filter selection.")
     else:
-        # Build tidy data for grouped bar
-        milestone_labels = {
-            "permit_sub":  "Permit Submission",
-            "permit_appr": "Permit Approval",
-            "cs":          "Construction Start",
-            "open":        "Open Date",
-        }
-        milestone_colors = {
-            "Permit Submission":  "#9B59B6",
-            "Permit Approval":    "#E74C3C",
-            "Construction Start": "#FF6B00",
-            "Open Date":          "#4A90E2",
-        }
-
-        bar_data = {"Stand": [], "Milestone": [], "Days Drifted": [], "Label": []}
-        for r in ms_rows:
-            stand = f"{r['city']}, {r['state']}"
-            for key, label in milestone_labels.items():
-                delta = r.get(f"{key}_delta")
-                if delta is None:
-                    continue
-                bar_data["Stand"].append(stand)
-                bar_data["Milestone"].append(label)
-                bar_data["Days Drifted"].append(delta)
-                sign = f"+{delta}d" if delta > 0 else (f"{delta}d" if delta < 0 else "±0")
-                bar_data["Label"].append(
-                    f"{label}: {sign}<br>"
-                    f"Jan 15: {r.get(key+'_jan15','?')} → Apr 2: {r.get(key+'_apr2','?')}"
-                )
-
-        ms_df = pd.DataFrame(bar_data)
-
-        # Order stands by open_delta descending (worst slip first = top of chart)
-        stand_order = (
-            ms_df[ms_df["Milestone"] == "Open Date"]
-            .sort_values("Days Drifted", ascending=True)["Stand"]
-            .tolist()
-        )
-        # Include stands that have no open delta (sort them after)
-        all_stands = list(dict.fromkeys(stand_order + ms_df["Stand"].tolist()))
-
-        fig_ms = go.Figure()
-        for label, color in milestone_colors.items():
-            sub = ms_df[ms_df["Milestone"] == label]
-            if sub.empty:
-                continue
-            fig_ms.add_bar(
-                x=sub["Days Drifted"],
-                y=sub["Stand"],
-                name=label,
-                orientation="h",
-                marker_color=[color if d >= 0 else "#27AE60" for d in sub["Days Drifted"]],
-                customdata=sub["Label"],
-                hovertemplate="%{customdata}<extra></extra>",
-            )
-
-        fig_ms.add_vline(x=0, line_color="white", line_width=1, opacity=0.4)
-        fig_ms.update_layout(
-            template="plotly_dark",
-            barmode="group",
-            height=max(320, len(ms_rows) * 28 + 100),
-            margin=dict(t=20, b=40, l=0, r=20),
-            xaxis=dict(title="Days Drifted vs Jan 15 (+ = slipped, − = earlier)",
-                       zeroline=True, zerolinecolor="white", zerolinewidth=1),
-            yaxis=dict(categoryorder="array", categoryarray=all_stands, title=""),
-            legend=dict(orientation="h", y=1.04, x=0),
-            bargap=0.25, bargroupgap=0.05,
-        )
-        st.plotly_chart(fig_ms, use_container_width=True)
+        import json as _json_ms
+        _ms_json = _json_ms.dumps(ms_rows)
+        fig_ms, ms_df = _build_milestone_fig(_ms_json)
+        if fig_ms is not None:
+            st.plotly_chart(fig_ms, use_container_width=True)
 
         # Summary insight callout
-        avg_by_milestone = ms_df.groupby("Milestone")["Days Drifted"].mean().sort_values(ascending=False)
-        worst_milestone = avg_by_milestone.index[0]
-        worst_avg = avg_by_milestone.iloc[0]
-        open_avg  = avg_by_milestone.get("Open Date", 0)
-        if isinstance(open_avg, pd.Series): open_avg = open_avg.iloc[0]
-        if worst_avg > 0:
-            st.info(
-                f"📊 **Process insight:** Across the {len(ms_rows)} stands shown, "
-                f"**{worst_milestone}** has the largest average drift at **+{worst_avg:.0f} days** vs Jan 15. "
-                f"Average open date drift is **+{open_avg:.0f} days**."
-            )
+        if ms_df is not None and not ms_df.empty:
+            avg_by_milestone = ms_df.groupby("Milestone")["Days Drifted"].mean().sort_values(ascending=False)
+            worst_milestone = avg_by_milestone.index[0]
+            worst_avg = avg_by_milestone.iloc[0]
+            open_avg  = avg_by_milestone.get("Open Date", 0)
+            if isinstance(open_avg, pd.Series): open_avg = open_avg.iloc[0]
+            if worst_avg > 0:
+                st.info(
+                    f"📊 **Process insight:** Across the {len(ms_rows)} stands shown, "
+                    f"**{worst_milestone}** has the largest average drift at **+{worst_avg:.0f} days** vs Jan 15. "
+                    f"Average open date drift is **+{open_avg:.0f} days**."
+                )
 
     # ── Upcoming openings table ────────────────────────────────────────────────
     st.divider()
