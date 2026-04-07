@@ -6142,6 +6142,117 @@ def tab_pipeline(dash):
     else:
         st.info("No stands with both Construction Start and Open Date in current filter.")
 
+    # ── Milestone Drift Chart ─────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 🔍 Process Leakage — Milestone Drift vs Jan 15 Baseline")
+    st.caption(
+        "Shows how each milestone date moved between the Jan 15 and Apr 2 reports. "
+        "🔴 bar = slipped later · 🟢 bar = moved earlier. "
+        "If Permit Approval consistently leads all other bars, permitting is the bottleneck. "
+        "If Construction Start leads, the issue is post-permit execution."
+    )
+
+    _ms_data = _pdata.get("milestone_shifts", [])
+
+    # Phase filter — default to Construction, allow expanding
+    ms_phase_opts = ["5. Construction", "4. Permitting", "3. Design", "All Phases"]
+    ms_phase = st.selectbox("Show Phase", ms_phase_opts, key="ms_phase_sel")
+
+    # Filter milestone data to match current state filter + phase selection
+    ms_rows = [
+        r for r in _ms_data
+        if (ms_phase == "All Phases" or r["phase"] == ms_phase)
+        and (sel_state == "All States" or r["state"] == sel_state)
+        and any(r.get(f"{k}_delta") is not None
+                for k in ["permit_sub","permit_appr","cs","open"])
+    ]
+
+    if not ms_rows:
+        st.info("No milestone data available for the current filter selection.")
+    else:
+        # Build tidy data for grouped bar
+        milestone_labels = {
+            "permit_sub":  "Permit Submission",
+            "permit_appr": "Permit Approval",
+            "cs":          "Construction Start",
+            "open":        "Open Date",
+        }
+        milestone_colors = {
+            "Permit Submission":  "#9B59B6",
+            "Permit Approval":    "#E74C3C",
+            "Construction Start": "#FF6B00",
+            "Open Date":          "#4A90E2",
+        }
+
+        bar_data = {"Stand": [], "Milestone": [], "Days Drifted": [], "Label": []}
+        for r in ms_rows:
+            stand = f"{r['city']}, {r['state']}"
+            for key, label in milestone_labels.items():
+                delta = r.get(f"{key}_delta")
+                if delta is None:
+                    continue
+                bar_data["Stand"].append(stand)
+                bar_data["Milestone"].append(label)
+                bar_data["Days Drifted"].append(delta)
+                sign = f"+{delta}d" if delta > 0 else (f"{delta}d" if delta < 0 else "±0")
+                bar_data["Label"].append(
+                    f"{label}: {sign}<br>"
+                    f"Jan 15: {r.get(key+'_jan15','?')} → Apr 2: {r.get(key+'_apr2','?')}"
+                )
+
+        ms_df = pd.DataFrame(bar_data)
+
+        # Order stands by open_delta descending (worst slip first = top of chart)
+        stand_order = (
+            ms_df[ms_df["Milestone"] == "Open Date"]
+            .sort_values("Days Drifted", ascending=True)["Stand"]
+            .tolist()
+        )
+        # Include stands that have no open delta (sort them after)
+        all_stands = list(dict.fromkeys(stand_order + ms_df["Stand"].tolist()))
+
+        fig_ms = go.Figure()
+        for label, color in milestone_colors.items():
+            sub = ms_df[ms_df["Milestone"] == label]
+            if sub.empty:
+                continue
+            fig_ms.add_bar(
+                x=sub["Days Drifted"],
+                y=sub["Stand"],
+                name=label,
+                orientation="h",
+                marker_color=[color if d >= 0 else "#27AE60" for d in sub["Days Drifted"]],
+                customdata=sub["Label"],
+                hovertemplate="%{customdata}<extra></extra>",
+            )
+
+        fig_ms.add_vline(x=0, line_color="white", line_width=1, opacity=0.4)
+        fig_ms.update_layout(
+            template="plotly_dark",
+            barmode="group",
+            height=max(320, len(ms_rows) * 28 + 100),
+            margin=dict(t=20, b=40, l=0, r=20),
+            xaxis=dict(title="Days Drifted vs Jan 15 (+ = slipped, − = earlier)",
+                       zeroline=True, zerolinecolor="white", zerolinewidth=1),
+            yaxis=dict(categoryorder="array", categoryarray=all_stands, title=""),
+            legend=dict(orientation="h", y=1.04, x=0),
+            bargap=0.25, bargroupgap=0.05,
+        )
+        st.plotly_chart(fig_ms, use_container_width=True)
+
+        # Summary insight callout
+        avg_by_milestone = ms_df.groupby("Milestone")["Days Drifted"].mean().sort_values(ascending=False)
+        worst_milestone = avg_by_milestone.index[0]
+        worst_avg = avg_by_milestone.iloc[0]
+        open_avg  = avg_by_milestone.get("Open Date", 0)
+        if isinstance(open_avg, pd.Series): open_avg = open_avg.iloc[0]
+        if worst_avg > 0:
+            st.info(
+                f"📊 **Process insight:** Across the {len(ms_rows)} stands shown, "
+                f"**{worst_milestone}** has the largest average drift at **+{worst_avg:.0f} days** vs Jan 15. "
+                f"Average open date drift is **+{open_avg:.0f} days**."
+            )
+
     # ── Upcoming openings table ────────────────────────────────────────────────
     st.divider()
     st.markdown("#### 📋 Upcoming Openings")
