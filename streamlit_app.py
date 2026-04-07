@@ -6107,72 +6107,8 @@ def tab_pipeline(dash):
                      height=min(60 + len(hist_df) * 35, 520))
 
     # ── Section print button — builds standalone HTML and opens in new tab ────
-    if hist_rows or opened_display_rows:
-        import json as _json_mod
-        import streamlit.components.v1 as _comp_si
-
-        def _html_table(rows, caption=""):
-            if not rows: return ""
-            cols = list(rows[0].keys())
-            hdr = "".join(f"<th>{c}</th>" for c in cols)
-            body = ""
-            for r in rows:
-                cells = ""
-                for c in cols:
-                    v = str(r.get(c,""))
-                    color = ""
-                    if "🔴" in v: color = " style='color:#ff6b6b'"
-                    elif "🟢" in v: color = " style='color:#51cf66'"
-                    cells += f"<td{color}>{v}</td>"
-                body += f"<tr>{cells}</tr>"
-            cap = f"<caption>{caption}</caption>" if caption else ""
-            return f"<table>{cap}<thead><tr>{hdr}</tr></thead><tbody>{body}</tbody></table>"
-
-        upcoming_tbl = _html_table(hist_rows,   "📋 Upcoming 2026 Openings — Date History vs Jan 15 Baseline")
-        opened_tbl   = _html_table(opened_display_rows, "✅ Already Opened 2026 — Schedule Performance")
-        report_date  = _pdata.get("_last_updated","")
-        snap_str     = "  ·  ".join(s["label"] for s in _report_snapshots)
-
-        html_doc = f"""<!DOCTYPE html>
-<html><head><meta charset='utf-8'>
-<title>7BREW Schedule Intelligence — {report_date}</title>
-<style>
-  body {{ font-family: Arial, sans-serif; font-size: 11px; margin: 0.5in; color: #111; }}
-  h1   {{ font-size: 15px; margin-bottom: 4px; }}
-  p.sub{{ font-size: 10px; color: #555; margin-top: 0; }}
-  table{{ border-collapse: collapse; width: 100%; margin-bottom: 24px; }}
-  caption{{ text-align:left; font-weight:bold; font-size:12px; padding:6px 0 4px; }}
-  th   {{ background:#222; color:#fff; padding:5px 8px; font-size:10px; text-align:left; }}
-  td   {{ padding:4px 8px; border-bottom:1px solid #ddd; }}
-  tr:nth-child(even) td {{ background:#f9f9f9; }}
-  @media print {{ @page {{ margin:0.5in; size:landscape; }} }}
-</style>
-</head><body>
-<h1>🏗️ 7BREW — Schedule Intelligence Report</h1>
-<p class='sub'>Data as of {report_date} &nbsp;·&nbsp; Snapshots: {snap_str} &nbsp;·&nbsp; 🔴 = pushed out &nbsp;·&nbsp; 🟢 = pulled in / on time</p>
-{upcoming_tbl}
-{opened_tbl}
-<p class='sub' style='margin-top:16px'>Generated from 7BREW Pipeline Dashboard</p>
-<script>window.onload = function(){{ window.print(); }}</script>
-</body></html>"""
-
-        # Encode as data URI so no server round-trip needed
-        import base64 as _b64
-        encoded = _b64.b64encode(html_doc.encode()).decode()
-        data_uri = f"data:text/html;base64,{encoded}"
-
-        _comp_si.html(f"""
-        <button onclick="window.open('{data_uri}','_blank')"
-          title="Opens a print-ready version of the schedule in a new tab"
-          style="background:#4A90E2;color:white;border:none;border-radius:6px;
-                 padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;
-                 font-family:sans-serif;margin-top:6px;">
-          🖨️  Print Schedule Intelligence
-        </button>
-        <span style="font-family:sans-serif;font-size:11px;color:#aaa;margin-left:10px;">
-          Opens a clean print-ready page — use your browser's Print dialog to save as PDF or share.
-        </span>
-        """, height=44)
+    # opened_display_rows is populated below; declare early so print button can reference it
+    opened_display_rows = []
 
     # ── Already-opened 2026 stands ────────────────────────────────────────────
     st.markdown("**✅ Already Opened 2026 — Schedule Performance**")
@@ -6207,6 +6143,71 @@ def tab_pipeline(dash):
                      height=min(60 + len(opened_df) * 35, 480))
         if all(r["delta_days"] == 0 for r in opened_rows_calc):
             st.info("⚠️ Jan 15 dates not yet filled in — all deltas show 0. Update `opened_shifts[].jan15` in `pipeline_data.json` with the actual projected dates from Drew's Jan 15 report.")
+
+    # ── Section print button — both tables now fully built, safe to reference ──
+    if hist_rows or opened_display_rows:
+        import streamlit.components.v1 as _comp_si
+
+        def _html_table(rows, caption=""):
+            if not rows: return ""
+            cols = list(rows[0].keys())
+            hdr  = "".join(f"<th>{c}</th>" for c in cols)
+            body = ""
+            for r in rows:
+                cells = ""
+                for c in cols:
+                    v = str(r.get(c, ""))
+                    color = " style='color:#cc0000'" if "🔴" in v else (
+                            " style='color:#006600'" if "🟢" in v else "")
+                    cells += f"<td{color}>{v}</td>"
+                body += f"<tr>{cells}</tr>"
+            cap = f"<caption>{caption}</caption>" if caption else ""
+            return f"<table>{cap}<thead><tr>{hdr}</tr></thead><tbody>{body}</tbody></table>"
+
+        report_date = _pdata.get("_last_updated", "")
+        snap_str    = "  ·  ".join(s["label"] for s in _report_snapshots)
+        upcoming_tbl = _html_table(hist_rows, "📋 Upcoming 2026 Openings — Date History vs Jan 15 Baseline")
+        opened_tbl   = _html_table(opened_display_rows, "✅ Already Opened 2026 — Schedule Performance")
+
+        html_doc = f"""<!DOCTYPE html>
+<html><head><meta charset='utf-8'>
+<title>7BREW Schedule Intelligence — {report_date}</title>
+<style>
+  body    {{ font-family:Arial,sans-serif; font-size:11px; margin:0.5in; color:#111; }}
+  h1      {{ font-size:15px; margin-bottom:4px; }}
+  p.sub   {{ font-size:10px; color:#555; margin-top:0; }}
+  table   {{ border-collapse:collapse; width:100%; margin-bottom:24px; }}
+  caption {{ text-align:left; font-weight:bold; font-size:12px; padding:6px 0 4px; }}
+  th      {{ background:#222; color:#fff; padding:5px 8px; font-size:10px; text-align:left; }}
+  td      {{ padding:4px 8px; border-bottom:1px solid #ddd; }}
+  tr:nth-child(even) td {{ background:#f9f9f9; }}
+  @media print {{ @page {{ margin:0.5in; size:landscape; }} }}
+</style>
+</head><body>
+<h1>🏗️ 7BREW — Schedule Intelligence Report</h1>
+<p class='sub'>Data as of {report_date} &nbsp;·&nbsp; Snapshots: {snap_str}
+   &nbsp;·&nbsp; 🔴 = pushed out &nbsp;·&nbsp; 🟢 = pulled in / on time</p>
+{upcoming_tbl}
+{opened_tbl}
+<p class='sub' style='margin-top:16px'>Generated from 7BREW Pipeline Dashboard</p>
+<script>window.onload = function(){{ window.print(); }}</script>
+</body></html>"""
+
+        import base64 as _b64
+        data_uri = "data:text/html;base64," + _b64.b64encode(html_doc.encode()).decode()
+
+        _comp_si.html(f"""
+        <button onclick="window.open('{data_uri}','_blank')"
+          title="Opens a print-ready version of the schedule in a new tab"
+          style="background:#4A90E2;color:white;border:none;border-radius:6px;
+                 padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;
+                 font-family:sans-serif;margin-top:6px;">
+          🖨️  Print Schedule Intelligence
+        </button>
+        <span style="font-family:sans-serif;font-size:11px;color:#aaa;margin-left:10px;">
+          Opens a clean print-ready page — use your browser's Print dialog to save as PDF or share.
+        </span>
+        """, height=44)
 
     # ── New stands since Jan 15 ───────────────────────────────────────────────
     if filtered_new_since:
