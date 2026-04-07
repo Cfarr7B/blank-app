@@ -5582,6 +5582,42 @@ _NEW_SINCE_JAN15 = [
 ]
 
 
+_PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
+
+
+@st.cache_data(show_spinner=False)
+def _load_pipeline_data(_mtime: float) -> dict:
+    """Load pipeline_data.json once and cache it.
+
+    _mtime is the file's modification timestamp — passing it as a parameter
+    means the cache automatically invalidates the moment you drop a new file
+    in, so the weekly update workflow is: replace pipeline_data.json → done.
+    """
+    import json as _j
+    with open(_PIPELINE_JSON_PATH) as f:
+        return _j.load(f)
+
+
+@st.cache_data(show_spinner=False)
+def _get_pipeline_dfs(_mtime: float):
+    """Return pre-parsed pipeline DataFrames — built once, cached until file changes."""
+    data = _load_pipeline_data(_mtime)
+    df = pd.DataFrame(data["upcoming"])
+    df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
+    df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
+    df = df.sort_values("open_dt").reset_index(drop=True)
+    shifts_df = pd.DataFrame(data["date_shifts"])
+    return df, shifts_df
+
+
+def _pipeline_mtime() -> float:
+    """Return pipeline_data.json modification time, or 0 if file not found."""
+    try:
+        return os.path.getmtime(_PIPELINE_JSON_PATH)
+    except FileNotFoundError:
+        return 0.0
+
+
 def _pl_coords(city, state):
     """Return (lat, lon) or None from the city/state lookup."""
     return _CITY_COORDS.get((city, state))
@@ -5828,19 +5864,21 @@ def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
+
+    # ── Load pipeline data (cached until pipeline_data.json changes) ──────────
+    _pmtime = _pipeline_mtime()
+    _pdata  = _load_pipeline_data(_pmtime)
+    df, shifts_df_base = _get_pipeline_dfs(_pmtime)
+
+    _last_updated = _pdata.get("_last_updated", "unknown")
     st.caption(
-        "**Data source:** Drew Deagan's weekly opening schedule (last updated Mar 26, 2026). "
-        "To refresh this tab, upload the latest spreadsheet from Drew's weekly update. "
+        f"**Data source:** Drew Deagan's weekly opening schedule (last updated **{_last_updated}**). "
+        "To refresh: replace `pipeline_data.json` with the latest export. "
         "Jan 15, 2026 used as baseline for schedule shift analysis · 2027 dates are soft/indicative · $45K avg revenue/week assumed."
     )
 
     # ── Print / PDF button ────────────────────────────────────────────────────
     _print_button("🖨️  Print / Save as PDF")
-
-    df = pd.DataFrame(_PIPELINE_UPCOMING)
-    df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
-    df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
-    df = df.sort_values("open_dt").reset_index(drop=True)
 
     AVG_REV_PER_WEEK = 45_000   # $ per stand per week
 
@@ -5870,7 +5908,7 @@ def tab_pipeline(dash):
         parts = raw.split(" ", 1)
         if parts:
             open_store_ids.add(parts[0].strip())
-    for r in _PIPELINE_OPEN_PDF:
+    for r in _pdata["open_pdf"]:
         open_store_ids.add(r.get("store", ""))
     total_open = len(open_store_ids)
 
@@ -5888,19 +5926,21 @@ def tab_pipeline(dash):
 
     # ── Schedule Intelligence: weekly date-drift tracker ─────────────────────
     st.divider()
-    snap_labels = [s["label"] for s in _REPORT_SNAPSHOTS]
-    latest_snap = _REPORT_SNAPSHOTS[-1]
+    _report_snapshots = _pdata["report_snapshots"]
+    snap_labels = [s["label"] for s in _report_snapshots]
+    latest_snap = _report_snapshots[-1]
     st.markdown(f"#### 📅 Schedule Intelligence — Opening Date Tracker  *(2026 opens · indexed to Jan 15 baseline)*")
     st.caption(f"Tracks how opening dates move week-over-week vs the Jan 15 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
 
-    shifts_df = pd.DataFrame(_DATE_SHIFTS)
+    shifts_df = shifts_df_base.copy()
     if sel_state != "All States":
         shifts_df = shifts_df[shifts_df["state"] == sel_state]
     dff_rshs = set(dff["rsh"].tolist())
-    filtered_new_since = [r for r in _NEW_SINCE_JAN15 if r in dff_rshs]
+    _new_since_jan15 = _pdata["new_since_jan15"]
+    filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
 
     # Compute week-over-week delta (latest vs previous snapshot)
-    prev_snap = _REPORT_SNAPSHOTS[-2]["key"] if len(_REPORT_SNAPSHOTS) >= 2 else "jan15"
+    prev_snap = _report_snapshots[-2]["key"] if len(_report_snapshots) >= 2 else "jan15"
     curr_snap = latest_snap["key"]
     def _parse_d(s):
         if not s or str(s) in ("","nan","None"): return None
@@ -5935,7 +5975,7 @@ def tab_pipeline(dash):
         return None
 
     opened_rows_calc = []
-    for o in _OPENED_SHIFTS:
+    for o in _pdata["opened_shifts"]:
         d_jan15  = _parse_d_simple(o.get("jan15",""))
         d_actual = _parse_d_simple(o.get("actual_open",""))
         if d_jan15 and d_actual:
@@ -5993,7 +6033,7 @@ def tab_pipeline(dash):
             "Stand": f"{r['city']}, {r['state']}",
             "Store": r.get("store",""),
         }
-        for snap in _REPORT_SNAPSHOTS:
+        for snap in _report_snapshots:
             row_dict[snap["label"]] = _fmt_cell(snap["key"], r, r.get("jan15",""))
         # Week-over-week badge
         wow = r["_wow"]
@@ -6019,7 +6059,7 @@ def tab_pipeline(dash):
     st.caption(
         "Shows every stand that opened in 2026 vs the Jan 15 baseline. "
         "🔴 = opened late · 🟢 = opened early · ⬜ = on time.  "
-        "*Update the `jan15` dates in `_OPENED_SHIFTS` from Drew's Jan 15 report to see true slippage.*"
+        "*Update the `jan15` dates in `pipeline_data.json → opened_shifts` from Drew's Jan 15 report to see true slippage.*"
     )
 
     opened_display_rows = []
@@ -6046,12 +6086,12 @@ def tab_pipeline(dash):
         st.dataframe(opened_df, use_container_width=True, hide_index=True,
                      height=min(60 + len(opened_df) * 35, 480))
         if all(r["delta_days"] == 0 for r in opened_rows_calc):
-            st.info("⚠️ Jan 15 dates not yet filled in — all deltas show 0. Update `_OPENED_SHIFTS` with the actual projected dates from Drew's Jan 15 report.")
+            st.info("⚠️ Jan 15 dates not yet filled in — all deltas show 0. Update `opened_shifts[].jan15` in `pipeline_data.json` with the actual projected dates from Drew's Jan 15 report.")
 
     # ── New stands since Jan 15 ───────────────────────────────────────────────
     if filtered_new_since:
         st.markdown("**🆕 New to Pipeline Since Jan 15**")
-        new_stands_info = [r for r in _PIPELINE_UPCOMING if r["rsh"] in filtered_new_since]
+        new_stands_info = [r for r in _pdata["upcoming"] if r["rsh"] in filtered_new_since]
         if new_stands_info:
             new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
             new_df.columns = ["City","State","Phase","Est. Opening"]
@@ -6114,7 +6154,7 @@ def tab_pipeline(dash):
     shifted_rsh = set(shifts_df["rsh"].tolist())
     table_df["⚑ Shifted"] = table_df["RSH"].apply(lambda r: "↑ Pushed" if r in set(
         pushed["rsh"].tolist()) else ("↓ Pulled" if r in set(pulled["rsh"].tolist()) else
-        ("🆕 New" if r in set(_NEW_SINCE_JAN15) else "")))
+        ("🆕 New" if r in set(_new_since_jan15) else "")))
 
     def _row_style(row):
         if "Construction" in row["Phase"]: bg = "rgba(255,107,0,0.08)"
