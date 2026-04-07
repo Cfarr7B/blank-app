@@ -6272,9 +6272,6 @@ def tab_pipeline(dash):
 
     # ── Section print button — both tables now fully built, safe to reference ──
     if hist_rows or opened_display_rows:
-        import streamlit.components.v1 as _comp_si
-        import base64 as _b64
-
         report_date  = _pdata.get("_last_updated", "")
         snap_str     = "  ·  ".join(s["label"] for s in _report_snapshots)
         latest_label = _report_snapshots[-1]["label"] if _report_snapshots else ""
@@ -6407,32 +6404,19 @@ def tab_pipeline(dash):
 <script>window.onload = function(){{ window.print(); }}</script>
 </body></html>"""
 
-        _b64_html = _b64.b64encode(html_doc.encode()).decode()
-
-        # Use a Blob URL instead of a data: URI — avoids blank-page issues caused
-        # by browser popup blockers and iframe sandbox restrictions on data: URIs.
-        _comp_si.html(f"""
-        <button
-          title="Opens a formatted print-ready report in a new tab"
-          style="background:#4A90E2;color:white;border:none;border-radius:6px;
-                 padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;
-                 font-family:sans-serif;margin-top:6px;"
-          onclick="(function(){{
-            var html = atob('{_b64_html}');
-            var blob = new Blob([html], {{type:'text/html;charset=utf-8'}});
-            var url  = URL.createObjectURL(blob);
-            var w    = window.open(url, '_blank');
-            if (!w) {{
-              // Popup blocked — fall back: write into current parent window
-              window.parent.location.href = url;
-            }}
-          }})();">
-          🖨️  Print Schedule Intelligence
-        </button>
-        <span style="font-family:sans-serif;font-size:11px;color:#aaa;margin-left:10px;">
-          Opens a formatted report — use browser Print dialog to save as PDF or share.
-        </span>
-        """, height=44)
+        # st.download_button is the most reliable cross-browser approach:
+        # the HTML file is served by Streamlit directly (no popup/iframe issues).
+        # The report already contains window.onload = window.print() so the
+        # browser print dialog opens automatically when the file is opened.
+        _fname = f"7BREW_Schedule_Intelligence_{report_date.replace('/','')}.html"
+        st.download_button(
+            label="🖨️  Download Schedule Intelligence Report",
+            data=html_doc.encode("utf-8"),
+            file_name=_fname,
+            mime="text/html",
+            help="Downloads an HTML report — open it in your browser and the print dialog will appear automatically. Save as PDF to share.",
+            type="primary",
+        )
 
     # ── New stands since Jan 15 ───────────────────────────────────────────────
     if filtered_new_since:
