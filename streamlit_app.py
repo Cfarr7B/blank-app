@@ -6041,8 +6041,46 @@ def tab_pipeline(dash):
         else:           arrow = ""
         return f"{val}{arrow}"
 
+    # Sort selector — parse actual dates so Oct/Nov sort after Jan, not before
+    sort_col1, sort_col2 = st.columns([2, 4])
+    with sort_col1:
+        sort_opt = st.selectbox(
+            "Sort by",
+            ["Opening Date (earliest first)", "Opening Date (latest first)",
+             "Slippage (most delayed first)", "Stand Name (A–Z)"],
+            key="si_sort_opt",
+        )
+
+    def _parse_open_date(r):
+        """Return a sortable date from the latest snapshot open date field."""
+        import datetime as _dt3
+        v = str(r.get(curr_snap, "") or "")
+        for fs in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt3.datetime.strptime(v, fs).date()
+            except: pass
+        # fallback: parse jan15 date
+        v2 = str(r.get("jan15","") or "")
+        for fs in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt3.datetime.strptime(v2, fs).date()
+            except: pass
+        import datetime as _dt3
+        return _dt3.date(9999, 1, 1)  # unknown dates sort last
+
+    if sort_opt == "Opening Date (earliest first)":
+        shifts_sorted = shifts_df.copy()
+        shifts_sorted["_sort_dt"] = shifts_sorted.apply(_parse_open_date, axis=1)
+        shifts_sorted = shifts_sorted.sort_values("_sort_dt", ascending=True)
+    elif sort_opt == "Opening Date (latest first)":
+        shifts_sorted = shifts_df.copy()
+        shifts_sorted["_sort_dt"] = shifts_sorted.apply(_parse_open_date, axis=1)
+        shifts_sorted = shifts_sorted.sort_values("_sort_dt", ascending=False)
+    elif sort_opt == "Slippage (most delayed first)":
+        shifts_sorted = shifts_df.sort_values("delta_days", ascending=False)
+    else:  # Stand Name A–Z
+        shifts_sorted = shifts_df.sort_values("city", ascending=True)
+
     hist_rows = []
-    for _, r in shifts_df.sort_values("delta_days", ascending=False).iterrows():
+    for _, r in shifts_sorted.iterrows():
         row_dict = {
             "Stand": f"{r['city']}, {r['state']}",
             "Store": r.get("store",""),
