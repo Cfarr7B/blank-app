@@ -448,5 +448,23 @@
     "Region": "CO",
     "Open_Date": "Unknown",
     "Store_ID": "197"
+  },
+  "516": {
+    "Display_Name": "Cleburne",
+    "Region": "South Central TX",
+    "Open_Date": "2026-03-30",
+    "Store_ID": "516"
+  },
+  "709": {
+    "Display_Name": "Pampa",
+    "Region": "West TX",
+    "Open_Date": "2026-03-30",
+    "Store_ID": "709"
+  },
+  "711": {
+    "Display_Name": "Waco",
+    "Region": "South Central TX",
+    "Open_Date": "2026-04-13",
+    "Store_ID": "711"
   }
 }

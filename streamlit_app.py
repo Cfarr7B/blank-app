@@ -3465,8 +3465,26 @@ def tab_sos(dash):
                 "Open Date":  rec.get("Open Date", ""),
             }
 
-    # Stable JSON key for the cached period-summary function
+    # Fallback: enrich from stand_meta.json for very new stands not yet in stand_records
+    # (e.g. stands that opened mid-period and have SOS data but no P&L period yet)
     import json as _json
+    _meta_path = os.path.join(os.path.dirname(__file__), "stand_meta.json")
+    if os.path.exists(_meta_path):
+        try:
+            with open(_meta_path) as _mf:
+                _stand_meta = _json.load(_mf)
+            for _sid, _sm in _stand_meta.items():
+                _sn_pad = str(_sid).strip().zfill(6)
+                if _sn_pad not in stands_info and _sm.get("Open_Date"):
+                    stands_info[_sn_pad] = {
+                        "Region":     _sm.get("Region", "Unknown"),
+                        "Age_Bucket": "New",
+                        "Open Date":  _sm["Open_Date"],
+                    }
+        except Exception:
+            pass
+
+    # Stable JSON key for the cached period-summary function
     _stands_info_json = _json.dumps(stands_info, sort_keys=True)
 
     def _days_open(store_num, as_of=None):
