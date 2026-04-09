@@ -3885,7 +3885,7 @@ def tab_sos(dash):
                 reg_day_df.pivot(index="Region", columns="Day", values="_avg")
                 .reindex(columns=day_order)
             )
-            pivot_fmt = pivot.applymap(lambda v: _fmt_sos(v) if pd.notna(v) else "—")
+            pivot_fmt = pivot.map(lambda v: _fmt_sos(v) if pd.notna(v) else "—")
             # Add system-wide row at top
             sys_row = {
                 day: _fmt_sos(prime_df[prime_df["DayOfWeek"] == day]["SOS_min"].mean())
