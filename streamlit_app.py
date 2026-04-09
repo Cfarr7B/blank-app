@@ -5943,7 +5943,7 @@ def _build_milestone_fig(ms_rows_json: str):
             sign = f"+{delta}d" if delta > 0 else (f"{delta}d" if delta < 0 else "±0")
             bar_data["Label"].append(
                 f"{label}: {sign}<br>"
-                f"Jan 15: {r.get(key+'_jan15','?')} → Apr 2: {r.get(key+'_apr2','?')}"
+                f"Jan 15: {r.get(key+'_jan15','?')} → Apr 9: {r.get(key+'_apr9','?')}"
             )
 
     ms_df = _pdm.DataFrame(bar_data)
