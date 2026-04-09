@@ -3495,6 +3495,17 @@ def tab_sos(dash):
     df["At_Goal"]    = df["SOS_min"] <= df["Stand_Goal"]
     df["Is_P0"]      = df["Goal_Tier"] == "P0"
 
+    # ── P0 exclude toggle (global filter for this tab) ────────────────────────
+    _excl_p0 = st.checkbox(
+        "Exclude P0 (opening-period) stands from wait time metrics",
+        value=True,
+        key="sos_excl_p0",
+        help="P0 = stand open < 28 days. Opening-period stands often have higher SOS "
+             "and no established goal, so excluding them gives a cleaner system average.",
+    )
+    if _excl_p0:
+        df = df[~df["Is_P0"]].copy()
+
     # ── Shared helpers ────────────────────────────────────────────────────────
     _sos_ticks      = [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
     _sos_ticklabels = [_fmt_sos(v) for v in _sos_ticks]
@@ -3637,79 +3648,6 @@ def tab_sos(dash):
             goal_cols[i].metric(label.split("(")[0].strip(), _fmt_sos(target),
                                 help=label)
 
-    # ═════════════════════════════════════════════════════════════════════════
-    # SECTION 0 — PERIOD-OVER-PERIOD TREND
-    # ═════════════════════════════════════════════════════════════════════════
-    st.subheader("📈 Period-over-Period Trend")
-    # Period summaries computed via module-level @st.cache_data function (_sos_period_kpis)
-
-    # ── Head-to-head picker (only when 2+ periods loaded) ────────────────────
-    if len(available_periods) >= 2:
-        st.caption("Comparing periods head-to-head — use the selectors above to change.")
-        # Default Period A = first selected period; Period B = "Compare To" selection
-        _default_a = sel_periods[0] if sel_periods[0] in available_periods else available_periods[0]
-        _default_b = (cmp_to_key if cmp_to_key and cmp_to_key in available_periods
-                      else available_periods[-1])
-        _idx_a = available_periods.index(_default_a) if _default_a in available_periods else 0
-        _idx_b = available_periods.index(_default_b) if _default_b in available_periods else len(available_periods) - 1
-        cA, cVS, cB = st.columns([5, 1, 5])
-        with cA:
-            lbl_a = st.selectbox("Period A", available_periods,
-                                 index=_idx_a, key="sos_cmp_a")
-        with cVS:
-            st.html('<div style="text-align:center;font-family:\'Bebas Neue\',sans-serif;'
-                    'font-size:28px;color:#AC2430;padding-top:26px;letter-spacing:2px;">VS</div>')
-        with cB:
-            lbl_b = st.selectbox("Period B", available_periods,
-                                 index=_idx_b, key="sos_cmp_b")
-
-        sA = _sos_period_kpis(lbl_a, _stands_info_json)
-        sB = _sos_period_kpis(lbl_b, _stands_info_json)
-
-        # Scorecard: 5 metrics side by side, coloured border = improvement direction
-        GREEN, RED, GREY = "#12a06e", "#AC2430", "#595959"
-        metrics = [
-            ("System Avg",          "_sys",   False),  # lower is better
-            ("Prime Time Avg",      "_prime", False),
-            ("Txns At Goal",        "_pct",   True),   # higher is better
-            ("Stands Meeting Goal", None,     True),
-            ("Stands Over Goal",    None,     False),
-        ]
-        score_cols = st.columns(len(metrics))
-        for col, (m_label, raw_key, higher_good) in zip(score_cols, metrics):
-            if raw_key:
-                va, vb = sA[raw_key], sB[raw_key]
-            else:
-                va = float(sA[m_label])
-                vb = float(sB[m_label])
-            try:
-                delta     = va - vb
-                is_better = (delta < 0) if not higher_good else (delta > 0)
-                color     = GREEN if is_better else (RED if delta != 0 else GREY)
-                arrow     = ("▲" if delta > 0 else "▼") if delta != 0 else "—"
-                fmt_delta = f"{arrow} {_fmt_sos(abs(delta))}" if raw_key in ("_sys", "_prime") else \
-                            f"{arrow} {abs(delta):.1f}%" if raw_key == "_pct" else \
-                            f"{arrow} {abs(int(delta))}"
-            except Exception:
-                color, fmt_delta = GREY, "—"
-            with col:
-                st.html(f"""
-                <div style="background:#f8f8f8;border-radius:10px;padding:14px 10px;
-                            text-align:center;border-top:3px solid {color};margin-bottom:8px;">
-                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:#595959;
-                              text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">
-                    {m_label}</div>
-                  <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1A1919;">
-                    {sA[m_label]}</div>
-                  <div style="font-family:'DM Mono',monospace;font-size:10px;color:#595959;margin:2px 0;">
-                    vs {sB[m_label]}</div>
-                  <div style="font-family:'DM Mono',monospace;font-size:11px;
-                              color:{color};font-weight:600;margin-top:4px;">
-                    {fmt_delta}</div>
-                </div>""")
-
-        st.markdown("")   # spacer
-
     # ── Trend chart + table (all available periods) ───────────────────────────
     if available_periods:
         trend_rows = [r for p in available_periods
@@ -3759,15 +3697,18 @@ def tab_sos(dash):
     st.subheader("🎯 Goal Tier Breakdown — Current Period")
     st.caption("Each stand's goal is set by its age at the period midpoint (28-day periods).")
 
-    tier_order = ["P1–P2", "P3", "P4", "P5", "P6+"]
+    # P0 included so the full distribution is visible (excluded from goal math below)
+    tier_order = ["P0", "P1–P2", "P3", "P4", "P5", "P6+"]
     tier_goals = {"P1–P2": 5.0, "P3": 4.5, "P4": 4.0, "P5": 3.75, "P6+": 3.5}
+    # Re-compute Is_P0 on current df (may have been excluded above if toggle was off)
+    _all_df_for_tiers = df  # use whatever df is active (P0 filtered or not)
 
     # One row per stand — vectorized prime avg (no cross-df lambda)
     _prime_by_stand = (
-        df[df["IsPrimeTime"]].groupby("Stand_Label")["SOS_min"].mean()
+        _all_df_for_tiers[_all_df_for_tiers["IsPrimeTime"]].groupby("Stand_Label")["SOS_min"].mean()
     )
     stand_tier_df = (
-        df.groupby("Stand_Label")
+        _all_df_for_tiers.groupby("Stand_Label")
         .agg(
             _avg  =("SOS_min",    "mean"),
             _goal =("Stand_Goal", "first"),
@@ -3782,31 +3723,48 @@ def tab_sos(dash):
         sub = stand_tier_df[stand_tier_df["_tier"] == tier]
         if sub.empty:
             continue
-        goal      = tier_goals[tier]
         n_stands  = len(sub)
-        n_meeting = (sub["_avg"] <= goal).sum()
-        n_missing = n_stands - n_meeting
         avg_sos   = sub["_avg"].mean()
-        tier_rows.append({
-            "Tier":          tier,
-            "Goal":          _fmt_sos(goal),
-            "# Stands":      n_stands,
-            "Avg SOS":       _fmt_sos(avg_sos),
-            "vs Goal":       ("+" if avg_sos - goal >= 0 else "-") + _fmt_sos(abs(avg_sos - goal)),
-            "✅ Meeting":    n_meeting,
-            "❌ Missing":    n_missing,
-            "% Meeting":     f"{n_meeting / n_stands * 100:.0f}%",
-        })
+        if tier == "P0":
+            # P0 has no goal — show informational row only
+            tier_rows.append({
+                "Tier":       "P0 (Opening)",
+                "Goal":       "—",
+                "# Stands":   n_stands,
+                "Avg SOS":    _fmt_sos(avg_sos),
+                "vs Goal":    "—",
+                "✅ Meeting": "—",
+                "❌ Missing": "—",
+                "% Meeting":  "—",
+            })
+        else:
+            goal      = tier_goals[tier]
+            n_meeting = (sub["_avg"] <= goal).sum()
+            n_missing = n_stands - n_meeting
+            tier_rows.append({
+                "Tier":          tier,
+                "Goal":          _fmt_sos(goal),
+                "# Stands":      n_stands,
+                "Avg SOS":       _fmt_sos(avg_sos),
+                "vs Goal":       ("+" if avg_sos - goal >= 0 else "-") + _fmt_sos(abs(avg_sos - goal)),
+                "✅ Meeting":    n_meeting,
+                "❌ Missing":    n_missing,
+                "% Meeting":     f"{n_meeting / n_stands * 100:.0f}%",
+            })
 
     if tier_rows:
         tier_summary_df = pd.DataFrame(tier_rows)
 
-        # Bar chart: avg SOS per tier vs their goal
+        # Bar chart: avg SOS per tier vs their goal (P0 shown in grey, no goal line)
         fig_tier = go.Figure()
         for _, row in tier_summary_df.iterrows():
-            goal_val = tier_goals[row["Tier"]]
-            avg_val  = stand_tier_df[stand_tier_df["_tier"] == row["Tier"]]["_avg"].mean()
-            colour   = "#12a06e" if avg_val <= goal_val else "#AC2430"
+            raw_tier = row["Tier"].replace(" (Opening)", "")
+            goal_val = tier_goals.get(raw_tier)
+            avg_val  = stand_tier_df[stand_tier_df["_tier"] == raw_tier]["_avg"].mean()
+            if goal_val is not None:
+                colour = "#12a06e" if avg_val <= goal_val else "#AC2430"
+            else:
+                colour = "#888888"  # grey for P0 — no goal
             fig_tier.add_trace(go.Bar(
                 name=row["Tier"],
                 x=[row["Tier"]],
@@ -3816,12 +3774,13 @@ def tab_sos(dash):
                 textposition="outside",
                 showlegend=False,
             ))
-            # Goal line for this tier
-            fig_tier.add_shape(type="line",
-                x0=row["Tier"], x1=row["Tier"],
-                y0=0, y1=goal_val,
-                line=dict(color="white", dash="dash", width=2),
-            )
+            # Goal line for tiers that have a goal
+            if goal_val is not None:
+                fig_tier.add_shape(type="line",
+                    x0=row["Tier"], x1=row["Tier"],
+                    y0=0, y1=goal_val,
+                    line=dict(color="white", dash="dash", width=2),
+                )
 
         fig_tier.update_yaxes(
             tickvals=[2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
@@ -3844,11 +3803,18 @@ def tab_sos(dash):
     st.subheader("🕐 Prime Time by Day of Week")
     st.caption("Mon–Fri prime: 7–10am · Sat–Sun prime: 9am–1pm")
 
-    if len(prime_df) > 0:
+    _pt_regions = ["All Regions"] + sorted(df["Region"].dropna().unique().tolist())
+    _pt_region  = st.selectbox("Filter by Region", _pt_regions, key="sos_pt_region")
+    _prime_df_view = (
+        prime_df[prime_df["Region"] == _pt_region].copy()
+        if _pt_region != "All Regions" else prime_df.copy()
+    )
+
+    if len(_prime_df_view) > 0:
         # Per-day prime time avg and worst hour
         rows = []
         for day in day_order:
-            day_prime = prime_df[prime_df["DayOfWeek"] == day]
+            day_prime = _prime_df_view[_prime_df_view["DayOfWeek"] == day]
             if day_prime.empty:
                 continue
             avg_sos   = day_prime["SOS_min"].mean()
@@ -3877,12 +3843,13 @@ def tab_sos(dash):
 
         if rows:
             prime_day_df = pd.DataFrame(rows)
+            _region_suffix = f" — {_pt_region}" if _pt_region != "All Regions" else ""
 
             # Bar chart
             fig_pd = px.bar(
                 prime_day_df, x="Day", y="_avg",
                 category_orders={"Day": day_order},
-                title="Prime Time Avg SOS by Day of Week",
+                title=f"Prime Time Avg SOS by Day of Week{_region_suffix}",
                 color="_avg",
                 color_continuous_scale="RdYlGn_r",
                 range_color=[3.0, 5.5],
@@ -3911,6 +3878,8 @@ def tab_sos(dash):
                                "✅ At Goal", "❌ Over Goal"]],
                 use_container_width=True, hide_index=True,
             )
+    else:
+        st.info(f"No prime-time data for region: {_pt_region}.")
 
     st.markdown("---")
 
@@ -6591,7 +6560,8 @@ def main():
         "📊 CEO Snapshot",
         "🏠 Overview",
         "📈 Period Comparison",
-        "🗺 Regions & Stands",
+        "🗺 Regions",
+        "📋 Stands",
         "💡 Wins & Opportunities",
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
@@ -6604,11 +6574,12 @@ def main():
     with tabs[1]: tab_overview(dash)
     with tabs[2]: tab_comparison(dash)
     with tabs[3]: tab_regions(dash)
-    with tabs[4]: tab_insights(dash)
-    with tabs[5]: tab_utilities(dash)
-    with tabs[6]: tab_pipeline(dash)
-    with tabs[7]: tab_forecast(dash)
-    with tabs[8]: tab_sos(dash)
+    with tabs[4]: tab_stands(dash)
+    with tabs[5]: tab_insights(dash)
+    with tabs[6]: tab_utilities(dash)
+    with tabs[7]: tab_pipeline(dash)
+    with tabs[8]: tab_forecast(dash)
+    with tabs[9]: tab_sos(dash)
 
 
 main()
