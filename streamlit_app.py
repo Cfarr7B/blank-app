@@ -3801,85 +3801,92 @@ def tab_sos(dash):
     # SECTION 1 — PRIME TIME BY DAY
     # ═════════════════════════════════════════════════════════════════════════
     st.subheader("🕐 Prime Time by Day of Week")
-    st.caption("Mon–Fri prime: 7–10am · Sat–Sun prime: 9am–1pm")
+    st.caption("Mon–Fri prime: 7–10am · Sat–Sun prime: 9am–1pm · Each region shown as its own bar")
 
-    _pt_regions = ["All Regions"] + sorted(df["Region"].dropna().unique().tolist())
-    _pt_region  = st.selectbox("Filter by Region", _pt_regions, key="sos_pt_region")
-    _prime_df_view = (
-        prime_df[prime_df["Region"] == _pt_region].copy()
-        if _pt_region != "All Regions" else prime_df.copy()
-    )
+    if len(prime_df) > 0:
+        _pt_all_regions = sorted(prime_df["Region"].dropna().unique().tolist())
 
-    if len(_prime_df_view) > 0:
-        # Per-day prime time avg and worst hour
-        rows = []
-        for day in day_order:
-            day_prime = _prime_df_view[_prime_df_view["DayOfWeek"] == day]
-            if day_prime.empty:
-                continue
-            avg_sos   = day_prime["SOS_min"].mean()
-            is_wkend  = day in ["Saturday", "Sunday"]
-            prime_s, prime_e = (9, 13) if is_wkend else (7, 10)
+        # ── Build region-by-day matrix ────────────────────────────────────────
+        _region_day_rows = []
+        for region in _pt_all_regions:
+            reg_prime = prime_df[prime_df["Region"] == region]
+            for day in day_order:
+                day_data = reg_prime[reg_prime["DayOfWeek"] == day]
+                if day_data.empty:
+                    continue
+                _region_day_rows.append({
+                    "Region": region,
+                    "Day":    day,
+                    "_avg":   day_data["SOS_min"].mean(),
+                })
 
-            # worst and best hour during prime window
-            hr_avg    = day_prime.groupby("Hour")["SOS_min"].mean()
-            worst_hr  = int(hr_avg.idxmax()) if not hr_avg.empty else None
-            best_hr   = int(hr_avg.idxmin()) if not hr_avg.empty else None
+        if _region_day_rows:
+            reg_day_df = pd.DataFrame(_region_day_rows)
 
-            # # stands at/over their goal during this day's prime time
-            stand_day_prime = day_prime.groupby("Stand_Label")["SOS_min"].mean()
-            n_at   = sum(stand_day_prime[s] <= stand_goal_map.get(s, 3.5) for s in stand_day_prime.index)
-            n_over = len(stand_day_prime) - n_at
+            # Grouped bar: one trace per region, x = day
+            fig_pd = go.Figure()
+            _region_palette = [
+                "#4C78A8","#F58518","#E45756","#72B7B2",
+                "#54A24B","#EECA3B","#B279A2","#FF9DA6",
+                "#9D755D","#BAB0AC",
+            ]
+            for i, region in enumerate(_pt_all_regions):
+                sub = reg_day_df[reg_day_df["Region"] == region]
+                # Reindex to day_order so bars line up correctly even if a day is missing
+                sub = sub.set_index("Day").reindex(day_order).reset_index()
+                color = _region_palette[i % len(_region_palette)]
+                fig_pd.add_bar(
+                    name=region,
+                    x=sub["Day"],
+                    y=sub["_avg"],
+                    marker_color=color,
+                    text=sub["_avg"].apply(lambda v: _fmt_sos(v) if pd.notna(v) else ""),
+                    textposition="outside",
+                    hovertemplate=(
+                        f"<b>{region}</b><br>%{{x}}<br>"
+                        "Prime Avg: %{text}<extra></extra>"
+                    ),
+                )
 
-            rows.append({
-                "Day":           day,
-                "_avg":          avg_sos,
-                "Prime Avg SOS": _fmt_sos(avg_sos),
-                "Worst Hour":    _fmt_hour(worst_hr) if worst_hr is not None else "—",
-                "Best Hour":     _fmt_hour(best_hr)  if best_hr  is not None else "—",
-                "✅ At Goal":    n_at,
-                "❌ Over Goal":  n_over,
-            })
-
-        if rows:
-            prime_day_df = pd.DataFrame(rows)
-            _region_suffix = f" — {_pt_region}" if _pt_region != "All Regions" else ""
-
-            # Bar chart
-            fig_pd = px.bar(
-                prime_day_df, x="Day", y="_avg",
-                category_orders={"Day": day_order},
-                title=f"Prime Time Avg SOS by Day of Week{_region_suffix}",
-                color="_avg",
-                color_continuous_scale="RdYlGn_r",
-                range_color=[3.0, 5.5],
+            fig_pd.add_hline(
+                y=3.5, line_dash="dash", line_color="rgba(100,200,100,0.7)",
+                annotation_text="3:30 Mature Goal", annotation_position="bottom right",
             )
-            fig_pd.add_hline(y=3.5, line_dash="dash", line_color="green",
-                             annotation_text="3:30 Mature Goal", annotation_position="bottom right")
             _apply_sos_yaxis(fig_pd)
-            fig_pd.update_layout(height=360, coloraxis_showscale=False)
-            fig_pd.update_traces(
-                hovertemplate="<b>%{x}</b><br>Prime Avg: %{customdata}<extra></extra>",
-                customdata=prime_day_df["Prime Avg SOS"],
+            fig_pd.update_layout(
+                title="Prime Time Avg SOS by Day of Week — All Regions",
+                barmode="group",
+                height=420,
+                legend=dict(orientation="h", y=-0.18, x=0),
+                bargap=0.18, bargroupgap=0.04,
             )
             st.plotly_chart(fig_pd, use_container_width=True)
 
-            # Summary table
-            worst_day = prime_day_df.loc[prime_day_df["_avg"].idxmax(), "Day"]
-            best_day  = prime_day_df.loc[prime_day_df["_avg"].idxmin(), "Day"]
-            bc1, bc2 = st.columns(2)
-            bc1.metric("🔴 Worst Prime-Time Day", worst_day,
-                       _fmt_sos(prime_day_df["_avg"].max()))
-            bc2.metric("🟢 Best Prime-Time Day", best_day,
-                       _fmt_sos(prime_day_df["_avg"].min()))
-
-            st.dataframe(
-                prime_day_df[["Day", "Prime Avg SOS", "Worst Hour", "Best Hour",
-                               "✅ At Goal", "❌ Over Goal"]],
-                use_container_width=True, hide_index=True,
+            # Summary table: pivot so rows=Region, cols=Day
+            pivot = (
+                reg_day_df.pivot(index="Region", columns="Day", values="_avg")
+                .reindex(columns=day_order)
             )
-    else:
-        st.info(f"No prime-time data for region: {_pt_region}.")
+            pivot_fmt = pivot.applymap(lambda v: _fmt_sos(v) if pd.notna(v) else "—")
+            # Add system-wide row at top
+            sys_row = {
+                day: _fmt_sos(prime_df[prime_df["DayOfWeek"] == day]["SOS_min"].mean())
+                     if not prime_df[prime_df["DayOfWeek"] == day].empty else "—"
+                for day in day_order
+            }
+            sys_df = pd.DataFrame([{"Region": "⚡ System Avg", **sys_row}]).set_index("Region")
+            display_tbl = pd.concat([sys_df, pivot_fmt])
+            st.dataframe(display_tbl, use_container_width=True)
+
+            # Best / worst by region (overall prime avg across week)
+            region_overall = reg_day_df.groupby("Region")["_avg"].mean()
+            best_reg  = region_overall.idxmin()
+            worst_reg = region_overall.idxmax()
+            bc1, bc2 = st.columns(2)
+            bc1.metric("🟢 Best Region (Prime Avg)", best_reg,
+                       _fmt_sos(region_overall.min()))
+            bc2.metric("🔴 Worst Region (Prime Avg)", worst_reg,
+                       _fmt_sos(region_overall.max()))
 
     st.markdown("---")
 
