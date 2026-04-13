@@ -5979,8 +5979,6 @@ def _build_milestone_fig(ms_rows_json: str):
 
 
 def tab_pipeline(dash):
-    if not _require_password("pipeline"):
-        return
     import streamlit.components.v1 as components
 
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
