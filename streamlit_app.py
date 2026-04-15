@@ -2264,7 +2264,10 @@ def tab_stands(dash):
 
     # Benchmark legend
     st.caption("🟢 At or better than benchmark  ·  🟡 Within 2pp  ·  🔴 Exceeds benchmark by >2pp  ·  "
-               "Targets: COGS 26.5% · Labor 24.5% · EBITDA 13.0% · EBITDAR 20.0%")
+               f"System avg: COGS {df['Total_COGS_pct'].mean()*100:.1f}% · "
+               f"Labor {df['Total_Labor_pct'].mean()*100:.1f}% · "
+               f"EBITDA {df['Store_EBITDA_pct'].mean()*100:.1f}% · "
+               f"EBITDAR {df['Unit_EBITDAR_pct'].mean()*100:.1f}%")
 
     st.divider()
 
