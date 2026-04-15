@@ -2076,30 +2076,58 @@ def tab_comparison(dash):
 # TAB: STAND DETAIL
 # ─────────────────────────────────────────────
 def tab_stands(dash):
+    # ── P&L benchmark targets (lower=better for costs, higher=better for margins) ──
+    _BM = {
+        "Total_COGS_pct":       {"t": 0.265, "hi": False, "label": "COGS"},
+        "Total_Hourly_pct":     {"t": 0.171, "hi": False, "label": "Hourly Labor"},
+        "Total_Labor_pct":      {"t": 0.245, "hi": False, "label": "Total Labor"},
+        "Total_RM_pct":         {"t": 0.015, "hi": False, "label": "R&M"},
+        "Controllable_pct":     {"t": 0.033, "hi": False, "label": "Controllable"},
+        "Total_Utilities_pct":  {"t": 0.021, "hi": False, "label": "Utilities"},
+        "Total_Fixed_pct":      {"t": 0.105, "hi": False, "label": "Fixed"},
+        "Total_Marketing_pct":  {"t": 0.111, "hi": False, "label": "Marketing"},
+        "Unit_EBITDAR_pct":     {"t": 0.200, "hi": True,  "label": "EBITDAR"},
+        "Total_Rent_pct":       {"t": 0.072, "hi": False, "label": "Rent"},
+        "Store_EBITDA_pct":     {"t": 0.130, "hi": True,  "label": "EBITDA"},
+        "Discounts_pct":        {"t": 0.005, "hi": False, "label": "Discounts"},
+    }
+
+    def _bm_color(col, val):
+        """Return 'good'/'warn'/'bad' based on benchmark direction."""
+        if col not in _BM or pd.isna(val): return ""
+        bm = _BM[col]
+        diff = val - bm["t"]
+        if bm["hi"]:
+            if diff >= 0.01:   return "good"
+            if diff >= -0.015: return "warn"
+            return "bad"
+        else:
+            if diff <= 0.005:  return "good"
+            if diff <= 0.020:  return "warn"
+            return "bad"
+
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
-    section("STAND DETAIL", "Filter, sort, and drill into individual stand performance")
 
-    all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
-    label_to_key = {l: pk for l, pk in all_options}
+    section("📋 STAND DETAIL", "Full P&L deep-dive — filter, drill into any stand, benchmark every line item")
+
+    # ── Filters ───────────────────────────────────────────────────────────────
+    all_options   = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
+    label_to_key  = {l: pk for l, pk in all_options}
+    period_keys   = [pk for _, pk in all_options]
 
     c1, c2, c3, c4 = st.columns([2, 1.5, 1.5, 2])
     with c1:
         sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="std_period")
     with c2:
-        try:
-            if "Region" in stands_df.columns and len(stands_df) > 0:
-                regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
-            else:
-                regions = ["All Regions"]
-        except (KeyError, TypeError, AttributeError):
-            regions = ["All Regions"]
+        regions = (["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
+                   if "Region" in stands_df.columns else ["All Regions"])
         sel_reg = st.selectbox("Region", regions, key="std_region")
     with c3:
         ages = ["All Ages", "New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
         sel_age = st.selectbox("Age Bucket", ages, key="std_age")
     with c4:
-        search = st.text_input("Search Stands", placeholder="Type stand name...", key="std_search")
+        search = st.text_input("Search Stands", placeholder="Type stand name…", key="std_search")
 
     pk = label_to_key[sel_lbl]
     df = stands_df[stands_df["Period_Key"] == pk].copy()
@@ -2110,27 +2138,616 @@ def tab_stands(dash):
     if search and "Stand" in df.columns:
         df = df[df["Stand"].str.contains(search, case=False, na=False)]
 
-    st.caption(f"Showing {len(df)} stands")
+    if df.empty:
+        st.info("No stands match the current filters.")
+        return
 
-    display_cols = {
-        "Stand": "Stand", "Region": "Region", "Age_Bucket": "Age",
-        "Net_Sales": "Net Sales", "Total_COGS_pct": "COGS%",
-        "Total_Hourly_pct": "Hourly%", "Total_Labor_pct": "Labor%",
-        "Total_RM_pct": "R&M%", "Controllable_pct": "Ctrl%",
-        "Total_Utilities_pct": "Util%", "Total_Fixed_pct": "Fixed%",
-        "Unit_EBITDAR_pct": "EBITDAR%", "Total_Rent_pct": "Rent%",
-        "Store_EBITDA_pct": "EBITDA%", "Discounts_pct": "Disc%",
-    }
-    # Only select columns that exist in the dataframe
-    available_cols = [col for col in display_cols.keys() if col in df.columns]
-    disp = df[available_cols].rename(columns={k: v for k, v in display_cols.items() if k in available_cols}).copy()
-    for col in ["COGS%", "Hourly%", "Labor%", "R&M%", "Ctrl%", "Util%",
-                "Fixed%", "EBITDAR%", "Rent%", "EBITDA%", "Disc%"]:
-        if col in disp.columns:
-            disp[col] = disp[col].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
-    disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
+    # ── Portfolio-level KPIs ──────────────────────────────────────────────────
+    n = len(df)
+    avg_sales   = df["Net_Sales"].mean()
+    avg_ebitda  = df["Store_EBITDA_pct"].mean()
+    avg_labor   = df["Total_Labor_pct"].mean()
+    avg_cogs    = df["Total_COGS_pct"].mean()
+    pct_above   = (df["Store_EBITDA_pct"] >= _BM["Store_EBITDA_pct"]["t"]).sum()
+    total_rev   = df["Net_Sales"].sum()
 
-    render_table(disp)
+    k1, k2, k3, k4, k5, k6 = st.columns(6)
+    k1.metric("Stands Shown",        n)
+    k2.metric("Total Revenue",        f"${total_rev/1e6:.2f}M")
+    k3.metric("Avg Net Sales",        f"${avg_sales:,.0f}")
+    k4.metric("Avg EBITDA%",          f"{avg_ebitda*100:.1f}%",
+              delta=f"{(avg_ebitda - _BM['Store_EBITDA_pct']['t'])*100:+.1f}pp vs target",
+              delta_color="normal" if avg_ebitda >= _BM["Store_EBITDA_pct"]["t"] else "inverse")
+    k5.metric("Avg Labor%",           f"{avg_labor*100:.1f}%",
+              delta=f"{(avg_labor - _BM['Total_Labor_pct']['t'])*100:+.1f}pp vs target",
+              delta_color="inverse" if avg_labor > _BM["Total_Labor_pct"]["t"] else "normal")
+    k6.metric("Stands At/Above Target EBITDA", f"{pct_above}/{n}",
+              delta=f"{pct_above/n*100:.0f}%",
+              delta_color="normal" if pct_above/n >= 0.5 else "inverse")
+
+    st.divider()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 1: FULL P&L SUMMARY TABLE — all line items, $ and %
+    # ══════════════════════════════════════════════════════════════════════════
+    section("📊 FULL P&L SUMMARY TABLE",
+            f"Every P&L line item for all {n} stands · green = at/above benchmark · red = below")
+
+    # Build row-per-stand, all columns
+    PL_COLS = [
+        ("Net_Sales",          "Net Sales",      "$"),
+        ("Total_COGS",         "COGS $",         "$"),
+        ("Total_COGS_pct",     "COGS %",         "%"),
+        ("Total_Hourly",       "Hourly Labor $", "$"),
+        ("Total_Hourly_pct",   "Hourly %",       "%"),
+        ("Total_Labor",        "Total Labor $",  "$"),
+        ("Total_Labor_pct",    "Total Labor %",  "%"),
+        ("Total_RM",           "R&M $",          "$"),
+        ("Total_RM_pct",       "R&M %",          "%"),
+        ("Controllable",       "Controllable $", "$"),
+        ("Controllable_pct",   "Ctrl %",         "%"),
+        ("Total_Utilities",    "Utilities $",    "$"),
+        ("Total_Utilities_pct","Util %",         "%"),
+        ("Total_Fixed",        "Fixed $",        "$"),
+        ("Total_Fixed_pct",    "Fixed %",        "%"),
+        ("Total_Marketing",    "Marketing $",    "$"),
+        ("Total_Marketing_pct","Marketing %",    "%"),
+        ("Unit_EBITDAR",       "EBITDAR $",      "$"),
+        ("Unit_EBITDAR_pct",   "EBITDAR %",      "%"),
+        ("Total_Rent",         "Rent $",         "$"),
+        ("Total_Rent_pct",     "Rent %",         "%"),
+        ("Store_EBITDA",       "EBITDA $",       "$"),
+        ("Store_EBITDA_pct",   "EBITDA %",       "%"),
+        ("Discounts",          "Discounts $",    "$"),
+        ("Discounts_pct",      "Disc %",         "%"),
+        ("Net_Income",         "Net Income $",   "$"),
+        ("Waste_Removal",      "Waste $",        "$"),
+        ("Landscaping",        "Landscaping $",  "$"),
+    ]
+
+    avail_pl = [(raw, lbl, fmt) for raw, lbl, fmt in PL_COLS if raw in df.columns]
+    id_cols  = [c for c in ["Stand","Region","Age_Bucket","RM"] if c in df.columns]
+    id_rename = {"Stand": "Stand", "Region": "Region", "Age_Bucket": "Age", "RM": "RM"}
+
+    disp_full = df[id_cols + [raw for raw,_,_ in avail_pl]].copy()
+    disp_full = disp_full.rename(columns={k: v for k, v in id_rename.items() if k in disp_full.columns})
+
+    # Format display values
+    for raw, lbl, fmt in avail_pl:
+        if fmt == "$":
+            disp_full[raw] = disp_full[raw].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
+        else:
+            disp_full[raw] = disp_full[raw].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
+    disp_full = disp_full.rename(columns={raw: lbl for raw, lbl, _ in avail_pl})
+
+    # Color coding on % columns via Styler
+    pct_raw_cols = {lbl: raw for raw, lbl, fmt in avail_pl if fmt == "%" and raw in _BM}
+
+    def _color_cell(col_name, val_str):
+        if col_name not in pct_raw_cols or val_str in ("—", ""):
+            return ""
+        raw = pct_raw_cols[col_name]
+        try:
+            v = float(val_str.replace("%","")) / 100
+        except Exception:
+            return ""
+        c = _bm_color(raw, v)
+        if c == "good": return "background-color:#e8f8f2;color:#0d6e4a;font-weight:600"
+        if c == "warn": return "background-color:#fff8e1;color:#b45309;"
+        if c == "bad":  return "background-color:#fff0f0;color:#991b1b;font-weight:600"
+        return ""
+
+    def _style_row(row):
+        return [_color_cell(col, str(val)) for col, val in zip(row.index, row.values)]
+
+    styled = disp_full.style.apply(_style_row, axis=1)
+
+    # Sort options
+    sort_c1, sort_c2 = st.columns([2, 4])
+    with sort_c1:
+        sort_by = st.selectbox("Sort by", ["Stand (A–Z)", "Net Sales ↓", "EBITDA% ↓",
+                                            "Labor% ↓", "COGS% ↓"],
+                               key="std_sort")
+
+    sort_map = {"Stand (A–Z)": ("Stand", False), "Net Sales ↓": ("Net_Sales", True),
+                "EBITDA% ↓": ("Store_EBITDA_pct", True), "Labor% ↓": ("Total_Labor_pct", False),
+                "COGS% ↓": ("Total_COGS_pct", False)}
+    raw_sort_col, sort_asc = sort_map.get(sort_by, ("Stand", True))
+    if raw_sort_col in df.columns:
+        order = df.sort_values(raw_sort_col, ascending=sort_asc).index
+        disp_full = disp_full.loc[disp_full.index.intersection(order)].reindex(
+            [i for i in order if i in disp_full.index])
+        styled = disp_full.style.apply(_style_row, axis=1)
+
+    st.dataframe(styled, use_container_width=True, hide_index=True,
+                 height=min(55 + n * 35, 600))
+
+    # Benchmark legend
+    st.caption("🟢 At or better than benchmark  ·  🟡 Within 2pp  ·  🔴 Exceeds benchmark by >2pp  ·  "
+               "Targets: COGS 26.5% · Labor 24.5% · EBITDA 13.0% · EBITDAR 20.0%")
+
+    st.divider()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 2: INDIVIDUAL STAND DRILL-DOWN
+    # ══════════════════════════════════════════════════════════════════════════
+    section("🔍 STAND DRILL-DOWN", "Select any stand for a complete P&L waterfall + period trend")
+
+    stand_options = sorted(df["Stand"].dropna().unique().tolist())
+    drill_col1, drill_col2 = st.columns([3, 1])
+    with drill_col1:
+        sel_stand = st.selectbox("Select Stand", stand_options, key="std_drill_stand")
+    with drill_col2:
+        show_vs_avg = st.checkbox("Show vs Period Avg", value=True, key="std_vs_avg")
+
+    stand_row = df[df["Stand"] == sel_stand]
+    if stand_row.empty:
+        st.warning("Stand not found in current filter. Clear filters to find it.")
+    else:
+        row = stand_row.iloc[0]
+
+        # ── Stand header ─────────────────────────────────────────────────────
+        hc1, hc2, hc3, hc4 = st.columns(4)
+        hc1.metric("Stand",    row.get("Stand","—").split(" ",1)[-1] if " " in str(row.get("Stand","")) else row.get("Stand","—"))
+        hc2.metric("Region",   row.get("Region","—"))
+        hc3.metric("Age",      row.get("Age_Bucket","—"))
+        hc4.metric("RM",       row.get("RM","—"))
+
+        # ── Full P&L waterfall table ──────────────────────────────────────────
+        st.markdown("##### Complete P&L — Dollar & % Breakdown")
+
+        PL_WATERFALL = [
+            # (label, $ col, % col, indent, type)
+            ("NET SALES",              "Net_Sales",         None,                 0, "header"),
+            ("Cost of Goods Sold",     "Total_COGS",        "Total_COGS_pct",     1, "cost"),
+            ("Gross Profit",           None,                None,                 0, "derived"),
+            ("Hourly Labor",           "Total_Hourly",      "Total_Hourly_pct",   1, "cost"),
+            ("Total Labor",            "Total_Labor",       "Total_Labor_pct",    1, "cost"),
+            ("Repairs & Maintenance",  "Total_RM",          "Total_RM_pct",       1, "cost"),
+            ("Controllable",           "Controllable",      "Controllable_pct",   1, "cost"),
+            ("Utilities",              "Total_Utilities",   "Total_Utilities_pct",1, "cost"),
+            ("Fixed Costs",            "Total_Fixed",       "Total_Fixed_pct",    1, "cost"),
+            ("Marketing",              "Total_Marketing",   "Total_Marketing_pct",1, "cost"),
+            ("Discounts",              "Discounts",         "Discounts_pct",      1, "cost"),
+            ("UNIT EBITDAR",           "Unit_EBITDAR",      "Unit_EBITDAR_pct",   0, "subtotal"),
+            ("Rent",                   "Total_Rent",        "Total_Rent_pct",     1, "cost"),
+            ("STORE EBITDA",           "Store_EBITDA",      "Store_EBITDA_pct",   0, "subtotal"),
+            ("Net Income",             "Net_Income",        None,                 1, "cost"),
+            ("Waste Removal",          "Waste_Removal",     None,                 1, "cost"),
+            ("Landscaping",            "Landscaping",       None,                 1, "cost"),
+        ]
+
+        net_sales = row.get("Net_Sales", 0) or 1  # avoid div/0
+        avg_net_sales = df["Net_Sales"].mean() or 1
+
+        wf_rows = []
+        for lbl, dollar_col, pct_col, indent, rtype in PL_WATERFALL:
+            prefix = "  " * indent
+
+            if rtype == "header":
+                amt = row.get(dollar_col, None)
+                avg_amt = df[dollar_col].mean() if dollar_col in df.columns else None
+                wf_rows.append({
+                    "Line Item": f"**{prefix}{lbl}**",
+                    "Amount":    f"**${amt:,.0f}**" if pd.notna(amt) else "—",
+                    "% of Sales":"**100.0%**",
+                    "Period Avg $": f"${avg_amt:,.0f}" if show_vs_avg and avg_amt is not None else "",
+                    "Period Avg %": "100.0%"                 if show_vs_avg else "",
+                    "vs Avg":    ""                          if not show_vs_avg else (
+                                 f"+${(amt-avg_amt):,.0f}" if pd.notna(amt) and avg_amt else "—"),
+                    "_type": rtype,
+                })
+
+            elif rtype == "derived":
+                # Gross Profit = Net Sales - COGS
+                if "Net_Sales" in row.index and "Total_COGS" in row.index:
+                    gp = row["Net_Sales"] - row["Total_COGS"]
+                    gp_pct = gp / net_sales
+                    avg_gp = df["Net_Sales"].mean() - df["Total_COGS"].mean()
+                    avg_gp_pct = avg_gp / avg_net_sales
+                    wf_rows.append({
+                        "Line Item": f"**{prefix}{lbl}**",
+                        "Amount":    f"**${gp:,.0f}**",
+                        "% of Sales":f"**{gp_pct*100:.1f}%**",
+                        "Period Avg $": f"${avg_gp:,.0f}" if show_vs_avg else "",
+                        "Period Avg %": f"{avg_gp_pct*100:.1f}%"   if show_vs_avg else "",
+                        "vs Avg":       f"+${(gp-avg_gp):,.0f}"    if show_vs_avg else "",
+                        "_type": rtype,
+                    })
+
+            elif rtype in ("cost", "subtotal"):
+                amt = row.get(dollar_col) if dollar_col else None
+                pct = row.get(pct_col)    if pct_col    else (amt/net_sales if amt else None)
+                avg_amt = df[dollar_col].mean() if dollar_col and dollar_col in df.columns else None
+                avg_pct = df[pct_col].mean()    if pct_col    and pct_col   in df.columns else None
+
+                bm_color = _bm_color(pct_col, pct) if pct_col and pct is not None else ""
+                color_mark = {"good":"🟢","warn":"🟡","bad":"🔴"}.get(bm_color,"")
+
+                bold = "**" if rtype == "subtotal" else ""
+                vs_str = ""
+                if show_vs_avg and avg_amt is not None and pd.notna(amt):
+                    diff = amt - avg_amt
+                    vs_str = f"+${diff:,.0f}" if diff >= 0 else f"-${abs(diff):,.0f}"
+
+                wf_rows.append({
+                    "Line Item":   f"{bold}{prefix}{lbl}{bold}",
+                    "Amount":      f"{bold}${amt:,.0f}{bold}" if pd.notna(amt) else "—",
+                    "% of Sales":  f"{bold}{pct*100:.1f}%{bold} {color_mark}" if pd.notna(pct) else "—",
+                    "Period Avg $":f"${avg_amt:,.0f}" if show_vs_avg and avg_amt is not None else "",
+                    "Period Avg %":f"{avg_pct*100:.1f}%"  if show_vs_avg and avg_pct is not None else "",
+                    "vs Avg":      vs_str if show_vs_avg else "",
+                    "_type": rtype,
+                })
+
+        wf_df = pd.DataFrame(wf_rows).drop(columns=["_type"])
+        if not show_vs_avg:
+            wf_df = wf_df[["Line Item","Amount","% of Sales"]]
+
+        st.dataframe(wf_df, use_container_width=True, hide_index=True,
+                     height=min(55 + len(wf_df)*35, 700))
+
+        # ── EBITDA Waterfall chart for selected stand ──────────────────────────
+        st.markdown("##### EBITDA Waterfall")
+        _wf_labels = ["Net Sales","COGS","Labor","R&M","Controllable",
+                      "Utilities","Fixed","Marketing","Rent","Discounts","EBITDA"]
+        _wf_raw    = ["Net_Sales","Total_COGS","Total_Labor","Total_RM","Controllable",
+                      "Total_Utilities","Total_Fixed","Total_Marketing","Total_Rent",
+                      "Discounts","Store_EBITDA"]
+        _wf_vals   = []
+        for c in _wf_raw:
+            v = row.get(c, 0)
+            _wf_vals.append(float(v) if pd.notna(v) else 0.0)
+
+        _wf_measure = ["absolute"] + ["relative"]*(len(_wf_labels)-2) + ["total"]
+        _wf_colors  = [GREEN] + [RED]*(len(_wf_labels)-2) + [
+            GREEN if _wf_vals[-1] >= 0 else RED]
+
+        fig_wf = go.Figure(go.Waterfall(
+            orientation="v",
+            measure=_wf_measure,
+            x=_wf_labels,
+            y=[_wf_vals[0]] + [-v for v in _wf_vals[1:-1]] + [None],
+            totals={"marker":{"color": GREEN if _wf_vals[-1]>=0 else RED}},
+            connector={"line":{"color":"rgba(0,0,0,0.15)","width":1}},
+            decreasing={"marker":{"color":RED}},
+            increasing={"marker":{"color":GREEN}},
+            text=[f"${v:,.0f}" for v in _wf_vals[:-1]] + [f"${_wf_vals[-1]:,.0f}"],
+            textposition="outside",
+        ))
+        fig_wf.update_layout(
+            title_text=f"P&L Waterfall — {sel_stand.split(' ',1)[-1] if ' ' in sel_stand else sel_stand}",
+            showlegend=False, height=380,
+        )
+        brew_fig(fig_wf, height=380)
+        st.plotly_chart(fig_wf, use_container_width=True, config={"displayModeBar":False})
+
+        # ── Period-over-period trend for this stand ─────────────────────────
+        st.markdown("##### Period-Over-Period Trend")
+        stand_hist = stands_df[stands_df["Stand"] == sel_stand].copy()
+        if len(stand_hist) > 1:
+            stand_hist = stand_hist.sort_values("Period_Key")
+            trend_metrics = {
+                "Net Sales": ("Net_Sales","$"),
+                "EBITDA%":   ("Store_EBITDA_pct","%"),
+                "Labor%":    ("Total_Labor_pct","%"),
+                "COGS%":     ("Total_COGS_pct","%"),
+            }
+            tc1, tc2 = st.columns(2)
+            for i, (metric_lbl, (raw_col, fmt)) in enumerate(trend_metrics.items()):
+                if raw_col not in stand_hist.columns: continue
+                tgt = _BM.get(raw_col,{}).get("t")
+                fig_t = go.Figure()
+                fig_t.add_scatter(
+                    x=stand_hist["Period_Key"].str.replace("_"," "),
+                    y=stand_hist[raw_col] * (100 if fmt=="%" else 1),
+                    mode="lines+markers",
+                    name=metric_lbl,
+                    line=dict(color=RED, width=2),
+                    marker=dict(size=7),
+                )
+                if tgt is not None:
+                    fig_t.add_hline(
+                        y=tgt * (100 if fmt=="%" else 1),
+                        line_dash="dash", line_color=GREEN, line_width=1.5,
+                        annotation_text="Target", annotation_position="right",
+                    )
+                fig_t.update_layout(
+                    title_text=metric_lbl,
+                    yaxis=dict(ticksuffix="%" if fmt=="%" else "",
+                               tickprefix="$" if fmt=="$" else ""),
+                    xaxis=dict(tickangle=-35),
+                )
+                brew_fig(fig_t, height=260)
+                (tc1 if i%2==0 else tc2).plotly_chart(
+                    fig_t, use_container_width=True, config={"displayModeBar":False})
+        else:
+            st.caption("Only one period of data for this stand — trend not available.")
+
+    st.divider()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 3: CATEGORY DEEP-DIVES
+    # ══════════════════════════════════════════════════════════════════════════
+    section("📂 CATEGORY DEEP-DIVES",
+            "Expand any category to see ranked bar charts and distribution analysis")
+
+    def _ranked_bar(col_pct, col_dollar, title, higher_better=False, target=None):
+        """Ranked horizontal bar chart by % of sales, colored vs target."""
+        if col_pct not in df.columns: return
+        sub = df[["Stand", col_pct, col_dollar]].dropna(subset=[col_pct]).copy()
+        sub["Stand_Short"] = sub["Stand"].str.split(" ",1).str[-1]
+        sub = sub.sort_values(col_pct, ascending=not higher_better)
+        colors = []
+        for v in sub[col_pct]:
+            c = _bm_color(col_pct, v)
+            colors.append({"good":GREEN,"warn":AMBER,"bad":RED}.get(c, BLUE))
+        fig = go.Figure(go.Bar(
+            y=sub["Stand_Short"],
+            x=sub[col_pct]*100,
+            orientation="h",
+            marker_color=colors,
+            text=[f"{v*100:.1f}%" for v in sub[col_pct]],
+            textposition="outside",
+            customdata=sub[col_dollar].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—"),
+            hovertemplate="<b>%{y}</b><br>%{x:.1f}%  (%{customdata})<extra></extra>",
+        ))
+        if target is not None:
+            fig.add_vline(x=target*100, line_dash="dash", line_color="#888",
+                          annotation_text=f"Target {target*100:.1f}%",
+                          annotation_position="top right",
+                          annotation_font_size=11)
+        sys_avg = sub[col_pct].mean()
+        fig.add_vline(x=sys_avg*100, line_dash="dot", line_color=BLUE, line_width=1.5,
+                      annotation_text=f"Avg {sys_avg*100:.1f}%",
+                      annotation_position="bottom right",
+                      annotation_font_size=11)
+        fig.update_layout(
+            title_text=title,
+            xaxis=dict(ticksuffix="%"),
+            yaxis=dict(autorange="reversed" if not higher_better else True),
+        )
+        brew_fig(fig, height=max(300, len(sub)*22+80), margin=dict(t=60,b=40,l=0,r=80))
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+
+    # ── Revenue ──────────────────────────────────────────────────────────────
+    with st.expander("💰 REVENUE — Net Sales Analysis", expanded=False):
+        ea, eb = st.columns(2)
+        with ea:
+            fig_rev = go.Figure()
+            sub_rev = df[["Stand","Net_Sales"]].dropna().copy()
+            sub_rev["Stand_Short"] = sub_rev["Stand"].str.split(" ",1).str[-1]
+            sub_rev = sub_rev.sort_values("Net_Sales", ascending=False)
+            fig_rev.add_bar(
+                y=sub_rev["Stand_Short"], x=sub_rev["Net_Sales"],
+                orientation="h",
+                marker_color=[GREEN if v >= avg_sales else AMBER for v in sub_rev["Net_Sales"]],
+                text=[f"${v:,.0f}" for v in sub_rev["Net_Sales"]],
+                textposition="outside",
+            )
+            fig_rev.add_vline(x=avg_sales, line_dash="dash", line_color=RED, line_width=1.5,
+                              annotation_text=f"Avg ${avg_sales:,.0f}",
+                              annotation_position="top right", annotation_font_size=11)
+            fig_rev.update_layout(title_text="Net Sales by Stand", xaxis_tickprefix="$",
+                                  yaxis=dict(autorange="reversed"))
+            brew_fig(fig_rev, height=max(300, len(sub_rev)*22+80), margin=dict(t=60,b=40,l=0,r=80))
+            st.plotly_chart(fig_rev, use_container_width=True, config={"displayModeBar":False})
+        with eb:
+            fig_hist = go.Figure(go.Histogram(
+                x=df["Net_Sales"], nbinsx=12,
+                marker_color=BLUE, opacity=0.8,
+                hovertemplate="$%{x:,.0f}<br>Count: %{y}<extra></extra>",
+            ))
+            fig_hist.add_vline(x=avg_sales, line_dash="dash", line_color=RED,
+                               annotation_text=f"Avg ${avg_sales:,.0f}")
+            fig_hist.update_layout(title_text="Revenue Distribution",
+                                   xaxis_tickprefix="$", yaxis_title="# Stands")
+            brew_fig(fig_hist, height=350)
+            st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar":False})
+
+        # Top / Bottom 5
+        tt1, tt2 = st.columns(2)
+        with tt1:
+            st.markdown("**Top 5 by Net Sales**")
+            top5 = df.nlargest(5,"Net_Sales")[["Stand","Net_Sales","Store_EBITDA_pct"]].copy()
+            top5["Net_Sales"] = top5["Net_Sales"].map(lambda v: f"${v:,.0f}")
+            top5["Store_EBITDA_pct"] = top5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
+            top5 = top5.rename(columns={"Stand":"Stand","Net_Sales":"Net Sales","Store_EBITDA_pct":"EBITDA%"})
+            st.dataframe(top5, hide_index=True, use_container_width=True)
+        with tt2:
+            st.markdown("**Bottom 5 by Net Sales**")
+            bot5 = df.nsmallest(5,"Net_Sales")[["Stand","Net_Sales","Store_EBITDA_pct"]].copy()
+            bot5["Net_Sales"] = bot5["Net_Sales"].map(lambda v: f"${v:,.0f}")
+            bot5["Store_EBITDA_pct"] = bot5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
+            bot5 = bot5.rename(columns={"Stand":"Stand","Net_Sales":"Net Sales","Store_EBITDA_pct":"EBITDA%"})
+            st.dataframe(bot5, hide_index=True, use_container_width=True)
+
+    # ── COGS ─────────────────────────────────────────────────────────────────
+    with st.expander("🛒 COST OF GOODS (COGS)", expanded=False):
+        st.caption(f"Target: {_BM['Total_COGS_pct']['t']*100:.1f}% · System avg this period: {df['Total_COGS_pct'].mean()*100:.1f}%")
+        _ranked_bar("Total_COGS_pct","Total_COGS","COGS% by Stand (lower = better)",
+                    higher_better=False, target=_BM["Total_COGS_pct"]["t"])
+        cg1, cg2 = st.columns(2)
+        with cg1:
+            at_or_below = (df["Total_COGS_pct"] <= _BM["Total_COGS_pct"]["t"]).sum()
+            st.metric("Stands At/Below Target COGS", f"{at_or_below}/{n}")
+        with cg2:
+            worst = df.nlargest(1,"Total_COGS_pct").iloc[0]
+            st.metric("Highest COGS%", f"{worst['Total_COGS_pct']*100:.1f}%",
+                      delta=f"{(worst['Total_COGS_pct']-_BM['Total_COGS_pct']['t'])*100:+.1f}pp",
+                      delta_color="inverse",
+                      help=worst.get("Stand",""))
+
+    # ── Labor ─────────────────────────────────────────────────────────────────
+    with st.expander("👥 LABOR — Hourly & Total", expanded=False):
+        st.caption(f"Hourly target: {_BM['Total_Hourly_pct']['t']*100:.1f}% · Total Labor target: {_BM['Total_Labor_pct']['t']*100:.1f}%")
+        la, lb = st.columns(2)
+        with la:
+            _ranked_bar("Total_Hourly_pct","Total_Hourly","Hourly Labor% by Stand",
+                        target=_BM["Total_Hourly_pct"]["t"])
+        with lb:
+            _ranked_bar("Total_Labor_pct","Total_Labor","Total Labor% by Stand",
+                        target=_BM["Total_Labor_pct"]["t"])
+        # Scatter: sales vs labor%
+        fig_lab = go.Figure(go.Scatter(
+            x=df["Net_Sales"], y=df["Total_Labor_pct"]*100,
+            mode="markers+text",
+            text=df["Stand"].str.split(" ",1).str[-1],
+            textposition="top center",
+            textfont=dict(size=9),
+            marker=dict(
+                color=[{"good":GREEN,"warn":AMBER,"bad":RED}.get(_bm_color("Total_Labor_pct",v),BLUE)
+                       for v in df["Total_Labor_pct"]],
+                size=10, opacity=0.8,
+            ),
+            hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Labor%: %{y:.1f}%<extra></extra>",
+        ))
+        fig_lab.add_hline(y=_BM["Total_Labor_pct"]["t"]*100, line_dash="dash",
+                          line_color=RED, annotation_text="Target")
+        fig_lab.update_layout(title_text="Net Sales vs Total Labor% (colored by benchmark)",
+                              xaxis_tickprefix="$", yaxis_ticksuffix="%")
+        brew_fig(fig_lab, height=380)
+        st.plotly_chart(fig_lab, use_container_width=True, config={"displayModeBar":False})
+
+    # ── R&M ──────────────────────────────────────────────────────────────────
+    with st.expander("🔧 REPAIRS & MAINTENANCE (R&M)", expanded=False):
+        st.caption(f"Target: {_BM['Total_RM_pct']['t']*100:.1f}% · System avg: {df['Total_RM_pct'].mean()*100:.1f}%")
+        _ranked_bar("Total_RM_pct","Total_RM","R&M% by Stand",
+                    target=_BM["Total_RM_pct"]["t"])
+        ra, rb = st.columns(2)
+        with ra:
+            st.metric("Total R&M Spend (period)", f"${df['Total_RM'].sum():,.0f}")
+        with rb:
+            over = df[df["Total_RM_pct"] > _BM["Total_RM_pct"]["t"]]
+            st.metric("Stands Over R&M Target", f"{len(over)}/{n}")
+
+    # ── Controllable ──────────────────────────────────────────────────────────
+    with st.expander("🎛️ CONTROLLABLE EXPENSES", expanded=False):
+        st.caption(f"Target: {_BM['Controllable_pct']['t']*100:.1f}% · System avg: {df['Controllable_pct'].mean()*100:.1f}%")
+        _ranked_bar("Controllable_pct","Controllable","Controllable% by Stand",
+                    target=_BM["Controllable_pct"]["t"])
+
+    # ── Utilities ─────────────────────────────────────────────────────────────
+    with st.expander("⚡ UTILITIES", expanded=False):
+        st.caption(f"Target: {_BM['Total_Utilities_pct']['t']*100:.1f}% · System avg: {df['Total_Utilities_pct'].mean()*100:.1f}%")
+        _ranked_bar("Total_Utilities_pct","Total_Utilities","Utilities% by Stand",
+                    target=_BM["Total_Utilities_pct"]["t"])
+        if "Waste_Removal" in df.columns and "Landscaping" in df.columns:
+            uc1, uc2 = st.columns(2)
+            with uc1:
+                st.metric("Avg Waste Removal / Stand", f"${df['Waste_Removal'].mean():,.0f}")
+            with uc2:
+                st.metric("Avg Landscaping / Stand", f"${df['Landscaping'].mean():,.0f}")
+
+    # ── Fixed Costs ───────────────────────────────────────────────────────────
+    with st.expander("🏢 FIXED COSTS", expanded=False):
+        st.caption(f"Target: {_BM['Total_Fixed_pct']['t']*100:.1f}% · System avg: {df['Total_Fixed_pct'].mean()*100:.1f}%  "
+                   "Fixed costs benefit from high sales volume — stands with low sales will show higher Fixed%.")
+        _ranked_bar("Total_Fixed_pct","Total_Fixed","Fixed Costs% by Stand",
+                    target=_BM["Total_Fixed_pct"]["t"])
+        # Fixed vs sales volume scatter
+        fig_fix = go.Figure(go.Scatter(
+            x=df["Net_Sales"], y=df["Total_Fixed_pct"]*100,
+            mode="markers",
+            text=df["Stand"].str.split(" ",1).str[-1],
+            marker=dict(color=BLUE, size=9, opacity=0.7),
+            hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Fixed%: %{y:.1f}%<extra></extra>",
+        ))
+        fig_fix.update_layout(title_text="Fixed Cost % vs Revenue (high sales dilutes fixed costs)",
+                              xaxis_tickprefix="$", yaxis_ticksuffix="%")
+        brew_fig(fig_fix, height=320)
+        st.plotly_chart(fig_fix, use_container_width=True, config={"displayModeBar":False})
+
+    # ── Marketing ─────────────────────────────────────────────────────────────
+    with st.expander("📣 MARKETING", expanded=False):
+        st.caption(f"Target: {_BM['Total_Marketing_pct']['t']*100:.1f}% · System avg: {df['Total_Marketing_pct'].mean()*100:.1f}%")
+        _ranked_bar("Total_Marketing_pct","Total_Marketing","Marketing% by Stand",
+                    target=_BM["Total_Marketing_pct"]["t"])
+
+    # ── EBITDAR → EBITDA ──────────────────────────────────────────────────────
+    with st.expander("📈 EBITDAR → EBITDA (with Rent Analysis)", expanded=False):
+        st.caption(f"EBITDAR target: {_BM['Unit_EBITDAR_pct']['t']*100:.1f}% · EBITDA target: {_BM['Store_EBITDA_pct']['t']*100:.1f}%")
+        ea1, ea2 = st.columns(2)
+        with ea1:
+            _ranked_bar("Unit_EBITDAR_pct","Unit_EBITDAR","EBITDAR% by Stand (higher = better)",
+                        higher_better=True, target=_BM["Unit_EBITDAR_pct"]["t"])
+        with ea2:
+            _ranked_bar("Store_EBITDA_pct","Store_EBITDA","EBITDA% by Stand (higher = better)",
+                        higher_better=True, target=_BM["Store_EBITDA_pct"]["t"])
+        # Rent burden
+        st.markdown("**Rent Burden Analysis**")
+        _ranked_bar("Total_Rent_pct","Total_Rent","Rent% by Stand (lower = better)",
+                    target=_BM["Total_Rent_pct"]["t"])
+        # Rent vs EBITDA scatter
+        fig_rent = go.Figure(go.Scatter(
+            x=df["Total_Rent_pct"]*100, y=df["Store_EBITDA_pct"]*100,
+            mode="markers+text",
+            text=df["Stand"].str.split(" ",1).str[-1],
+            textposition="top center", textfont=dict(size=9),
+            marker=dict(color=[{"good":GREEN,"warn":AMBER,"bad":RED}.get(
+                _bm_color("Store_EBITDA_pct",v),BLUE) for v in df["Store_EBITDA_pct"]],
+                size=10, opacity=0.8),
+            hovertemplate="<b>%{text}</b><br>Rent%: %{x:.1f}%<br>EBITDA%: %{y:.1f}%<extra></extra>",
+        ))
+        fig_rent.add_hline(y=_BM["Store_EBITDA_pct"]["t"]*100, line_dash="dash",
+                           line_color=GREEN, annotation_text="EBITDA Target")
+        fig_rent.add_vline(x=_BM["Total_Rent_pct"]["t"]*100, line_dash="dash",
+                           line_color=AMBER, annotation_text="Rent Target")
+        fig_rent.update_layout(title_text="Rent% vs EBITDA% (ideal: lower-left = high rent, lower right = efficient)",
+                               xaxis_ticksuffix="%", yaxis_ticksuffix="%")
+        brew_fig(fig_rent, height=380)
+        st.plotly_chart(fig_rent, use_container_width=True, config={"displayModeBar":False})
+
+    # ── Discounts ─────────────────────────────────────────────────────────────
+    with st.expander("🏷️ DISCOUNTS", expanded=False):
+        st.caption(f"Target: {_BM['Discounts_pct']['t']*100:.1f}% · System avg: {df['Discounts_pct'].mean()*100:.1f}%")
+        _ranked_bar("Discounts_pct","Discounts","Discount% by Stand",
+                    target=_BM["Discounts_pct"]["t"])
+        st.metric("Total Discounts Given (period)", f"${df['Discounts'].sum():,.0f}")
+
+    st.divider()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 4: PERFORMANCE RANKINGS
+    # ══════════════════════════════════════════════════════════════════════════
+    section("🏆 PERFORMANCE RANKINGS", f"Top & bottom performers in the filtered set · {sel_lbl}")
+
+    rk1, rk2, rk3 = st.columns(3)
+    rank_cols = ["Stand","Net_Sales","Store_EBITDA_pct","Total_Labor_pct","Total_COGS_pct"]
+    rank_avail = [c for c in rank_cols if c in df.columns]
+
+    def _fmt_rank(sub):
+        out = sub.copy()
+        if "Net_Sales"        in out: out["Net_Sales"]        = out["Net_Sales"].map(lambda v: f"${v:,.0f}")
+        if "Store_EBITDA_pct" in out: out["Store_EBITDA_pct"] = out["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
+        if "Total_Labor_pct"  in out: out["Total_Labor_pct"]  = out["Total_Labor_pct"].map(lambda v: f"{v*100:.1f}%")
+        if "Total_COGS_pct"   in out: out["Total_COGS_pct"]   = out["Total_COGS_pct"].map(lambda v: f"{v*100:.1f}%")
+        return out.rename(columns={"Net_Sales":"Sales","Store_EBITDA_pct":"EBITDA%",
+                                   "Total_Labor_pct":"Labor%","Total_COGS_pct":"COGS%"})
+
+    with rk1:
+        st.markdown("**🥇 Top 10 — EBITDA%**")
+        top10 = df.nlargest(10,"Store_EBITDA_pct")[rank_avail]
+        st.dataframe(_fmt_rank(top10), hide_index=True, use_container_width=True)
+
+    with rk2:
+        st.markdown("**⚠️ Bottom 10 — EBITDA%**")
+        bot10 = df.nsmallest(10,"Store_EBITDA_pct")[rank_avail]
+        st.dataframe(_fmt_rank(bot10), hide_index=True, use_container_width=True)
+
+    with rk3:
+        st.markdown("**📊 EBITDA% Distribution**")
+        fig_dist = go.Figure(go.Histogram(
+            x=df["Store_EBITDA_pct"]*100, nbinsx=10,
+            marker_color=BLUE, opacity=0.8,
+        ))
+        fig_dist.add_vline(x=_BM["Store_EBITDA_pct"]["t"]*100, line_dash="dash",
+                           line_color=RED, annotation_text="Target")
+        fig_dist.add_vline(x=avg_ebitda*100, line_dash="dot",
+                           line_color=GREEN, annotation_text="Avg")
+        fig_dist.update_layout(xaxis_ticksuffix="%", yaxis_title="# Stands")
+        brew_fig(fig_dist, height=320)
+        st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar":False})
 
 
 # ─────────────────────────────────────────────
