@@ -2120,9 +2120,10 @@ def tab_stands(dash):
     with c1:
         sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="std_period")
     with c2:
-        regions = (["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
-                   if "Region" in stands_df.columns else ["All Regions"])
-        sel_reg = st.selectbox("Region", regions, key="std_region")
+        region_options = (sorted(stands_df["Region"].dropna().unique().tolist())
+                          if "Region" in stands_df.columns else [])
+        sel_reg = st.multiselect("Region", region_options,
+                                 placeholder="All Regions", key="std_region")
     with c3:
         ages = ["All Ages", "New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
         sel_age = st.selectbox("Age Bucket", ages, key="std_age")
@@ -2131,8 +2132,8 @@ def tab_stands(dash):
 
     pk = label_to_key[sel_lbl]
     df = stands_df[stands_df["Period_Key"] == pk].copy()
-    if sel_reg != "All Regions" and "Region" in df.columns:
-        df = df[df["Region"] == sel_reg]
+    if sel_reg and "Region" in df.columns:
+        df = df[df["Region"].isin(sel_reg)]
     if sel_age != "All Ages" and "Age_Bucket" in df.columns:
         df = df[df["Age_Bucket"] == sel_age]
     if search and "Stand" in df.columns:
