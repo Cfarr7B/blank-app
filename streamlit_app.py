@@ -2241,8 +2241,6 @@ def tab_stands(dash):
     def _style_row(row):
         return [_color_cell(col, str(val)) for col, val in zip(row.index, row.values)]
 
-    styled = disp_full.style.apply(_style_row, axis=1)
-
     # Sort options
     sort_c1, sort_c2 = st.columns([2, 4])
     with sort_c1:
@@ -2258,10 +2256,97 @@ def tab_stands(dash):
         order = df.sort_values(raw_sort_col, ascending=sort_asc).index
         disp_full = disp_full.loc[disp_full.index.intersection(order)].reindex(
             [i for i in order if i in disp_full.index])
-        styled = disp_full.style.apply(_style_row, axis=1)
 
-    st.dataframe(styled, use_container_width=True, hide_index=True,
-                 height=min(55 + n * 35, 600))
+    # ── Sticky-column HTML table ──────────────────────────────────────────────
+    # st.dataframe has no column-pin API, so we render a custom HTML table
+    # with CSS position:sticky on the first 4 id columns (Stand/Region/Age/RM).
+    import streamlit.components.v1 as _stc
+
+    _freeze_cols = [c for c in ["Stand","Region","Age","RM"] if c in disp_full.columns]
+    _freeze_n    = len(_freeze_cols)
+    # Pixel widths for frozen columns (must match what we set in CSS min-width)
+    _freeze_w    = {"Stand": 220, "Region": 140, "Age": 120, "RM": 120}
+    _col_list    = list(disp_full.columns)
+    _tbl_h       = min(55 + n * 35, 580)
+
+    # Build cumulative left-offset for each frozen column
+    _left = []
+    _running = 0
+    for c in _col_list:
+        if c in _freeze_cols:
+            _left.append(_running)
+            _running += _freeze_w.get(c, 120)
+        else:
+            _left.append(None)
+
+    # Cell-level color for % columns (replicate _style_row logic in HTML)
+    def _cell_style_html(col_name, val_str):
+        if col_name not in pct_raw_cols: return ""
+        raw = pct_raw_cols[col_name]
+        try:
+            v = float(str(val_str).replace("%","").strip()) / 100
+        except Exception:
+            return ""
+        c = _bm_color(raw, v)
+        if c == "good": return "background:#e8f8f2;color:#0d6e4a;font-weight:600;"
+        if c == "warn": return "background:#fff8e1;color:#b45309;"
+        if c == "bad":  return "background:#fff0f0;color:#991b1b;font-weight:600;"
+        return ""
+
+    # Header row
+    _thead_cells = ""
+    for i, col in enumerate(_col_list):
+        lft = _left[i]
+        if lft is not None:
+            w = _freeze_w.get(col, 120)
+            _thead_cells += (
+                f"<th style='position:sticky;top:0;left:{lft}px;z-index:4;"
+                f"background:#2c2c2c;color:#fff;padding:7px 10px;white-space:nowrap;"
+                f"min-width:{w}px;font-size:12px;font-weight:600;text-align:left;"
+                f"border-right:1px solid #444;'>{col}</th>"
+            )
+        else:
+            _thead_cells += (
+                f"<th style='position:sticky;top:0;z-index:2;background:#2c2c2c;color:#fff;"
+                f"padding:7px 10px;white-space:nowrap;font-size:12px;font-weight:600;"
+                f"text-align:right;min-width:90px;'>{col}</th>"
+            )
+
+    # Body rows
+    _tbody = ""
+    for row_i, (_, row) in enumerate(disp_full.iterrows()):
+        _row_bg = "#ffffff" if row_i % 2 == 0 else "#fafafa"
+        _tr = ""
+        for i, (col, val) in enumerate(zip(_col_list, row.values)):
+            lft   = _left[i]
+            extra = _cell_style_html(col, val)
+            align = "left" if lft is not None else "right"
+            if lft is not None:
+                w = _freeze_w.get(col, 120)
+                _tr += (
+                    f"<td style='position:sticky;left:{lft}px;z-index:1;"
+                    f"background:{_row_bg};padding:5px 10px;white-space:nowrap;"
+                    f"font-size:13px;border-right:1px solid #e8e8e8;"
+                    f"min-width:{w}px;text-align:{align};{extra}'>{val}</td>"
+                )
+            else:
+                cell_bg = extra if extra else f"background:{_row_bg};"
+                _tr += (
+                    f"<td style='padding:5px 10px;white-space:nowrap;font-size:13px;"
+                    f"border-bottom:1px solid #f2f2f2;text-align:{align};{cell_bg}'>{val}</td>"
+                )
+        _tbody += f"<tr onmouseover=\"this.style.background='#fffbf0'\" onmouseout=\"this.style.background=''\">{_tr}</tr>"
+
+    _html = f"""
+    <div style="overflow:auto;max-height:{_tbl_h}px;border:1px solid #e2e4e9;border-radius:8px;
+                font-family:'DM Sans',Arial,sans-serif;">
+      <table style="border-collapse:collapse;width:max-content;min-width:100%;">
+        <thead><tr>{_thead_cells}</tr></thead>
+        <tbody>{_tbody}</tbody>
+      </table>
+    </div>
+    """
+    _stc.html(_html, height=_tbl_h + 35)
 
     # Benchmark legend
     st.caption("🟢 At or better than benchmark  ·  🟡 Within 2pp  ·  🔴 Exceeds benchmark by >2pp  ·  "
