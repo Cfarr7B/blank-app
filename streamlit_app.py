@@ -2427,6 +2427,24 @@ def tab_stands(dash):
         stand_hist = stands_df[stands_df["Stand"] == sel_stand].copy()
         if len(stand_hist) > 1:
             stand_hist = stand_hist.sort_values("Period_Key")
+
+            # Opening-period filter — new stands have extreme values that
+            # compress the scale and hide steady-state performance
+            excl_opening = st.checkbox(
+                "Exclude opening period (New <6mo) — removes ramp-up distortion",
+                value=True, key="trend_excl_opening",
+                help="Opening periods often show deeply negative EBITDA and "
+                     "elevated costs that skew the Y-axis. Uncheck to see the full history.",
+            )
+            if excl_opening and "Age_Bucket" in stand_hist.columns:
+                stand_hist_plot = stand_hist[stand_hist["Age_Bucket"] != "New (<6mo)"].copy()
+                if stand_hist_plot.empty:
+                    st.caption("All available periods are opening-period data. "
+                               "Uncheck the filter above to see them.")
+                    stand_hist_plot = stand_hist  # fall back to full history
+            else:
+                stand_hist_plot = stand_hist
+
             trend_metrics = {
                 "Net Sales": ("Net_Sales","$"),
                 "EBITDA%":   ("Store_EBITDA_pct","%"),
@@ -2435,22 +2453,44 @@ def tab_stands(dash):
             }
             tc1, tc2 = st.columns(2)
             for i, (metric_lbl, (raw_col, fmt)) in enumerate(trend_metrics.items()):
-                if raw_col not in stand_hist.columns: continue
-                tgt = _BM.get(raw_col,{}).get("t")
+                if raw_col not in stand_hist_plot.columns: continue
+                tgt   = _BM.get(raw_col,{}).get("t")
+                yvals = stand_hist_plot[raw_col] * (100 if fmt=="%" else 1)
+
+                # Colour each marker: green if at/above target, red if not
+                def _marker_colors(series, raw, is_pct):
+                    out = []
+                    for v in series:
+                        if pd.isna(v): out.append(MID); continue
+                        actual = v/100 if is_pct else v
+                        c = _bm_color(raw, actual)
+                        out.append({"good": GREEN, "warn": AMBER, "bad": RED}.get(c, BLUE))
+                    return out
+
+                marker_colors = _marker_colors(yvals, raw_col, fmt=="%")
+
                 fig_t = go.Figure()
                 fig_t.add_scatter(
-                    x=stand_hist["Period_Key"].str.replace("_"," "),
-                    y=stand_hist[raw_col] * (100 if fmt=="%" else 1),
+                    x=stand_hist_plot["Period_Key"].str.replace("_"," "),
+                    y=yvals,
                     mode="lines+markers",
                     name=metric_lbl,
-                    line=dict(color=RED, width=2),
-                    marker=dict(size=7),
+                    line=dict(color=MID, width=1.5),
+                    marker=dict(size=9, color=marker_colors,
+                                line=dict(width=1, color="white")),
+                    hovertemplate=(
+                        "<b>%{x}</b><br>" +
+                        ("$%{y:,.0f}" if fmt=="$" else "%{y:.1f}%") +
+                        "<extra></extra>"
+                    ),
                 )
                 if tgt is not None:
                     fig_t.add_hline(
                         y=tgt * (100 if fmt=="%" else 1),
                         line_dash="dash", line_color=GREEN, line_width=1.5,
-                        annotation_text="Target", annotation_position="right",
+                        annotation_text=f"Target {tgt*100:.1f}%" if fmt=="%" else f"Target ${tgt:,.0f}",
+                        annotation_position="right",
+                        annotation_font_size=11,
                     )
                 fig_t.update_layout(
                     title_text=metric_lbl,
@@ -2476,7 +2516,7 @@ def tab_stands(dash):
         """Ranked horizontal bar chart by % of sales, colored vs target."""
         if col_pct not in df.columns: return
         sub = df[["Stand", col_pct, col_dollar]].dropna(subset=[col_pct]).copy()
-        sub["Stand_Short"] = sub["Stand"].str.split(" ",1).str.get(1).fillna(sub["Stand"])
+        sub["Stand_Short"] = sub["Stand"].apply(lambda x: x.split(" ",1)[1] if isinstance(x,str) and " " in x else str(x))
         sub = sub.sort_values(col_pct, ascending=not higher_better)
         colors = []
         for v in sub[col_pct]:
@@ -2516,7 +2556,7 @@ def tab_stands(dash):
         with ea:
             fig_rev = go.Figure()
             sub_rev = df[["Stand","Net_Sales"]].dropna().copy()
-            sub_rev["Stand_Short"] = sub_rev["Stand"].str.split(" ",1).str.get(1).fillna(sub_rev["Stand"])
+            sub_rev["Stand_Short"] = sub_rev["Stand"].apply(lambda x: x.split(" ",1)[1] if isinstance(x,str) and " " in x else str(x))
             sub_rev = sub_rev.sort_values("Net_Sales", ascending=False)
             fig_rev.add_bar(
                 y=sub_rev["Stand_Short"], x=sub_rev["Net_Sales"],
@@ -2592,7 +2632,7 @@ def tab_stands(dash):
         fig_lab = go.Figure(go.Scatter(
             x=df["Net_Sales"], y=df["Total_Labor_pct"]*100,
             mode="markers+text",
-            text=df["Stand"].str.split(" ",1).str.get(1).fillna(df["Stand"]),
+            text=df["Stand"].apply(lambda x: x.split(" ",1)[1] if isinstance(x,str) and " " in x else str(x)),
             textposition="top center",
             textfont=dict(size=9),
             marker=dict(
@@ -2649,7 +2689,7 @@ def tab_stands(dash):
         fig_fix = go.Figure(go.Scatter(
             x=df["Net_Sales"], y=df["Total_Fixed_pct"]*100,
             mode="markers",
-            text=df["Stand"].str.split(" ",1).str.get(1).fillna(df["Stand"]),
+            text=df["Stand"].apply(lambda x: x.split(" ",1)[1] if isinstance(x,str) and " " in x else str(x)),
             marker=dict(color=BLUE, size=9, opacity=0.7),
             hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Fixed%: %{y:.1f}%<extra></extra>",
         ))
@@ -2682,7 +2722,7 @@ def tab_stands(dash):
         fig_rent = go.Figure(go.Scatter(
             x=df["Total_Rent_pct"]*100, y=df["Store_EBITDA_pct"]*100,
             mode="markers+text",
-            text=df["Stand"].str.split(" ",1).str.get(1).fillna(df["Stand"]),
+            text=df["Stand"].apply(lambda x: x.split(" ",1)[1] if isinstance(x,str) and " " in x else str(x)),
             textposition="top center", textfont=dict(size=9),
             marker=dict(color=[{"good":GREEN,"warn":AMBER,"bad":RED}.get(
                 _bm_color("Store_EBITDA_pct",v),BLUE) for v in df["Store_EBITDA_pct"]],
