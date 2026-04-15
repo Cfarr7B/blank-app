@@ -2476,7 +2476,7 @@ def tab_stands(dash):
         """Ranked horizontal bar chart by % of sales, colored vs target."""
         if col_pct not in df.columns: return
         sub = df[["Stand", col_pct, col_dollar]].dropna(subset=[col_pct]).copy()
-        sub["Stand_Short"] = sub["Stand"].str.split(" ",1).str[-1]
+        sub["Stand_Short"] = sub["Stand"].str.split(" ",1).str.get(1).fillna(sub["Stand"])
         sub = sub.sort_values(col_pct, ascending=not higher_better)
         colors = []
         for v in sub[col_pct]:
@@ -2516,7 +2516,7 @@ def tab_stands(dash):
         with ea:
             fig_rev = go.Figure()
             sub_rev = df[["Stand","Net_Sales"]].dropna().copy()
-            sub_rev["Stand_Short"] = sub_rev["Stand"].str.split(" ",1).str[-1]
+            sub_rev["Stand_Short"] = sub_rev["Stand"].str.split(" ",1).str.get(1).fillna(sub_rev["Stand"])
             sub_rev = sub_rev.sort_values("Net_Sales", ascending=False)
             fig_rev.add_bar(
                 y=sub_rev["Stand_Short"], x=sub_rev["Net_Sales"],
@@ -2592,7 +2592,7 @@ def tab_stands(dash):
         fig_lab = go.Figure(go.Scatter(
             x=df["Net_Sales"], y=df["Total_Labor_pct"]*100,
             mode="markers+text",
-            text=df["Stand"].str.split(" ",1).str[-1],
+            text=df["Stand"].str.split(" ",1).str.get(1).fillna(df["Stand"]),
             textposition="top center",
             textfont=dict(size=9),
             marker=dict(
@@ -2649,7 +2649,7 @@ def tab_stands(dash):
         fig_fix = go.Figure(go.Scatter(
             x=df["Net_Sales"], y=df["Total_Fixed_pct"]*100,
             mode="markers",
-            text=df["Stand"].str.split(" ",1).str[-1],
+            text=df["Stand"].str.split(" ",1).str.get(1).fillna(df["Stand"]),
             marker=dict(color=BLUE, size=9, opacity=0.7),
             hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Fixed%: %{y:.1f}%<extra></extra>",
         ))
@@ -2682,7 +2682,7 @@ def tab_stands(dash):
         fig_rent = go.Figure(go.Scatter(
             x=df["Total_Rent_pct"]*100, y=df["Store_EBITDA_pct"]*100,
             mode="markers+text",
-            text=df["Stand"].str.split(" ",1).str[-1],
+            text=df["Stand"].str.split(" ",1).str.get(1).fillna(df["Stand"]),
             textposition="top center", textfont=dict(size=9),
             marker=dict(color=[{"good":GREEN,"warn":AMBER,"bad":RED}.get(
                 _bm_color("Store_EBITDA_pct",v),BLUE) for v in df["Store_EBITDA_pct"]],
