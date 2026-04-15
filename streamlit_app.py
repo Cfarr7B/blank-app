@@ -2207,8 +2207,8 @@ def tab_stands(dash):
     ]
 
     avail_pl = [(raw, lbl, fmt) for raw, lbl, fmt in PL_COLS if raw in df.columns]
-    id_cols  = [c for c in ["Stand","Region","Age_Bucket","RM"] if c in df.columns]
-    id_rename = {"Stand": "Stand", "Region": "Region", "Age_Bucket": "Age", "RM": "RM"}
+    id_cols  = [c for c in ["Stand","Region","Age_Bucket"] if c in df.columns]
+    id_rename = {"Stand": "Stand", "Region": "Region", "Age_Bucket": "Age"}
 
     disp_full = df[id_cols + [raw for raw,_,_ in avail_pl]].copy()
     disp_full = disp_full.rename(columns={k: v for k, v in id_rename.items() if k in disp_full.columns})
@@ -2257,21 +2257,20 @@ def tab_stands(dash):
         disp_full = disp_full.loc[disp_full.index.intersection(order)].reindex(
             [i for i in order if i in disp_full.index])
 
-    # ── Sticky-column HTML table ──────────────────────────────────────────────
-    # st.dataframe has no column-pin API, so we render a custom HTML table
-    # with CSS position:sticky on the first 4 id columns (Stand/Region/Age/RM).
+    # ── Sticky + sortable HTML table ─────────────────────────────────────────
+    # st.dataframe has no column-pin or click-sort API, so we render a
+    # custom HTML component. Frozen cols use position:sticky; JS handles
+    # click-to-sort on every column header.
     import streamlit.components.v1 as _stc
+    import json as _json
 
-    _freeze_cols = [c for c in ["Stand","Region","Age","RM"] if c in disp_full.columns]
-    _freeze_n    = len(_freeze_cols)
-    # Pixel widths for frozen columns (must match what we set in CSS min-width)
-    _freeze_w    = {"Stand": 220, "Region": 140, "Age": 120, "RM": 120}
+    _freeze_cols = [c for c in ["Stand","Region","Age"] if c in disp_full.columns]
+    _freeze_w    = {"Stand": 220, "Region": 140, "Age": 120}
     _col_list    = list(disp_full.columns)
     _tbl_h       = min(55 + n * 35, 580)
 
-    # Build cumulative left-offset for each frozen column
-    _left = []
-    _running = 0
+    # Cumulative left offsets for frozen columns
+    _left, _running = [], 0
     for c in _col_list:
         if c in _freeze_cols:
             _left.append(_running)
@@ -2279,74 +2278,141 @@ def tab_stands(dash):
         else:
             _left.append(None)
 
-    # Cell-level color for % columns (replicate _style_row logic in HTML)
-    def _cell_style_html(col_name, val_str):
+    # Cell colour classes for % columns
+    def _cell_cls(col_name, val_str):
         if col_name not in pct_raw_cols: return ""
         raw = pct_raw_cols[col_name]
         try:
             v = float(str(val_str).replace("%","").strip()) / 100
         except Exception:
             return ""
-        c = _bm_color(raw, v)
-        if c == "good": return "background:#e8f8f2;color:#0d6e4a;font-weight:600;"
-        if c == "warn": return "background:#fff8e1;color:#b45309;"
-        if c == "bad":  return "background:#fff0f0;color:#991b1b;font-weight:600;"
-        return ""
+        return _bm_color(raw, v)   # "good" | "warn" | "bad" | ""
 
-    # Header row
-    _thead_cells = ""
-    for i, col in enumerate(_col_list):
-        lft = _left[i]
-        if lft is not None:
-            w = _freeze_w.get(col, 120)
-            _thead_cells += (
-                f"<th style='position:sticky;top:0;left:{lft}px;z-index:4;"
-                f"background:#2c2c2c;color:#fff;padding:7px 10px;white-space:nowrap;"
-                f"min-width:{w}px;font-size:12px;font-weight:600;text-align:left;"
-                f"border-right:1px solid #444;'>{col}</th>"
-            )
-        else:
-            _thead_cells += (
-                f"<th style='position:sticky;top:0;z-index:2;background:#2c2c2c;color:#fff;"
-                f"padding:7px 10px;white-space:nowrap;font-size:12px;font-weight:600;"
-                f"text-align:right;min-width:90px;'>{col}</th>"
-            )
+    # Serialise table data for JS sorting (raw numeric values where possible)
+    _js_rows = []
+    for _, row in disp_full.iterrows():
+        js_row = []
+        for col, val in zip(_col_list, row.values):
+            js_row.append(str(val))
+        _js_rows.append(js_row)
 
-    # Body rows
-    _tbody = ""
-    for row_i, (_, row) in enumerate(disp_full.iterrows()):
-        _row_bg = "#ffffff" if row_i % 2 == 0 else "#fafafa"
-        _tr = ""
-        for i, (col, val) in enumerate(zip(_col_list, row.values)):
-            lft   = _left[i]
-            extra = _cell_style_html(col, val)
-            align = "left" if lft is not None else "right"
-            if lft is not None:
-                w = _freeze_w.get(col, 120)
-                _tr += (
-                    f"<td style='position:sticky;left:{lft}px;z-index:1;"
-                    f"background:{_row_bg};padding:5px 10px;white-space:nowrap;"
-                    f"font-size:13px;border-right:1px solid #e8e8e8;"
-                    f"min-width:{w}px;text-align:{align};{extra}'>{val}</td>"
-                )
-            else:
-                cell_bg = extra if extra else f"background:{_row_bg};"
-                _tr += (
-                    f"<td style='padding:5px 10px;white-space:nowrap;font-size:13px;"
-                    f"border-bottom:1px solid #f2f2f2;text-align:{align};{cell_bg}'>{val}</td>"
-                )
-        _tbody += f"<tr onmouseover=\"this.style.background='#fffbf0'\" onmouseout=\"this.style.background=''\">{_tr}</tr>"
+    _js_data   = _json.dumps(_js_rows)
+    _js_cols   = _json.dumps(_col_list)
+    _js_freeze = _json.dumps([i for i,c in enumerate(_col_list) if c in _freeze_cols])
+    _js_left   = _json.dumps(_left)
+    _js_fw     = _json.dumps([_freeze_w.get(c,120) if c in _freeze_cols else None for c in _col_list])
+
+    # Pre-compute colour class for every cell
+    _cell_cls_grid = []
+    for _, row in disp_full.iterrows():
+        _cell_cls_grid.append([_cell_cls(col, val) for col, val in zip(_col_list, row.values)])
+    _js_cls = _json.dumps(_cell_cls_grid)
 
     _html = f"""
-    <div style="overflow:auto;max-height:{_tbl_h}px;border:1px solid #e2e4e9;border-radius:8px;
-                font-family:'DM Sans',Arial,sans-serif;">
-      <table style="border-collapse:collapse;width:max-content;min-width:100%;">
-        <thead><tr>{_thead_cells}</tr></thead>
-        <tbody>{_tbody}</tbody>
-      </table>
-    </div>
-    """
-    _stc.html(_html, height=_tbl_h + 35)
+<!DOCTYPE html><html><head><style>
+*{{box-sizing:border-box;margin:0;padding:0;}}
+body{{font-family:'DM Sans',Arial,sans-serif;font-size:13px;background:#fff;}}
+.wrap{{overflow:auto;max-height:{_tbl_h}px;border:1px solid #e2e4e9;border-radius:8px;}}
+table{{border-collapse:collapse;width:max-content;min-width:100%;}}
+thead tr th{{
+  position:sticky;top:0;z-index:2;
+  background:#2c2c2c;color:#fff;
+  padding:7px 10px;white-space:nowrap;
+  font-size:12px;font-weight:600;
+  cursor:pointer;user-select:none;
+  min-width:90px;text-align:right;
+}}
+thead tr th.frozen{{z-index:4;text-align:left;border-right:1px solid #555;}}
+thead tr th:hover{{background:#444;}}
+thead tr th .sort-icon{{font-size:9px;margin-left:4px;opacity:0.5;}}
+thead tr th.sorted-asc .sort-icon::after{{content:'▲';opacity:1;}}
+thead tr th.sorted-desc .sort-icon::after{{content:'▼';opacity:1;}}
+tbody tr td{{
+  padding:5px 10px;white-space:nowrap;
+  border-bottom:1px solid #f2f2f2;text-align:right;
+}}
+tbody tr td.frozen{{
+  position:sticky;z-index:1;
+  text-align:left;border-right:1px solid #e8e8e8;
+}}
+tbody tr:hover td{{background:#fffbf0!important;}}
+tbody tr:nth-child(even) td{{background:#fafafa;}}
+tbody tr:nth-child(odd)  td{{background:#ffffff;}}
+td.good{{background:#e8f8f2!important;color:#0d6e4a;font-weight:600;}}
+td.warn{{background:#fff8e1!important;color:#b45309;}}
+td.bad {{background:#fff0f0!important;color:#991b1b;font-weight:600;}}
+</style></head><body>
+<div class="wrap"><table id="t"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+<script>
+const COLS   = {_js_cols};
+const ROWS   = {_js_data};
+const CLS    = {_js_cls};
+const FREEZE = new Set({_js_freeze});
+const LEFT   = {_js_left};
+const FW     = {_js_fw};
+
+let sortCol = -1, sortAsc = true;
+
+function numVal(s){{
+  if(s==='—'||s===''||s==null) return null;
+  const n=parseFloat(s.replace(/[$%,]/g,''));
+  return isNaN(n)?s.toLowerCase():n;
+}}
+
+function renderTable(rows, cls){{
+  // Header
+  const thead=document.getElementById('thead');
+  thead.innerHTML='';
+  const tr=document.createElement('tr');
+  COLS.forEach((col,i)=>{{
+    const th=document.createElement('th');
+    th.innerHTML=col+'<span class="sort-icon"></span>';
+    if(FREEZE.has(i)){{
+      th.classList.add('frozen');
+      th.style.left=LEFT[i]+'px';
+      th.style.minWidth=FW[i]+'px';
+    }}
+    if(i===sortCol) th.classList.add(sortAsc?'sorted-asc':'sorted-desc');
+    th.onclick=()=>{{
+      if(sortCol===i){{ sortAsc=!sortAsc; }}else{{ sortCol=i; sortAsc=true; }}
+      const idx=[...Array(rows.length).keys()];
+      idx.sort((a,b)=>{{
+        const va=numVal(rows[a][i]), vb=numVal(rows[b][i]);
+        if(va===null&&vb===null) return 0;
+        if(va===null) return 1; if(vb===null) return -1;
+        return (va<vb?-1:va>vb?1:0)*(sortAsc?1:-1);
+      }});
+      renderTable(idx.map(j=>rows[j]), idx.map(j=>cls[j]));
+    }};
+    tr.appendChild(th);
+  }});
+  thead.appendChild(tr);
+
+  // Body
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  rows.forEach((row,ri)=>{{
+    const tr=document.createElement('tr');
+    row.forEach((val,i)=>{{
+      const td=document.createElement('td');
+      td.textContent=val;
+      const c=cls[ri][i];
+      if(c) td.classList.add(c);
+      if(FREEZE.has(i)){{
+        td.classList.add('frozen');
+        td.style.left=LEFT[i]+'px';
+        td.style.minWidth=FW[i]+'px';
+      }}
+      tr.appendChild(td);
+    }});
+    tbody.appendChild(tr);
+  }});
+}}
+
+renderTable(ROWS, CLS);
+</script></body></html>"""
+
+    _stc.html(_html, height=_tbl_h + 40)
 
     # Benchmark legend
     st.caption("🟢 At or better than benchmark  ·  🟡 Within 2pp  ·  🔴 Exceeds benchmark by >2pp  ·  "
