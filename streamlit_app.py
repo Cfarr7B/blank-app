@@ -6862,6 +6862,113 @@ def _build_milestone_fig(ms_rows_json: str):
     return fig, ms_df
 
 
+def _generate_pipeline_pdf(table_df, password: str) -> bytes:
+    """Build a styled, password-protected PDF of the Upcoming Openings table."""
+    from reportlab.lib.pagesizes import landscape, letter
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    import io, pikepdf, datetime
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=landscape(letter),
+        leftMargin=0.4*inch, rightMargin=0.4*inch,
+        topMargin=0.45*inch, bottomMargin=0.4*inch,
+    )
+
+    styles = getSampleStyleSheet()
+    title_s = ParagraphStyle("t", parent=styles["Heading1"], fontSize=15,
+                              textColor=colors.HexColor("#AC2430"), spaceAfter=3)
+    sub_s   = ParagraphStyle("s", parent=styles["Normal"],   fontSize=8,
+                              textColor=colors.HexColor("#666666"), spaceAfter=10)
+
+    today_str = datetime.date.today().strftime("%B %d, %Y")
+    elements = [
+        Paragraph("7BREW — Upcoming Openings", title_s),
+        Paragraph(f"Pipeline Report · As of Apr 16, 2026 · {len(table_df)} stands · Generated {today_str}", sub_s),
+    ]
+
+    # Strip emoji from Phase column so reportlab doesn't choke
+    tdf = table_df.copy()
+    tdf["Phase"] = tdf["Phase"].str.replace(r"[^\x00-\x7F]+\s*", "", regex=True).str.strip()
+    tdf["⚑ Shifted"] = tdf["⚑ Shifted"].str.replace("↑", "+").str.replace("↓", "-")
+
+    col_names = list(tdf.columns)
+    data_rows = [col_names] + [list(r) for r in tdf.itertuples(index=False, name=None)]
+
+    # Column widths (10.2" usable in landscape letter)
+    cw_map = {
+        "Phase": 1.15*inch, "Address": 1.65*inch, "City": 0.82*inch,
+        "State": 0.38*inch, "Region": 0.55*inch, "Const. Start": 0.68*inch,
+        "Building Drop": 0.72*inch, "Est. Opening": 0.72*inch,
+        "Store #": 0.58*inch, "RSH": 0.75*inch, "⚑ Shifted": 0.62*inch,
+    }
+    col_widths = [cw_map.get(c, 0.75*inch) for c in col_names]
+
+    # Phase row background colors (matching the app)
+    phase_bg = {
+        "Under Construction": colors.HexColor("#FFF3EC"),
+        "Permitting":         colors.HexColor("#FEFAE8"),
+        "Design":             colors.HexColor("#EBF3FD"),
+        "Due Diligence":      colors.HexColor("#F5EEF8"),
+    }
+
+    tbl_style = [
+        # Header
+        ("BACKGROUND",    (0, 0), (-1, 0), colors.HexColor("#2C2C2C")),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), colors.white),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0, 0), (-1, 0), 7.5),
+        ("ALIGN",         (0, 0), (-1, 0), "CENTER"),
+        # Data rows
+        ("FONTNAME",      (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE",      (0, 1), (-1, -1), 7.5),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+        ("GRID",          (0, 0), (-1, -1), 0.4, colors.HexColor("#CCCCCC")),
+        ("TOPPADDING",    (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 4),
+    ]
+
+    # Alternating row base (light grey every other row)
+    for ri in range(1, len(data_rows)):
+        if ri % 2 == 0:
+            tbl_style.append(("BACKGROUND", (0, ri), (-1, ri), colors.HexColor("#F6F6F6")))
+
+    # Phase-specific row colors (override alternating)
+    shifted_col_idx = col_names.index("⚑ Shifted") if "⚑ Shifted" in col_names else -1
+    for ri, row in enumerate(data_rows[1:], start=1):
+        phase = str(row[0])
+        for phase_name, bg in phase_bg.items():
+            if phase_name in phase:
+                tbl_style.append(("BACKGROUND", (0, ri), (-1, ri), bg))
+                break
+        # Color the Shifted column text
+        if shifted_col_idx >= 0:
+            shifted_val = str(row[shifted_col_idx]) if shifted_col_idx < len(row) else ""
+            if "Pushed" in shifted_val or "+" in shifted_val:
+                tbl_style.append(("TEXTCOLOR", (shifted_col_idx, ri), (shifted_col_idx, ri),
+                                   colors.HexColor("#CC3300")))
+            elif "Pulled" in shifted_val or "-" in shifted_val:
+                tbl_style.append(("TEXTCOLOR", (shifted_col_idx, ri), (shifted_col_idx, ri),
+                                   colors.HexColor("#006633")))
+
+    tbl = Table(data_rows, colWidths=col_widths, repeatRows=1)
+    tbl.setStyle(TableStyle(tbl_style))
+    elements.append(tbl)
+    doc.build(elements)
+
+    # Add password protection with pikepdf
+    plain = io.BytesIO(buf.getvalue())
+    enc   = io.BytesIO()
+    with pikepdf.open(plain) as pdf:
+        pdf.save(enc, encryption=pikepdf.Encryption(owner=password, user=password, R=4))
+    return enc.getvalue()
+
+
 def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
@@ -7410,6 +7517,37 @@ def tab_pipeline(dash):
         use_container_width=True, hide_index=True,
         height=min(50 + len(table_df) * 35, 500),
     )
+
+    # ── PDF Export ────────────────────────────────────────────────────────────
+    with st.expander("📄 Export as Password-Protected PDF"):
+        ex_c1, ex_c2 = st.columns([2, 1])
+        with ex_c1:
+            pdf_pw = st.text_input(
+                "Set PDF Password",
+                value="7BREW2026",
+                type="password",
+                key="pipeline_pdf_pw",
+                help="Recipients will need this password to open the PDF.",
+            )
+        with ex_c2:
+            st.write("")
+            st.write("")
+            gen_btn = st.button("⚙️ Generate PDF", key="gen_pipeline_pdf", type="primary")
+
+        if gen_btn:
+            with st.spinner("Building PDF…"):
+                try:
+                    pdf_bytes = _generate_pipeline_pdf(table_df, pdf_pw)
+                    st.download_button(
+                        label="⬇️ Download PDF",
+                        data=pdf_bytes,
+                        file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        key="dl_pipeline_pdf",
+                    )
+                    st.success(f"✅ PDF ready — password is: `{pdf_pw}`")
+                except Exception as _e:
+                    st.error(f"PDF generation failed: {_e}")
 
     # ── Delay sensitivity ─────────────────────────────────────────────────────
     st.divider()
