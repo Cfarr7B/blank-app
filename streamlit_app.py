@@ -2073,6 +2073,58 @@ def tab_comparison(dash):
 
 
 # ─────────────────────────────────────────────
+# TAB: STAND DETAIL — helpers
+# ─────────────────────────────────────────────
+def _aggregate_stands_multi(raw_df):
+    """Aggregate stand records across multiple periods.
+    Dollar columns are summed per stand; percentage columns are recomputed
+    from the summed totals so the rates are accurate weighted averages."""
+    if raw_df.empty:
+        return raw_df
+
+    _PCT_TO_BASE = {
+        "Total_COGS_pct":      "Total_COGS",
+        "Total_Hourly_pct":    "Total_Hourly",
+        "Total_Labor_pct":     "Total_Labor",
+        "Total_RM_pct":        "Total_RM",
+        "Controllable_pct":    "Controllable",
+        "Total_Utilities_pct": "Total_Utilities",
+        "Total_Fixed_pct":     "Total_Fixed",
+        "Total_Marketing_pct": "Total_Marketing",
+        "Unit_EBITDAR_pct":    "Unit_EBITDAR",
+        "Total_Rent_pct":      "Total_Rent",
+        "Store_EBITDA_pct":    "Store_EBITDA",
+        "Discounts_pct":       "Discounts",
+    }
+
+    id_cols   = [c for c in ["Stand", "Region", "Age_Bucket"] if c in raw_df.columns]
+    pct_cols  = [c for c in _PCT_TO_BASE if c in raw_df.columns]
+    skip_cols = set(pct_cols) | {"Period_Key"}
+
+    # Build aggregation: id cols → first/mode; numeric $ cols → sum
+    agg_dict = {}
+    for c in raw_df.columns:
+        if c in skip_cols or c == "Stand":
+            continue
+        if c in id_cols:
+            agg_dict[c] = "first"
+        elif pd.api.types.is_numeric_dtype(raw_df[c]):
+            agg_dict[c] = "sum"
+
+    work = raw_df[[c for c in raw_df.columns if c not in pct_cols]].copy()
+    grouped = work.groupby("Stand", as_index=False).agg(agg_dict)
+
+    # Recompute percentage columns from the summed dollar totals
+    net = grouped["Net_Sales"].replace(0, float("nan")) if "Net_Sales" in grouped.columns else None
+    for pct_col, base_col in _PCT_TO_BASE.items():
+        if pct_col in raw_df.columns and base_col in grouped.columns and net is not None:
+            grouped[pct_col] = grouped[base_col] / net
+
+    grouped["Period_Key"] = "+".join(sorted(raw_df["Period_Key"].unique()))
+    return grouped
+
+
+# ─────────────────────────────────────────────
 # TAB: STAND DETAIL
 # ─────────────────────────────────────────────
 def tab_stands(dash):
@@ -2118,7 +2170,16 @@ def tab_stands(dash):
 
     c1, c2, c3, c4 = st.columns([2, 1.5, 1.5, 2])
     with c1:
-        sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="std_period")
+        all_labels = [l for l, _ in all_options]
+        sel_lbls = st.multiselect(
+            "Period(s)",
+            all_labels,
+            default=[all_labels[0]],   # most recent period by default
+            placeholder="Choose one or more periods…",
+            key="std_period",
+        )
+        if not sel_lbls:
+            sel_lbls = [all_labels[0]]   # never allow empty
     with c2:
         region_options = (sorted(stands_df["Region"].dropna().unique().tolist())
                           if "Region" in stands_df.columns else [])
@@ -2130,8 +2191,19 @@ def tab_stands(dash):
     with c4:
         search = st.text_input("Search Stands", placeholder="Type stand name…", key="std_search")
 
-    pk = label_to_key[sel_lbl]
-    df = stands_df[stands_df["Period_Key"] == pk].copy()
+    sel_pks = [label_to_key[l] for l in sel_lbls]
+    multi_period = len(sel_pks) > 1
+
+    if multi_period:
+        raw_multi = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
+        df = _aggregate_stands_multi(raw_multi)
+        if multi_period:
+            st.caption(
+                f"📊 Showing **{len(sel_pks)} periods combined** ({', '.join(sel_lbls)}) — "
+                "dollar values are summed across periods; percentages are recalculated from totals."
+            )
+    else:
+        df = stands_df[stands_df["Period_Key"] == sel_pks[0]].copy()
     if sel_reg and "Region" in df.columns:
         df = df[df["Region"].isin(sel_reg)]
     if sel_age != "All Ages" and "Age_Bucket" in df.columns:
