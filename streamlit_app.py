@@ -2977,7 +2977,7 @@ renderTable(ROWS, CLS);
     # ══════════════════════════════════════════════════════════════════════════
     # SECTION 4: PERFORMANCE RANKINGS
     # ══════════════════════════════════════════════════════════════════════════
-    section("🏆 PERFORMANCE RANKINGS", f"Top & bottom performers in the filtered set · {sel_lbl}")
+    section("🏆 PERFORMANCE RANKINGS", f"Top & bottom performers in the filtered set · {', '.join(sel_lbls)}")
 
     rk1, rk2, rk3 = st.columns(3)
     rank_cols = ["Stand","Net_Sales","Store_EBITDA_pct","Total_Labor_pct","Total_COGS_pct"]
@@ -3130,7 +3130,7 @@ def tab_regions(dash):
 
     # ── STAND DETAIL ──────────────────────────────────────────────────────────
     st.html('<hr class="brew">')
-    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {sel_lbl}")
+    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {', '.join(sel_lbls)}")
 
     sd_c1, sd_c2, sd_c3 = st.columns([1.5, 1.5, 2])
     with sd_c1:
