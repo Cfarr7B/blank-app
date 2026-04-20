@@ -1,7 +1,7 @@
 {
   "_schema_version": "2.2",
-  "_last_updated": "2026-04-09",
-  "_source": "Drew Deagan weekly opening schedule",
+  "_last_updated": "2026-04-16",
+  "_source": "7Crew Pipeline Report_4.16.2026.xlsx",
   "report_snapshots": [
     {
       "key": "jan15",
@@ -14,41 +14,13 @@
     {
       "key": "apr9",
       "label": "Apr 9"
+    },
+    {
+      "label": "Apr 16",
+      "date": "2026-04-16"
     }
   ],
   "upcoming": [
-    {
-      "rsh": "RSH-00068",
-      "store": "000711",
-      "phase": "5. Construction",
-      "address": "1540 N Valley Mills Drive",
-      "city": "Waco",
-      "state": "TX",
-      "region": "C. TX",
-      "permit_sub": "2/27/25",
-      "permit_appr": "5/23/25",
-      "cs": "11/3/25",
-      "bd": "12/3/25",
-      "open": "4/13/26",
-      "gc": "D&C",
-      "notes": "TCO to stock 3/23. Full CO on 3/27 per GC"
-    },
-    {
-      "rsh": "RSH-00082",
-      "store": "000987",
-      "phase": "5. Construction",
-      "address": "3617 Classen Blvd",
-      "city": "Norman",
-      "state": "OK",
-      "region": "OKC",
-      "permit_sub": "7/21/25",
-      "permit_appr": "9/5/25",
-      "cs": "12/1/25",
-      "bd": "3/4/26",
-      "open": "4/13/26",
-      "gc": "Tatco",
-      "notes": "S&T CO 3/27. tracking full TCO 4/1 (raise FH for perm. CO).  porkchop for WM = done."
-    },
     {
       "rsh": "RSH-00097",
       "store": "000878",
@@ -62,7 +34,6 @@
       "cs": "11/19/25",
       "bd": "3/6/26",
       "open": "5/4/26",
-      "gc": "BJD",
       "notes": "water and sewer and tied . elec meter installed 3/24. Paving 4/2 . Target TCO for 4/2. Full CO by 4/8"
     },
     {
@@ -78,8 +49,7 @@
       "cs": "2/2/26",
       "bd": "3/19/26",
       "open": "5/18/26",
-      "gc": "Tatco",
-      "notes": "water taps done.  power in GC's/City court. signage - LL confirmed we can re-use old. PID to survey to confirm integrity"
+      "notes": "water taps done & power on. signage - good to re-use existing sign. pouring concrete, sewer by 4/17"
     },
     {
       "rsh": "RSH-00091",
@@ -94,8 +64,7 @@
       "cs": "2/18/26",
       "bd": "3/25/26",
       "open": "5/18/26",
-      "gc": "D&C",
-      "notes": "BD confirmed with CTAR. RW drawing received from struc. 3/31"
+      "notes": "RW drawing received from struc. 3/31.  Elevations around canopy.  Issues with elevations under canopy.  W/S connected. Power is pending."
     },
     {
       "rsh": "RSH-00101",
@@ -110,8 +79,7 @@
       "cs": "2/23/26",
       "bd": "4/1/26",
       "open": "5/18/26",
-      "gc": "D&C",
-      "notes": "CO pending LS lead time"
+      "notes": "CO pending LS lead time (should be good). Elec meter set on 4/15 (power should be same day)"
     },
     {
       "rsh": "RSH-00095",
@@ -126,8 +94,7 @@
       "cs": "1/22/26",
       "bd": "2/18/26",
       "open": "6/1/26",
-      "gc": "D&C (FL)",
-      "notes": "Nichia for muffin top. CO pending soft soil removal"
+      "notes": "Nichia for muffin top. CO pending soft soil removal. Power ready once we get meter can.  w/s taps are done"
     },
     {
       "rsh": "RSH-00081",
@@ -142,8 +109,7 @@
       "cs": "1/26/26",
       "bd": "2/26/26",
       "open": "6/1/26",
-      "gc": "Fulcrum",
-      "notes": "water and power on."
+      "notes": "water and power on. storm/sewer conflict"
     },
     {
       "rsh": "RSH-00071",
@@ -158,7 +124,6 @@
       "cs": "1/12/26",
       "bd": "3/11/26",
       "open": "6/8/26",
-      "gc": "RNR",
       "notes": "GC confirmed CO target of 5/22"
     },
     {
@@ -174,24 +139,7 @@
       "cs": "2/16/26",
       "bd": "3/17/26",
       "open": "6/15/26",
-      "gc": "Prestige",
       "notes": "Electric line relocation by City and 7Crew = done"
-    },
-    {
-      "rsh": "RSH-00109",
-      "store": "001234",
-      "phase": "5. Construction",
-      "address": "2415 S Country Club Rd",
-      "city": "El Reno",
-      "state": "OK",
-      "region": "OKC",
-      "permit_sub": "11/6/25",
-      "permit_appr": "1/21/26",
-      "cs": "2/23/26",
-      "bd": "5/6/26",
-      "open": "6/15/26",
-      "gc": "VBC",
-      "notes": "UES providing recs for soil mitigation.  On site 4/3, pending report. Need to confirm 5/6 with CTAR"
     },
     {
       "rsh": "RSH-00069",
@@ -206,8 +154,7 @@
       "cs": "12/17/25",
       "bd": "3/4/26",
       "open": "6/22/26",
-      "gc": "RNR",
-      "notes": "Need GC/County to verify CO. GC tracking Building final 5/13 and CO 6/5"
+      "notes": "power pending city/GC. water tapped, sewer done, storm almost done"
     },
     {
       "rsh": "RSH-00116",
@@ -222,8 +169,22 @@
       "cs": "3/2/26",
       "bd": "4/15/26",
       "open": "6/22/26",
-      "gc": "Burd",
       "notes": "confirm CO date with GC. need building payment ASAP"
+    },
+    {
+      "rsh": "RSH-00109",
+      "store": "001234",
+      "phase": "5. Construction",
+      "address": "2415 S Country Club Rd",
+      "city": "El Reno",
+      "state": "OK",
+      "region": "OKC",
+      "permit_sub": "11/6/25",
+      "permit_appr": "1/21/26",
+      "cs": "2/23/26",
+      "bd": "5/13/26",
+      "open": "6/29/26",
+      "notes": "UES provided recs for soil mitigation 4/10.  5/13 good with CTAR (pending dirt)"
     },
     {
       "rsh": "RSH-00106",
@@ -236,10 +197,8 @@
       "permit_sub": "11/12/25",
       "permit_appr": "4/9/26",
       "cs": "4/8/26",
-      "bd": "4/20/26",
-      "open": "7/27/26",
-      "gc": "Walker Co.",
-      "notes": "Building permit pending SWPPP only."
+      "bd": "4/24/26",
+      "open": "7/27/26"
     },
     {
       "rsh": "RSH-00123",
@@ -252,26 +211,9 @@
       "permit_sub": "1/21/26",
       "permit_appr": "2/20/26",
       "cs": "4/6/26",
-      "bd": "4/20/26",
+      "bd": "4/21/26",
       "open": "8/3/26",
-      "gc": "Walker Co.",
-      "notes": ""
-    },
-    {
-      "rsh": "RSH-00114",
-      "store": "001154",
-      "phase": "5. Construction",
-      "address": "8106 N Davis Hwy",
-      "city": "Pensacola",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "11/14/25",
-      "permit_appr": "2/25/26",
-      "cs": "4/7/26",
-      "bd": "5/6/26",
-      "open": "8/10/26",
-      "gc": "Fulcrum",
-      "notes": ""
+      "notes": "GC reporting CO of 5/29"
     },
     {
       "rsh": "RSH-00078",
@@ -284,25 +226,23 @@
       "permit_sub": "12/10/24",
       "permit_appr": "2/17/26",
       "cs": "4/6/26",
-      "bd": "5/13/26",
+      "bd": "4/29/26",
       "open": "8/10/26",
-      "gc": "Tatco (FL)",
       "notes": "Site Plan approved 12/2. Site Permit Placard issues 2.17. All permits in hand on 3/25"
     },
     {
       "rsh": "RSH-00110",
       "store": "001156",
-      "phase": "4. Permitting",
+      "phase": "5. Construction",
       "address": "955 US-377",
       "city": "Granbury",
       "state": "TX",
       "region": "C. TX",
       "permit_sub": "11/26/25",
       "permit_appr": "4/2/26",
-      "cs": "4/13/26",
+      "cs": "4/20/26",
       "bd": "5/20/26",
       "open": "8/10/26",
-      "gc": "VBC",
       "notes": "electric review last pending item for full permit approval - resubmitted 2/3. getting tight with elec devision"
     },
     {
@@ -318,8 +258,21 @@
       "cs": "4/20/26",
       "bd": "5/27/26",
       "open": "8/10/26",
-      "gc": "Prestige",
       "notes": "Permit expected 4/7. Need GC to verify construction schedule"
+    },
+    {
+      "rsh": "RSH-00114",
+      "store": "001154",
+      "phase": "5. Construction",
+      "address": "8106 N Davis Hwy",
+      "city": "Pensacola",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "11/14/25",
+      "permit_appr": "2/25/26",
+      "cs": "4/7/26",
+      "bd": "6/3/26",
+      "open": "8/10/26"
     },
     {
       "rsh": "RSH-00089",
@@ -332,26 +285,9 @@
       "permit_sub": "11/6/24",
       "permit_appr": "8/27/25",
       "cs": "1/5/26",
-      "bd": "",
+      "bd": "N/A STICK BUILD",
       "open": "8/10/26",
-      "gc": "RNR",
       "notes": "GC building final target = 7/16 & CO target date = 8/14"
-    },
-    {
-      "rsh": "RSH-00102",
-      "store": "001118",
-      "phase": "4. Permitting",
-      "address": "3700 College Ave",
-      "city": "Snyder",
-      "state": "TX",
-      "region": "W. TX",
-      "permit_sub": "9/16/25",
-      "permit_appr": "4/10/26",
-      "cs": "4/13/26",
-      "bd": "",
-      "open": "8/10/26",
-      "gc": "Burd",
-      "notes": "TXDOT approved 3/16. Oncor needs 4 weeks from KO to move poles. tracking pole move for 4/22 based on 3/25 KO.  parking agreement submitted 4/7"
     },
     {
       "rsh": "RSH-00092",
@@ -364,9 +300,8 @@
       "permit_sub": "11/21/24",
       "permit_appr": "2/26/26",
       "cs": "4/8/26",
-      "bd": "5/6/26",
+      "bd": "5/13/26",
       "open": "8/17/26",
-      "gc": "BJD",
       "notes": "CS looking like 4/6 pending billboard power. schedule pending billboard and owls"
     },
     {
@@ -378,28 +313,25 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "5/2/25",
-      "permit_appr": "4/10/26",
+      "permit_appr": "4/17/26",
       "cs": "4/27/26",
       "bd": "6/3/26",
       "open": "9/14/26",
-      "gc": "Tatco (FL)",
       "notes": "Permits delayed for FDOT Drainage comment. Need to verify property boundary"
     },
     {
       "rsh": "RSH-00094",
       "store": "000757",
-      "phase": "4. Permitting",
+      "phase": "5. Construction",
       "address": "4102 Cleveland Ave",
       "city": "Fort Myers",
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "4/15/25",
-      "permit_appr": "4/10/26",
-      "cs": "4/13/26",
-      "bd": "5/20/26",
-      "open": "9/28/26",
-      "gc": "BJD",
-      "notes": ""
+      "permit_appr": "4/17/26",
+      "cs": "4/20/26",
+      "bd": "6/3/26",
+      "open": "9/28/26"
     },
     {
       "rsh": "RSH-00084",
@@ -410,12 +342,25 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "3/7/25",
-      "permit_appr": "5/15/26",
-      "cs": "5/25/26",
-      "bd": "6/24/26",
+      "permit_appr": "5/22/26",
+      "cs": "6/1/26",
+      "bd": "7/1/26",
+      "open": "9/28/26"
+    },
+    {
+      "rsh": "RSH-00102",
+      "store": "001118",
+      "phase": "5. Construction",
+      "address": "3700 College Ave",
+      "city": "Snyder",
+      "state": "TX",
+      "region": "W. TX",
+      "permit_sub": "9/16/25",
+      "permit_appr": "4/13/26",
+      "cs": "4/13/26",
+      "bd": "Stick Build",
       "open": "9/28/26",
-      "gc": "BJD",
-      "notes": ""
+      "notes": "TXDOT approved 3/16. Oncor needs 4 weeks from KO to move poles. tracking pole move for 4/22 based on 3/25 KO.  parking agreement submitted 4/7"
     },
     {
       "rsh": "RSH-00112",
@@ -430,8 +375,22 @@
       "cs": "6/22/26",
       "bd": "7/15/26",
       "open": "10/5/26",
-      "gc": "",
-      "notes": ""
+      "notes": "TXDOT work during opening"
+    },
+    {
+      "rsh": "RSH-00103",
+      "store": "001713",
+      "phase": "3. Design",
+      "address": "736 Hewitt Dr",
+      "city": "Waco",
+      "state": "TX",
+      "region": "C. TX",
+      "permit_sub": "5/20/26",
+      "permit_appr": "6/26/26",
+      "cs": "7/6/26",
+      "bd": "N/A - Retrofit",
+      "open": "10/12/26",
+      "notes": "need to confirm submittal date with citadel"
     },
     {
       "rsh": "RSH-00088",
@@ -446,7 +405,6 @@
       "cs": "5/6/26",
       "bd": "6/3/26",
       "open": "10/19/26",
-      "gc": "BJD",
       "notes": "Turn lane required and SWFWMD now required."
     },
     {
@@ -462,7 +420,6 @@
       "cs": "5/25/26",
       "bd": "7/8/26",
       "open": "11/2/26",
-      "gc": "",
       "notes": "City has approved site plan and traffic. LL tenant approval could delay CS"
     },
     {
@@ -477,9 +434,7 @@
       "permit_appr": "5/29/26",
       "cs": "6/15/26",
       "bd": "7/22/26",
-      "open": "11/2/26",
-      "gc": "",
-      "notes": ""
+      "open": "11/2/26"
     },
     {
       "rsh": "RSH-00139",
@@ -494,8 +449,7 @@
       "cs": "7/6/26",
       "bd": "8/5/26",
       "open": "11/2/26",
-      "gc": "",
-      "notes": "City fully signed off pending ARB"
+      "notes": "City fully signed off pending ARB (3rd party review - no hearing)"
     },
     {
       "rsh": "RSH-00134",
@@ -510,7 +464,6 @@
       "cs": "7/20/26",
       "bd": "8/26/26",
       "open": "11/9/26",
-      "gc": "",
       "notes": "Civils ONLY in 3/25"
     },
     {
@@ -526,24 +479,7 @@
       "cs": "7/27/26",
       "bd": "9/9/26",
       "open": "11/9/26",
-      "gc": "Prestige",
-      "notes": "Permits expire 7/7/26. Need lease by end of March to meet this schedule. Goal to have resolution with LL 4/10.  Need asbestos survey and avigation easement prior to CS. LL to respond by 1/30. 7C send back lease on 2/2 and asked for back by 2/6"
-    },
-    {
-      "rsh": "RSH-00103",
-      "store": "001713",
-      "phase": "3. Design",
-      "address": "736 Hewitt Dr",
-      "city": "Waco",
-      "state": "TX",
-      "region": "C. TX",
-      "permit_sub": "5/18/26",
-      "permit_appr": "7/20/26",
-      "cs": "7/27/26",
-      "bd": "",
-      "open": "11/30/26",
-      "gc": "Citadel",
-      "notes": "need to confirm submittal date with citadel"
+      "notes": "Permits expire 7/7/26.  Lease - (appraisers to find Fair market value rent). expecting LL lease redlines 4/16 with goal to have leases agreed to by 4/17"
     },
     {
       "rsh": "RSH-00129",
@@ -558,7 +494,6 @@
       "cs": "8/10/26",
       "bd": "9/16/26",
       "open": "12/7/26",
-      "gc": "",
       "notes": "Parking Variance approved 3/31.  LL to deliver pad & utilities in May (MH to confirm)"
     },
     {
@@ -572,26 +507,8 @@
       "permit_sub": "10/9/25",
       "permit_appr": "8/14/26",
       "cs": "8/24/26",
-      "bd": "9/23/26",
-      "open": "12/7/26",
-      "gc": "",
-      "notes": ""
-    },
-    {
-      "rsh": "RSH-00151",
-      "store": "TBD",
-      "phase": "2. Due Diligence",
-      "address": "3514 E Interstate Drive",
-      "city": "Amarillo",
-      "state": "TX",
-      "region": "W. TX",
-      "permit_sub": "5/8/26",
-      "permit_appr": "8/7/26",
-      "cs": "8/24/26",
-      "bd": "9/23/26",
-      "open": "12/7/26",
-      "gc": "",
-      "notes": "LL provided Lease redlines 1/28. 7C sent redlines back 2/4.  LL reviewing 7C financials and other tenant plans (chick express & title max), legal call on 4/1"
+      "bd": "Stick-built",
+      "open": "12/7/26"
     },
     {
       "rsh": "RSH-00149",
@@ -604,10 +521,9 @@
       "permit_sub": "3/27/26",
       "permit_appr": "8/19/26",
       "cs": "9/7/26",
-      "bd": "",
+      "bd": "Stick Build",
       "open": "1/4/27",
-      "gc": "",
-      "notes": ""
+      "notes": "3/27 is civil only submittal"
     },
     {
       "rsh": "RSH-00100",
@@ -622,8 +538,22 @@
       "cs": "8/31/26",
       "bd": "9/30/26",
       "open": "1/18/27",
-      "gc": "",
-      "notes": "plat will take 2.5 months for approval from submittal to acceptance from submit. SP submitted late February. Lease amendment for SP rights and IP extended signed 4/3.  Need REA and parking agreement (tracking 4/9)"
+      "notes": "Plat is approved. SP submitted late February, review commencing as of plat approval. Lease amendment for SP rights and IP extended signed 4/3.  Need REA and parking agreement (tracking 4/9)"
+    },
+    {
+      "rsh": "RSH-00151",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "3514 E Interstate Drive",
+      "city": "Amarillo",
+      "state": "TX",
+      "region": "W. TX",
+      "permit_sub": "5/22/26",
+      "permit_appr": "8/21/26",
+      "cs": "9/7/26",
+      "bd": "10/7/26",
+      "open": "1/18/27",
+      "notes": "LL provided Lease redlines 1/28. 7C sent redlines back 2/4.  LL reviewing 7C financials and other tenant plans (chick express & title max), legal call on 4/1. have not heard back since?  Need LL to demo building by early august for 2026"
     },
     {
       "rsh": "RSH-00180",
@@ -634,16 +564,15 @@
       "state": "TX",
       "region": "W. TX",
       "permit_sub": "3/11/26",
-      "permit_appr": "8/14/26",
-      "cs": "8/31/26",
-      "bd": "9/30/26",
+      "permit_appr": "7/17/26",
+      "cs": "8/3/26",
+      "bd": "9/2/26",
       "open": "1/25/27",
-      "gc": "",
       "notes": "second round of city review"
     },
     {
       "rsh": "RSH-00692",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "7101 Park Blvd",
       "city": "Pinellas Park",
@@ -654,7 +583,6 @@
       "cs": "10/26/26",
       "bd": "12/2/26",
       "open": "1/25/27",
-      "gc": "",
       "notes": "LL to design and permit all civil/site, 7C to drop building, landscape TBD.  LL prelim civils in review at City."
     },
     {
@@ -668,14 +596,12 @@
       "permit_sub": "3/25/26",
       "permit_appr": "8/21/26",
       "cs": "9/7/26",
-      "bd": "",
-      "open": "1/25/27",
-      "gc": "Citadel",
-      "notes": ""
+      "bd": "N/A - Retrofit",
+      "open": "1/25/27"
     },
     {
       "rsh": "RSH-00528",
-      "store": "TBD",
+      "store": "",
       "phase": "3. Design",
       "address": "2401 Henney Rd",
       "city": "Choctaw",
@@ -686,7 +612,6 @@
       "cs": "9/21/26",
       "bd": "11/4/26",
       "open": "2/1/27",
-      "gc": "",
       "notes": "LL has to complete lot split and record utility easement before 7C can submit for plans and review.  Need to confirm no CLOMR (adds 6 - 9 months)"
     },
     {
@@ -701,9 +626,7 @@
       "permit_appr": "8/28/26",
       "cs": "9/14/26",
       "bd": "10/14/26",
-      "open": "2/22/27",
-      "gc": "",
-      "notes": ""
+      "open": "2/22/27"
     },
     {
       "rsh": "RSH-00077",
@@ -718,23 +641,21 @@
       "cs": "9/21/26",
       "bd": "10/21/26",
       "open": "2/22/27",
-      "gc": "",
       "notes": "Corrected LL Applications on 12/16 (WMD might need clearer version)"
     },
     {
       "rsh": "RSH-00111",
-      "store": "TBD",
+      "store": "",
       "phase": "3. Design",
       "address": "35910 US-27",
       "city": "Haines City",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "4/8/26",
+      "permit_sub": "4/15/26",
       "permit_appr": "9/4/26",
       "cs": "9/21/26",
       "bd": "10/21/26",
       "open": "2/22/27",
-      "gc": "",
       "notes": "12/9 - 7C asking title if LL access/parking is acceptable"
     },
     {
@@ -749,9 +670,7 @@
       "permit_appr": "9/9/26",
       "cs": "9/28/26",
       "bd": "9/9/26",
-      "open": "3/1/27",
-      "gc": "",
-      "notes": ""
+      "open": "3/1/27"
     },
     {
       "rsh": "RSH-00147",
@@ -765,13 +684,11 @@
       "permit_appr": "10/16/26",
       "cs": "11/4/26",
       "bd": "12/9/26",
-      "open": "4/19/27",
-      "gc": "",
-      "notes": ""
+      "open": "4/19/27"
     },
     {
       "rsh": "RSH-00592",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "1080 Fort Hood St",
       "city": "Killeen",
@@ -781,9 +698,7 @@
       "permit_appr": "11/6/26",
       "cs": "12/2/26",
       "bd": "1/13/27",
-      "open": "4/19/27",
-      "gc": "",
-      "notes": ""
+      "open": "4/19/27"
     },
     {
       "rsh": "RSH-00273",
@@ -793,12 +708,11 @@
       "city": "Mulberry",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "4/24/26",
+      "permit_sub": "5/22/26",
       "permit_appr": "11/13/26",
       "cs": "11/30/26",
       "bd": "1/6/27",
       "open": "5/3/27",
-      "gc": "",
       "notes": "Civil only KO on 3/18."
     },
     {
@@ -809,12 +723,11 @@
       "city": "Springtown",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "5/8/26",
+      "permit_sub": "5/15/26",
       "permit_appr": "11/6/26",
       "cs": "12/2/26",
       "bd": "1/6/27",
       "open": "5/3/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES. P&Z hearing for canopy in BS on 4/8"
     },
     {
@@ -829,13 +742,11 @@
       "permit_appr": "11/13/26",
       "cs": "11/30/26",
       "bd": "1/13/27",
-      "open": "5/3/27",
-      "gc": "",
-      "notes": ""
+      "open": "5/3/27"
     },
     {
       "rsh": "RSH-00606",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2215 N Big Spring St",
       "city": "Midland",
@@ -846,7 +757,6 @@
       "cs": "12/14/26",
       "bd": "1/27/27",
       "open": "5/3/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
@@ -862,7 +772,6 @@
       "cs": "1/6/27",
       "bd": "2/10/27",
       "open": "5/24/27",
-      "gc": "",
       "notes": "Only Rider is outstanding for Lease - target execution is 2/27"
     },
     {
@@ -878,12 +787,11 @@
       "cs": "1/25/27",
       "bd": "3/3/27",
       "open": "6/14/27",
-      "gc": "",
       "notes": "lease is close.  should be signed in next few days (note on 3/18)"
     },
     {
       "rsh": "RSH-00205",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2159 W 9 Mile Rd",
       "city": "Pensacola",
@@ -894,12 +802,11 @@
       "cs": "1/25/27",
       "bd": "3/10/27",
       "open": "6/21/27",
-      "gc": "",
       "notes": "Pause for LOI delays from LL sale and use restriction concerns"
     },
     {
       "rsh": "RSH-00266",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "116 Sebring Square",
       "city": "Sebring",
@@ -910,7 +817,6 @@
       "cs": "2/3/27",
       "bd": "3/10/27",
       "open": "6/21/27",
-      "gc": "",
       "notes": "3/11 DKO is aggressive. 1/28 - LL receives first draft of lease. 7C got LL redlines on 2/10.  LL working on legal description. 3/11 is agressive for DKO"
     },
     {
@@ -921,33 +827,16 @@
       "city": "Hudson",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "5/15/26",
-      "permit_appr": "1/15/27",
-      "cs": "2/1/27",
-      "bd": "3/10/27",
-      "open": "6/28/27",
-      "gc": "",
+      "permit_sub": "6/5/26",
+      "permit_appr": "2/5/27",
+      "cs": "2/22/27",
+      "bd": "3/31/27",
+      "open": "7/19/27",
       "notes": "Need access through O'Reilly's"
     },
     {
-      "rsh": "RSH-00108",
-      "store": "TBD",
-      "phase": "2. Due Diligence",
-      "address": "4801 Cortez Blvd",
-      "city": "Bradenton",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "6/3/26",
-      "permit_appr": "2/5/27",
-      "cs": "2/22/27",
-      "bd": "3/24/27",
-      "open": "7/19/27",
-      "gc": "",
-      "notes": "DD KO 2/25 is very aggressive. another lease call on 2/5."
-    },
-    {
       "rsh": "RSH-00610",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "16564 US-331",
       "city": "Freeport",
@@ -958,12 +847,11 @@
       "cs": "3/1/27",
       "bd": "4/1/27",
       "open": "7/26/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00579",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "1325 E Oak St",
       "city": "Arcadia",
@@ -974,12 +862,26 @@
       "cs": "3/1/27",
       "bd": "4/1/27",
       "open": "7/26/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
+      "rsh": "RSH-00108",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "4801 Cortez Blvd",
+      "city": "Bradenton",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "6/17/26",
+      "permit_appr": "2/19/27",
+      "cs": "3/8/27",
+      "bd": "4/7/27",
+      "open": "8/2/27",
+      "notes": "DD KO 2/25 is very aggressive. another lease call on 2/5."
+    },
+    {
       "rsh": "RSH-00582",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "Cottonwood & Hwy 27",
       "city": "Davenport",
@@ -990,7 +892,6 @@
       "cs": "3/15/27",
       "bd": "4/14/27",
       "open": "8/2/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
@@ -1001,17 +902,16 @@
       "city": "Panama City Beach",
       "state": "FL",
       "region": "FLPH",
-      "permit_sub": "4/17/26",
-      "permit_appr": "1/1/27",
-      "cs": "1/11/27",
+      "permit_sub": "5/1/26",
+      "permit_appr": "1/15/27",
+      "cs": "2/1/27",
       "bd": "4/16/27",
-      "open": "8/16/27",
-      "gc": "",
+      "open": "8/30/27",
       "notes": "coordinate LL Delivery - KM & KB"
     },
     {
       "rsh": "RSH-00584",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "1405 W Buckingham Rd",
       "city": "Garland",
@@ -1022,12 +922,11 @@
       "cs": "5/31/27",
       "bd": "7/7/27",
       "open": "8/30/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES. Need 6-9 months for SUP"
     },
     {
       "rsh": "RSH-00601",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "1738 N Town E Blvd",
       "city": "Mesquite",
@@ -1037,13 +936,11 @@
       "permit_appr": "3/12/27",
       "cs": "5/3/27",
       "bd": "6/9/27",
-      "open": "9/20/27",
-      "gc": "",
-      "notes": ""
+      "open": "9/20/27"
     },
     {
       "rsh": "RSH-00596",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "6051 Skillman St",
       "city": "Dallas",
@@ -1054,12 +951,11 @@
       "cs": "5/10/27",
       "bd": "6/16/27",
       "open": "9/20/27",
-      "gc": "",
       "notes": "LL LOI comments back as of 1/28. &C send back 2/6.  Need utility easement agreement with smoothie king (3-6 month).  DIR = Dev Impact Review (PD mod - 6-9 months)"
     },
     {
       "rsh": "RSH-00235",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2210 Del Prado Blvd S",
       "city": "Cape Coral",
@@ -1069,13 +965,11 @@
       "permit_appr": "3/26/27",
       "cs": "4/19/27",
       "bd": "6/2/27",
-      "open": "10/4/27",
-      "gc": "",
-      "notes": ""
+      "open": "10/4/27"
     },
     {
       "rsh": "RSH-00208",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2511 Thomas Dr",
       "city": "Panama City Beach",
@@ -1085,13 +979,11 @@
       "permit_appr": "5/14/27",
       "cs": "5/31/27",
       "bd": "10/28/26",
-      "open": "10/18/27",
-      "gc": "",
-      "notes": ""
+      "open": "10/18/27"
     },
     {
       "rsh": "RSH-00575",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2805 S 14th St",
       "city": "Abilene",
@@ -1102,12 +994,11 @@
       "cs": "5/17/27",
       "bd": "6/21/27",
       "open": "10/18/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00126",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "3900 E 15th St",
       "city": "Edmond",
@@ -1118,7 +1009,6 @@
       "cs": "5/17/27",
       "bd": "6/21/27",
       "open": "10/18/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
@@ -1134,12 +1024,11 @@
       "cs": "3/22/27",
       "bd": "6/16/27",
       "open": "11/1/27",
-      "gc": "",
       "notes": "LL targeting Plat recorded June of 2026,  7B pad ready Summer '27.  WM & neighbors planning to open Feb '28. Need to align planned open with RC."
     },
     {
       "rsh": "RSH-00622",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "1751 66th St N",
       "city": "St. Petersburg",
@@ -1150,12 +1039,11 @@
       "cs": "5/17/27",
       "bd": "7/14/27",
       "open": "11/1/27",
-      "gc": "",
-      "notes": "PLACEHOLDER DATES"
+      "notes": "PLACEHOLDER DATES. Lease draft went to LL around 4/1 and awaing LL reply"
     },
     {
       "rsh": "RSH-00233",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "15201 N Cleveland Ave",
       "city": "Fort Myers",
@@ -1166,12 +1054,11 @@
       "cs": "6/14/27",
       "bd": "7/14/27",
       "open": "11/1/27",
-      "gc": "",
-      "notes": "PLACEHOLDER DATES"
+      "notes": "PLACEHOLDER DATES. Lease in LL court for long time (noted 4/15)"
     },
     {
       "rsh": "RSH-00217",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "7603 Seminole Blvd",
       "city": "Seminole",
@@ -1182,12 +1069,11 @@
       "cs": "5/17/27",
       "bd": "6/23/27",
       "open": "11/8/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00634",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "983 US-98",
       "city": "Destin",
@@ -1198,12 +1084,11 @@
       "cs": "5/24/27",
       "bd": "7/7/27",
       "open": "11/8/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00656",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2317 Gunn Hwy",
       "city": "Odessa",
@@ -1214,12 +1099,11 @@
       "cs": "6/21/27",
       "bd": "7/21/27",
       "open": "11/15/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00621",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "2801 James L Redman Pkwy",
       "city": "Plant City",
@@ -1230,12 +1114,11 @@
       "cs": "6/21/27",
       "bd": "7/21/27",
       "open": "11/15/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00620",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "906 W University Dr",
       "city": "Denton",
@@ -1244,9 +1127,8 @@
       "permit_sub": "10/9/26",
       "permit_appr": "4/30/27",
       "cs": "5/17/27",
-      "bd": "",
+      "bd": "N/A",
       "open": "11/15/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
@@ -1262,12 +1144,11 @@
       "cs": "4/26/27",
       "bd": "3/31/27",
       "open": "11/22/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00666",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "1048 S Pine Ave",
       "city": "Ocala",
@@ -1278,12 +1159,11 @@
       "cs": "6/21/27",
       "bd": "8/4/27",
       "open": "12/6/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00630",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "201 SW Pine Island Rd",
       "city": "Cape Coral",
@@ -1294,12 +1174,11 @@
       "cs": "6/28/27",
       "bd": "8/19/27",
       "open": "12/6/27",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00683",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "3230 W Camp Wisdom Rd",
       "city": "Dallas",
@@ -1310,12 +1189,11 @@
       "cs": "8/9/27",
       "bd": "9/15/27",
       "open": "1/17/28",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00673",
-      "store": "TBD",
+      "store": "",
       "phase": "2. Due Diligence",
       "address": "16991 Three Oaks Mkt PL",
       "city": "Fort Myers",
@@ -1326,7 +1204,6 @@
       "cs": "8/9/27",
       "bd": "9/15/27",
       "open": "1/17/28",
-      "gc": "",
       "notes": "PLACEHOLDER DATES"
     }
   ],
@@ -1875,55 +1752,71 @@
       "state": "TX",
       "jan15": "2/16/26",
       "actual_open": "3/9/26"
+    },
+    {
+      "store": "000987",
+      "rsh": "RSH-00082",
+      "city": "Norman",
+      "state": "OK",
+      "jan15": "4/13/26",
+      "actual_open": "4/13/26"
+    },
+    {
+      "store": "000711",
+      "rsh": "RSH-00068",
+      "city": "Waco",
+      "state": "TX",
+      "jan15": "4/13/26",
+      "actual_open": "4/13/26"
     }
   ],
   "new_since_jan15": [
-    "RSH-00149",
-    "RSH-00100",
-    "RSH-00180",
-    "RSH-00692",
-    "RSH-00104",
-    "RSH-00528",
-    "RSH-00117",
-    "RSH-00077",
-    "RSH-00111",
-    "RSH-00146",
-    "RSH-00147",
-    "RSH-00592",
-    "RSH-00273",
-    "RSH-00617",
-    "RSH-00231",
-    "RSH-00606",
-    "RSH-00127",
-    "RSH-00115",
-    "RSH-00205",
-    "RSH-00266",
-    "RSH-00211",
-    "RSH-00108",
-    "RSH-00610",
-    "RSH-00579",
-    "RSH-00582",
-    "RSH-00099",
-    "RSH-00584",
-    "RSH-00601",
-    "RSH-00596",
-    "RSH-00235",
-    "RSH-00208",
-    "RSH-00575",
-    "RSH-00126",
-    "RSH-00239",
-    "RSH-00622",
-    "RSH-00233",
-    "RSH-00217",
     "RSH-00634",
-    "RSH-00656",
+    "RSH-00610",
     "RSH-00621",
-    "RSH-00620",
+    "RSH-00115",
+    "RSH-00575",
+    "RSH-00592",
+    "RSH-00146",
+    "RSH-00528",
+    "RSH-00273",
+    "RSH-00217",
+    "RSH-00231",
+    "RSH-00266",
+    "RSH-00617",
     "RSH-00119",
-    "RSH-00666",
-    "RSH-00630",
+    "RSH-00692",
+    "RSH-00077",
+    "RSH-00211",
+    "RSH-00622",
+    "RSH-00147",
+    "RSH-00596",
     "RSH-00683",
-    "RSH-00673"
+    "RSH-00100",
+    "RSH-00601",
+    "RSH-00673",
+    "RSH-00584",
+    "RSH-00127",
+    "RSH-00666",
+    "RSH-00099",
+    "RSH-00630",
+    "RSH-00208",
+    "RSH-00104",
+    "RSH-00620",
+    "RSH-00579",
+    "RSH-00117",
+    "RSH-00582",
+    "RSH-00108",
+    "RSH-00126",
+    "RSH-00111",
+    "RSH-00239",
+    "RSH-00233",
+    "RSH-00656",
+    "RSH-00205",
+    "RSH-00149",
+    "RSH-00606",
+    "RSH-00180",
+    "RSH-00235"
   ],
   "milestone_shifts": [
     {

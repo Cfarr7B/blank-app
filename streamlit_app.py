@@ -7363,6 +7363,419 @@ def tab_pipeline(dash):
 
 
 # ─────────────────────────────────────────────
+# BONUS REPORTS TAB
+# ─────────────────────────────────────────────
+def tab_bonus(_dash):
+    """Stand Manager Bonus Report generator — upload bonus Excel, generate PDFs."""
+    import io, zipfile, re as _re, base64 as _b64, math as _math
+    import openpyxl as _opx
+
+    section("STAND MANAGER BONUS REPORTS",
+            "Upload your bonus Excel · review eligibility · download individual HTML reports (open in browser → Print → Save as PDF)")
+
+    # ── Bonus rules (editable in sidebar or hardcoded here) ──────────────────
+    with st.expander("⚙️  Bonus Rules", expanded=False):
+        c1, c2, c3 = st.columns(3)
+        bonus_per_kpi     = c1.number_input("$ Per KPI Hit",        value=250.0, step=25.0, key="bn_kpi")
+        stretch_threshold = c2.number_input("Stretch Sales Threshold ($)", value=150_000.0, step=5_000.0, key="bn_thresh")
+        stretch_pct       = c3.number_input("Stretch Bonus %",       value=1.0,   step=0.25, key="bn_pct") / 100.0
+        all_or_nothing    = st.checkbox(
+            "All-or-Nothing SM Bonus (manager must hit ALL 4 KPIs to earn any individual KPI bonus)",
+            value=False, key="bn_aon",
+        )
+
+    st.html('<hr class="brew">')
+
+    # ── File upload ───────────────────────────────────────────────────────────
+    uploaded = st.file_uploader(
+        "Upload Bonus Excel (.xlsx)",
+        type=["xlsx"],
+        help="Excel file with one row per stand manager. Column J = Bonus Eligible (Y/N). "
+             "Managers where Column J = N are skipped — no PDF generated.",
+        key="bn_upload",
+    )
+
+    if not uploaded:
+        st.info(
+            "📤 Upload your bonus calculation Excel to get started.\n\n"
+            "**Required columns** (header names, any order):\n"
+            "- **Bonus Eligible** (Y/N) — Column J by default; managers with N are skipped\n"
+            "- **Stand Manager**, **Store #**, **City**, **State**, **Stand**\n"
+            "- **Net Sales** + **Net Sales Goal**\n"
+            "- **COGS %** + **COGS Goal**\n"
+            "- **Labor %** + **Labor Goal**\n"
+            "- **EBITDA %** + **EBITDA Goal**\n\n"
+            "**Optional**: Regional Manager, Director, Period"
+        )
+        return
+
+    # ── Parse Excel ───────────────────────────────────────────────────────────
+    # Import helpers from generate_bonus_pdfs if available, else inline them
+    try:
+        import sys as _sys, os as _os
+        _sys.path.insert(0, _os.path.dirname(__file__))
+        from generate_bonus_pdfs import (
+            _map_columns, _col_val, _pct as _gpct, _dollar as _gdollar,
+            calc_bonus, build_html, _logo_b64, _safe_name,
+            BONUS_PER_KPI as _DEFAULT_KPI,
+        )
+        _have_module = True
+    except Exception:
+        _have_module = False
+
+    def _norm_h(s):
+        return re.sub(r"\s+", " ", str(s).strip().lower())
+
+    # ── Alias map (duplicate from generate_bonus_pdfs for self-containment) ──
+    _ALIASES_LOCAL = {
+        "store":          ["store #","store#","store number","store num","storeno"],
+        "city":           ["city"],
+        "state":          ["state"],
+        "stand":          ["stand","stand #","stand#","stand num","unit"],
+        "manager":        ["stand manager","manager","manager name","sm","sm name"],
+        "rm":             ["regional manager","rm","region manager","reg manager"],
+        "director":       ["director","director of operations","doo","do"],
+        "period":         ["period","period name","bonus period"],
+        "eligible":       ["bonus eligible","eligible","eligibility","bonus eligibility",
+                           "bonus elig","elig","column j","col j"],
+        "net_sales":      ["net sales","net sales actual","sales","sales actual","revenue"],
+        "cogs_pct":       ["cogs %","cogs%","cogs pct","cogs actual","cogs"],
+        "labor_pct":      ["labor %","labor%","hourly labor %","hourly labor%",
+                           "labor pct","labor actual","hourly labor"],
+        "ebitda_pct":     ["ebitda %","ebitda%","sl ebitda %","sl ebitda%",
+                           "ebitda pct","ebitda actual","store ebitda %","store ebitda%"],
+        "net_sales_goal": ["net sales goal","sales goal","revenue goal","net sales target"],
+        "cogs_goal":      ["cogs goal","cogs target","cogs % goal","cogs% goal"],
+        "labor_goal":     ["labor goal","labor target","labor % goal","labor% goal",
+                           "hourly labor goal","hourly labor target"],
+        "ebitda_goal":    ["ebitda goal","ebitda target","ebitda % goal","ebitda% goal",
+                           "sl ebitda goal","sl ebitda target"],
+        "ebitda_dollars": ["store ebitda","ebitda $","ebitda dollars","sl ebitda $",
+                           "sl ebitda dollars"],
+    }
+
+    def _map_cols_local(headers):
+        nh = [_norm_h(h) for h in headers]
+        m = {}
+        for field, aliases in _ALIASES_LOCAL.items():
+            for idx, h in enumerate(nh):
+                if h in aliases:
+                    m[field] = idx
+                    break
+        return m
+
+    def _cv(rv, idx):
+        if idx is None or idx >= len(rv): return ""
+        v = rv[idx]
+        return "" if v is None else str(v)
+
+    def _to_pct(v):
+        try:
+            f = float(str(v).replace("%","").strip())
+            return f/100.0 if abs(f) > 1.5 else f
+        except: return 0.0
+
+    def _to_dollar(v):
+        try: return float(str(v).replace(",","").replace("$","").strip())
+        except: return 0.0
+
+    def _calc_b(rec, bpk, st_thr, st_pct, aon):
+        ns=_to_dollar(rec.get("net_sales",0)); ns_g=_to_dollar(rec.get("net_sales_goal",0))
+        cg=_to_pct(rec.get("cogs_pct",0));    cg_g=_to_pct(rec.get("cogs_goal",0))
+        lb=_to_pct(rec.get("labor_pct",0));   lb_g=_to_pct(rec.get("labor_goal",0))
+        eb=_to_pct(rec.get("ebitda_pct",0));  eb_g=_to_pct(rec.get("ebitda_goal",0))
+        h_ns=ns>=ns_g if ns_g>0 else False
+        h_cg=cg<=cg_g if cg_g>0 else False
+        h_lb=lb<=lb_g if lb_g>0 else False
+        h_eb=eb>=eb_g if eb_g>0 else False
+        all_hit=h_ns and h_cg and h_lb and h_eb
+        if aon:
+            sm_ns=sm_cg=sm_lb=sm_eb=bpk if all_hit else 0.0
+        else:
+            sm_ns=bpk if h_ns else 0.0; sm_cg=bpk if h_cg else 0.0
+            sm_lb=bpk if h_lb else 0.0; sm_eb=bpk if h_eb else 0.0
+        sm_tot=sm_ns+sm_cg+sm_lb+sm_eb
+        ebi_d=_to_dollar(rec.get("ebitda_dollars",0))
+        if ebi_d==0 and ns>0 and eb>0: ebi_d=ns*eb
+        st_hit=ns>=st_thr
+        st_amt=ebi_d*st_pct if st_hit else 0.0
+        return dict(ns=ns,ns_g=ns_g,h_ns=h_ns,sm_ns=sm_ns,
+                    cg=cg,cg_g=cg_g,h_cg=h_cg,sm_cg=sm_cg,
+                    lb=lb,lb_g=lb_g,h_lb=h_lb,sm_lb=sm_lb,
+                    eb=eb,eb_g=eb_g,h_eb=h_eb,sm_eb=sm_eb,
+                    sm_tot=sm_tot,all_hit=all_hit,
+                    st_hit=st_hit,st_amt=st_amt,ebi_d=ebi_d)
+
+    # Read workbook
+    wb  = _opx.load_workbook(io.BytesIO(uploaded.read()), read_only=True, data_only=True)
+    ws  = wb.active
+    all_rows = list(ws.iter_rows(values_only=True))
+
+    # Find header row
+    col_map = {}
+    data_start = 0
+    for ri, raw in enumerate(all_rows):
+        non_empty = [c for c in raw if c is not None and str(c).strip()]
+        if len(non_empty) >= 5:
+            trial = _map_cols_local([str(c) if c is not None else "" for c in raw])
+            if "eligible" in trial or "manager" in trial:
+                col_map    = trial
+                data_start = ri + 1
+                break
+
+    if not col_map:
+        st.error("Could not find a header row. Make sure the first non-empty row contains column names like 'Stand Manager', 'Bonus Eligible', 'Net Sales', etc.")
+        return
+
+    if "eligible" not in col_map:
+        st.warning("⚠️ 'Bonus Eligible' column not found by name — assuming **Column J** (index 9).")
+        col_map["eligible"] = 9
+
+    # Build record list — include ALL rows with Y flag metadata
+    all_records = []
+    for raw in all_rows[data_start:]:
+        if all(c is None for c in raw): continue
+        elig_raw = _cv(list(raw), col_map.get("eligible","")).strip().upper()
+        rec = {field: _cv(list(raw), col_map.get(field)) for field in _ALIASES_LOCAL}
+        rec["_eligible"] = elig_raw in ("Y","YES","1","TRUE")
+        rec["_elig_raw"]  = elig_raw
+        if elig_raw or rec.get("manager","").strip():
+            all_records.append(rec)
+
+    eligible   = [r for r in all_records if r["_eligible"]]
+    ineligible = [r for r in all_records if not r["_eligible"] and r.get("manager","").strip()]
+
+    # ── Summary strip ─────────────────────────────────────────────────────────
+    col_a, col_b, col_c = st.columns(3)
+    col_a.metric("Total Managers",      len(all_records))
+    col_b.metric("✅ Eligible (PDF)",    len(eligible),   delta=None)
+    col_c.metric("⛔ Skipped (Col J=N)", len(ineligible), delta=None)
+    st.html('<hr class="brew">')
+
+    # ── Preview table ─────────────────────────────────────────────────────────
+    section("PREVIEW — ALL MANAGERS", "Green row = PDF will be generated · Red = skipped (Column J = N)")
+
+    preview_rows = []
+    for rec in all_records:
+        b = _calc_b(rec, bonus_per_kpi, stretch_threshold, stretch_pct, all_or_nothing)
+        preview_rows.append({
+            "Eligible": "✅ Y" if rec["_eligible"] else "⛔ N",
+            "Store #":  str(rec.get("store","")).zfill(6) if rec.get("store") else "",
+            "City":     rec.get("city",""),
+            "St":       rec.get("state",""),
+            "Manager":  rec.get("manager",""),
+            "Net Sales": f"${b['ns']:,.0f}",
+            "COGS%":     f"{b['cg']*100:.1f}%",
+            "Labor%":    f"{b['lb']*100:.1f}%",
+            "EBITDA%":   f"{b['eb']*100:.1f}%",
+            "SM Bonus":  f"${b['sm_tot']:,.2f}",
+            "Stretch":   f"${b['st_amt']:,.2f}",
+        })
+
+    if preview_rows:
+        prev_df = pd.DataFrame(preview_rows)
+        def _row_color(row):
+            if row["Eligible"].startswith("⛔"):
+                return ["background-color:#fff0f0"] * len(row)
+            return ["background-color:#f0fff4"] * len(row)
+        st.dataframe(
+            prev_df.style.apply(_row_color, axis=1),
+            use_container_width=True, hide_index=True,
+            height=min(60 + len(prev_df)*35, 480),
+        )
+
+    if ineligible:
+        st.warning(
+            f"⛔ **{len(ineligible)} manager(s) will NOT receive a PDF** "
+            f"because Column J = N: "
+            + ", ".join(r.get("manager","?") for r in ineligible[:10])
+            + ("…" if len(ineligible) > 10 else "")
+        )
+
+    if not eligible:
+        st.error("No eligible managers found. Nothing to generate.")
+        return
+
+    st.html('<hr class="brew">')
+    section("GENERATE REPORTS", f"{len(eligible)} eligible manager(s) ready")
+
+    # ── Load logo ─────────────────────────────────────────────────────────────
+    logo_uri = ""
+    logo_path = os.path.join(os.path.dirname(__file__), "ICON LOGO.jpg")
+    if os.path.exists(logo_path):
+        with open(logo_path,"rb") as lf:
+            logo_uri = "data:image/jpeg;base64," + _b64.b64encode(lf.read()).decode()
+
+    # ── HTML builder (inline — no external module dependency) ─────────────────
+    _BN_TMPL = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>7BREW Bonus — {store} {city} {state} - {stand}</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:'DM Sans',sans-serif;background:#fff;color:#222;padding:28px 40px;max-width:820px;margin:0 auto;font-size:14px}}
+.hdr{{display:flex;flex-direction:column;align-items:center;border-bottom:3px solid #AC2430;padding-bottom:14px;margin-bottom:18px}}
+.hdr img{{height:62px;width:auto;margin-bottom:8px}}
+.hdr h1{{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:#222;margin:0}}
+.people{{width:100%;border-collapse:collapse;margin-bottom:6px}}
+.people th{{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;padding:4px 8px;text-align:center;font-weight:600}}
+.people td{{font-size:14px;font-weight:700;padding:6px 8px;text-align:center;border-top:1px solid #e0e0e0}}
+.period-line{{text-align:center;font-size:12px;color:#666;margin-bottom:16px}}
+.bonus-row{{display:flex;gap:16px;margin:18px 0}}
+.bonus-box{{flex:1;border:1px solid #ddd;border-radius:6px;padding:18px 16px;text-align:center}}
+.bonus-box .label{{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:8px}}
+.bonus-box .amount{{font-family:'Bebas Neue',sans-serif;font-size:42px;color:#AC2430;line-height:1}}
+.section-hdr{{background:#333;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;padding:8px 12px;margin:20px 0 0 0;border-radius:3px 3px 0 0}}
+table.perf{{width:100%;border-collapse:collapse;margin-bottom:20px}}
+table.perf th{{font-size:11px;letter-spacing:.8px;text-transform:uppercase;background:#f5f5f5;padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:700;color:#444}}
+table.perf th:first-child{{text-align:left}}
+table.perf td{{padding:9px 10px;border:1px solid #e8e8e8;text-align:center;font-size:13px;font-family:'DM Mono',monospace}}
+table.perf td:first-child{{text-align:left;font-family:'DM Sans',sans-serif;font-size:13px}}
+table.perf tr:hover td{{background:#fffaf0}}
+.bonus-amt{{color:#27ae60;font-weight:700}}
+.miss-amt{{color:#999}}
+table.how{{width:100%;border-collapse:collapse}}
+table.how th{{font-size:11px;letter-spacing:.8px;text-transform:uppercase;background:#f5f5f5;padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:700;color:#444}}
+table.how th:first-child{{width:140px;text-align:left}}
+table.how td{{padding:9px 10px;border:1px solid #e8e8e8;font-size:13px;vertical-align:top}}
+table.how td:first-child{{font-weight:600}}
+.footer{{font-size:10px;color:#aaa;text-align:center;margin-top:24px;border-top:1px solid #eee;padding-top:8px}}
+@media print{{
+  @page{{size:letter portrait;margin:.5in}}
+  body{{padding:0;max-width:100%}}
+  .bonus-box .amount{{color:#AC2430!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  .section-hdr{{background:#333!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  table.perf th,table.how th{{background:#f5f5f5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+}}
+</style>
+</head>
+<body>
+<div class="hdr">{logo_tag}<h1>Stand Manager Bonus Results</h1></div>
+<table class="people">
+  <tr><th>Stand Manager</th><th>Regional Manager</th><th>Director of Operations</th></tr>
+  <tr><td>{manager}</td><td>{rm}</td><td>{director}</td></tr>
+</table>
+<p class="period-line">{period} &nbsp;&middot;&nbsp; {store} {city}, {state} - {stand}</p>
+<div class="bonus-row">
+  <div class="bonus-box"><div class="label">Stand Manager Bonus</div><div class="amount">{sm_bonus_fmt}</div></div>
+  <div class="bonus-box"><div class="label">Stretch Bonus</div><div class="amount">{stretch_fmt}</div></div>
+</div>
+<div class="section-hdr">Performance Detail</div>
+<table class="perf">
+  <tr><th>Metric</th><th>Actual</th><th>Goal</th><th>Hit?</th><th>Bonus</th></tr>
+  {perf_rows}
+</table>
+<div class="section-hdr">How Your Bonus Works</div>
+<table class="how">
+  <tr><th>Metric</th><th>What It Measures</th></tr>
+  <tr><td>Net Sales</td><td>Total revenue your stand brought in — higher is better</td></tr>
+  <tr><td>COGS %</td><td>Cost of goods as % of sales (product waste &amp; usage) — lower is better</td></tr>
+  <tr><td>Hourly Labor %</td><td>Labor cost as % of sales — keep scheduling efficient — lower is better</td></tr>
+  <tr><td>SL EBITDA %</td><td>Store-level profit margin — the bottom line — higher is better</td></tr>
+  <tr><td>Stretch Bonus</td><td>Exceed ${stretch_threshold:,.0f} in sales and hit your KPIs — earn {stretch_pct_disp:.0f}% of your EBITDA</td></tr>
+</table>
+<div class="footer">7 Crew Enterprises &middot; Confidential &middot; {period} Bonus Results</div>
+<script>window.onload=function(){{window.print();}}</script>
+</body></html>"""
+
+    def _hit_span(hit):
+        c="#27ae60" if hit else "#e74c3c"
+        return f"<span style='color:{c};font-weight:700;font-size:15px;'>{'Y' if hit else 'N'}</span>"
+
+    def _make_html(rec):
+        b  = _calc_b(rec, bonus_per_kpi, stretch_threshold, stretch_pct, all_or_nothing)
+        lg = f"<img src='{logo_uri}' alt='7BREW' style='height:60px;width:auto;margin-bottom:8px'>" if logo_uri else ""
+        st_note = ""
+        if b["st_hit"] and b["ebi_d"]>0:
+            st_note = f" <small style='color:#888;font-size:11px;'>({stretch_pct*100:.0f}% of ${b['ebi_d']:,.2f})</small>"
+        def pr(metric,actual,goal,hit,amt):
+            cls="bonus-amt" if amt>0 else "miss-amt"
+            return f"<tr><td>{metric}</td><td>{actual}</td><td>{goal}</td><td>{_hit_span(hit)}</td><td class='{cls}'>${amt:,.2f}</td></tr>"
+        perf = (
+            pr("Net Sales",f"${b['ns']:,.2f}",f"${b['ns_g']:,.2f}",b["h_ns"],b["sm_ns"])+
+            pr("COGS %",f"{b['cg']*100:.1f}%",f"{b['cg_g']*100:.1f}%",b["h_cg"],b["sm_cg"])+
+            pr("Hourly Labor %",f"{b['lb']*100:.1f}%",f"{b['lb_g']*100:.1f}%",b["h_lb"],b["sm_lb"])+
+            pr("SL EBITDA %",f"{b['eb']*100:.1f}%",f"{b['eb_g']*100:.1f}%",b["h_eb"],b["sm_eb"])+
+            f"<tr><td>Stretch Bonus</td><td>${b['ns']:,.2f}</td><td>${stretch_threshold:,.2f}</td>"
+            f"<td>{_hit_span(b['st_hit'])}</td>"
+            f"<td class=\"{'bonus-amt' if b['st_amt']>0 else 'miss-amt'}\">${b['st_amt']:,.2f}{st_note}</td></tr>"
+        )
+        store_z = str(rec.get("store","")).zfill(6) if rec.get("store") else ""
+        return _BN_TMPL.format(
+            logo_tag=lg, store=store_z,
+            city=rec.get("city",""), state=rec.get("state",""),
+            stand=rec.get("stand","1"), manager=rec.get("manager",""),
+            rm=rec.get("rm",""), director=rec.get("director",""),
+            period=rec.get("period",""),
+            sm_bonus_fmt=f"${b['sm_tot']:,.2f}",
+            stretch_fmt=f"${b['st_amt']:,.2f}",
+            perf_rows=perf,
+            stretch_threshold=stretch_threshold,
+            stretch_pct_disp=stretch_pct*100,
+        )
+
+    # ── Individual downloads + zip ─────────────────────────────────────────────
+    zip_buf = io.BytesIO()
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for rec in eligible:
+            html = _make_html(rec)
+            store  = str(rec.get("store","")).strip().zfill(6) if rec.get("store") else "XXXXX"
+            city   = str(rec.get("city","")).strip().replace(" ","_")
+            state  = str(rec.get("state","")).strip()
+            stand  = str(rec.get("stand","1")).strip()
+            period_s = str(rec.get("period","BONUS")).strip().replace(" ","")
+            raw_name = f"{period_s}_Bonus_{store}_{city}_{state}_-_{stand}.html"
+            fname  = re.sub(r"[^\w\-.]","_", raw_name)
+            zf.writestr(fname, html)
+
+    zip_buf.seek(0)
+    period_label = eligible[0].get("period","Bonus").replace(" ","") if eligible else "Bonus"
+    st.download_button(
+        label=f"📦 Download All {len(eligible)} Bonus Reports (ZIP)",
+        data=zip_buf.getvalue(),
+        file_name=f"{period_label}_BonusReports_All.zip",
+        mime="application/zip",
+        type="primary",
+        key="bn_zip",
+    )
+
+    st.caption("Open each HTML file in Chrome/Edge · Ctrl+P (or ⌘+P) · **Save as PDF**")
+    st.html('<hr class="brew">')
+
+    # ── Individual report cards ────────────────────────────────────────────────
+    section("INDIVIDUAL REPORTS", "Download one at a time or preview below")
+    for i, rec in enumerate(eligible):
+        html = _make_html(rec)
+        b    = _calc_b(rec, bonus_per_kpi, stretch_threshold, stretch_pct, all_or_nothing)
+        store_z = str(rec.get("store","")).zfill(6) if rec.get("store") else ""
+        city_s  = rec.get("city",""); state_s = rec.get("state","")
+        stand_s = rec.get("stand","1"); period_s = str(rec.get("period","")).replace(" ","")
+        raw_name = f"{period_s}_Bonus_{store_z}_{city_s.replace(' ','_')}_{state_s}_-_{stand_s}.html"
+        fname = re.sub(r"[^\w\-.]","_", raw_name)
+        manager_s = rec.get("manager","Unknown")
+
+        kpi_hits = sum([b["h_ns"], b["h_cg"], b["h_lb"], b["h_eb"]])
+        hit_color = "#27ae60" if kpi_hits == 4 else ("#e8940a" if kpi_hits >= 2 else "#c0392b")
+        with st.container():
+            cc1, cc2, cc3, cc4 = st.columns([3, 2, 2, 2])
+            cc1.markdown(f"**{manager_s}** · {store_z} {city_s}, {state_s}-{stand_s}")
+            cc2.markdown(f"<span style='color:{hit_color};font-weight:700'>{kpi_hits}/4 KPIs Hit</span>",
+                         unsafe_allow_html=True)
+            cc3.markdown(f"SM: **${b['sm_tot']:,.2f}** &nbsp; Stretch: **${b['st_amt']:,.2f}**",
+                         unsafe_allow_html=True)
+            cc4.download_button(
+                label="⬇ Download",
+                data=html.encode("utf-8"),
+                file_name=fname,
+                mime="text/html",
+                key=f"bn_dl_{i}",
+            )
+        st.divider()
+
+
+# ─────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────
 def main():
@@ -7402,19 +7815,21 @@ def main():
         "🏗️ Pipeline (Draft)",
         "🔮 Forecast (Draft)",
         "⏱️ Speed of Service",
+        "🎯 Bonus Reports",
     ]
     tabs = st.tabs(tab_names)
 
-    with tabs[0]: tab_ceo(dash)
-    with tabs[1]: tab_overview(dash)
-    with tabs[2]: tab_comparison(dash)
-    with tabs[3]: tab_regions(dash)
-    with tabs[4]: tab_stands(dash)
-    with tabs[5]: tab_insights(dash)
-    with tabs[6]: tab_utilities(dash)
-    with tabs[7]: tab_pipeline(dash)
-    with tabs[8]: tab_forecast(dash)
-    with tabs[9]: tab_sos(dash)
+    with tabs[0]:  tab_ceo(dash)
+    with tabs[1]:  tab_overview(dash)
+    with tabs[2]:  tab_comparison(dash)
+    with tabs[3]:  tab_regions(dash)
+    with tabs[4]:  tab_stands(dash)
+    with tabs[5]:  tab_insights(dash)
+    with tabs[6]:  tab_utilities(dash)
+    with tabs[7]:  tab_pipeline(dash)
+    with tabs[8]:  tab_forecast(dash)
+    with tabs[9]:  tab_sos(dash)
+    with tabs[10]: tab_bonus(dash)
 
 
 main()
