@@ -3130,7 +3130,7 @@ def tab_regions(dash):
 
     # ── STAND DETAIL ──────────────────────────────────────────────────────────
     st.html('<hr class="brew">')
-    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {', '.join(sel_lbls)}")
+    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {sel_lbl}")
 
     sd_c1, sd_c2, sd_c3 = st.columns([1.5, 1.5, 2])
     with sd_c1:
