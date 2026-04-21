@@ -6972,6 +6972,9 @@ def _generate_pipeline_pdf(table_df, password: str) -> bytes:
 def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
+    if not _require_password("pipeline"):
+        return
+
     st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
 
     # ── Load pipeline data (cached until pipeline_data.json changes) ──────────
