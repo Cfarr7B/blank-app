@@ -7043,7 +7043,7 @@ def tab_pipeline(dash):
 
     shifts_df = shifts_df_base.copy()
     # Exclude any stand whose latest open date has slipped into 2027
-    _curr_key = _pdata["report_snapshots"][-1]["key"]
+    _curr_key = _pdata["report_snapshots"][-1].get("key", "apr9")
     def _is_2026_open(row):
         import datetime as _dt2
         v = str(row.get(_curr_key, "") or "")
@@ -7063,8 +7063,8 @@ def tab_pipeline(dash):
     filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
 
     # Compute week-over-week delta (latest vs previous snapshot)
-    prev_snap = _report_snapshots[-2]["key"] if len(_report_snapshots) >= 2 else "jan15"
-    curr_snap = latest_snap["key"]
+    prev_snap = _report_snapshots[-2].get("key", "jan15") if len(_report_snapshots) >= 2 else "jan15"
+    curr_snap = latest_snap.get("key", "apr9")
     def _parse_d(s):
         if not s or str(s) in ("","nan","None"): return None
         for fmt in ["%m/%d/%y","%m/%d/%Y"]:
@@ -7186,7 +7186,7 @@ def tab_pipeline(dash):
             "Store": r.get("store",""),
         }
         for snap in _report_snapshots:
-            row_dict[snap["label"]] = _fmt_cell(snap["key"], r, r.get("jan15",""))
+            row_dict[snap["label"]] = _fmt_cell(snap.get("key","apr9"), r, r.get("jan15",""))
         # Week-over-week badge
         wow = r["_wow"]
         wow_wks = wow // 7
