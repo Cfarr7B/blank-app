@@ -6627,7 +6627,13 @@ _NEW_SINCE_JAN15 = [
 ]
 
 
-_PIPELINE_XLSX_PATH = os.path.join(os.path.dirname(__file__), "7Crew_Stand_Dates.xlsx")
+_PIPELINE_XLSX_PATH = next(
+    (p for p in [
+        os.path.join(os.path.dirname(__file__), "7Crew_Stand_Dates.xlsx"),
+        os.path.join(os.path.dirname(__file__), "..", "7Crew_Stand_Dates.xlsx"),
+    ] if os.path.exists(p)),
+    os.path.join(os.path.dirname(__file__), "7Crew_Stand_Dates.xlsx"),  # fallback for error msg
+)
 
 
 def _pipeline_xlsx_mtime() -> float:
@@ -6653,6 +6659,124 @@ def _load_pipeline_xlsx(_mtime: float):
     operating["open_dt"] = pd.to_datetime(operating["Open Date"],   errors="coerce")
 
     return upcoming, operating
+
+
+# ── xlsx-based pipeline data ──────────────────────────────────────────────────
+# Finds the most recently modified "7Crew Pipeline Report_*.xlsx" in the app
+# folder. Drop in a new dated file and the tab picks it up automatically.
+
+def _find_pipeline_xlsx() -> tuple[str, str]:
+    """Return (path, display_name) for the newest pipeline xlsx in the app folder.
+
+    Looks for files matching '7Crew Pipeline Report*.xlsx' first; falls back to
+    'pipeline_report.xlsx' for backwards compatibility.
+    """
+    import glob as _glob
+    app_dir = os.path.dirname(__file__)
+    pattern = os.path.join(app_dir, "7Crew Pipeline Report*.xlsx")
+    candidates = _glob.glob(pattern)
+    if candidates:
+        # Pick the most recently modified file
+        best = max(candidates, key=os.path.getmtime)
+        return best, os.path.basename(best)
+    # Fallback
+    fallback = os.path.join(app_dir, "pipeline_report.xlsx")
+    return fallback, "pipeline_report.xlsx"
+
+
+# Phase name normalisation: xlsx → internal code used by filters / Gantt
+_PHASE_NORM = {
+    "7. Construction Phase":  "5. Construction",
+    "6. Permitting Phase":    "4. Permitting",
+    "5. Design Phase":        "3. Design",
+    "4. Due Diligence Phase": "2. Due Diligence",
+    "3. LOI Negotiations":    "1. LOI",
+    "Open":                   "Open",
+}
+
+
+def _pipeline_mtime() -> float:
+    path, _ = _find_pipeline_xlsx()
+    try:
+        return os.path.getmtime(path)
+    except FileNotFoundError:
+        return 0.0
+
+
+@st.cache_data(show_spinner=False)
+def _get_pipeline_dfs(_mtime: float):
+    """Load the newest pipeline xlsx and return (df, empty_shifts_df)."""
+    xlsx_path, _ = _find_pipeline_xlsx()
+    raw = pd.read_excel(xlsx_path, sheet_name="Permits To Open Dates", header=1)
+    raw.columns = [str(c).strip() for c in raw.columns]
+
+    def _dt(col):
+        return pd.to_datetime(raw.get(col), errors="coerce")
+
+    def _ds(col):
+        """Date column → formatted string MM/DD/YY."""
+        s = _dt(col)
+        return s.dt.strftime("%m/%d/%y").where(s.notna(), "")
+
+    df = pd.DataFrame({
+        "rsh":     raw.get("Project ID", "").fillna("").astype(str).str.strip(),
+        "phase":   raw.get("Project Phase", "").fillna("").astype(str).str.strip()
+                      .map(lambda p: _PHASE_NORM.get(p, p)),
+        "address": raw.get("Address", "").fillna("").astype(str).str.strip(),
+        "city":    raw.get("City", "").fillna("").astype(str).str.strip(),
+        "state":   raw.get("State", "").fillna("").astype(str).str.strip(),
+        "region":  raw.get("Region", "").fillna("").astype(str).str.strip(),
+        "gc":      raw.get("General Contractor", "").fillna("").astype(str).str.strip(),
+        "store":   "TBD",
+        # milestone strings
+        "permit_sub":  _ds("Permit Submission"),
+        "permit_appr": _ds("Permit Approval Date"),
+        "cs":          _ds("Construction Start"),
+        "bd":          _ds("Building Drop Date"),
+        "co":          _ds("Certificate of Occupancy Date"),
+        "open":        _ds("Open Date"),
+        # milestone datetimes for charts
+        "permit_sub_dt":  _dt("Permit Submission"),
+        "permit_appr_dt": _dt("Permit Approval Date"),
+        "cs_dt":          _dt("Construction Start"),
+        "bd_dt":          _dt("Building Drop Date"),
+        "co_dt":          _dt("Certificate of Occupancy Date"),
+        "open_dt":        _dt("Open Date"),
+        "construction_days": pd.to_numeric(raw.get("Construction Time", 0), errors="coerce").fillna(0),
+        "notes":  raw.get("Notes for Corporate", "").fillna("").astype(str).str.strip(),
+    })
+
+    # Drop blank/invalid rows
+    df = df[df["rsh"].str.startswith("RSH-", na=False)].copy()
+    df = df.sort_values("open_dt", na_position="last").reset_index(drop=True)
+
+    # Empty shifts_df — schedule intelligence section uses JSON; xlsx has live dates
+    shifts_df = pd.DataFrame(columns=["city","state","rsh","store","delta_days"])
+    return df, shifts_df
+
+
+# Keep JSON path as fallback for snapshot data only
+_PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
+
+
+@st.cache_data(show_spinner=False)
+def _load_pipeline_data(_mtime: float) -> dict:
+    """Load pipeline_data.json for snapshot/schedule-intelligence data if it exists."""
+    import json as _j
+    try:
+        with open(_PIPELINE_JSON_PATH) as f:
+            return _j.load(f)
+    except FileNotFoundError:
+        return {
+            "_last_updated": "N/A",
+            "open_pdf": [],
+            "report_snapshots": [],
+            "date_shifts": [],
+            "opened_shifts": [],
+            "new_since_jan15": [],
+            "milestone_shifts": [],
+            "upcoming": [],
+        }
 
 
 def _pl_coords(city, state):
@@ -7093,147 +7217,196 @@ def _generate_pipeline_pdf(table_df, password: str) -> bytes:
 
 
 def tab_pipeline(dash):
+    import streamlit.components.v1 as components
+
     st.markdown("### 🏗️ Stand Pipeline")
 
-    # ── Load xlsx (cached until file changes) ─────────────────────────────────
-    if not os.path.exists(_PIPELINE_XLSX_PATH):
-        st.error("Pipeline file not found: 7Crew_Stand_Dates.xlsx — drop it into the app folder.")
+    # ── Load from xlsx (cached until file changes) ────────────────────────────
+    _xlsx_path, _xlsx_name = _find_pipeline_xlsx()
+    if not os.path.exists(_xlsx_path):
+        st.error("Pipeline file not found. Upload a file named '7Crew Pipeline Report_[date].xlsx' to the app folder.")
         return
 
-    _mtime = _pipeline_xlsx_mtime()
-    upcoming_raw, operating_raw = _load_pipeline_xlsx(_mtime)
+    _pmtime = _pipeline_mtime()
+    df, shifts_df_base = _get_pipeline_dfs(_pmtime)
+    _pdata  = _load_pipeline_data(0)   # snapshot data from JSON if present, else empty
 
+    import datetime as _dt_now
+    _file_dt = _dt_now.datetime.fromtimestamp(_pmtime).strftime("%b %d, %Y %I:%M %p") if _pmtime else "unknown"
     st.caption(
-        f"Source: **7Crew_Stand_Dates.xlsx** · "
-        f"{len(upcoming_raw)} upcoming · {len(operating_raw)} operating  "
-        f"*(replace the xlsx to refresh)*"
+        f"**Source:** `{_xlsx_name}` · last modified **{_file_dt}** · "
+        f"{len(df)} stands · drop in a newer `7Crew Pipeline Report_[date].xlsx` to refresh."
     )
 
+    # ── Print / PDF button ────────────────────────────────────────────────────
     _print_button("🖨️  Print / Save as PDF")
 
-    # ── Region filter ─────────────────────────────────────────────────────────
-    all_regions = sorted(
-        set(upcoming_raw["Region"].dropna()) | set(operating_raw["Region"].dropna())
-    )
-    sel_region = st.selectbox("Region", ["All Regions"] + all_regions, key="pipe_region")
+    AVG_REV_PER_WEEK = 45_000   # $ per stand per week
 
-    upcoming  = upcoming_raw.copy()
-    operating = operating_raw.copy()
-    if sel_region != "All Regions":
-        upcoming  = upcoming[upcoming["Region"]  == sel_region]
-        operating = operating[operating["Region"] == sel_region]
+    # ── Filters ───────────────────────────────────────────────────────────────
+    fc1, fc2, fc3 = st.columns([1, 1, 1])
+    with fc1:
+        avail_phases = sorted([p for p in df["phase"].unique() if p != "Open"])
+        phase_opts = ["All Phases"] + avail_phases
+        sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase")
+    with fc2:
+        state_opts = ["All States"] + sorted(df["state"].unique().tolist())
+        sel_state = st.selectbox("State", state_opts, key="pipe_state")
+    with fc3:
+        region_opts = ["All Regions"] + sorted(df["region"].dropna().unique().tolist())
+        sel_region = st.selectbox("Region", region_opts, key="pipe_region")
 
-    # ── KPI strip ─────────────────────────────────────────────────────────────
+    dff = df.copy()
+    if sel_phase != "All Phases":  dff = dff[dff["phase"] == sel_phase]
+    if sel_state != "All States":  dff = dff[dff["state"] == sel_state]
+    if sel_region != "All Regions": dff = dff[dff["region"] == sel_region]
+
+    # Pre-load existing open stands (used for open count + map at bottom)
+    stands_df_pipe = get_stands_df(dash)
+    existing_rows  = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
+    open_store_ids = set()
+    for row in existing_rows:
+        raw = row.get("Stand", "")
+        parts = raw.split(" ", 1)
+        if parts:
+            open_store_ids.add(parts[0].strip())
+    for r in _pdata["open_pdf"]:
+        open_store_ids.add(r.get("store", ""))
+    total_open = len(open_store_ids)
+
+    # ── Summary metrics ─────────────────────────────────────────────────────
+    open_df  = df[df["phase"] == "Open"]
+    mc = st.columns(6)
+    mc[0].metric("✅ Open Stands",        len(open_df))
+    mc[1].metric("Total Pipeline",         len(dff))
+    mc[2].metric("🔨 Under Construction",  len(dff[dff["phase"] == "5. Construction"]))
+    mc[3].metric("📋 Permitting",          len(dff[dff["phase"] == "4. Permitting"]))
+    mc[4].metric("📐 Design",             len(dff[dff["phase"] == "3. Design"]))
+    mc[5].metric("🔍 Due Diligence",      len(dff[dff["phase"] == "2. Due Diligence"]))
+
     import datetime as _dt
     today = _dt.date.today()
 
-    next_open = upcoming.dropna(subset=["open_dt"]).sort_values("open_dt")
-    next_label = "—"
-    days_to_next = None
-    if not next_open.empty:
-        nxt_row = next_open.iloc[0]
-        nxt_dt  = nxt_row["open_dt"].date()
-        days_to_next = (nxt_dt - today).days
-        next_label = f"{nxt_row['Stand']}  ({nxt_dt.strftime('%b %d')})"
-
-    mc = st.columns(4)
-    mc[0].metric("🏗️ Upcoming Openings", len(upcoming))
-    mc[1].metric("✅ Operating Stands",   len(operating))
-    mc[2].metric("📊 Total Portfolio",    len(upcoming) + len(operating))
-    mc[3].metric("⏳ Next Open (days)",
-                 f"{days_to_next}d" if days_to_next is not None else "—",
-                 help=next_label)
-
-    # ── Upcoming opens by month (bar chart) ──────────────────────────────────
+    # ── Milestone Timeline (from xlsx) ────────────────────────────────────────
     st.divider()
-    st.subheader("📅 Upcoming Openings by Month")
+    st.subheader("📅 Milestone Timeline — Active Pipeline")
+    st.caption("Permit Submission → Permit Approval → Construction Start → Building Drop → Open Date · all dates from the live xlsx report.")
 
-    up_dated = upcoming.dropna(subset=["open_dt"]).copy()
-    if not up_dated.empty:
-        up_dated["Month"]    = up_dated["open_dt"].dt.to_period("M")
-        up_dated["MonthStr"] = up_dated["open_dt"].dt.strftime("%b %Y")
-        monthly = (
-            up_dated.groupby(["Month", "MonthStr"])
-            .size().reset_index(name="Count")
-            .sort_values("Month")
+    ms_active = dff[dff["phase"] != "Open"].copy()
+    ms_active = ms_active[ms_active["open_dt"].notna()].copy()
+
+    if not ms_active.empty:
+        ms_display = pd.DataFrame({
+            "Stand":          ms_active.apply(lambda r: f"{r['city']}, {r['state']}", axis=1),
+            "Phase":          ms_active["phase"].map(_phase_label),
+            "Region":         ms_active["region"],
+            "Permit Sub":     ms_active["permit_sub"],
+            "Permit Appr":    ms_active["permit_appr"],
+            "Const. Start":   ms_active["cs"],
+            "Bldg Drop":      ms_active["bd"],
+            "Est. Open":      ms_active["open"],
+            "Const. Days":    ms_active["construction_days"].apply(
+                                  lambda v: f"{int(v)}d" if v > 0 else "—"),
+            "Days to Open":   ms_active["open_dt"].apply(
+                                  lambda d: f"{(d.date() - today).days}d"
+                                            if pd.notna(d) and d.date() >= today
+                                            else ("✅ Open" if pd.notna(d) else "—")),
+        })
+        # Sort by est open date earliest first
+        ms_display = ms_display.sort_values(
+            "Est. Open",
+            key=lambda col: pd.to_datetime(col, errors="coerce"),
         )
-        fig_mo = go.Figure(go.Bar(
-            x=monthly["MonthStr"],
-            y=monthly["Count"],
-            marker_color="#FF6B00",
-            text=monthly["Count"],
-            textposition="outside",
-            hovertemplate="<b>%{x}</b><br>%{y} opens<extra></extra>",
-        ))
-        fig_mo.update_layout(
-            title="Planned Openings by Month",
-            height=300,
-            xaxis_title=None,
-            yaxis_title="# Opens",
-            plot_bgcolor="rgba(0,0,0,0)",
-            yaxis=dict(dtick=1),
-        )
-        st.plotly_chart(fig_mo, use_container_width=True)
-    else:
-        st.info("No dated upcoming openings in the current filter.")
 
-    # ── Upcoming openings table ───────────────────────────────────────────────
-    st.subheader("📋 Upcoming Openings")
-    up_display = upcoming[["Stand", "Region", "Opening Date"]].copy()
-    up_display = up_display.sort_values(
-        by="Opening Date",
-        key=lambda col: pd.to_datetime(col, errors="coerce"),
-    )
-    st.dataframe(up_display, use_container_width=True, hide_index=True,
-                 height=min(60 + len(up_display) * 35, 520))
+        def _ms_row_style(row):
+            ph = str(row.get("Phase",""))
+            if "Construction" in ph: bg = "rgba(255,107,0,0.08)"
+            elif "Permitting"  in ph: bg = "rgba(245,166,35,0.08)"
+            elif "Design"      in ph: bg = "rgba(74,144,226,0.08)"
+            else:                     bg = "rgba(155,89,182,0.08)"
+            return [f"background-color:{bg}"] * len(row)
 
-    # ── Revenue sensitivity ───────────────────────────────────────────────────
-    AVG_REV_PER_WEEK = 45_000
-    sense_rows = []
-    for _, r in up_dated.iterrows():
-        days_out = (r["open_dt"].date() - today).days
-        if days_out > 0:
-            sense_rows.append({
-                "Stand":     r["Stand"],
-                "Region":    r["Region"],
-                "Est. Open": r["open_dt"].strftime("%b %d, %Y"),
-                "Days Away": days_out,
-                "+4 Wks":    f"${4  * AVG_REV_PER_WEEK:,.0f}",
-                "+8 Wks":    f"${8  * AVG_REV_PER_WEEK:,.0f}",
-                "+12 Wks":   f"${12 * AVG_REV_PER_WEEK:,.0f}",
-                "+26 Wks":   f"${26 * AVG_REV_PER_WEEK:,.0f}",
-            })
-
-    if sense_rows:
-        st.divider()
-        st.subheader("⚠️ Opening Delay Sensitivity")
-        st.caption("Revenue impact per stand if opening slips beyond current estimate · assumes $45K avg weekly revenue")
         st.dataframe(
-            pd.DataFrame(sense_rows),
+            ms_display.style.apply(_ms_row_style, axis=1),
             use_container_width=True, hide_index=True,
-            height=min(60 + len(sense_rows) * 35, 400),
+            height=min(60 + len(ms_display) * 35, 540),
         )
 
-    # ── Operating stands table ────────────────────────────────────────────────
-    st.divider()
-    st.subheader("✅ Operating Stands")
-    op_display = operating[["Stand", "Region", "Open Date"]].copy()
-    op_display = op_display.sort_values(
-        by="Open Date",
-        key=lambda col: pd.to_datetime(col, errors="coerce"),
-        ascending=False,
-    )
-    st.dataframe(op_display, use_container_width=True, hide_index=True,
-                 height=min(60 + len(op_display) * 35, 520))
+        # Milestone duration analysis
+        with st.expander("📊 Milestone Duration Analysis"):
+            st.caption("Average days between each milestone stage, across all active pipeline stands with complete data.")
+            dur_rows = []
+            for _, r in ms_active.iterrows():
+                ps  = r["permit_sub_dt"]
+                pa  = r["permit_appr_dt"]
+                cs  = r["cs_dt"]
+                bd  = r["bd_dt"]
+                op  = r["open_dt"]
+                row = {"Stand": f"{r['city']}, {r['state']}", "Phase": r["phase"]}
+                if pd.notna(ps) and pd.notna(pa):  row["Permit (sub→appr)"] = (pa - ps).days
+                if pd.notna(pa) and pd.notna(cs):  row["Permit→Const Start"] = (cs - pa).days
+                if pd.notna(cs) and pd.notna(bd):  row["Const Start→Bldg Drop"] = (bd - cs).days
+                if pd.notna(bd) and pd.notna(op):  row["Bldg Drop→Open"] = (op - bd).days
+                if pd.notna(cs) and pd.notna(op):  row["Total Const Days"] = (op - cs).days
+                dur_rows.append(row)
+            if dur_rows:
+                dur_df = pd.DataFrame(dur_rows).fillna("—")
+                st.dataframe(dur_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No active pipeline stands with open dates in the current filter.")
 
-    # ── PDF Export ────────────────────────────────────────────────────────────
+    # ── Gantt chart ───────────────────────────────────────────────────────────
     st.divider()
-    with st.expander("📄 Export Upcoming Openings as PDF"):
+    st.markdown("#### 📊 Construction Timeline — Active Pipeline")
+
+    gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design","2. Due Diligence"])].copy()
+    gantt_df = gantt_df[gantt_df["open_dt"].notna() & gantt_df["cs_dt"].notna()].copy()
+    if not gantt_df.empty:
+        gantt_df["Label"] = gantt_df.apply(
+            lambda r: f"{r['city']}, {r['state']}",
+            axis=1)
+        gantt_df = gantt_df.sort_values("open_dt", ascending=False)
+        import json as _json_g
+        _gantt_json = _json_g.dumps(
+            gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records")
+        )
+        fig_gantt = _build_gantt_fig(_gantt_json, str(today))
+        if fig_gantt is not None:
+            st.plotly_chart(fig_gantt, use_container_width=True)
+    else:
+        st.info("No stands with both Construction Start and Open Date in the current filter.")
+
+    # ── Upcoming openings table ────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 📋 Upcoming Openings")
+    table_df = dff[dff["phase"] != "Open"][["phase","address","city","state","region","cs","bd","open","store","rsh"]].copy()
+    table_df.columns = ["Phase","Address","City","State","Region",
+                        "Const. Start","Building Drop","Est. Opening","Store #","RSH"]
+    table_df["Phase"]   = table_df["Phase"].map(_phase_label)
+    table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
+
+    def _row_style(row):
+        ph = str(row.get("Phase",""))
+        if "Construction" in ph: bg = "rgba(255,107,0,0.08)"
+        elif "Permitting"  in ph: bg = "rgba(245,166,35,0.08)"
+        elif "Design"      in ph: bg = "rgba(74,144,226,0.08)"
+        else: bg = "rgba(155,89,182,0.08)"
+        return [f"background-color:{bg}"] * len(row)
+
+    st.dataframe(
+        table_df.style.apply(_row_style, axis=1),
+        use_container_width=True, hide_index=True,
+        height=min(50 + len(table_df) * 35, 500),
+    )
+
+        # ── PDF Export ────────────────────────────────────────────────────────────
+    with st.expander("📄 Export as Password-Protected PDF"):
         ex_c1, ex_c2 = st.columns([2, 1])
         with ex_c1:
             pdf_pw = st.text_input(
-                "PDF Password (optional — leave blank for no password)",
-                value="",
+                "Set PDF Password",
+                value="7BREW2026",
+                type="password",
                 key="pipeline_pdf_pw",
                 help="Recipients will need this password to open the PDF.",
             )
@@ -7245,22 +7418,37 @@ def tab_pipeline(dash):
         if gen_btn:
             with st.spinner("Building PDF…"):
                 try:
-                    pdf_bytes = _generate_pipeline_pdf(up_display.rename(
-                        columns={"Opening Date": "Est. Opening"}
-                    ), pdf_pw or None)
+                    pdf_bytes = _generate_pipeline_pdf(table_df, pdf_pw)
                     st.download_button(
                         label="⬇️ Download PDF",
                         data=pdf_bytes,
-                        file_name=f"7BREW_Pipeline_{today.strftime('%Y%m%d')}.pdf",
+                        file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
                         key="dl_pipeline_pdf",
                     )
-                    if pdf_pw:
-                        st.success(f"✅ PDF ready — password: `{pdf_pw}`")
-                    else:
-                        st.success("✅ PDF ready — no password set")
+                    st.success(f"✅ PDF ready — password is: `{pdf_pw}`")
                 except Exception as _e:
                     st.error(f"PDF generation failed: {_e}")
+
+    # ── Delay sensitivity ─────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
+    st.caption("Revenue impact per stand if opening slips beyond current estimate")
+
+    sense_df = dff[dff["open_dt"].notna()].copy()
+    sense_df = sense_df[sense_df["open_dt"].dt.date >= today].head(20)
+    if not sense_df.empty:
+        sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
+        sense_df["Est. Open"] = sense_df["open"].astype(str)
+        sense_df["+4 Wks"]  = f"${4  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+8 Wks"]  = f"${8  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+12 Wks"] = f"${12 * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+26 Wks"] = f"${26 * AVG_REV_PER_WEEK:,.0f}"
+        st.dataframe(
+            sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
+            use_container_width=True, hide_index=True,
+            height=min(50 + len(sense_df) * 35, 400),
+        )
 
 
 
