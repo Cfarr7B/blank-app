@@ -6711,8 +6711,11 @@ def _build_gantt_fig(gantt_df_json: str, today_str: str):
                 f"Duration: {(op-cs).days} days<extra></extra>"
             ),
         ))
-    fig.add_vline(x=str(today), line_dash="dash", line_color="white",
-                  annotation_text="Today", annotation_position="top right")
+    fig.add_shape(type="line", xref="x", yref="paper",
+                  x0=str(today), x1=str(today), y0=0, y1=1,
+                  line=dict(color="white", dash="dash", width=1.5))
+    fig.add_annotation(x=str(today), y=1, yref="paper", text="Today",
+                       showarrow=False, xanchor="left", font=dict(color="white", size=11))
     fig.update_layout(
         barmode="overlay", height=max(300, len(rows) * 28 + 80),
         xaxis=dict(type="date", title="Date"),
