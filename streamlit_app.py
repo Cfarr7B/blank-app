@@ -6661,6 +6661,170 @@ def _load_pipeline_xlsx(_mtime: float):
     return upcoming, operating
 
 
+# ── Pipeline helper functions ─────────────────────────────────────────────────
+
+def _phase_color_hex(phase):
+    if "5." in phase: return "#FF6B00"
+    if "4." in phase: return "#F5A623"
+    if "3." in phase: return "#4A90E2"
+    if "2." in phase: return "#9B59B6"
+    return "#27AE60"
+
+def _phase_label(phase):
+    mapping = {
+        "5. Construction": "🔨 Under Construction",
+        "4. Permitting":   "📋 Permitting",
+        "3. Design":       "📐 Design",
+        "2. Due Diligence":"🔍 Due Diligence",
+        "1. LOI":          "📝 LOI",
+    }
+    return mapping.get(phase, phase)
+
+@st.cache_data(show_spinner=False)
+def _build_gantt_fig(gantt_df_json: str, today_str: str):
+    import json as _j
+    import datetime as _dt
+    rows = _j.loads(gantt_df_json)
+    if not rows:
+        return None
+    today = _dt.date.fromisoformat(today_str)
+    fig = go.Figure()
+    for r in rows:
+        try:
+            cs  = _dt.datetime.strptime(r["cs_dt"],   "%Y-%m-%d %H:%M:%S").date()
+            op  = _dt.datetime.strptime(r["open_dt"], "%Y-%m-%d %H:%M:%S").date()
+        except Exception:
+            continue
+        color = _phase_color_hex(r.get("phase",""))
+        fig.add_trace(go.Bar(
+            x=[(op - cs).days],
+            y=[r["Label"]],
+            base=[str(cs)],
+            orientation="h",
+            marker_color=color,
+            name=r.get("phase",""),
+            showlegend=False,
+            hovertemplate=(
+                f"<b>{r['Label']}</b><br>"
+                f"Construction Start: {cs}<br>"
+                f"Est. Open: {op}<br>"
+                f"Duration: {(op-cs).days} days<extra></extra>"
+            ),
+        ))
+    fig.add_vline(x=str(today), line_dash="dash", line_color="white",
+                  annotation_text="Today", annotation_position="top right")
+    fig.update_layout(
+        barmode="overlay", height=max(300, len(rows) * 28 + 80),
+        xaxis=dict(type="date", title="Date"),
+        yaxis=dict(autorange="reversed", title=None),
+        title="Construction Timeline — Est. Construction Start → Open Date",
+        legend=dict(orientation="h", y=-0.12),
+        margin=dict(l=180, r=20, t=50, b=60),
+    )
+    return fig
+
+@st.cache_data(show_spinner=False)
+def _build_milestone_fig(ms_rows_json: str):
+    import json as _j
+    rows = _j.loads(ms_rows_json)
+    if not rows:
+        return None, None
+    milestones = ["permit_sub", "permit_appr", "cs", "open"]
+    ms_labels  = {"permit_sub": "Permit Submission", "permit_appr": "Permit Approval",
+                  "cs": "Construction Start", "open": "Open Date"}
+    plot_rows = []
+    for r in rows:
+        for mk in milestones:
+            delta = r.get(f"{mk}_delta")
+            if delta is not None:
+                plot_rows.append({
+                    "Stand":       f"{r['city']}, {r['state']}",
+                    "Milestone":   ms_labels[mk],
+                    "Days Drifted": delta,
+                    "Phase":       r.get("phase",""),
+                })
+    if not plot_rows:
+        return None, None
+    ms_df = pd.DataFrame(plot_rows)
+    avg_df = ms_df.groupby("Milestone")["Days Drifted"].mean().reset_index()
+    avg_df["color"] = avg_df["Days Drifted"].apply(lambda v: "#c0392b" if v > 0 else "#27ae60")
+    avg_df = avg_df.set_index("Milestone").reindex(
+        [ms_labels[m] for m in milestones if ms_labels[m] in avg_df["Milestone"].values]
+    ).reset_index()
+    fig = go.Figure(go.Bar(
+        x=avg_df["Milestone"], y=avg_df["Days Drifted"],
+        marker_color=avg_df["color"],
+        text=avg_df["Days Drifted"].apply(lambda v: f"{v:+.0f}d"),
+        textposition="outside",
+        hovertemplate="<b>%{x}</b><br>Avg drift: %{y:+.0f} days<extra></extra>",
+    ))
+    fig.add_hline(y=0, line_color="white", line_width=1)
+    fig.update_layout(
+        title="Avg Milestone Drift vs Jan 15 Baseline",
+        height=360, yaxis_title="Avg Days Drifted",
+        xaxis_title=None,
+    )
+    return fig, ms_df
+
+
+def _generate_pipeline_pdf(table_df, password: str) -> bytes:
+    from reportlab.lib.pagesizes import landscape, letter
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    import io, pikepdf, datetime
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=landscape(letter),
+                            leftMargin=0.4*inch, rightMargin=0.4*inch,
+                            topMargin=0.45*inch, bottomMargin=0.4*inch)
+    styles = getSampleStyleSheet()
+    title_s = ParagraphStyle("t", parent=styles["Heading1"], fontSize=15,
+                             textColor=colors.HexColor("#AC2430"), spaceAfter=3)
+    sub_s   = ParagraphStyle("s", parent=styles["Normal"], fontSize=8,
+                             textColor=colors.HexColor("#666666"), spaceAfter=10)
+    today_str = datetime.date.today().strftime("%B %d, %Y")
+    elements  = [
+        Paragraph("7BREW — Upcoming Openings", title_s),
+        Paragraph(f"Pipeline Report · {len(table_df)} stands · Generated {today_str}", sub_s),
+    ]
+    tdf = table_df.copy().astype(str)
+    col_names = list(tdf.columns)
+    data_rows = [col_names] + [list(r) for r in tdf.itertuples(index=False, name=None)]
+    usable_w  = 10.2 * inch
+    col_widths = [usable_w / max(len(col_names), 1)] * len(col_names)
+    tbl_style = [
+        ("BACKGROUND",    (0,0), (-1,0), colors.HexColor("#2C2C2C")),
+        ("TEXTCOLOR",     (0,0), (-1,0), colors.white),
+        ("FONTNAME",      (0,0), (-1,0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0,0), (-1,0), 8),
+        ("ALIGN",         (0,0), (-1,0), "CENTER"),
+        ("FONTNAME",      (0,1), (-1,-1), "Helvetica"),
+        ("FONTSIZE",      (0,1), (-1,-1), 8),
+        ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+        ("GRID",          (0,0), (-1,-1), 0.4, colors.HexColor("#CCCCCC")),
+        ("TOPPADDING",    (0,0), (-1,-1), 3),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 3),
+        ("LEFTPADDING",   (0,0), (-1,-1), 4),
+        ("RIGHTPADDING",  (0,0), (-1,-1), 4),
+    ]
+    for ri in range(1, len(data_rows)):
+        if ri % 2 == 0:
+            tbl_style.append(("BACKGROUND", (0,ri), (-1,ri), colors.HexColor("#F6F6F6")))
+    tbl = Table(data_rows, colWidths=col_widths, repeatRows=1)
+    tbl.setStyle(TableStyle(tbl_style))
+    elements.append(tbl)
+    doc.build(elements)
+    if password:
+        plain = io.BytesIO(buf.getvalue())
+        enc   = io.BytesIO()
+        with pikepdf.open(plain) as pdf:
+            pdf.save(enc, encryption=pikepdf.Encryption(owner=password, user=password, R=4))
+        return enc.getvalue()
+    return buf.getvalue()
+
+
 # ── Pipeline data (pipeline_data.json — cached until file changes) ──────────
 _PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
 
