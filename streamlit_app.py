@@ -6661,593 +6661,58 @@ def _load_pipeline_xlsx(_mtime: float):
     return upcoming, operating
 
 
-# ── xlsx-based pipeline data ──────────────────────────────────────────────────
-# Finds the most recently modified "7Crew Pipeline Report_*.xlsx" in the app
-# folder. Drop in a new dated file and the tab picks it up automatically.
-
-def _find_pipeline_xlsx() -> tuple[str, str]:
-    """Return (path, display_name) for the newest pipeline xlsx in the app folder.
-
-    Looks for files matching '7Crew Pipeline Report*.xlsx' first; falls back to
-    'pipeline_report.xlsx' for backwards compatibility.
-    """
-    import glob as _glob
-    app_dir = os.path.dirname(__file__)
-    pattern = os.path.join(app_dir, "7Crew Pipeline Report*.xlsx")
-    candidates = _glob.glob(pattern)
-    if candidates:
-        # Pick the most recently modified file
-        best = max(candidates, key=os.path.getmtime)
-        return best, os.path.basename(best)
-    # Fallback
-    fallback = os.path.join(app_dir, "pipeline_report.xlsx")
-    return fallback, "pipeline_report.xlsx"
-
-
-# Phase name normalisation: xlsx → internal code used by filters / Gantt
-_PHASE_NORM = {
-    "7. Construction Phase":  "5. Construction",
-    "6. Permitting Phase":    "4. Permitting",
-    "5. Design Phase":        "3. Design",
-    "4. Due Diligence Phase": "2. Due Diligence",
-    "3. LOI Negotiations":    "1. LOI",
-    "Open":                   "Open",
-}
+# ── Pipeline data (pipeline_data.json — cached until file changes) ──────────
+_PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
 
 
 def _pipeline_mtime() -> float:
-    path, _ = _find_pipeline_xlsx()
     try:
-        return os.path.getmtime(path)
+        return os.path.getmtime(_PIPELINE_JSON_PATH)
     except FileNotFoundError:
         return 0.0
 
 
 @st.cache_data(show_spinner=False)
-def _get_pipeline_dfs(_mtime: float):
-    """Load the newest pipeline xlsx and return (df, empty_shifts_df)."""
-    xlsx_path, _ = _find_pipeline_xlsx()
-    raw = pd.read_excel(xlsx_path, sheet_name="Permits To Open Dates", header=1)
-    raw.columns = [str(c).strip() for c in raw.columns]
-
-    def _dt(col):
-        return pd.to_datetime(raw.get(col), errors="coerce")
-
-    def _ds(col):
-        """Date column → formatted string MM/DD/YY."""
-        s = _dt(col)
-        return s.dt.strftime("%m/%d/%y").where(s.notna(), "")
-
-    df = pd.DataFrame({
-        "rsh":     raw.get("Project ID", "").fillna("").astype(str).str.strip(),
-        "phase":   raw.get("Project Phase", "").fillna("").astype(str).str.strip()
-                      .map(lambda p: _PHASE_NORM.get(p, p)),
-        "address": raw.get("Address", "").fillna("").astype(str).str.strip(),
-        "city":    raw.get("City", "").fillna("").astype(str).str.strip(),
-        "state":   raw.get("State", "").fillna("").astype(str).str.strip(),
-        "region":  raw.get("Region", "").fillna("").astype(str).str.strip(),
-        "gc":      raw.get("General Contractor", "").fillna("").astype(str).str.strip(),
-        "store":   "TBD",
-        # milestone strings
-        "permit_sub":  _ds("Permit Submission"),
-        "permit_appr": _ds("Permit Approval Date"),
-        "cs":          _ds("Construction Start"),
-        "bd":          _ds("Building Drop Date"),
-        "co":          _ds("Certificate of Occupancy Date"),
-        "open":        _ds("Open Date"),
-        # milestone datetimes for charts
-        "permit_sub_dt":  _dt("Permit Submission"),
-        "permit_appr_dt": _dt("Permit Approval Date"),
-        "cs_dt":          _dt("Construction Start"),
-        "bd_dt":          _dt("Building Drop Date"),
-        "co_dt":          _dt("Certificate of Occupancy Date"),
-        "open_dt":        _dt("Open Date"),
-        "construction_days": pd.to_numeric(raw.get("Construction Time", 0), errors="coerce").fillna(0),
-        "notes":  raw.get("Notes for Corporate", "").fillna("").astype(str).str.strip(),
-    })
-
-    # Drop blank/invalid rows
-    df = df[df["rsh"].str.startswith("RSH-", na=False)].copy()
-    df = df.sort_values("open_dt", na_position="last").reset_index(drop=True)
-
-    # Empty shifts_df — schedule intelligence section uses JSON; xlsx has live dates
-    shifts_df = pd.DataFrame(columns=["city","state","rsh","store","delta_days"])
-    return df, shifts_df
-
-
-# Keep JSON path as fallback for snapshot data only
-_PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
-
-
-@st.cache_data(show_spinner=False)
 def _load_pipeline_data(_mtime: float) -> dict:
-    """Load pipeline_data.json for snapshot/schedule-intelligence data if it exists."""
     import json as _j
-    try:
-        with open(_PIPELINE_JSON_PATH) as f:
-            return _j.load(f)
-    except FileNotFoundError:
-        return {
-            "_last_updated": "N/A",
-            "open_pdf": [],
-            "report_snapshots": [],
-            "date_shifts": [],
-            "opened_shifts": [],
-            "new_since_jan15": [],
-            "milestone_shifts": [],
-            "upcoming": [],
-        }
-
-
-def _pl_coords(city, state):
-    """Return (lat, lon) or None from the city/state lookup."""
-    return _CITY_COORDS.get((city, state))
-
-
-def _phase_color_hex(phase):
-    if "5." in phase:   return "#FF6B00"   # orange
-    if "4." in phase:   return "#F5A623"   # amber
-    if "3." in phase:   return "#4A90E2"   # blue
-    if "2." in phase:   return "#9B59B6"   # purple
-    return "#27AE60"                         # green (open)
-
-
-def _phase_label(phase):
-    mapping = {
-        "5. Construction": "🔨 Under Construction",
-        "4. Permitting":   "📋 Permitting",
-        "3. Design":       "📐 Design",
-        "2. Due Diligence":"🔍 Due Diligence",
-    }
-    return mapping.get(phase, phase)
+    with open(_PIPELINE_JSON_PATH) as f:
+        return _j.load(f)
 
 
 @st.cache_data(show_spinner=False)
-def _build_pipeline_map_html(upcoming_rows, open_rows, existing_stands):
-    """Build a self-contained Leaflet.js HTML map with clickable legend toggles."""
-    import json as _json
-
-    markers = []
-
-    # Store IDs already represented by upcoming_rows — these win over open markers
-    upcoming_store_ids = {r.get("store","") for r in upcoming_rows
-                         if r.get("store","") not in ("TBD", "")}
-
-    # Track every store ID plotted so far to prevent any cross-source duplicates
-    plotted_store_ids = set()
-
-    # ── Existing open stands from data.json ───────────────────────────────────
-    seen_stand_names = set()
-    for s in existing_stands:
-        raw = s.get("Stand", "")
-        if raw in seen_stand_names:
-            continue
-        seen_stand_names.add(raw)
-        parts = raw.split(" ", 1)
-        if len(parts) < 2:
-            continue
-        store_id = parts[0].strip()          # e.g. "000356"
-        loc = parts[1]                        # e.g. "Bradenton, FL - 2"
-        loc_parts = loc.split(",")
-        if len(loc_parts) < 2:
-            continue
-        city = loc_parts[0].strip()
-        st_part = loc_parts[1].strip().split()[0] if loc_parts[1].strip() else ""
-        # Skip if this store is shown as an upcoming (colored) marker
-        if store_id in upcoming_store_ids:
-            continue
-        if store_id in plotted_store_ids:
-            continue
-        plotted_store_ids.add(store_id)
-        coords = _pl_coords(city, st_part)
-        if not coords:
-            continue
-        lat, lon = coords
-        markers.append({
-            "lat": round(lat + (hash(raw) % 100) * 0.003, 5),
-            "lon": round(lon + (hash(raw) % 73)  * 0.003, 5),
-            "color": "#27AE60", "radius": 7, "group": "Open",
-            "popup": f"<b>{raw.split(' - ')[0].strip()}</b><br>{city}, {st_part}<br><i>Currently Open</i>",
-        })
-
-    # ── Phase-6 stands from PDF not yet in data.json ─────────────────────────
-    # (skip any store already plotted above or reserved for upcoming layer)
-    for r in open_rows:
-        sid = r.get("store", "")
-        if sid in upcoming_store_ids:
-            continue
-        if sid in plotted_store_ids:
-            continue
-        coords = _pl_coords(r["city"], r["state"])
-        if not coords:
-            continue
-        plotted_store_ids.add(sid)
-        lat, lon = coords
-        markers.append({
-            "lat": round(lat + (hash(sid)       % 50) * 0.004, 5),
-            "lon": round(lon + (hash(sid + "x") % 50) * 0.004, 5),
-            "color": "#27AE60", "radius": 7, "group": "Open",
-            "popup": (f"<b>#{sid}</b> · {r['city']}, {r['state']}<br>"
-                      f"{r['address']}<br>Region: {r.get('region','')}<br>"
-                      f"Opened: {r.get('open','')}"),
-        })
-
-    # Upcoming stands (phases 2–5)
-    for r in upcoming_rows:
-        coords = _pl_coords(r["city"], r["state"])
-        if not coords:
-            continue
-        lat, lon = coords
-        sid = r.get("store", "TBD")
-        color = _phase_color_hex(r["phase"])
-        label = _phase_label(r["phase"])
-        # strip emoji for group key so JS object key stays clean
-        group_key = label.split(" ", 1)[1] if " " in label else label
-        markers.append({
-            "lat": round(lat + (hash(sid + "u") % 80) * 0.004, 5),
-            "lon": round(lon + (hash(sid + "v") % 80) * 0.004, 5),
-            "color": color, "radius": 9, "group": group_key,
-            "popup": (f"<b>{r['city']}, {r['state']}</b> — #{sid}<br>"
-                      f"{r['address']}<br>Region: {r.get('region','')}<br>"
-                      f"Phase: {label}<br>"
-                      f"Const. Start: {r.get('cs','—')}<br>"
-                      f"Building Drop: {r.get('bd','—')}<br>"
-                      f"<b>Est. Opening: {r.get('open','—')}</b>"),
-        })
-
-    markers_json = _json.dumps(markers)
-
-    # Legend items: [label, hex-color, group-key]
-    legend_items = [
-        ["Open",                "#27AE60", "Open"],
-        ["Under Construction",  "#FF6B00", "Under Construction"],
-        ["Permitting",          "#F5A623", "Permitting"],
-        ["Design",              "#4A90E2", "Design"],
-        ["Due Diligence",       "#9B59B6", "Due Diligence"],
-    ]
-    legend_json = _json.dumps(legend_items)
-
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-  html,body{{height:100%;margin:0;padding:0;background:#1a1a2e;}}
-  #map{{height:100%;width:100%;}}
-  .legend-box{{
-    background:rgba(15,15,30,0.93);color:#e8e8e8;
-    padding:12px 16px;border-radius:10px;
-    font-family:sans-serif;font-size:13px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.5);
-    min-width:180px;
-  }}
-  .legend-box b{{font-size:14px;display:block;margin-bottom:6px;color:#fff;}}
-  .leg-row{{
-    display:flex;align-items:center;gap:8px;
-    padding:5px 8px;border-radius:6px;
-    cursor:pointer;user-select:none;
-    transition:background 0.15s;
-    margin-bottom:2px;
-  }}
-  .leg-row:hover{{background:rgba(255,255,255,0.08);}}
-  .leg-row.off{{opacity:0.35;}}
-  .leg-dot{{
-    flex-shrink:0;width:14px;height:14px;
-    border-radius:50%;border:2px solid rgba(255,255,255,0.3);
-  }}
-  .leg-label{{flex:1;}}
-  .leg-count{{font-size:11px;color:#aaa;}}
-</style>
-</head>
-<body>
-<div id="map"></div>
-<script>
-var map = L.map('map',{{zoomControl:true}}).setView([32.5,-95],5);
-L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png',{{
-  attribution:'&copy; OpenStreetMap &amp; CARTO',maxZoom:19
-}}).addTo(map);
-
-var allMarkers = {markers_json};
-var legendDefs  = {legend_json};
-
-// Build a LayerGroup per category
-var groups = {{}};
-legendDefs.forEach(function(d){{ groups[d[2]] = L.layerGroup().addTo(map); }});
-
-// Count per group for the legend badge
-var counts = {{}};
-legendDefs.forEach(function(d){{ counts[d[2]] = 0; }});
-
-allMarkers.forEach(function(m){{
-  var grp = groups[m.group];
-  if(!grp) return;
-  counts[m.group] = (counts[m.group]||0) + 1;
-  var circle = L.circleMarker([m.lat,m.lon],{{
-    radius:m.radius, color:m.color, fillColor:m.color,
-    fillOpacity:0.85, weight:2, opacity:1
-  }});
-  circle.bindPopup(m.popup,{{maxWidth:260}});
-  grp.addLayer(circle);
-}});
-
-// Custom clickable legend — uses data-key to avoid quoting issues with spaced keys
-var visibility = {{}};
-legendDefs.forEach(function(d){{ visibility[d[2]] = true; }});
-
-var legend = L.control({{position:'bottomleft'}});
-legend.onAdd = function(){{
-  var div = L.DomUtil.create('div','legend-box');
-  var html = '<b>7BREW Locations</b>';
-  legendDefs.forEach(function(d){{
-    var label=d[0], color=d[1], key=d[2];
-    var cnt = counts[key]||0;
-    // Use data-key attribute — avoids any JS string-quoting issues
-    html += '<div class="leg-row" data-key="' + key + '" title="Click to show/hide">' +
-            '<div class="leg-dot" style="background:' + color + ';"></div>' +
-            '<span class="leg-label">' + label + '</span>' +
-            '<span class="leg-count">' + cnt + '</span>' +
-            '</div>';
-  }});
-  div.innerHTML = html;
-  // Single delegated click listener — works for any key regardless of spaces
-  div.addEventListener('click', function(e){{
-    var row = e.target.closest('.leg-row');
-    if(row){{ toggleGroup(row.getAttribute('data-key')); }}
-  }});
-  L.DomEvent.disableClickPropagation(div);
-  return div;
-}};
-legend.addTo(map);
-
-function toggleGroup(key){{
-  var grp = groups[key];
-  if(!grp) return;
-  visibility[key] = !visibility[key];
-  if(visibility[key]){{ grp.addTo(map); }} else {{ map.removeLayer(grp); }}
-  // Find the row by data-key and toggle the .off class
-  var row = document.querySelector('.leg-row[data-key="' + key + '"]');
-  if(row){{
-    if(visibility[key]) row.classList.remove('off');
-    else                row.classList.add('off');
-  }}
-}}
-</script>
-</body>
-</html>"""
-    return html
-
-
-@st.cache_data(show_spinner=False)
-def _build_gantt_fig(gantt_df_json: str, today_str: str):
-    """Build the construction timeline Gantt chart — cached until data or filter changes."""
-    import json as _jg
-    import pandas as _pdg
-    import plotly.express as _pxg
-
-    _gantt_df = _pdg.DataFrame(_jg.loads(gantt_df_json))
-    if _gantt_df.empty:
-        return None
-    # Restore datetimes (serialised as ISO strings)
-    _gantt_df["open_dt"] = _pdg.to_datetime(_gantt_df["open_dt"])
-    _gantt_df["cs_dt"]   = _pdg.to_datetime(_gantt_df["cs_dt"])
-
-    phase_colors = {
-        "5. Construction": "#FF6B00",
-        "4. Permitting":   "#F5A623",
-        "3. Design":       "#4A90E2",
-    }
-    fig = _pxg.timeline(
-        _gantt_df,
-        x_start="cs_dt", x_end="open_dt",
-        y="Label", color="phase",
-        color_discrete_map=phase_colors,
-        labels={"phase": "Phase", "Label": "Stand"},
-        category_orders={"Label": _gantt_df["Label"].tolist()},
-    )
-    fig.update_yaxes(autorange="reversed")
-    fig.update_layout(
-        template="plotly_dark",
-        height=max(350, len(_gantt_df) * 22 + 80),
-        margin=dict(t=20, b=40, l=0, r=0),
-        legend=dict(orientation="h", y=1.02),
-        xaxis_title="",
-    )
-    import datetime as _dtg
-    _today = _dtg.date.fromisoformat(today_str)
-    import pandas as _pdg2
-    fig.add_vline(
-        x=_pdg2.Timestamp(_today).value / 1e6,
-        line_dash="dash",
-        line_color="rgba(255,255,255,0.4)", line_width=1.5,
-        annotation_text="Today", annotation_position="top right",
-        annotation_font_color="rgba(255,255,255,0.6)",
-    )
-    return fig
-
-
-@st.cache_data(show_spinner=False)
-def _build_milestone_fig(ms_rows_json: str):
-    """Build the process leakage milestone drift chart — cached until data or filter changes."""
-    import json as _jm
-    import pandas as _pdm
-    import plotly.graph_objects as _gom
-
-    ms_rows = _jm.loads(ms_rows_json)
-    if not ms_rows:
-        return None, None
-
-    milestone_labels = {
-        "permit_sub":  "Permit Submission",
-        "permit_appr": "Permit Approval",
-        "cs":          "Construction Start",
-        "open":        "Open Date",
-    }
-    milestone_colors = {
-        "Permit Submission":  "#9B59B6",
-        "Permit Approval":    "#E74C3C",
-        "Construction Start": "#FF6B00",
-        "Open Date":          "#4A90E2",
-    }
-
-    bar_data = {"Stand": [], "Milestone": [], "Days Drifted": [], "Label": []}
-    for r in ms_rows:
-        stand = f"{r['city']}, {r['state']}"
-        for key, label in milestone_labels.items():
-            delta = r.get(f"{key}_delta")
-            if delta is None:
-                continue
-            bar_data["Stand"].append(stand)
-            bar_data["Milestone"].append(label)
-            bar_data["Days Drifted"].append(delta)
-            sign = f"+{delta}d" if delta > 0 else (f"{delta}d" if delta < 0 else "±0")
-            bar_data["Label"].append(
-                f"{label}: {sign}<br>"
-                f"Jan 15: {r.get(key+'_jan15','?')} → Apr 16: {r.get(key+'_apr9','?')}"
-            )
-
-    ms_df = _pdm.DataFrame(bar_data)
-    stand_order = (
-        ms_df[ms_df["Milestone"] == "Open Date"]
-        .sort_values("Days Drifted", ascending=True)["Stand"]
-        .tolist()
-    )
-    all_stands = list(dict.fromkeys(stand_order + ms_df["Stand"].tolist()))
-
-    fig = _gom.Figure()
-    for label, color in milestone_colors.items():
-        sub = ms_df[ms_df["Milestone"] == label]
-        if sub.empty:
-            continue
-        fig.add_bar(
-            x=sub["Days Drifted"],
-            y=sub["Stand"],
-            name=label,
-            orientation="h",
-            marker_color=[color if d >= 0 else "#27AE60" for d in sub["Days Drifted"]],
-            customdata=sub["Label"],
-            hovertemplate="%{customdata}<extra></extra>",
-        )
-
-    fig.add_vline(x=0, line_color="white", line_width=1, opacity=0.4)
-    fig.update_layout(
-        template="plotly_dark",
-        barmode="group",
-        height=max(320, len(ms_rows) * 28 + 100),
-        margin=dict(t=20, b=40, l=0, r=20),
-        xaxis=dict(title="Days Drifted vs Jan 15 (+ = slipped, − = earlier)",
-                   zeroline=True, zerolinecolor="white", zerolinewidth=1),
-        yaxis=dict(categoryorder="array", categoryarray=all_stands, title=""),
-        legend=dict(orientation="h", y=1.04, x=0),
-        bargap=0.25, bargroupgap=0.05,
-    )
-    return fig, ms_df
-
-
-def _generate_pipeline_pdf(table_df, password: str) -> bytes:
-    """Build a styled, password-protected PDF of the Upcoming Openings table."""
-    from reportlab.lib.pagesizes import landscape, letter
-    from reportlab.lib import colors
-    from reportlab.lib.units import inch
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    import io, pikepdf, datetime
-
-    buf = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buf, pagesize=landscape(letter),
-        leftMargin=0.4*inch, rightMargin=0.4*inch,
-        topMargin=0.45*inch, bottomMargin=0.4*inch,
-    )
-
-    styles = getSampleStyleSheet()
-    title_s = ParagraphStyle("t", parent=styles["Heading1"], fontSize=15,
-                              textColor=colors.HexColor("#AC2430"), spaceAfter=3)
-    sub_s   = ParagraphStyle("s", parent=styles["Normal"],   fontSize=8,
-                              textColor=colors.HexColor("#666666"), spaceAfter=10)
-
-    today_str = datetime.date.today().strftime("%B %d, %Y")
-    elements = [
-        Paragraph("7BREW — Upcoming Openings", title_s),
-        Paragraph(f"Pipeline Report · As of Apr 16, 2026 · {len(table_df)} stands · Generated {today_str}", sub_s),
-    ]
-
-    tdf = table_df.copy().astype(str)
-    col_names = list(tdf.columns)
-    data_rows = [col_names] + [list(r) for r in tdf.itertuples(index=False, name=None)]
-
-    # Column widths — auto-scale to fit landscape letter (10.2" usable)
-    usable_w = 10.2 * inch
-    per_col  = usable_w / max(len(col_names), 1)
-    col_widths = [per_col] * len(col_names)
-
-    tbl_style = [
-        ("BACKGROUND",    (0, 0), (-1, 0), colors.HexColor("#2C2C2C")),
-        ("TEXTCOLOR",     (0, 0), (-1, 0), colors.white),
-        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",      (0, 0), (-1, 0), 9),
-        ("ALIGN",         (0, 0), (-1, 0), "CENTER"),
-        ("FONTNAME",      (0, 1), (-1, -1), "Helvetica"),
-        ("FONTSIZE",      (0, 1), (-1, -1), 9),
-        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
-        ("GRID",          (0, 0), (-1, -1), 0.4, colors.HexColor("#CCCCCC")),
-        ("TOPPADDING",    (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("LEFTPADDING",   (0, 0), (-1, -1), 5),
-        ("RIGHTPADDING",  (0, 0), (-1, -1), 5),
-    ]
-    for ri in range(1, len(data_rows)):
-        if ri % 2 == 0:
-            tbl_style.append(("BACKGROUND", (0, ri), (-1, ri), colors.HexColor("#F6F6F6")))
-
-    tbl = Table(data_rows, colWidths=col_widths, repeatRows=1)
-    tbl.setStyle(TableStyle(tbl_style))
-    elements.append(tbl)
-    doc.build(elements)
-
-    # Optionally add password protection with pikepdf
-    if password:
-        plain = io.BytesIO(buf.getvalue())
-        enc   = io.BytesIO()
-        with pikepdf.open(plain) as pdf:
-            pdf.save(enc, encryption=pikepdf.Encryption(owner=password, user=password, R=4))
-        return enc.getvalue()
-    return buf.getvalue()
+def _get_pipeline_dfs(_mtime: float):
+    data = _load_pipeline_data(_mtime)
+    df = pd.DataFrame(data["upcoming"])
+    df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
+    df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
+    df = df.sort_values("open_dt").reset_index(drop=True)
+    shifts_df = pd.DataFrame(data["date_shifts"])
+    return df, shifts_df
 
 
 def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
-    st.markdown("### 🏗️ Stand Pipeline")
-
-    # ── Load from xlsx (cached until file changes) ────────────────────────────
-    _xlsx_path, _xlsx_name = _find_pipeline_xlsx()
-    if not os.path.exists(_xlsx_path):
-        st.error("Pipeline file not found. Upload a file named '7Crew Pipeline Report_[date].xlsx' to the app folder.")
-        return
+    st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
 
     _pmtime = _pipeline_mtime()
+    _pdata  = _load_pipeline_data(_pmtime)
     df, shifts_df_base = _get_pipeline_dfs(_pmtime)
-    _pdata  = _load_pipeline_data(0)   # snapshot data from JSON if present, else empty
 
-    import datetime as _dt_now
-    _file_dt = _dt_now.datetime.fromtimestamp(_pmtime).strftime("%b %d, %Y %I:%M %p") if _pmtime else "unknown"
+    _last_updated = _pdata.get("_last_updated", "unknown")
     st.caption(
-        f"**Source:** `{_xlsx_name}` · last modified **{_file_dt}** · "
-        f"{len(df)} stands · drop in a newer `7Crew Pipeline Report_[date].xlsx` to refresh."
+        f"**Data source:** Drew Deagan's weekly opening schedule (last updated **{_last_updated}**). "
+        "To refresh: replace `pipeline_data.json` with the latest export. "
+        "Jan 15, 2026 used as baseline for schedule shift analysis · 2027 dates are soft/indicative · $45K avg revenue/week assumed."
     )
 
-    # ── Print / PDF button ────────────────────────────────────────────────────
     _print_button("🖨️  Print / Save as PDF")
 
-    AVG_REV_PER_WEEK = 45_000   # $ per stand per week
+    AVG_REV_PER_WEEK = 45_000
 
-    # ── Filters ───────────────────────────────────────────────────────────────
     fc1, fc2, fc3 = st.columns([1, 1, 1])
     with fc1:
-        avail_phases = sorted([p for p in df["phase"].unique() if p != "Open"])
-        phase_opts = ["All Phases"] + avail_phases
+        phase_opts = ["All Phases", "5. Construction", "4. Permitting", "3. Design", "2. Due Diligence"]
         sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase")
     with fc2:
         state_opts = ["All States"] + sorted(df["state"].unique().tolist())
@@ -7257,11 +6722,10 @@ def tab_pipeline(dash):
         sel_region = st.selectbox("Region", region_opts, key="pipe_region")
 
     dff = df.copy()
-    if sel_phase != "All Phases":  dff = dff[dff["phase"] == sel_phase]
-    if sel_state != "All States":  dff = dff[dff["state"] == sel_state]
+    if sel_phase != "All Phases":   dff = dff[dff["phase"] == sel_phase]
+    if sel_state != "All States":   dff = dff[dff["state"] == sel_state]
     if sel_region != "All Regions": dff = dff[dff["region"] == sel_region]
 
-    # Pre-load existing open stands (used for open count + map at bottom)
     stands_df_pipe = get_stands_df(dash)
     existing_rows  = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
     open_store_ids = set()
@@ -7274,182 +6738,272 @@ def tab_pipeline(dash):
         open_store_ids.add(r.get("store", ""))
     total_open = len(open_store_ids)
 
-    # ── Summary metrics ─────────────────────────────────────────────────────
-    open_df  = df[df["phase"] == "Open"]
     mc = st.columns(6)
-    mc[0].metric("✅ Open Stands",        len(open_df))
-    mc[1].metric("Total Pipeline",         len(dff))
-    mc[2].metric("🔨 Under Construction",  len(dff[dff["phase"] == "5. Construction"]))
+    mc[0].metric("✅ Stands Open", total_open)
+    mc[1].metric("Total Pipeline", len(dff))
+    mc[2].metric("🔨 Under Construction", len(dff[dff["phase"] == "5. Construction"]))
     mc[3].metric("📋 Permitting",          len(dff[dff["phase"] == "4. Permitting"]))
-    mc[4].metric("📐 Design",             len(dff[dff["phase"] == "3. Design"]))
-    mc[5].metric("🔍 Due Diligence",      len(dff[dff["phase"] == "2. Due Diligence"]))
+    mc[4].metric("📐 Design",              len(dff[dff["phase"] == "3. Design"]))
+    mc[5].metric("🔍 Due Diligence",       len(dff[dff["phase"] == "2. Due Diligence"]))
 
     import datetime as _dt
     today = _dt.date.today()
 
-    # ── Milestone Timeline (from xlsx) ────────────────────────────────────────
     st.divider()
-    st.subheader("📅 Milestone Timeline — Active Pipeline")
-    st.caption("Permit Submission → Permit Approval → Construction Start → Building Drop → Open Date · all dates from the live xlsx report.")
+    _report_snapshots = _pdata["report_snapshots"]
+    snap_labels = [s["label"] for s in _report_snapshots]
+    latest_snap = _report_snapshots[-1]
+    st.markdown("#### 📅 Schedule Intelligence — Opening Date Tracker  *(2026 opens · indexed to Jan 15 baseline)*")
+    st.caption(f"Tracks how opening dates move week-over-week vs the Jan 15 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
 
-    ms_active = dff[dff["phase"] != "Open"].copy()
-    ms_active = ms_active[ms_active["open_dt"].notna()].copy()
+    shifts_df = shifts_df_base.copy()
+    _curr_key = _pdata["report_snapshots"][-1].get("key", "apr9")
 
-    if not ms_active.empty:
-        ms_display = pd.DataFrame({
-            "Stand":          ms_active.apply(lambda r: f"{r['city']}, {r['state']}", axis=1),
-            "Phase":          ms_active["phase"].map(_phase_label),
-            "Region":         ms_active["region"],
-            "Permit Sub":     ms_active["permit_sub"],
-            "Permit Appr":    ms_active["permit_appr"],
-            "Const. Start":   ms_active["cs"],
-            "Bldg Drop":      ms_active["bd"],
-            "Est. Open":      ms_active["open"],
-            "Const. Days":    ms_active["construction_days"].apply(
-                                  lambda v: f"{int(v)}d" if v > 0 else "—"),
-            "Days to Open":   ms_active["open_dt"].apply(
-                                  lambda d: f"{(d.date() - today).days}d"
-                                            if pd.notna(d) and d.date() >= today
-                                            else ("✅ Open" if pd.notna(d) else "—")),
-        })
-        # Sort by est open date earliest first
-        ms_display = ms_display.sort_values(
-            "Est. Open",
-            key=lambda col: pd.to_datetime(col, errors="coerce"),
-        )
+    def _is_2026_open(row):
+        v = str(row.get(_curr_key, "") or "")
+        if not v or v in ("nan", "None", ""): return True
+        for _fs in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt.datetime.strptime(v, _fs).year == 2026
+            except: pass
+        return True
 
-        def _ms_row_style(row):
-            ph = str(row.get("Phase",""))
-            if "Construction" in ph: bg = "rgba(255,107,0,0.08)"
-            elif "Permitting"  in ph: bg = "rgba(245,166,35,0.08)"
-            elif "Design"      in ph: bg = "rgba(74,144,226,0.08)"
-            else:                     bg = "rgba(155,89,182,0.08)"
-            return [f"background-color:{bg}"] * len(row)
+    shifts_df = shifts_df[shifts_df.apply(_is_2026_open, axis=1)]
+    if sel_state != "All States":
+        shifts_df = shifts_df[shifts_df["state"] == sel_state]
+    dff_rshs = set(dff["rsh"].tolist())
+    _new_since_jan15 = _pdata["new_since_jan15"]
+    filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
 
-        st.dataframe(
-            ms_display.style.apply(_ms_row_style, axis=1),
-            use_container_width=True, hide_index=True,
-            height=min(60 + len(ms_display) * 35, 540),
-        )
+    prev_snap = _report_snapshots[-2].get("key", "jan15") if len(_report_snapshots) >= 2 else "jan15"
+    curr_snap = latest_snap.get("key", "apr9")
 
-        # Milestone duration analysis
-        with st.expander("📊 Milestone Duration Analysis"):
-            st.caption("Average days between each milestone stage, across all active pipeline stands with complete data.")
-            dur_rows = []
-            for _, r in ms_active.iterrows():
-                ps  = r["permit_sub_dt"]
-                pa  = r["permit_appr_dt"]
-                cs  = r["cs_dt"]
-                bd  = r["bd_dt"]
-                op  = r["open_dt"]
-                row = {"Stand": f"{r['city']}, {r['state']}", "Phase": r["phase"]}
-                if pd.notna(ps) and pd.notna(pa):  row["Permit (sub→appr)"] = (pa - ps).days
-                if pd.notna(pa) and pd.notna(cs):  row["Permit→Const Start"] = (cs - pa).days
-                if pd.notna(cs) and pd.notna(bd):  row["Const Start→Bldg Drop"] = (bd - cs).days
-                if pd.notna(bd) and pd.notna(op):  row["Bldg Drop→Open"] = (op - bd).days
-                if pd.notna(cs) and pd.notna(op):  row["Total Const Days"] = (op - cs).days
-                dur_rows.append(row)
-            if dur_rows:
-                dur_df = pd.DataFrame(dur_rows).fillna("—")
-                st.dataframe(dur_df, use_container_width=True, hide_index=True)
+    def _parse_d(s):
+        if not s or str(s) in ("","nan","None"): return None
+        for fmt in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt.datetime.strptime(str(s), fmt).date()
+            except: pass
+        return None
+
+    shifts_df["_wow"] = shifts_df.apply(
+        lambda r: ((_parse_d(r.get(curr_snap,"")) - _parse_d(r.get(prev_snap,""))).days
+                   if _parse_d(r.get(curr_snap,"")) and _parse_d(r.get(prev_snap,"")) else 0),
+        axis=1,
+    )
+
+    pushed  = shifts_df[shifts_df["delta_days"] > 0].sort_values("delta_days", ascending=False)
+    pulled  = shifts_df[shifts_df["delta_days"] < 0].sort_values("delta_days")
+    wow_movers = shifts_df[shifts_df["_wow"] != 0]
+
+    opened_rows_calc = []
+    for o in _pdata["opened_shifts"]:
+        d_jan15  = _parse_d(o.get("jan15",""))
+        d_actual = _parse_d(o.get("actual_open",""))
+        delta = (d_actual - d_jan15).days if d_jan15 and d_actual else 0
+        opened_rows_calc.append({**o, "delta_days": delta})
+
+    opened_late   = [r for r in opened_rows_calc if r["delta_days"] > 0]
+    opened_early  = [r for r in opened_rows_calc if r["delta_days"] < 0]
+    opened_ontime = [r for r in opened_rows_calc if r["delta_days"] == 0]
+    opened_slip_days  = sum(r["delta_days"] for r in opened_late)
+    opened_slip_weeks = opened_slip_days / 7
+    opened_rev_lost   = opened_slip_weeks * AVG_REV_PER_WEEK
+
+    total_slip_days  = pushed["delta_days"].sum()
+    total_slip_weeks = total_slip_days / 7
+    total_rev_risk   = total_slip_weeks * AVG_REV_PER_WEEK
+
+    si1, si2, si3, si4, si5 = st.columns(5)
+    si1.metric("Stands Pushed Out (vs Jan 15)", len(pushed),
+               delta=f"+{len(pushed)} delayed", delta_color="inverse")
+    si2.metric("Stands Pulled In (vs Jan 15)", len(pulled),
+               delta=f"{len(pulled)} accelerated", delta_color="normal")
+    si3.metric(f"Moved This Week ({snap_labels[-2]}→{snap_labels[-1]})", len(wow_movers),
+               help="Stands whose date changed since the previous report")
+    si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
+               help=f"{total_slip_weeks:.1f} wks pushed × $45K avg weekly revenue vs Jan 15")
+    si5.metric("Opened Late (2026 YTD)", len(opened_late),
+               delta=f"{opened_slip_weeks:.1f} wks lost · ${opened_rev_lost/1e3:.0f}K" if opened_late else "All on time",
+               delta_color="inverse" if opened_late else "normal",
+               help=f"{len(opened_rows_calc)} total · {len(opened_ontime)} on time · {len(opened_early)} early")
+
+    st.markdown("**📋 Full Date History** — every snapshot vs Jan 15 baseline")
+    st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 15** = total drift from baseline")
+
+    sort_col1, _ = st.columns([2, 4])
+    with sort_col1:
+        sort_opt = st.selectbox("Sort by",
+            ["Opening Date (earliest first)", "Opening Date (latest first)",
+             "Slippage (most delayed first)", "Stand Name (A–Z)"],
+            key="si_sort_opt")
+
+    def _parse_open_date(r):
+        v = str(r.get(curr_snap, "") or "")
+        for fs in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt.datetime.strptime(v, fs).date()
+            except: pass
+        v2 = str(r.get("jan15","") or "")
+        for fs in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt.datetime.strptime(v2, fs).date()
+            except: pass
+        return _dt.date(9999, 1, 1)
+
+    if sort_opt == "Opening Date (earliest first)":
+        ss = shifts_df.copy(); ss["_s"] = ss.apply(_parse_open_date, axis=1); shifts_sorted = ss.sort_values("_s")
+    elif sort_opt == "Opening Date (latest first)":
+        ss = shifts_df.copy(); ss["_s"] = ss.apply(_parse_open_date, axis=1); shifts_sorted = ss.sort_values("_s", ascending=False)
+    elif sort_opt == "Slippage (most delayed first)":
+        shifts_sorted = shifts_df.sort_values("delta_days", ascending=False)
     else:
-        st.info("No active pipeline stands with open dates in the current filter.")
+        shifts_sorted = shifts_df.sort_values("city")
 
-    # ── Gantt chart ───────────────────────────────────────────────────────────
+    hist_rows = []
+    for _, r in shifts_sorted.iterrows():
+        row_dict = {"Stand": f"{r['city']}, {r['state']}", "Store": r.get("store","")}
+        for snap in _report_snapshots:
+            val = r.get(snap.get("key",""), "")
+            row_dict[snap["label"]] = str(val) if val and str(val) not in ("","nan","None") else "—"
+        wow = r["_wow"]; wow_wks = wow // 7
+        row_dict["vs Last Wk"] = (f"🔴 +{wow_wks}wk" if wow>0 and wow_wks else
+                                   f"🔴 +{wow}d" if wow>0 else
+                                   f"🟢 {wow_wks}wk" if wow<0 and wow_wks else
+                                   f"🟢 {wow}d" if wow<0 else "—")
+        net = r["delta_days"]; net_wks = net // 7
+        row_dict["Net vs Jan 15"] = f"+{net_wks}wk" if net>0 else (f"{net_wks}wk" if net<0 else "±0")
+        hist_rows.append(row_dict)
+
+    if hist_rows:
+        st.dataframe(pd.DataFrame(hist_rows), use_container_width=True, hide_index=True,
+                     height=min(60 + len(hist_rows) * 35, 520))
+
+    opened_display_rows = []
+    st.markdown("**✅ Already Opened 2026 — Schedule Performance**")
+    st.caption("🔴 = opened late · 🟢 = opened early · ⬜ = on time.")
+    for r in sorted(opened_rows_calc, key=lambda x: x["delta_days"], reverse=True):
+        delta = r["delta_days"]; wks = abs(delta) // 7
+        slip = (f"🔴 +{wks}wk" if delta>0 and wks else f"🔴 +{delta}d" if delta>0 else
+                f"🟢 -{wks}wk" if delta<0 and wks else f"🟢 {delta}d" if delta<0 else "⬜ On Time")
+        opened_display_rows.append({
+            "Stand": f"{r['city']}, {r['state']}",
+            "Store #": r.get("store",""),
+            "Jan 15 Projected": r.get("jan15",""),
+            "Actual Open": r.get("actual_open",""),
+            "vs Jan 15": slip,
+        })
+    if opened_display_rows:
+        st.dataframe(pd.DataFrame(opened_display_rows), use_container_width=True, hide_index=True,
+                     height=min(60 + len(opened_display_rows) * 35, 480))
+
+    if filtered_new_since:
+        st.markdown("**🆕 New to Pipeline Since Jan 15**")
+        new_stands_info = [r for r in _pdata["upcoming"] if r["rsh"] in filtered_new_since]
+        if new_stands_info:
+            new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
+            new_df.columns = ["City","State","Phase","Est. Opening"]
+            st.dataframe(new_df, use_container_width=True, hide_index=True)
+
     st.divider()
-    st.markdown("#### 📊 Construction Timeline — Active Pipeline")
-
-    gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design","2. Due Diligence"])].copy()
+    st.markdown("#### 📊 Construction Timeline — Phases 3–5")
+    gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design"])].copy()
     gantt_df = gantt_df[gantt_df["open_dt"].notna() & gantt_df["cs_dt"].notna()].copy()
     if not gantt_df.empty:
         gantt_df["Label"] = gantt_df.apply(
-            lambda r: f"{r['city']}, {r['state']}",
-            axis=1)
+            lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""), axis=1)
         gantt_df = gantt_df.sort_values("open_dt", ascending=False)
         import json as _json_g
         _gantt_json = _json_g.dumps(
-            gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records")
-        )
+            gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records"))
         fig_gantt = _build_gantt_fig(_gantt_json, str(today))
         if fig_gantt is not None:
             st.plotly_chart(fig_gantt, use_container_width=True)
     else:
-        st.info("No stands with both Construction Start and Open Date in the current filter.")
+        st.info("No stands with both Construction Start and Open Date in current filter.")
 
-    # ── Upcoming openings table ────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 🔍 Process Leakage — Milestone Drift vs Jan 15 Baseline")
+    st.caption("🔴 bar = slipped later · 🟢 bar = moved earlier.")
+    _ms_data = _pdata.get("milestone_shifts", [])
+    ms_phase_opts = ["5. Construction", "4. Permitting", "3. Design", "All Phases"]
+    ms_phase = st.selectbox("Show Phase", ms_phase_opts, key="ms_phase_sel")
+    ms_rows = [
+        r for r in _ms_data
+        if (ms_phase == "All Phases" or r["phase"] == ms_phase)
+        and (sel_state == "All States" or r["state"] == sel_state)
+        and any(r.get(f"{k}_delta") is not None for k in ["permit_sub","permit_appr","cs","open"])
+    ]
+    if not ms_rows:
+        st.info("No milestone data available for the current filter selection.")
+    else:
+        import json as _json_ms
+        fig_ms, ms_df = _build_milestone_fig(_json_ms.dumps(ms_rows))
+        if fig_ms is not None:
+            st.plotly_chart(fig_ms, use_container_width=True)
+        if ms_df is not None and not ms_df.empty:
+            avg_by_ms = ms_df.groupby("Milestone")["Days Drifted"].mean().sort_values(ascending=False)
+            worst_ms  = avg_by_ms.index[0]; worst_avg = avg_by_ms.iloc[0]
+            open_avg  = avg_by_ms.get("Open Date", 0)
+            if isinstance(open_avg, pd.Series): open_avg = open_avg.iloc[0]
+            if worst_avg > 0:
+                st.info(f"📊 **{worst_ms}** has the largest avg drift at **+{worst_avg:.0f} days**. "
+                        f"Avg open date drift: **+{open_avg:.0f} days**.")
+
     st.divider()
     st.markdown("#### 📋 Upcoming Openings")
-    table_df = dff[dff["phase"] != "Open"][["phase","address","city","state","region","cs","bd","open","store","rsh"]].copy()
+    table_df = dff[["phase","address","city","state","region","cs","bd","open","store","rsh"]].copy()
     table_df.columns = ["Phase","Address","City","State","Region",
                         "Const. Start","Building Drop","Est. Opening","Store #","RSH"]
     table_df["Phase"]   = table_df["Phase"].map(_phase_label)
     table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
+    table_df["⚑ Shifted"] = table_df["RSH"].apply(
+        lambda r: "↑ Pushed" if r in set(pushed["rsh"].tolist()) else
+                  "↓ Pulled" if r in set(pulled["rsh"].tolist()) else
+                  "🆕 New"   if r in set(_new_since_jan15) else "")
 
     def _row_style(row):
-        ph = str(row.get("Phase",""))
-        if "Construction" in ph: bg = "rgba(255,107,0,0.08)"
-        elif "Permitting"  in ph: bg = "rgba(245,166,35,0.08)"
-        elif "Design"      in ph: bg = "rgba(74,144,226,0.08)"
+        if "Construction" in row["Phase"]: bg = "rgba(255,107,0,0.08)"
+        elif "Permitting"  in row["Phase"]: bg = "rgba(245,166,35,0.08)"
+        elif "Design"      in row["Phase"]: bg = "rgba(74,144,226,0.08)"
         else: bg = "rgba(155,89,182,0.08)"
         return [f"background-color:{bg}"] * len(row)
 
-    st.dataframe(
-        table_df.style.apply(_row_style, axis=1),
-        use_container_width=True, hide_index=True,
-        height=min(50 + len(table_df) * 35, 500),
-    )
+    st.dataframe(table_df.style.apply(_row_style, axis=1),
+                 use_container_width=True, hide_index=True,
+                 height=min(50 + len(table_df) * 35, 500))
 
-        # ── PDF Export ────────────────────────────────────────────────────────────
     with st.expander("📄 Export as Password-Protected PDF"):
         ex_c1, ex_c2 = st.columns([2, 1])
         with ex_c1:
-            pdf_pw = st.text_input(
-                "Set PDF Password",
-                value="7BREW2026",
-                type="password",
-                key="pipeline_pdf_pw",
-                help="Recipients will need this password to open the PDF.",
-            )
+            pdf_pw = st.text_input("Set PDF Password", value="7BREW2026", type="password",
+                                   key="pipeline_pdf_pw",
+                                   help="Recipients will need this password to open the PDF.")
         with ex_c2:
-            st.write("")
-            st.write("")
+            st.write(""); st.write("")
             gen_btn = st.button("⚙️ Generate PDF", key="gen_pipeline_pdf", type="primary")
-
         if gen_btn:
             with st.spinner("Building PDF…"):
                 try:
                     pdf_bytes = _generate_pipeline_pdf(table_df, pdf_pw)
-                    st.download_button(
-                        label="⬇️ Download PDF",
-                        data=pdf_bytes,
-                        file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf",
-                        key="dl_pipeline_pdf",
-                    )
+                    st.download_button(label="⬇️ Download PDF", data=pdf_bytes,
+                                       file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
+                                       mime="application/pdf", key="dl_pipeline_pdf")
                     st.success(f"✅ PDF ready — password is: `{pdf_pw}`")
                 except Exception as _e:
                     st.error(f"PDF generation failed: {_e}")
 
-    # ── Delay sensitivity ─────────────────────────────────────────────────────
     st.divider()
     st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
     st.caption("Revenue impact per stand if opening slips beyond current estimate")
-
     sense_df = dff[dff["open_dt"].notna()].copy()
     sense_df = sense_df[sense_df["open_dt"].dt.date >= today].head(20)
     if not sense_df.empty:
-        sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
+        sense_df["Stand"]    = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
         sense_df["Est. Open"] = sense_df["open"].astype(str)
-        sense_df["+4 Wks"]  = f"${4  * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+8 Wks"]  = f"${8  * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+12 Wks"] = f"${12 * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+26 Wks"] = f"${26 * AVG_REV_PER_WEEK:,.0f}"
-        st.dataframe(
-            sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
-            use_container_width=True, hide_index=True,
-            height=min(50 + len(sense_df) * 35, 400),
-        )
-
+        sense_df["+4 Wks"]   = f"${4  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+8 Wks"]   = f"${8  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+12 Wks"]  = f"${12 * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+26 Wks"]  = f"${26 * AVG_REV_PER_WEEK:,.0f}"
+        st.dataframe(sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
+                     use_container_width=True, hide_index=True,
+                     height=min(50 + len(sense_df) * 35, 400))
 
 
 # ─────────────────────────────────────────────
