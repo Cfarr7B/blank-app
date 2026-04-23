@@ -2084,6 +2084,7 @@ def _aggregate_stands_multi(raw_df):
 
     _PCT_TO_BASE = {
         "Total_COGS_pct":      "Total_COGS",
+        "Overtime_pct":        "Overtime",
         "Total_Hourly_pct":    "Total_Hourly",
         "Total_Labor_pct":     "Total_Labor",
         "Total_RM_pct":        "Total_RM",
@@ -2253,6 +2254,8 @@ def tab_stands(dash):
         ("Total_COGS_pct",     "COGS %",         "%"),
         ("Total_Hourly",       "Hourly Labor $", "$"),
         ("Total_Hourly_pct",   "Hourly %",       "%"),
+        ("Overtime",           "Overtime $",     "$"),
+        ("Overtime_pct",       "Overtime %",     "%"),
         ("Total_Labor",        "Total Labor $",  "$"),
         ("Total_Labor_pct",    "Total Labor %",  "%"),
         ("Total_RM",           "R&M $",          "$"),
@@ -4080,6 +4083,27 @@ def _load_sos_data(csv_filename: str):
         df["SOS_sec"] = None
         df["SOS_min"] = None
 
+    # Sales & transaction columns
+    if "Gross Sales" in df.columns:
+        df["Gross_Sales"] = (
+            df["Gross Sales"].astype(str)
+            .str.replace(r"[\$,]", "", regex=True)
+            .pipe(pd.to_numeric, errors="coerce")
+            .fillna(0)
+        )
+    else:
+        df["Gross_Sales"] = 0.0
+
+    if "Transaction Count" in df.columns:
+        df["Transaction_Count"] = pd.to_numeric(df["Transaction Count"], errors="coerce").fillna(0)
+    else:
+        df["Transaction_Count"] = 0
+
+    if "Guest Count" in df.columns:
+        df["Guest_Count"] = pd.to_numeric(df["Guest Count"], errors="coerce").fillna(0)
+    else:
+        df["Guest_Count"] = 0
+
     # State from City_State
     df["State"] = df["City_State"].str.extract(r",\s*([A-Z]{2})$").fillna("Unknown")
 
@@ -5027,7 +5051,152 @@ def tab_sos(dash):
         )
 
     # ═════════════════════════════════════════════════════════════════════════
-    # SECTION 6 — INDIVIDUAL STAND DETAIL
+    # SECTION 6 — SALES vs WAIT TIME BY HOUR (overlay)
+    # ═════════════════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.subheader("💰 Sales vs Wait Time by Hour")
+    st.caption("Sales (bars, right axis) overlaid with avg wait time (line, left axis). "
+               "Pick any stand or combination of stands.")
+
+    # Stand picker — multiselect with "All Stands" shortcut
+    all_stand_opts = sorted(df["Stand_Label"].dropna().unique().tolist())
+    _sv_col1, _sv_col2 = st.columns([3, 1])
+    with _sv_col1:
+        sel_sv_stands = st.multiselect(
+            "Stand(s)",
+            all_stand_opts,
+            default=[],
+            placeholder="Leave blank for all stands combined",
+            key="sos_sv_stands",
+        )
+    with _sv_col2:
+        _sv_day = st.selectbox("Day of Week", ["All Days"] + day_order, key="sos_sv_day")
+
+    # Filter by selected stands (blank = all)
+    sv_df = df.copy()
+    if sel_sv_stands:
+        sv_df = sv_df[sv_df["Stand_Label"].isin(sel_sv_stands)]
+    if _sv_day != "All Days":
+        sv_df = sv_df[sv_df["DayOfWeek"] == _sv_day]
+
+    if sv_df.empty:
+        st.info("No data for the selected stand / day combination.")
+    elif not sv_df["Hour"].notna().any():
+        st.info("No hourly data available.")
+    else:
+        sv_label = ", ".join(sel_sv_stands) if sel_sv_stands else "All Stands"
+        day_label = f" — {_sv_day}" if _sv_day != "All Days" else ""
+
+        # Aggregate by hour: total sales + avg SOS
+        sv_hourly = (
+            sv_df.groupby("Hour")
+            .agg(
+                Total_Sales=("Gross_Sales", "sum"),
+                Avg_SOS=("SOS_min", "mean"),
+                Transactions=("Transaction_Count", "sum"),
+            )
+            .reset_index()
+            .sort_values("Hour")
+        )
+        sv_hourly["Hour_Label"] = sv_hourly["Hour"].apply(_fmt_hour)
+
+        # Build dual-axis figure
+        fig_sv = go.Figure()
+
+        # Bars: Total Sales (right Y axis)
+        fig_sv.add_trace(go.Bar(
+            x=sv_hourly["Hour_Label"],
+            y=sv_hourly["Total_Sales"],
+            name="Gross Sales ($)",
+            yaxis="y2",
+            marker_color="rgba(57,197,232,0.55)",
+            marker_line_color="rgba(57,197,232,0.9)",
+            marker_line_width=1,
+            hovertemplate="<b>%{x}</b><br>Sales: $%{y:,.0f}<extra></extra>",
+        ))
+
+        # Line: Avg SOS (left Y axis)
+        fig_sv.add_trace(go.Scatter(
+            x=sv_hourly["Hour_Label"],
+            y=sv_hourly["Avg_SOS"],
+            name="Avg Wait Time",
+            yaxis="y1",
+            mode="lines+markers+text",
+            line=dict(color="#FF2D9B", width=3),
+            marker=dict(size=8, color="#FF2D9B"),
+            text=sv_hourly["Avg_SOS"].apply(_fmt_sos),
+            textposition="top center",
+            textfont=dict(color="#FF2D9B", size=11, family="Arial Black"),
+            hovertemplate="<b>%{x}</b><br>Avg SOS: %{text}<extra></extra>",
+        ))
+
+        # Goal reference line at 3:30
+        fig_sv.add_hline(
+            y=3.5, yref="y1",
+            line_dash="dot", line_color="rgba(18,160,110,0.7)",
+            annotation_text="3:30 Mature Goal",
+            annotation_position="bottom right",
+            annotation_font_color="rgba(18,160,110,0.9)",
+        )
+
+        # Prime-time shading (approximate — weekday 7-10am, weekend 9am-1pm)
+        _is_wkend_sv = _sv_day in ["Saturday", "Sunday"]
+        _pt_s, _pt_e = (9, 13) if _is_wkend_sv else (7, 10)
+        # Convert hour numbers to hour-label strings for vrect x values
+        _hour_labels_ordered = sv_hourly["Hour_Label"].tolist()
+        if _hour_labels_ordered:
+            _pt_start_lbl = _fmt_hour(_pt_s) if _fmt_hour(_pt_s) in _hour_labels_ordered else _hour_labels_ordered[0]
+            _pt_end_lbl   = _fmt_hour(_pt_e - 1) if _fmt_hour(_pt_e - 1) in _hour_labels_ordered else _hour_labels_ordered[-1]
+            fig_sv.add_vrect(
+                x0=_pt_start_lbl, x1=_pt_end_lbl,
+                fillcolor="rgba(249,199,79,0.10)",
+                layer="below", line_width=0,
+                annotation_text="Prime Time" if _sv_day != "All Days" else "",
+                annotation_position="top left",
+            )
+
+        fig_sv.update_layout(
+            title=f"Gross Sales & Avg Wait Time by Hour — {sv_label}{day_label}",
+            height=460,
+            xaxis=dict(title="Hour of Day", tickangle=-30),
+            yaxis=dict(
+                title="Avg Wait Time",
+                tickvals=_sos_ticks,
+                ticktext=_sos_ticklabels,
+                side="left",
+                showgrid=True,
+                gridcolor="rgba(200,200,200,0.3)",
+            ),
+            yaxis2=dict(
+                title="Gross Sales ($)",
+                overlaying="y",
+                side="right",
+                tickformat="$,.0f",
+                showgrid=False,
+            ),
+            legend=dict(orientation="h", y=-0.18, x=0),
+            bargap=0.25,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig_sv, use_container_width=True)
+
+        # Summary table
+        sv_hourly["Sales"] = sv_hourly["Total_Sales"].apply(lambda v: f"${v:,.0f}")
+        sv_hourly["Avg SOS"] = sv_hourly["Avg_SOS"].apply(_fmt_sos)
+        sv_hourly["Txns"] = sv_hourly["Transactions"].apply(lambda v: f"{int(v):,}")
+        sv_hourly["vs Goal"] = sv_hourly["Avg_SOS"].apply(
+            lambda v: ("+" if v - 3.5 >= 0 else "") + _fmt_sos(v - 3.5)
+        )
+        st.dataframe(
+            sv_hourly[["Hour_Label", "Sales", "Txns", "Avg SOS", "vs Goal"]]
+            .rename(columns={"Hour_Label": "Hour"})
+            .style.map(_colour_sos_cell, subset=["Avg SOS"]),
+            use_container_width=True, hide_index=True,
+        )
+
+    # ═════════════════════════════════════════════════════════════════════════
+    # SECTION 7 — INDIVIDUAL STAND DETAIL
     # ═════════════════════════════════════════════════════════════════════════
     st.markdown("---")
     st.subheader("🔍 Individual Stand Detail")
@@ -5082,8 +5251,6 @@ def tab_sos(dash):
 # TAB: FORECAST
 # ─────────────────────────────────────────────
 def tab_forecast(dash):
-    if not _require_password("forecast"):
-        return
     section("FORECAST P4–P13 2026 (Draft)", "P1–P3 actuals locked · P4–P13 projected · 3 scenarios · Seasonal watch notes")
 
     fc = dash.get("forecast_26", [])
@@ -6460,40 +6627,32 @@ _NEW_SINCE_JAN15 = [
 ]
 
 
-_PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
+_PIPELINE_XLSX_PATH = os.path.join(os.path.dirname(__file__), "7Crew_Stand_Dates.xlsx")
 
 
-@st.cache_data(show_spinner=False)
-def _load_pipeline_data(_mtime: float) -> dict:
-    """Load pipeline_data.json once and cache it.
-
-    _mtime is the file's modification timestamp — passing it as a parameter
-    means the cache automatically invalidates the moment you drop a new file
-    in, so the weekly update workflow is: replace pipeline_data.json → done.
-    """
-    import json as _j
-    with open(_PIPELINE_JSON_PATH) as f:
-        return _j.load(f)
-
-
-@st.cache_data(show_spinner=False)
-def _get_pipeline_dfs(_mtime: float):
-    """Return pre-parsed pipeline DataFrames — built once, cached until file changes."""
-    data = _load_pipeline_data(_mtime)
-    df = pd.DataFrame(data["upcoming"])
-    df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
-    df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
-    df = df.sort_values("open_dt").reset_index(drop=True)
-    shifts_df = pd.DataFrame(data["date_shifts"])
-    return df, shifts_df
-
-
-def _pipeline_mtime() -> float:
-    """Return pipeline_data.json modification time, or 0 if file not found."""
+def _pipeline_xlsx_mtime() -> float:
+    """Return xlsx modification time, or 0 if not found."""
     try:
-        return os.path.getmtime(_PIPELINE_JSON_PATH)
+        return os.path.getmtime(_PIPELINE_XLSX_PATH)
     except FileNotFoundError:
         return 0.0
+
+
+@st.cache_data(show_spinner=False)
+def _load_pipeline_xlsx(_mtime: float):
+    """Load 7Crew_Stand_Dates.xlsx — cached until the file changes."""
+    upcoming  = pd.read_excel(_PIPELINE_XLSX_PATH, sheet_name="Upcoming Stands")
+    operating = pd.read_excel(_PIPELINE_XLSX_PATH, sheet_name="Operating Stands")
+
+    # Normalise column names
+    upcoming.columns  = [c.strip() for c in upcoming.columns]
+    operating.columns = [c.strip() for c in operating.columns]
+
+    # Parse dates
+    upcoming["open_dt"]  = pd.to_datetime(upcoming["Opening Date"], errors="coerce")
+    operating["open_dt"] = pd.to_datetime(operating["Open Date"],   errors="coerce")
+
+    return upcoming, operating
 
 
 def _pl_coords(city, state):
@@ -6890,645 +7049,191 @@ def _generate_pipeline_pdf(table_df, password: str) -> bytes:
         Paragraph(f"Pipeline Report · As of Apr 16, 2026 · {len(table_df)} stands · Generated {today_str}", sub_s),
     ]
 
-    # Strip emoji from Phase column so reportlab doesn't choke
-    tdf = table_df.copy()
-    tdf["Phase"] = tdf["Phase"].str.replace(r"[^\x00-\x7F]+\s*", "", regex=True).str.strip()
-    tdf["⚑ Shifted"] = tdf["⚑ Shifted"].str.replace("↑", "+").str.replace("↓", "-")
-
+    tdf = table_df.copy().astype(str)
     col_names = list(tdf.columns)
     data_rows = [col_names] + [list(r) for r in tdf.itertuples(index=False, name=None)]
 
-    # Column widths (10.2" usable in landscape letter)
-    cw_map = {
-        "Phase": 1.15*inch, "Address": 1.65*inch, "City": 0.82*inch,
-        "State": 0.38*inch, "Region": 0.55*inch, "Const. Start": 0.68*inch,
-        "Building Drop": 0.72*inch, "Est. Opening": 0.72*inch,
-        "Store #": 0.58*inch, "RSH": 0.75*inch, "⚑ Shifted": 0.62*inch,
-    }
-    col_widths = [cw_map.get(c, 0.75*inch) for c in col_names]
-
-    # Phase row background colors (matching the app)
-    phase_bg = {
-        "Under Construction": colors.HexColor("#FFF3EC"),
-        "Permitting":         colors.HexColor("#FEFAE8"),
-        "Design":             colors.HexColor("#EBF3FD"),
-        "Due Diligence":      colors.HexColor("#F5EEF8"),
-    }
+    # Column widths — auto-scale to fit landscape letter (10.2" usable)
+    usable_w = 10.2 * inch
+    per_col  = usable_w / max(len(col_names), 1)
+    col_widths = [per_col] * len(col_names)
 
     tbl_style = [
-        # Header
         ("BACKGROUND",    (0, 0), (-1, 0), colors.HexColor("#2C2C2C")),
         ("TEXTCOLOR",     (0, 0), (-1, 0), colors.white),
         ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",      (0, 0), (-1, 0), 7.5),
+        ("FONTSIZE",      (0, 0), (-1, 0), 9),
         ("ALIGN",         (0, 0), (-1, 0), "CENTER"),
-        # Data rows
         ("FONTNAME",      (0, 1), (-1, -1), "Helvetica"),
-        ("FONTSIZE",      (0, 1), (-1, -1), 7.5),
+        ("FONTSIZE",      (0, 1), (-1, -1), 9),
         ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
         ("GRID",          (0, 0), (-1, -1), 0.4, colors.HexColor("#CCCCCC")),
-        ("TOPPADDING",    (0, 0), (-1, -1), 3),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ("LEFTPADDING",   (0, 0), (-1, -1), 4),
-        ("RIGHTPADDING",  (0, 0), (-1, -1), 4),
+        ("TOPPADDING",    (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 5),
     ]
-
-    # Alternating row base (light grey every other row)
     for ri in range(1, len(data_rows)):
         if ri % 2 == 0:
             tbl_style.append(("BACKGROUND", (0, ri), (-1, ri), colors.HexColor("#F6F6F6")))
-
-    # Phase-specific row colors (override alternating)
-    shifted_col_idx = col_names.index("⚑ Shifted") if "⚑ Shifted" in col_names else -1
-    for ri, row in enumerate(data_rows[1:], start=1):
-        phase = str(row[0])
-        for phase_name, bg in phase_bg.items():
-            if phase_name in phase:
-                tbl_style.append(("BACKGROUND", (0, ri), (-1, ri), bg))
-                break
-        # Color the Shifted column text
-        if shifted_col_idx >= 0:
-            shifted_val = str(row[shifted_col_idx]) if shifted_col_idx < len(row) else ""
-            if "Pushed" in shifted_val or "+" in shifted_val:
-                tbl_style.append(("TEXTCOLOR", (shifted_col_idx, ri), (shifted_col_idx, ri),
-                                   colors.HexColor("#CC3300")))
-            elif "Pulled" in shifted_val or "-" in shifted_val:
-                tbl_style.append(("TEXTCOLOR", (shifted_col_idx, ri), (shifted_col_idx, ri),
-                                   colors.HexColor("#006633")))
 
     tbl = Table(data_rows, colWidths=col_widths, repeatRows=1)
     tbl.setStyle(TableStyle(tbl_style))
     elements.append(tbl)
     doc.build(elements)
 
-    # Add password protection with pikepdf
-    plain = io.BytesIO(buf.getvalue())
-    enc   = io.BytesIO()
-    with pikepdf.open(plain) as pdf:
-        pdf.save(enc, encryption=pikepdf.Encryption(owner=password, user=password, R=4))
-    return enc.getvalue()
+    # Optionally add password protection with pikepdf
+    if password:
+        plain = io.BytesIO(buf.getvalue())
+        enc   = io.BytesIO()
+        with pikepdf.open(plain) as pdf:
+            pdf.save(enc, encryption=pikepdf.Encryption(owner=password, user=password, R=4))
+        return enc.getvalue()
+    return buf.getvalue()
 
 
 def tab_pipeline(dash):
-    import streamlit.components.v1 as components
+    st.markdown("### 🏗️ Stand Pipeline")
 
-    if not _require_password("pipeline"):
+    # ── Load xlsx (cached until file changes) ─────────────────────────────────
+    if not os.path.exists(_PIPELINE_XLSX_PATH):
+        st.error("Pipeline file not found: 7Crew_Stand_Dates.xlsx — drop it into the app folder.")
         return
 
-    st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
+    _mtime = _pipeline_xlsx_mtime()
+    upcoming_raw, operating_raw = _load_pipeline_xlsx(_mtime)
 
-    # ── Load pipeline data (cached until pipeline_data.json changes) ──────────
-    _pmtime = _pipeline_mtime()
-    _pdata  = _load_pipeline_data(_pmtime)
-    df, shifts_df_base = _get_pipeline_dfs(_pmtime)
-
-    _last_updated = _pdata.get("_last_updated", "unknown")
     st.caption(
-        f"**Data source:** Drew Deagan's weekly opening schedule (last updated **{_last_updated}**). "
-        "To refresh: replace `pipeline_data.json` with the latest export. "
-        "Jan 15, 2026 used as baseline for schedule shift analysis · 2027 dates are soft/indicative · $45K avg revenue/week assumed."
+        f"Source: **7Crew_Stand_Dates.xlsx** · "
+        f"{len(upcoming_raw)} upcoming · {len(operating_raw)} operating  "
+        f"*(replace the xlsx to refresh)*"
     )
 
-    # ── Print / PDF button ────────────────────────────────────────────────────
     _print_button("🖨️  Print / Save as PDF")
 
-    AVG_REV_PER_WEEK = 45_000   # $ per stand per week
+    # ── Region filter ─────────────────────────────────────────────────────────
+    all_regions = sorted(
+        set(upcoming_raw["Region"].dropna()) | set(operating_raw["Region"].dropna())
+    )
+    sel_region = st.selectbox("Region", ["All Regions"] + all_regions, key="pipe_region")
 
-    # ── Filters ───────────────────────────────────────────────────────────────
-    fc1, fc2, fc3 = st.columns([1, 1, 1])
-    with fc1:
-        phase_opts = ["All Phases", "5. Construction", "4. Permitting", "3. Design", "2. Due Diligence"]
-        sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase")
-    with fc2:
-        state_opts = ["All States"] + sorted(df["state"].unique().tolist())
-        sel_state = st.selectbox("State", state_opts, key="pipe_state")
-    with fc3:
-        region_opts = ["All Regions"] + sorted(df["region"].dropna().unique().tolist())
-        sel_region = st.selectbox("Region", region_opts, key="pipe_region")
+    upcoming  = upcoming_raw.copy()
+    operating = operating_raw.copy()
+    if sel_region != "All Regions":
+        upcoming  = upcoming[upcoming["Region"]  == sel_region]
+        operating = operating[operating["Region"] == sel_region]
 
-    dff = df.copy()
-    if sel_phase != "All Phases":  dff = dff[dff["phase"] == sel_phase]
-    if sel_state != "All States":  dff = dff[dff["state"] == sel_state]
-    if sel_region != "All Regions": dff = dff[dff["region"] == sel_region]
-
-    # Pre-load existing open stands (used for open count + map at bottom)
-    stands_df_pipe = get_stands_df(dash)
-    existing_rows  = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
-    open_store_ids = set()
-    for row in existing_rows:
-        raw = row.get("Stand", "")
-        parts = raw.split(" ", 1)
-        if parts:
-            open_store_ids.add(parts[0].strip())
-    for r in _pdata["open_pdf"]:
-        open_store_ids.add(r.get("store", ""))
-    total_open = len(open_store_ids)
-
-    # ── Summary metrics ───────────────────────────────────────────────────────
-    mc = st.columns(6)
-    mc[0].metric("✅ Stands Open", total_open, help="Open stands in data.json + Mar 26 report")
-    mc[1].metric("Total Pipeline", len(dff))
-    mc[2].metric("🔨 Under Construction", len(dff[dff["phase"] == "5. Construction"]))
-    mc[3].metric("📋 Permitting",          len(dff[dff["phase"] == "4. Permitting"]))
-    mc[4].metric("📐 Design",              len(dff[dff["phase"] == "3. Design"]))
-    mc[5].metric("🔍 Due Diligence",       len(dff[dff["phase"] == "2. Due Diligence"]))
-
+    # ── KPI strip ─────────────────────────────────────────────────────────────
     import datetime as _dt
     today = _dt.date.today()
 
-    # ── Schedule Intelligence: weekly date-drift tracker ─────────────────────
+    next_open = upcoming.dropna(subset=["open_dt"]).sort_values("open_dt")
+    next_label = "—"
+    days_to_next = None
+    if not next_open.empty:
+        nxt_row = next_open.iloc[0]
+        nxt_dt  = nxt_row["open_dt"].date()
+        days_to_next = (nxt_dt - today).days
+        next_label = f"{nxt_row['Stand']}  ({nxt_dt.strftime('%b %d')})"
+
+    mc = st.columns(4)
+    mc[0].metric("🏗️ Upcoming Openings", len(upcoming))
+    mc[1].metric("✅ Operating Stands",   len(operating))
+    mc[2].metric("📊 Total Portfolio",    len(upcoming) + len(operating))
+    mc[3].metric("⏳ Next Open (days)",
+                 f"{days_to_next}d" if days_to_next is not None else "—",
+                 help=next_label)
+
+    # ── Upcoming opens by month (bar chart) ──────────────────────────────────
     st.divider()
-    _report_snapshots = _pdata["report_snapshots"]
-    snap_labels = [s["label"] for s in _report_snapshots]
-    latest_snap = _report_snapshots[-1]
-    st.markdown(f"#### 📅 Schedule Intelligence — Opening Date Tracker  *(2026 opens · indexed to Jan 15 baseline)*")
-    st.caption(f"Tracks how opening dates move week-over-week vs the Jan 15 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
+    st.subheader("📅 Upcoming Openings by Month")
 
-    shifts_df = shifts_df_base.copy()
-    # Exclude any stand whose latest open date has slipped into 2027
-    _curr_key = _pdata["report_snapshots"][-1].get("key", "apr9")
-    def _is_2026_open(row):
-        import datetime as _dt2
-        v = str(row.get(_curr_key, "") or "")
-        if not v or v in ("nan", "None", ""):
-            return True   # no date → keep
-        for _fs in ["%m/%d/%y", "%m/%d/%Y"]:
-            try:
-                return _dt2.datetime.strptime(v, _fs).year == 2026
-            except Exception:
-                pass
-        return True   # unparseable → keep
-    shifts_df = shifts_df[shifts_df.apply(_is_2026_open, axis=1)]
-    if sel_state != "All States":
-        shifts_df = shifts_df[shifts_df["state"] == sel_state]
-    dff_rshs = set(dff["rsh"].tolist())
-    _new_since_jan15 = _pdata["new_since_jan15"]
-    filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
-
-    # Compute week-over-week delta (latest vs previous snapshot)
-    prev_snap = _report_snapshots[-2].get("key", "jan15") if len(_report_snapshots) >= 2 else "jan15"
-    curr_snap = latest_snap.get("key", "apr9")
-    def _parse_d(s):
-        if not s or str(s) in ("","nan","None"): return None
-        for fmt in ["%m/%d/%y","%m/%d/%Y"]:
-            try:
-                import datetime as _dt
-                return _dt.datetime.strptime(str(s), fmt).date()
-            except: pass
-        return None
-
-    def _wow(row):
-        d_prev = _parse_d(row.get(prev_snap,""))
-        d_curr = _parse_d(row.get(curr_snap,""))
-        if d_prev and d_curr: return (d_curr - d_prev).days
-        return 0
-
-    shifts_df["_wow"] = shifts_df.apply(_wow, axis=1)
-
-    pushed  = shifts_df[shifts_df["delta_days"] > 0].sort_values("delta_days", ascending=False)
-    pulled  = shifts_df[shifts_df["delta_days"] < 0].sort_values("delta_days")
-    bounced = shifts_df[shifts_df["delta_days"] == 0]
-    new_count = len(filtered_new_since)
-
-    # ── Compute opened-stand slippage for metrics ─────────────────────────────
-    import datetime as _dt_mod
-    def _parse_d_simple(s):
-        if not s or str(s) in ("","nan","None"): return None
-        for fmt in ["%m/%d/%y","%m/%d/%Y"]:
-            try:
-                return _dt_mod.datetime.strptime(str(s), fmt).date()
-            except: pass
-        return None
-
-    opened_rows_calc = []
-    for o in _pdata["opened_shifts"]:
-        d_jan15  = _parse_d_simple(o.get("jan15",""))
-        d_actual = _parse_d_simple(o.get("actual_open",""))
-        if d_jan15 and d_actual:
-            delta = (d_actual - d_jan15).days
-        else:
-            delta = 0
-        opened_rows_calc.append({**o, "delta_days": delta})
-
-    opened_late  = [r for r in opened_rows_calc if r["delta_days"] > 0]
-    opened_early = [r for r in opened_rows_calc if r["delta_days"] < 0]
-    opened_ontime= [r for r in opened_rows_calc if r["delta_days"] == 0]
-    opened_slip_days  = sum(r["delta_days"] for r in opened_late)
-    opened_slip_weeks = opened_slip_days / 7
-    opened_rev_lost   = opened_slip_weeks * AVG_REV_PER_WEEK
-
-    si1, si2, si3, si4, si5 = st.columns(5)
-    total_slip_days  = pushed["delta_days"].sum()
-    total_slip_weeks = total_slip_days / 7
-    total_rev_risk   = total_slip_weeks * AVG_REV_PER_WEEK
-    wow_movers = shifts_df[shifts_df["_wow"] != 0]
-    si1.metric("Stands Pushed Out (vs Jan 15)",  len(pushed),   delta=f"+{len(pushed)} delayed",   delta_color="inverse")
-    si2.metric("Stands Pulled In (vs Jan 15)",   len(pulled),   delta=f"{len(pulled)} accelerated", delta_color="normal")
-    si3.metric(f"Moved This Week ({snap_labels[-2]}→{snap_labels[-1]})", len(wow_movers),
-               help="Stands whose date changed since the previous report")
-    si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
-               help=f"Total weeks pushed out ({total_slip_weeks:.1f} wks) × $45K avg weekly revenue vs Jan 15 baseline")
-    si5.metric("Opened Late (2026 YTD)", len(opened_late),
-               delta=f"{opened_slip_weeks:.1f} wks lost · ${opened_rev_lost/1e3:.0f}K" if opened_late else "All on time",
-               delta_color="inverse" if opened_late else "normal",
-               help=f"{len(opened_rows_calc)} total opened · {len(opened_ontime)} on time · {len(opened_early)} early")
-
-    # ── Full date history table ───────────────────────────────────────────────
-    st.markdown("**📋 Full Date History** — every snapshot vs Jan 15 baseline")
-    st.caption("Date columns show raw opening dates · 🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 15** = total drift from baseline")
-
-    def _fmt_cell(snap_key, row, jan15_date):
-        """Return the raw date value — deltas are shown only in the summary columns."""
-        val = row.get(snap_key, "")
-        if not val or str(val) in ("", "nan", "None"):
-            return "—"
-        return str(val)
-
-    # Sort selector — parse actual dates so Oct/Nov sort after Jan, not before
-    sort_col1, sort_col2 = st.columns([2, 4])
-    with sort_col1:
-        sort_opt = st.selectbox(
-            "Sort by",
-            ["Opening Date (earliest first)", "Opening Date (latest first)",
-             "Slippage (most delayed first)", "Stand Name (A–Z)"],
-            key="si_sort_opt",
+    up_dated = upcoming.dropna(subset=["open_dt"]).copy()
+    if not up_dated.empty:
+        up_dated["Month"]    = up_dated["open_dt"].dt.to_period("M")
+        up_dated["MonthStr"] = up_dated["open_dt"].dt.strftime("%b %Y")
+        monthly = (
+            up_dated.groupby(["Month", "MonthStr"])
+            .size().reset_index(name="Count")
+            .sort_values("Month")
         )
-
-    def _parse_open_date(r):
-        """Return a sortable date from the latest snapshot open date field."""
-        import datetime as _dt3
-        v = str(r.get(curr_snap, "") or "")
-        for fs in ["%m/%d/%y", "%m/%d/%Y"]:
-            try: return _dt3.datetime.strptime(v, fs).date()
-            except: pass
-        # fallback: parse jan15 date
-        v2 = str(r.get("jan15","") or "")
-        for fs in ["%m/%d/%y", "%m/%d/%Y"]:
-            try: return _dt3.datetime.strptime(v2, fs).date()
-            except: pass
-        import datetime as _dt3
-        return _dt3.date(9999, 1, 1)  # unknown dates sort last
-
-    if sort_opt == "Opening Date (earliest first)":
-        shifts_sorted = shifts_df.copy()
-        shifts_sorted["_sort_dt"] = shifts_sorted.apply(_parse_open_date, axis=1)
-        shifts_sorted = shifts_sorted.sort_values("_sort_dt", ascending=True)
-    elif sort_opt == "Opening Date (latest first)":
-        shifts_sorted = shifts_df.copy()
-        shifts_sorted["_sort_dt"] = shifts_sorted.apply(_parse_open_date, axis=1)
-        shifts_sorted = shifts_sorted.sort_values("_sort_dt", ascending=False)
-    elif sort_opt == "Slippage (most delayed first)":
-        shifts_sorted = shifts_df.sort_values("delta_days", ascending=False)
-    else:  # Stand Name A–Z
-        shifts_sorted = shifts_df.sort_values("city", ascending=True)
-
-    hist_rows = []
-    for _, r in shifts_sorted.iterrows():
-        row_dict = {
-            "Stand": f"{r['city']}, {r['state']}",
-            "Store": r.get("store",""),
-        }
-        for snap in _report_snapshots:
-            row_dict[snap["label"]] = _fmt_cell(snap.get("key","apr9"), r, r.get("jan15",""))
-        # Week-over-week badge
-        wow = r["_wow"]
-        wow_wks = wow // 7
-        if wow > 0:   row_dict["vs Last Wk"] = f"🔴 +{wow_wks}wk" if wow_wks else f"🔴 +{wow}d"
-        elif wow < 0: row_dict["vs Last Wk"] = f"🟢 {wow_wks}wk"  if wow_wks else f"🟢 {wow}d"
-        else:         row_dict["vs Last Wk"] = "—"
-        net = r["delta_days"]
-        net_wks = net // 7
-        row_dict["Net vs Jan 15"] = (
-            f"+{net_wks}wk" if net > 0
-            else (f"{net_wks}wk" if net < 0 else "±0")
+        fig_mo = go.Figure(go.Bar(
+            x=monthly["MonthStr"],
+            y=monthly["Count"],
+            marker_color="#FF6B00",
+            text=monthly["Count"],
+            textposition="outside",
+            hovertemplate="<b>%{x}</b><br>%{y} opens<extra></extra>",
+        ))
+        fig_mo.update_layout(
+            title="Planned Openings by Month",
+            height=300,
+            xaxis_title=None,
+            yaxis_title="# Opens",
+            plot_bgcolor="rgba(0,0,0,0)",
+            yaxis=dict(dtick=1),
         )
-        hist_rows.append(row_dict)
-
-    if hist_rows:
-        hist_df = pd.DataFrame(hist_rows)
-        st.dataframe(hist_df, use_container_width=True, hide_index=True,
-                     height=min(60 + len(hist_df) * 35, 520))
-
-    # ── Section print button — builds standalone HTML and opens in new tab ────
-    # opened_display_rows is populated below; declare early so print button can reference it
-    opened_display_rows = []
-
-    # ── Already-opened 2026 stands ────────────────────────────────────────────
-    st.markdown("**✅ Already Opened 2026 — Schedule Performance**")
-    st.caption(
-        "Shows every stand that opened in 2026 vs the Jan 15 baseline. "
-        "🔴 = opened late · 🟢 = opened early · ⬜ = on time.  "
-        "*Update the `jan15` dates in `pipeline_data.json → opened_shifts` from Drew's Jan 15 report to see true slippage.*"
-    )
-
-    opened_display_rows = []
-    for r in sorted(opened_rows_calc, key=lambda x: x["delta_days"], reverse=True):
-        delta = r["delta_days"]
-        wks   = abs(delta) // 7
-        days_rem = abs(delta) % 7
-        if delta > 0:
-            slip_str = f"🔴 +{wks}wk" if wks else f"🔴 +{delta}d"
-        elif delta < 0:
-            slip_str = f"🟢 -{wks}wk" if wks else f"🟢 {delta}d"
-        else:
-            slip_str = "⬜ On Time"
-        opened_display_rows.append({
-            "Stand": f"{r['city']}, {r['state']}",
-            "Store #": r.get("store",""),
-            "Jan 15 Projected": r.get("jan15",""),
-            "Actual Open": r.get("actual_open",""),
-            "vs Jan 15": slip_str,
-        })
-
-    if opened_display_rows:
-        opened_df = pd.DataFrame(opened_display_rows)
-        st.dataframe(opened_df, use_container_width=True, hide_index=True,
-                     height=min(60 + len(opened_df) * 35, 480))
-        if all(r["delta_days"] == 0 for r in opened_rows_calc):
-            st.info("⚠️ Jan 15 dates not yet filled in — all deltas show 0. Update `opened_shifts[].jan15` in `pipeline_data.json` with the actual projected dates from Drew's Jan 15 report.")
-
-    # ── Section print button — both tables now fully built, safe to reference ──
-    if hist_rows or opened_display_rows:
-        report_date  = _pdata.get("_last_updated", "")
-        snap_str     = "  ·  ".join(s["label"] for s in _report_snapshots)
-        latest_label = _report_snapshots[-1]["label"] if _report_snapshots else ""
-
-        # Load the 7BREW logo for embedding in the print report
-        import base64 as _b64
-        _logo_b64 = ""
-        _logo_path = os.path.join(os.path.dirname(__file__), "ICON LOGO.jpg")
-        if os.path.exists(_logo_path):
-            try:
-                with open(_logo_path, "rb") as _lf:
-                    _logo_b64 = _b64.b64encode(_lf.read()).decode()
-            except Exception:
-                _logo_b64 = ""
-        _logo_tag = (
-            f"<img src='data:image/jpeg;base64,{_logo_b64}' "
-            f"style='height:52px;width:auto;border-radius:4px;margin-right:12px;vertical-align:middle;' alt='7BREW'>"
-            if _logo_b64 else ""
-        )
-
-        # ── Metric cards ──────────────────────────────────────────────────────
-        def _metric_card(label, value, sub="", color="#FF6B00"):
-            sub_html = f"<div class='kpi-sub'>{sub}</div>" if sub else ""
-            return (f"<div class='kpi'>"
-                    f"<div class='kpi-val' style='color:{color}'>{value}</div>"
-                    f"<div class='kpi-lbl'>{label}</div>"
-                    f"{sub_html}"
-                    f"</div>")
-
-        rev_risk_fmt   = f"${total_rev_risk/1e6:.2f}M"
-        opened_rev_fmt = f"${opened_rev_lost/1e3:.0f}K lost" if opened_late else "All on time"
-        metrics_html = (
-            _metric_card("Pushed Out vs Jan 15",   len(pushed),        f"+{len(pushed)} delayed",      "#c0392b") +
-            _metric_card("Pulled In vs Jan 15",    len(pulled),        f"{len(pulled)} accelerated",   "#27ae60") +
-            _metric_card(f"Moved This Week",        len(wow_movers),    f"since last report",           "#e67e22") +
-            _metric_card("Revenue at Risk",         rev_risk_fmt,       f"{total_slip_weeks:.1f} wks × $45K", "#c0392b") +
-            _metric_card("Opened Late (2026 YTD)", len(opened_late),   opened_rev_fmt,                 "#8e44ad" if opened_late else "#27ae60")
-        )
-
-        # ── Build table rows with row-level color coding ───────────────────
-        def _si_table(rows, caption, net_col="Net vs Jan 15"):
-            if not rows: return ""
-            cols = list(rows[0].keys())
-            hdr  = "".join(f"<th>{c}</th>" for c in cols)
-            body = ""
-            for r in rows:
-                net = str(r.get(net_col, ""))
-                if net.startswith("+"):    row_cls = " class='pushed'"
-                elif net.startswith("-"):  row_cls = " class='pulled'"
-                else:                     row_cls = ""
-                cells = ""
-                for c in cols:
-                    v = str(r.get(c, ""))
-                    # Cell-level coloring for snapshot date cells
-                    if "🔴" in v:   td = f"<td class='red'>{v}</td>"
-                    elif "🟢" in v: td = f"<td class='grn'>{v}</td>"
-                    elif c == net_col and row_cls == " class='pushed'":
-                        td = f"<td><strong style='color:#c0392b'>{v}</strong></td>"
-                    elif c == net_col and row_cls == " class='pulled'":
-                        td = f"<td><strong style='color:#27ae60'>{v}</strong></td>"
-                    else:           td = f"<td>{v}</td>"
-                    cells += td
-                body += f"<tr{row_cls}>{cells}</tr>"
-            return (f"<h3 class='tbl-cap'>{caption}</h3>"
-                    f"<table><thead><tr>{hdr}</tr></thead><tbody>{body}</tbody></table>")
-
-        upcoming_tbl = _si_table(
-            hist_rows,
-            f"📋 Upcoming 2026 Openings — Date History vs Jan 15 Baseline  ({len(hist_rows)} stands · as of {latest_label})"
-        )
-        opened_tbl = _si_table(
-            opened_display_rows,
-            f"✅ Already Opened 2026 — Schedule Performance  ({len(opened_display_rows)} stands)",
-            net_col="vs Jan 15"
-        )
-
-        html_doc = f"""<!DOCTYPE html>
-<html><head><meta charset='utf-8'>
-<title>7BREW Schedule Intelligence — {report_date}</title>
-<style>
-  *      {{ box-sizing:border-box; margin:0; padding:0; }}
-  body   {{ font-family:Arial,sans-serif; font-size:11.5px; color:#111;
-            background:#fff; padding:0.4in 0.5in; }}
-  /* ── Header ── */
-  .hdr   {{ background:#CC2127; color:#fff; padding:10px 14px;
-            border-radius:6px; margin-bottom:14px; display:flex;
-            justify-content:space-between; align-items:center; }}
-  .hdr-left {{ display:flex; align-items:center; }}
-  .hdr h1{{ font-size:16px; font-weight:700; }}
-  .hdr p {{ font-size:10px; opacity:.85; margin-top:3px; }}
-  .hdr-right {{ text-align:right; font-size:10px; opacity:.85; }}
-  /* ── KPI strip ── */
-  .kpi-row {{ display:flex; gap:10px; margin-bottom:16px; }}
-  .kpi   {{ flex:1; border:1px solid #ddd; border-radius:5px;
-            padding:8px 10px; background:#fafafa; }}
-  .kpi-val{{ font-size:20px; font-weight:700; line-height:1.1; }}
-  .kpi-lbl{{ font-size:9px; color:#555; margin-top:2px; text-transform:uppercase;
-             letter-spacing:.03em; }}
-  .kpi-sub{{ font-size:9px; color:#888; margin-top:1px; }}
-  /* ── Tables ── */
-  .tbl-cap{{ font-size:12px; font-weight:700; margin:18px 0 5px;
-             padding-bottom:4px; border-bottom:2px solid #CC2127; }}
-  table  {{ border-collapse:collapse; width:100%; margin-bottom:6px; }}
-  thead tr{{ background:#2c2c2c; color:#fff; }}
-  th     {{ padding:5px 7px; font-size:10px; text-align:left;
-            white-space:nowrap; font-weight:600; }}
-  td     {{ padding:4px 7px; border-bottom:1px solid #e8e8e8;
-            white-space:nowrap; }}
-  tr.pushed td {{ background:#fff5f5; }}
-  tr.pulled td  {{ background:#f0fff4; }}
-  tr:hover td   {{ background:#fffbf0; }}
-  td.red {{ color:#c0392b; font-weight:600; }}
-  td.grn {{ color:#27ae60; font-weight:600; }}
-  /* ── Legend ── */
-  .legend{{ font-size:9.5px; color:#666; margin-top:4px; margin-bottom:14px; }}
-  /* ── Footer ── */
-  .footer{{ font-size:9px; color:#aaa; margin-top:20px;
-            border-top:1px solid #eee; padding-top:6px; }}
-  /* ── Print ── */
-  @media print {{
-    @page {{ margin:0.4in; size:landscape; }}
-    tr.pushed td {{ background:#fff5f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
-    tr.pulled td  {{ background:#f0fff4 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
-    thead tr      {{ background:#2c2c2c !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
-    .kpi          {{ background:#fafafa !important; border:1px solid #ddd !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
-    .hdr          {{ background:#CC2127 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
-  }}
-</style>
-</head><body>
-<div class='hdr'>
-  <div class='hdr-left'>
-    {_logo_tag}
-    <div>
-      <h1>7BREW — Schedule Intelligence Report</h1>
-      <p>Opening date tracker · 2026 opens · indexed to Jan 15 baseline · {snap_str}</p>
-    </div>
-  </div>
-  <div class='hdr-right'>Data as of {report_date}<br>🔴 pushed out · 🟢 pulled in</div>
-</div>
-<div class='kpi-row'>{metrics_html}</div>
-<div class='legend'>
-  <span style='background:#fff5f5;padding:2px 6px;border:1px solid #fcc;border-radius:3px'>🔴 Row = pushed out vs Jan 15</span>
-  &nbsp;
-  <span style='background:#f0fff4;padding:2px 6px;border:1px solid #c3e6cb;border-radius:3px'>🟢 Row = pulled in vs Jan 15</span>
-  &nbsp; Cell indicators show movement relative to Jan 15 baseline.
-</div>
-{upcoming_tbl}
-{opened_tbl}
-<div class='footer'>Generated from 7BREW Pipeline Dashboard · {report_date}</div>
-<script>window.onload = function(){{ window.print(); }}</script>
-</body></html>"""
-
-        # st.download_button is the most reliable cross-browser approach:
-        # the HTML file is served by Streamlit directly (no popup/iframe issues).
-        # The report already contains window.onload = window.print() so the
-        # browser print dialog opens automatically when the file is opened.
-        _fname = f"7BREW_Schedule_Intelligence_{report_date.replace('/','')}.html"
-        st.download_button(
-            label="🖨️  Download Schedule Intelligence Report",
-            data=html_doc.encode("utf-8"),
-            file_name=_fname,
-            mime="text/html",
-            help="Downloads an HTML report — open it in your browser and the print dialog will appear automatically. Save as PDF to share.",
-            type="primary",
-        )
-
-    # ── New stands since Jan 15 ───────────────────────────────────────────────
-    if filtered_new_since:
-        st.markdown("**🆕 New to Pipeline Since Jan 15**")
-        new_stands_info = [r for r in _pdata["upcoming"] if r["rsh"] in filtered_new_since]
-        if new_stands_info:
-            new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
-            new_df.columns = ["City","State","Phase","Est. Opening"]
-            st.dataframe(new_df, use_container_width=True, hide_index=True)
-
-    # ── Gantt chart ───────────────────────────────────────────────────────────
-    st.divider()
-    st.markdown("#### 📊 Construction Timeline — Phases 3–5")
-
-    gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design"])].copy()
-    gantt_df = gantt_df[gantt_df["open_dt"].notna() & gantt_df["cs_dt"].notna()].copy()
-    if not gantt_df.empty:
-        gantt_df["Label"] = gantt_df.apply(
-            lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""),
-            axis=1)
-        gantt_df = gantt_df.sort_values("open_dt", ascending=False)
-        # Serialise to JSON so the cached builder can hash inputs efficiently
-        import json as _json_g
-        _gantt_json = _json_g.dumps(
-            gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records")
-        )
-        fig_gantt = _build_gantt_fig(_gantt_json, str(today))
-        if fig_gantt is not None:
-            st.plotly_chart(fig_gantt, use_container_width=True)
+        st.plotly_chart(fig_mo, use_container_width=True)
     else:
-        st.info("No stands with both Construction Start and Open Date in current filter.")
+        st.info("No dated upcoming openings in the current filter.")
 
-    # ── Milestone Drift Chart ─────────────────────────────────────────────────
-    st.divider()
-    st.markdown("#### 🔍 Process Leakage — Milestone Drift vs Jan 15 Baseline")
-    st.caption(
-        "Shows how each milestone date moved between the Jan 15 and Apr 2 reports. "
-        "🔴 bar = slipped later · 🟢 bar = moved earlier. "
-        "If Permit Approval consistently leads all other bars, permitting is the bottleneck. "
-        "If Construction Start leads, the issue is post-permit execution."
+    # ── Upcoming openings table ───────────────────────────────────────────────
+    st.subheader("📋 Upcoming Openings")
+    up_display = upcoming[["Stand", "Region", "Opening Date"]].copy()
+    up_display = up_display.sort_values(
+        by="Opening Date",
+        key=lambda col: pd.to_datetime(col, errors="coerce"),
     )
+    st.dataframe(up_display, use_container_width=True, hide_index=True,
+                 height=min(60 + len(up_display) * 35, 520))
 
-    _ms_data = _pdata.get("milestone_shifts", [])
+    # ── Revenue sensitivity ───────────────────────────────────────────────────
+    AVG_REV_PER_WEEK = 45_000
+    sense_rows = []
+    for _, r in up_dated.iterrows():
+        days_out = (r["open_dt"].date() - today).days
+        if days_out > 0:
+            sense_rows.append({
+                "Stand":     r["Stand"],
+                "Region":    r["Region"],
+                "Est. Open": r["open_dt"].strftime("%b %d, %Y"),
+                "Days Away": days_out,
+                "+4 Wks":    f"${4  * AVG_REV_PER_WEEK:,.0f}",
+                "+8 Wks":    f"${8  * AVG_REV_PER_WEEK:,.0f}",
+                "+12 Wks":   f"${12 * AVG_REV_PER_WEEK:,.0f}",
+                "+26 Wks":   f"${26 * AVG_REV_PER_WEEK:,.0f}",
+            })
 
-    # Phase filter — default to Construction, allow expanding
-    ms_phase_opts = ["5. Construction", "4. Permitting", "3. Design", "All Phases"]
-    ms_phase = st.selectbox("Show Phase", ms_phase_opts, key="ms_phase_sel")
+    if sense_rows:
+        st.divider()
+        st.subheader("⚠️ Opening Delay Sensitivity")
+        st.caption("Revenue impact per stand if opening slips beyond current estimate · assumes $45K avg weekly revenue")
+        st.dataframe(
+            pd.DataFrame(sense_rows),
+            use_container_width=True, hide_index=True,
+            height=min(60 + len(sense_rows) * 35, 400),
+        )
 
-    # Filter milestone data to match current state filter + phase selection
-    ms_rows = [
-        r for r in _ms_data
-        if (ms_phase == "All Phases" or r["phase"] == ms_phase)
-        and (sel_state == "All States" or r["state"] == sel_state)
-        and any(r.get(f"{k}_delta") is not None
-                for k in ["permit_sub","permit_appr","cs","open"])
-    ]
-
-    if not ms_rows:
-        st.info("No milestone data available for the current filter selection.")
-    else:
-        import json as _json_ms
-        _ms_json = _json_ms.dumps(ms_rows)
-        fig_ms, ms_df = _build_milestone_fig(_ms_json)
-        if fig_ms is not None:
-            st.plotly_chart(fig_ms, use_container_width=True)
-
-        # Summary insight callout
-        if ms_df is not None and not ms_df.empty:
-            avg_by_milestone = ms_df.groupby("Milestone")["Days Drifted"].mean().sort_values(ascending=False)
-            worst_milestone = avg_by_milestone.index[0]
-            worst_avg = avg_by_milestone.iloc[0]
-            open_avg  = avg_by_milestone.get("Open Date", 0)
-            if isinstance(open_avg, pd.Series): open_avg = open_avg.iloc[0]
-            if worst_avg > 0:
-                st.info(
-                    f"📊 **Process insight:** Across the {len(ms_rows)} stands shown, "
-                    f"**{worst_milestone}** has the largest average drift at **+{worst_avg:.0f} days** vs Jan 15. "
-                    f"Average open date drift is **+{open_avg:.0f} days**."
-                )
-
-    # ── Upcoming openings table ────────────────────────────────────────────────
+    # ── Operating stands table ────────────────────────────────────────────────
     st.divider()
-    st.markdown("#### 📋 Upcoming Openings")
-    table_df = dff[["phase","address","city","state","region","cs","bd","open","store","rsh"]].copy()
-    table_df.columns = ["Phase","Address","City","State","Region",
-                        "Const. Start","Building Drop","Est. Opening","Store #","RSH"]
-    table_df["Phase"]   = table_df["Phase"].map(_phase_label)
-    table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
-    # Flag shifted stands
-    shifted_rsh = set(shifts_df["rsh"].tolist())
-    table_df["⚑ Shifted"] = table_df["RSH"].apply(lambda r: "↑ Pushed" if r in set(
-        pushed["rsh"].tolist()) else ("↓ Pulled" if r in set(pulled["rsh"].tolist()) else
-        ("🆕 New" if r in set(_new_since_jan15) else "")))
-
-    def _row_style(row):
-        if "Construction" in row["Phase"]: bg = "rgba(255,107,0,0.08)"
-        elif "Permitting"  in row["Phase"]: bg = "rgba(245,166,35,0.08)"
-        elif "Design"      in row["Phase"]: bg = "rgba(74,144,226,0.08)"
-        else: bg = "rgba(155,89,182,0.08)"
-        return [f"background-color:{bg}"] * len(row)
-
-    st.dataframe(
-        table_df.style.apply(_row_style, axis=1),
-        use_container_width=True, hide_index=True,
-        height=min(50 + len(table_df) * 35, 500),
+    st.subheader("✅ Operating Stands")
+    op_display = operating[["Stand", "Region", "Open Date"]].copy()
+    op_display = op_display.sort_values(
+        by="Open Date",
+        key=lambda col: pd.to_datetime(col, errors="coerce"),
+        ascending=False,
     )
+    st.dataframe(op_display, use_container_width=True, hide_index=True,
+                 height=min(60 + len(op_display) * 35, 520))
 
     # ── PDF Export ────────────────────────────────────────────────────────────
-    with st.expander("📄 Export as Password-Protected PDF"):
+    st.divider()
+    with st.expander("📄 Export Upcoming Openings as PDF"):
         ex_c1, ex_c2 = st.columns([2, 1])
         with ex_c1:
             pdf_pw = st.text_input(
-                "Set PDF Password",
-                value="7BREW2026",
-                type="password",
+                "PDF Password (optional — leave blank for no password)",
+                value="",
                 key="pipeline_pdf_pw",
                 help="Recipients will need this password to open the PDF.",
             )
@@ -7540,452 +7245,23 @@ def tab_pipeline(dash):
         if gen_btn:
             with st.spinner("Building PDF…"):
                 try:
-                    pdf_bytes = _generate_pipeline_pdf(table_df, pdf_pw)
+                    pdf_bytes = _generate_pipeline_pdf(up_display.rename(
+                        columns={"Opening Date": "Est. Opening"}
+                    ), pdf_pw or None)
                     st.download_button(
                         label="⬇️ Download PDF",
                         data=pdf_bytes,
-                        file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
+                        file_name=f"7BREW_Pipeline_{today.strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
                         key="dl_pipeline_pdf",
                     )
-                    st.success(f"✅ PDF ready — password is: `{pdf_pw}`")
+                    if pdf_pw:
+                        st.success(f"✅ PDF ready — password: `{pdf_pw}`")
+                    else:
+                        st.success("✅ PDF ready — no password set")
                 except Exception as _e:
                     st.error(f"PDF generation failed: {_e}")
 
-    # ── Delay sensitivity ─────────────────────────────────────────────────────
-    st.divider()
-    st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
-    st.caption("Revenue impact per stand if opening slips beyond current estimate")
-
-    sense_df = dff[dff["open_dt"].notna()].copy()
-    sense_df = sense_df[sense_df["open_dt"].dt.date >= today].head(20)
-    if not sense_df.empty:
-        sense_df["Stand"] = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
-        sense_df["Est. Open"] = sense_df["open"].astype(str)
-        sense_df["+4 Wks"]  = f"${4  * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+8 Wks"]  = f"${8  * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+12 Wks"] = f"${12 * AVG_REV_PER_WEEK:,.0f}"
-        sense_df["+26 Wks"] = f"${26 * AVG_REV_PER_WEEK:,.0f}"
-        st.dataframe(
-            sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
-            use_container_width=True, hide_index=True,
-            height=min(50 + len(sense_df) * 35, 400),
-        )
-
-    # Revenue Projection and Map removed for performance — can be re-enabled if needed
-
-
-# ─────────────────────────────────────────────
-# BONUS REPORTS TAB
-# ─────────────────────────────────────────────
-def tab_bonus(_dash):
-    """Stand Manager Bonus Report generator — upload bonus Excel, generate PDFs."""
-    import io, zipfile, re as _re, base64 as _b64, math as _math
-    import openpyxl as _opx
-
-    section("STAND MANAGER BONUS REPORTS",
-            "Upload your bonus Excel · review eligibility · download individual HTML reports (open in browser → Print → Save as PDF)")
-
-    # ── Bonus rules (editable in sidebar or hardcoded here) ──────────────────
-    with st.expander("⚙️  Bonus Rules", expanded=False):
-        c1, c2, c3 = st.columns(3)
-        bonus_per_kpi     = c1.number_input("$ Per KPI Hit",        value=250.0, step=25.0, key="bn_kpi")
-        stretch_threshold = c2.number_input("Stretch Sales Threshold ($)", value=150_000.0, step=5_000.0, key="bn_thresh")
-        stretch_pct       = c3.number_input("Stretch Bonus %",       value=1.0,   step=0.25, key="bn_pct") / 100.0
-        all_or_nothing    = st.checkbox(
-            "All-or-Nothing SM Bonus (manager must hit ALL 4 KPIs to earn any individual KPI bonus)",
-            value=False, key="bn_aon",
-        )
-
-    st.html('<hr class="brew">')
-
-    # ── File upload ───────────────────────────────────────────────────────────
-    uploaded = st.file_uploader(
-        "Upload Bonus Excel (.xlsx)",
-        type=["xlsx"],
-        help="Excel file with one row per stand manager. Column J = Bonus Eligible (Y/N). "
-             "Managers where Column J = N are skipped — no PDF generated.",
-        key="bn_upload",
-    )
-
-    if not uploaded:
-        st.info(
-            "📤 Upload your bonus calculation Excel to get started.\n\n"
-            "**Required columns** (header names, any order):\n"
-            "- **Bonus Eligible** (Y/N) — Column J by default; managers with N are skipped\n"
-            "- **Stand Manager**, **Store #**, **City**, **State**, **Stand**\n"
-            "- **Net Sales** + **Net Sales Goal**\n"
-            "- **COGS %** + **COGS Goal**\n"
-            "- **Labor %** + **Labor Goal**\n"
-            "- **EBITDA %** + **EBITDA Goal**\n\n"
-            "**Optional**: Regional Manager, Director, Period"
-        )
-        return
-
-    # ── Parse Excel ───────────────────────────────────────────────────────────
-    # Import helpers from generate_bonus_pdfs if available, else inline them
-    try:
-        import sys as _sys, os as _os
-        _sys.path.insert(0, _os.path.dirname(__file__))
-        from generate_bonus_pdfs import (
-            _map_columns, _col_val, _pct as _gpct, _dollar as _gdollar,
-            calc_bonus, build_html, _logo_b64, _safe_name,
-            BONUS_PER_KPI as _DEFAULT_KPI,
-        )
-        _have_module = True
-    except Exception:
-        _have_module = False
-
-    def _norm_h(s):
-        return re.sub(r"\s+", " ", str(s).strip().lower())
-
-    # ── Alias map (duplicate from generate_bonus_pdfs for self-containment) ──
-    _ALIASES_LOCAL = {
-        "store":          ["store #","store#","store number","store num","storeno"],
-        "city":           ["city"],
-        "state":          ["state"],
-        "stand":          ["stand","stand #","stand#","stand num","unit"],
-        "manager":        ["stand manager","manager","manager name","sm","sm name"],
-        "rm":             ["regional manager","rm","region manager","reg manager"],
-        "director":       ["director","director of operations","doo","do"],
-        "period":         ["period","period name","bonus period"],
-        "eligible":       ["bonus eligible","eligible","eligibility","bonus eligibility",
-                           "bonus elig","elig","column j","col j"],
-        "net_sales":      ["net sales","net sales actual","sales","sales actual","revenue"],
-        "cogs_pct":       ["cogs %","cogs%","cogs pct","cogs actual","cogs"],
-        "labor_pct":      ["labor %","labor%","hourly labor %","hourly labor%",
-                           "labor pct","labor actual","hourly labor"],
-        "ebitda_pct":     ["ebitda %","ebitda%","sl ebitda %","sl ebitda%",
-                           "ebitda pct","ebitda actual","store ebitda %","store ebitda%"],
-        "net_sales_goal": ["net sales goal","sales goal","revenue goal","net sales target"],
-        "cogs_goal":      ["cogs goal","cogs target","cogs % goal","cogs% goal"],
-        "labor_goal":     ["labor goal","labor target","labor % goal","labor% goal",
-                           "hourly labor goal","hourly labor target"],
-        "ebitda_goal":    ["ebitda goal","ebitda target","ebitda % goal","ebitda% goal",
-                           "sl ebitda goal","sl ebitda target"],
-        "ebitda_dollars": ["store ebitda","ebitda $","ebitda dollars","sl ebitda $",
-                           "sl ebitda dollars"],
-    }
-
-    def _map_cols_local(headers):
-        nh = [_norm_h(h) for h in headers]
-        m = {}
-        for field, aliases in _ALIASES_LOCAL.items():
-            for idx, h in enumerate(nh):
-                if h in aliases:
-                    m[field] = idx
-                    break
-        return m
-
-    def _cv(rv, idx):
-        if idx is None or idx >= len(rv): return ""
-        v = rv[idx]
-        return "" if v is None else str(v)
-
-    def _to_pct(v):
-        try:
-            f = float(str(v).replace("%","").strip())
-            return f/100.0 if abs(f) > 1.5 else f
-        except: return 0.0
-
-    def _to_dollar(v):
-        try: return float(str(v).replace(",","").replace("$","").strip())
-        except: return 0.0
-
-    def _calc_b(rec, bpk, st_thr, st_pct, aon):
-        ns=_to_dollar(rec.get("net_sales",0)); ns_g=_to_dollar(rec.get("net_sales_goal",0))
-        cg=_to_pct(rec.get("cogs_pct",0));    cg_g=_to_pct(rec.get("cogs_goal",0))
-        lb=_to_pct(rec.get("labor_pct",0));   lb_g=_to_pct(rec.get("labor_goal",0))
-        eb=_to_pct(rec.get("ebitda_pct",0));  eb_g=_to_pct(rec.get("ebitda_goal",0))
-        h_ns=ns>=ns_g if ns_g>0 else False
-        h_cg=cg<=cg_g if cg_g>0 else False
-        h_lb=lb<=lb_g if lb_g>0 else False
-        h_eb=eb>=eb_g if eb_g>0 else False
-        all_hit=h_ns and h_cg and h_lb and h_eb
-        if aon:
-            sm_ns=sm_cg=sm_lb=sm_eb=bpk if all_hit else 0.0
-        else:
-            sm_ns=bpk if h_ns else 0.0; sm_cg=bpk if h_cg else 0.0
-            sm_lb=bpk if h_lb else 0.0; sm_eb=bpk if h_eb else 0.0
-        sm_tot=sm_ns+sm_cg+sm_lb+sm_eb
-        ebi_d=_to_dollar(rec.get("ebitda_dollars",0))
-        if ebi_d==0 and ns>0 and eb>0: ebi_d=ns*eb
-        st_hit=ns>=st_thr
-        st_amt=ebi_d*st_pct if st_hit else 0.0
-        return dict(ns=ns,ns_g=ns_g,h_ns=h_ns,sm_ns=sm_ns,
-                    cg=cg,cg_g=cg_g,h_cg=h_cg,sm_cg=sm_cg,
-                    lb=lb,lb_g=lb_g,h_lb=h_lb,sm_lb=sm_lb,
-                    eb=eb,eb_g=eb_g,h_eb=h_eb,sm_eb=sm_eb,
-                    sm_tot=sm_tot,all_hit=all_hit,
-                    st_hit=st_hit,st_amt=st_amt,ebi_d=ebi_d)
-
-    # Read workbook
-    wb  = _opx.load_workbook(io.BytesIO(uploaded.read()), read_only=True, data_only=True)
-    ws  = wb.active
-    all_rows = list(ws.iter_rows(values_only=True))
-
-    # Find header row
-    col_map = {}
-    data_start = 0
-    for ri, raw in enumerate(all_rows):
-        non_empty = [c for c in raw if c is not None and str(c).strip()]
-        if len(non_empty) >= 5:
-            trial = _map_cols_local([str(c) if c is not None else "" for c in raw])
-            if "eligible" in trial or "manager" in trial:
-                col_map    = trial
-                data_start = ri + 1
-                break
-
-    if not col_map:
-        st.error("Could not find a header row. Make sure the first non-empty row contains column names like 'Stand Manager', 'Bonus Eligible', 'Net Sales', etc.")
-        return
-
-    if "eligible" not in col_map:
-        st.warning("⚠️ 'Bonus Eligible' column not found by name — assuming **Column J** (index 9).")
-        col_map["eligible"] = 9
-
-    # Build record list — include ALL rows with Y flag metadata
-    all_records = []
-    for raw in all_rows[data_start:]:
-        if all(c is None for c in raw): continue
-        elig_raw = _cv(list(raw), col_map.get("eligible","")).strip().upper()
-        rec = {field: _cv(list(raw), col_map.get(field)) for field in _ALIASES_LOCAL}
-        rec["_eligible"] = elig_raw in ("Y","YES","1","TRUE")
-        rec["_elig_raw"]  = elig_raw
-        if elig_raw or rec.get("manager","").strip():
-            all_records.append(rec)
-
-    eligible   = [r for r in all_records if r["_eligible"]]
-    ineligible = [r for r in all_records if not r["_eligible"] and r.get("manager","").strip()]
-
-    # ── Summary strip ─────────────────────────────────────────────────────────
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric("Total Managers",      len(all_records))
-    col_b.metric("✅ Eligible (PDF)",    len(eligible),   delta=None)
-    col_c.metric("⛔ Skipped (Col J=N)", len(ineligible), delta=None)
-    st.html('<hr class="brew">')
-
-    # ── Preview table ─────────────────────────────────────────────────────────
-    section("PREVIEW — ALL MANAGERS", "Green row = PDF will be generated · Red = skipped (Column J = N)")
-
-    preview_rows = []
-    for rec in all_records:
-        b = _calc_b(rec, bonus_per_kpi, stretch_threshold, stretch_pct, all_or_nothing)
-        preview_rows.append({
-            "Eligible": "✅ Y" if rec["_eligible"] else "⛔ N",
-            "Store #":  str(rec.get("store","")).zfill(6) if rec.get("store") else "",
-            "City":     rec.get("city",""),
-            "St":       rec.get("state",""),
-            "Manager":  rec.get("manager",""),
-            "Net Sales": f"${b['ns']:,.0f}",
-            "COGS%":     f"{b['cg']*100:.1f}%",
-            "Labor%":    f"{b['lb']*100:.1f}%",
-            "EBITDA%":   f"{b['eb']*100:.1f}%",
-            "SM Bonus":  f"${b['sm_tot']:,.2f}",
-            "Stretch":   f"${b['st_amt']:,.2f}",
-        })
-
-    if preview_rows:
-        prev_df = pd.DataFrame(preview_rows)
-        def _row_color(row):
-            if row["Eligible"].startswith("⛔"):
-                return ["background-color:#fff0f0"] * len(row)
-            return ["background-color:#f0fff4"] * len(row)
-        st.dataframe(
-            prev_df.style.apply(_row_color, axis=1),
-            use_container_width=True, hide_index=True,
-            height=min(60 + len(prev_df)*35, 480),
-        )
-
-    if ineligible:
-        st.warning(
-            f"⛔ **{len(ineligible)} manager(s) will NOT receive a PDF** "
-            f"because Column J = N: "
-            + ", ".join(r.get("manager","?") for r in ineligible[:10])
-            + ("…" if len(ineligible) > 10 else "")
-        )
-
-    if not eligible:
-        st.error("No eligible managers found. Nothing to generate.")
-        return
-
-    st.html('<hr class="brew">')
-    section("GENERATE REPORTS", f"{len(eligible)} eligible manager(s) ready")
-
-    # ── Load logo ─────────────────────────────────────────────────────────────
-    logo_uri = ""
-    logo_path = os.path.join(os.path.dirname(__file__), "ICON LOGO.jpg")
-    if os.path.exists(logo_path):
-        with open(logo_path,"rb") as lf:
-            logo_uri = "data:image/jpeg;base64," + _b64.b64encode(lf.read()).decode()
-
-    # ── HTML builder (inline — no external module dependency) ─────────────────
-    _BN_TMPL = """<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>7BREW Bonus — {store} {city} {state} - {stand}</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&family=DM+Mono&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
-body{{font-family:'DM Sans',sans-serif;background:#fff;color:#222;padding:28px 40px;max-width:820px;margin:0 auto;font-size:14px}}
-.hdr{{display:flex;flex-direction:column;align-items:center;border-bottom:3px solid #AC2430;padding-bottom:14px;margin-bottom:18px}}
-.hdr img{{height:62px;width:auto;margin-bottom:8px}}
-.hdr h1{{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:#222;margin:0}}
-.people{{width:100%;border-collapse:collapse;margin-bottom:6px}}
-.people th{{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;padding:4px 8px;text-align:center;font-weight:600}}
-.people td{{font-size:14px;font-weight:700;padding:6px 8px;text-align:center;border-top:1px solid #e0e0e0}}
-.period-line{{text-align:center;font-size:12px;color:#666;margin-bottom:16px}}
-.bonus-row{{display:flex;gap:16px;margin:18px 0}}
-.bonus-box{{flex:1;border:1px solid #ddd;border-radius:6px;padding:18px 16px;text-align:center}}
-.bonus-box .label{{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:8px}}
-.bonus-box .amount{{font-family:'Bebas Neue',sans-serif;font-size:42px;color:#AC2430;line-height:1}}
-.section-hdr{{background:#333;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;padding:8px 12px;margin:20px 0 0 0;border-radius:3px 3px 0 0}}
-table.perf{{width:100%;border-collapse:collapse;margin-bottom:20px}}
-table.perf th{{font-size:11px;letter-spacing:.8px;text-transform:uppercase;background:#f5f5f5;padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:700;color:#444}}
-table.perf th:first-child{{text-align:left}}
-table.perf td{{padding:9px 10px;border:1px solid #e8e8e8;text-align:center;font-size:13px;font-family:'DM Mono',monospace}}
-table.perf td:first-child{{text-align:left;font-family:'DM Sans',sans-serif;font-size:13px}}
-table.perf tr:hover td{{background:#fffaf0}}
-.bonus-amt{{color:#27ae60;font-weight:700}}
-.miss-amt{{color:#999}}
-table.how{{width:100%;border-collapse:collapse}}
-table.how th{{font-size:11px;letter-spacing:.8px;text-transform:uppercase;background:#f5f5f5;padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:700;color:#444}}
-table.how th:first-child{{width:140px;text-align:left}}
-table.how td{{padding:9px 10px;border:1px solid #e8e8e8;font-size:13px;vertical-align:top}}
-table.how td:first-child{{font-weight:600}}
-.footer{{font-size:10px;color:#aaa;text-align:center;margin-top:24px;border-top:1px solid #eee;padding-top:8px}}
-@media print{{
-  @page{{size:letter portrait;margin:.5in}}
-  body{{padding:0;max-width:100%}}
-  .bonus-box .amount{{color:#AC2430!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-  .section-hdr{{background:#333!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-  table.perf th,table.how th{{background:#f5f5f5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-}}
-</style>
-</head>
-<body>
-<div class="hdr">{logo_tag}<h1>Stand Manager Bonus Results</h1></div>
-<table class="people">
-  <tr><th>Stand Manager</th><th>Regional Manager</th><th>Director of Operations</th></tr>
-  <tr><td>{manager}</td><td>{rm}</td><td>{director}</td></tr>
-</table>
-<p class="period-line">{period} &nbsp;&middot;&nbsp; {store} {city}, {state} - {stand}</p>
-<div class="bonus-row">
-  <div class="bonus-box"><div class="label">Stand Manager Bonus</div><div class="amount">{sm_bonus_fmt}</div></div>
-  <div class="bonus-box"><div class="label">Stretch Bonus</div><div class="amount">{stretch_fmt}</div></div>
-</div>
-<div class="section-hdr">Performance Detail</div>
-<table class="perf">
-  <tr><th>Metric</th><th>Actual</th><th>Goal</th><th>Hit?</th><th>Bonus</th></tr>
-  {perf_rows}
-</table>
-<div class="section-hdr">How Your Bonus Works</div>
-<table class="how">
-  <tr><th>Metric</th><th>What It Measures</th></tr>
-  <tr><td>Net Sales</td><td>Total revenue your stand brought in — higher is better</td></tr>
-  <tr><td>COGS %</td><td>Cost of goods as % of sales (product waste &amp; usage) — lower is better</td></tr>
-  <tr><td>Hourly Labor %</td><td>Labor cost as % of sales — keep scheduling efficient — lower is better</td></tr>
-  <tr><td>SL EBITDA %</td><td>Store-level profit margin — the bottom line — higher is better</td></tr>
-  <tr><td>Stretch Bonus</td><td>Exceed ${stretch_threshold:,.0f} in sales and hit your KPIs — earn {stretch_pct_disp:.0f}% of your EBITDA</td></tr>
-</table>
-<div class="footer">7 Crew Enterprises &middot; Confidential &middot; {period} Bonus Results</div>
-<script>window.onload=function(){{window.print();}}</script>
-</body></html>"""
-
-    def _hit_span(hit):
-        c="#27ae60" if hit else "#e74c3c"
-        return f"<span style='color:{c};font-weight:700;font-size:15px;'>{'Y' if hit else 'N'}</span>"
-
-    def _make_html(rec):
-        b  = _calc_b(rec, bonus_per_kpi, stretch_threshold, stretch_pct, all_or_nothing)
-        lg = f"<img src='{logo_uri}' alt='7BREW' style='height:60px;width:auto;margin-bottom:8px'>" if logo_uri else ""
-        st_note = ""
-        if b["st_hit"] and b["ebi_d"]>0:
-            st_note = f" <small style='color:#888;font-size:11px;'>({stretch_pct*100:.0f}% of ${b['ebi_d']:,.2f})</small>"
-        def pr(metric,actual,goal,hit,amt):
-            cls="bonus-amt" if amt>0 else "miss-amt"
-            return f"<tr><td>{metric}</td><td>{actual}</td><td>{goal}</td><td>{_hit_span(hit)}</td><td class='{cls}'>${amt:,.2f}</td></tr>"
-        perf = (
-            pr("Net Sales",f"${b['ns']:,.2f}",f"${b['ns_g']:,.2f}",b["h_ns"],b["sm_ns"])+
-            pr("COGS %",f"{b['cg']*100:.1f}%",f"{b['cg_g']*100:.1f}%",b["h_cg"],b["sm_cg"])+
-            pr("Hourly Labor %",f"{b['lb']*100:.1f}%",f"{b['lb_g']*100:.1f}%",b["h_lb"],b["sm_lb"])+
-            pr("SL EBITDA %",f"{b['eb']*100:.1f}%",f"{b['eb_g']*100:.1f}%",b["h_eb"],b["sm_eb"])+
-            f"<tr><td>Stretch Bonus</td><td>${b['ns']:,.2f}</td><td>${stretch_threshold:,.2f}</td>"
-            f"<td>{_hit_span(b['st_hit'])}</td>"
-            f"<td class=\"{'bonus-amt' if b['st_amt']>0 else 'miss-amt'}\">${b['st_amt']:,.2f}{st_note}</td></tr>"
-        )
-        store_z = str(rec.get("store","")).zfill(6) if rec.get("store") else ""
-        return _BN_TMPL.format(
-            logo_tag=lg, store=store_z,
-            city=rec.get("city",""), state=rec.get("state",""),
-            stand=rec.get("stand","1"), manager=rec.get("manager",""),
-            rm=rec.get("rm",""), director=rec.get("director",""),
-            period=rec.get("period",""),
-            sm_bonus_fmt=f"${b['sm_tot']:,.2f}",
-            stretch_fmt=f"${b['st_amt']:,.2f}",
-            perf_rows=perf,
-            stretch_threshold=stretch_threshold,
-            stretch_pct_disp=stretch_pct*100,
-        )
-
-    # ── Individual downloads + zip ─────────────────────────────────────────────
-    zip_buf = io.BytesIO()
-    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        for rec in eligible:
-            html = _make_html(rec)
-            store  = str(rec.get("store","")).strip().zfill(6) if rec.get("store") else "XXXXX"
-            city   = str(rec.get("city","")).strip().replace(" ","_")
-            state  = str(rec.get("state","")).strip()
-            stand  = str(rec.get("stand","1")).strip()
-            period_s = str(rec.get("period","BONUS")).strip().replace(" ","")
-            raw_name = f"{period_s}_Bonus_{store}_{city}_{state}_-_{stand}.html"
-            fname  = re.sub(r"[^\w\-.]","_", raw_name)
-            zf.writestr(fname, html)
-
-    zip_buf.seek(0)
-    period_label = eligible[0].get("period","Bonus").replace(" ","") if eligible else "Bonus"
-    st.download_button(
-        label=f"📦 Download All {len(eligible)} Bonus Reports (ZIP)",
-        data=zip_buf.getvalue(),
-        file_name=f"{period_label}_BonusReports_All.zip",
-        mime="application/zip",
-        type="primary",
-        key="bn_zip",
-    )
-
-    st.caption("Open each HTML file in Chrome/Edge · Ctrl+P (or ⌘+P) · **Save as PDF**")
-    st.html('<hr class="brew">')
-
-    # ── Individual report cards ────────────────────────────────────────────────
-    section("INDIVIDUAL REPORTS", "Download one at a time or preview below")
-    for i, rec in enumerate(eligible):
-        html = _make_html(rec)
-        b    = _calc_b(rec, bonus_per_kpi, stretch_threshold, stretch_pct, all_or_nothing)
-        store_z = str(rec.get("store","")).zfill(6) if rec.get("store") else ""
-        city_s  = rec.get("city",""); state_s = rec.get("state","")
-        stand_s = rec.get("stand","1"); period_s = str(rec.get("period","")).replace(" ","")
-        raw_name = f"{period_s}_Bonus_{store_z}_{city_s.replace(' ','_')}_{state_s}_-_{stand_s}.html"
-        fname = re.sub(r"[^\w\-.]","_", raw_name)
-        manager_s = rec.get("manager","Unknown")
-
-        kpi_hits = sum([b["h_ns"], b["h_cg"], b["h_lb"], b["h_eb"]])
-        hit_color = "#27ae60" if kpi_hits == 4 else ("#e8940a" if kpi_hits >= 2 else "#c0392b")
-        with st.container():
-            cc1, cc2, cc3, cc4 = st.columns([3, 2, 2, 2])
-            cc1.markdown(f"**{manager_s}** · {store_z} {city_s}, {state_s}-{stand_s}")
-            cc2.markdown(f"<span style='color:{hit_color};font-weight:700'>{kpi_hits}/4 KPIs Hit</span>",
-                         unsafe_allow_html=True)
-            cc3.markdown(f"SM: **${b['sm_tot']:,.2f}** &nbsp; Stretch: **${b['st_amt']:,.2f}**",
-                         unsafe_allow_html=True)
-            cc4.download_button(
-                label="⬇ Download",
-                data=html.encode("utf-8"),
-                file_name=fname,
-                mime="text/html",
-                key=f"bn_dl_{i}",
-            )
-        st.divider()
 
 
 # ─────────────────────────────────────────────
@@ -8028,7 +7304,6 @@ def main():
         "🏗️ Pipeline (Draft)",
         "🔮 Forecast (Draft)",
         "⏱️ Speed of Service",
-        "🎯 Bonus Reports",
     ]
     tabs = st.tabs(tab_names)
 
@@ -8042,7 +7317,6 @@ def main():
     with tabs[7]:  tab_pipeline(dash)
     with tabs[8]:  tab_forecast(dash)
     with tabs[9]:  tab_sos(dash)
-    with tabs[10]: tab_bonus(dash)
 
 
 main()
