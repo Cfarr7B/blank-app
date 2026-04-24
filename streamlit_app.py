@@ -7136,19 +7136,51 @@ def tab_pipeline(dash):
                  use_container_width=True, hide_index=True,
                  height=min(50 + len(table_df) * 35, 500))
 
-    if st.button("📄 Export as PDF", key="gen_pipeline_pdf", type="primary"):
-        with st.spinner("Building PDF…"):
-            try:
-                pdf_bytes = _generate_pipeline_pdf(table_df, None)
-                st.download_button(
-                    label="⬇️ Download PDF",
-                    data=pdf_bytes,
-                    file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf",
-                    key="dl_pipeline_pdf",
-                )
-            except Exception as _e:
-                st.error(f"PDF generation failed: {_e}")
+    # Build a printable HTML report — download and open in browser → Print → Save as PDF
+    _tbl_cols = list(table_df.columns)
+    _tbl_hdr  = "".join(f"<th>{c}</th>" for c in _tbl_cols)
+    _tbl_body = ""
+    for _, row in table_df.iterrows():
+        cells = ""
+        for c in _tbl_cols:
+            v = str(row[c]) if str(row[c]) not in ("nan","None","") else "—"
+            cells += f"<td>{v}</td>"
+        _tbl_body += f"<tr>{cells}</tr>"
+
+    _pipe_html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>7BREW Upcoming Openings — {today.strftime('%B %d, %Y')}</title>
+<style>
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  body{{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:0.4in 0.5in}}
+  h1{{font-size:15px;color:#AC2430;margin-bottom:3px}}
+  p{{font-size:9px;color:#666;margin-bottom:10px}}
+  table{{border-collapse:collapse;width:100%}}
+  thead tr{{background:#2c2c2c;color:#fff}}
+  th{{padding:5px 6px;font-size:9.5px;text-align:left;white-space:nowrap}}
+  td{{padding:4px 6px;border-bottom:1px solid #e8e8e8;white-space:nowrap;font-size:9.5px}}
+  tr:nth-child(even) td{{background:#f6f6f6}}
+  @media print{{@page{{margin:0.4in;size:landscape}}}}
+</style>
+</head><body>
+<h1>7BREW — Upcoming Openings</h1>
+<p>Generated {today.strftime('%B %d, %Y')} · {len(table_df)} stands</p>
+<table>
+  <thead><tr>{_tbl_hdr}</tr></thead>
+  <tbody>{_tbl_body}</tbody>
+</table>
+<script>window.onload=function(){{window.print();}}</script>
+</body></html>"""
+
+    st.download_button(
+        label="📄 Download / Print as PDF",
+        data=_pipe_html.encode("utf-8"),
+        file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.html",
+        mime="text/html",
+        help="Downloads an HTML file — open it and your browser's print dialog appears automatically. Choose 'Save as PDF'.",
+        type="primary",
+        key="dl_pipeline_pdf",
+    )
 
     st.divider()
     st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
