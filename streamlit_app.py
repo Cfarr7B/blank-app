@@ -7136,25 +7136,19 @@ def tab_pipeline(dash):
                  use_container_width=True, hide_index=True,
                  height=min(50 + len(table_df) * 35, 500))
 
-    with st.expander("📄 Export as Password-Protected PDF"):
-        ex_c1, ex_c2 = st.columns([2, 1])
-        with ex_c1:
-            pdf_pw = st.text_input("Set PDF Password", value="7BREW2026", type="password",
-                                   key="pipeline_pdf_pw",
-                                   help="Recipients will need this password to open the PDF.")
-        with ex_c2:
-            st.write(""); st.write("")
-            gen_btn = st.button("⚙️ Generate PDF", key="gen_pipeline_pdf", type="primary")
-        if gen_btn:
-            with st.spinner("Building PDF…"):
-                try:
-                    pdf_bytes = _generate_pipeline_pdf(table_df, pdf_pw)
-                    st.download_button(label="⬇️ Download PDF", data=pdf_bytes,
-                                       file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
-                                       mime="application/pdf", key="dl_pipeline_pdf")
-                    st.success(f"✅ PDF ready — password is: `{pdf_pw}`")
-                except Exception as _e:
-                    st.error(f"PDF generation failed: {_e}")
+    if st.button("📄 Export as PDF", key="gen_pipeline_pdf", type="primary"):
+        with st.spinner("Building PDF…"):
+            try:
+                pdf_bytes = _generate_pipeline_pdf(table_df, None)
+                st.download_button(
+                    label="⬇️ Download PDF",
+                    data=pdf_bytes,
+                    file_name=f"7BREW_Upcoming_Openings_{today.strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf",
+                    key="dl_pipeline_pdf",
+                )
+            except Exception as _e:
+                st.error(f"PDF generation failed: {_e}")
 
     st.divider()
     st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
