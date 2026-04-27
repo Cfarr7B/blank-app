@@ -3050,8 +3050,8 @@ def tab_regions(dash):
             st.html(f"""
             <div class="kpi-card" style="border-top:3px solid {color}; margin-bottom:10px;">
               <div class="kpi-label">{row['region']}</div>
-              <div class="kpi-value">${row['net_sales']/1000:.0f}k</div>
-              <div class="kpi-sub">{int(row['stands'])} stands · ${row['avg_sales']:,.0f}/stand</div>
+              <div class="kpi-value">{_fmt_d_short(row['net_sales'])}</div>
+              <div class="kpi-sub">{int(row['stands'])} stands · {_fmt_d_short(row['avg_sales'])}/stand</div>
               <div class="kpi-delta {'up' if row['ebitda_pct']>=0.20 else 'down'}">EBITDA {_fmt_p(row['ebitda_pct'])}</div>
             </div>""")
 
