@@ -1119,9 +1119,9 @@ def tab_ceo(dash):
         st.plotly_chart(fig_lc, config={"displayModeBar": False})
 
         # ── Prime Cost vs EBITDA % ────────────────────────────────────────
-        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">PRIME COST vs EBITDA % — {period_range}</div>')
         fig_pc = go.Figure()
         if "labor_pct" in filtered_df.columns and "cogs_pct" in filtered_df.columns:
+            st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">PRIME COST vs EBITDA % — {period_range}</div>')
             prime_cost = (filtered_df["labor_pct"] + filtered_df["cogs_pct"]) * 100
             fig_pc.add_bar(
                 x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
