@@ -202,19 +202,19 @@ st.html("""
 # ─────────────────────────────────────────────
 def _fmt_d(v):
     if v is None: return "—"
-    return "$" + f"{abs(float(v)):,.2f}"
+    return "$" + f"{abs(float(v)):,.0f}"
 
 def _fmt_d_short(v):
     """Abbreviated dollar format for KPI cards where space is tight.
-    ≥ $1M → $X.XM  |  ≥ $1K → $X.XK  |  otherwise full
+    ≥ $1M → $X.XXM  |  ≥ $1K → $X.XXK  |  otherwise full
     """
     if v is None: return "—"
     v = abs(float(v))
     if v >= 1_000_000:
-        return f"${v/1_000_000:.1f}M"
+        return f"${v/1_000_000:.2f}M"
     if v >= 1_000:
-        return f"${v/1_000:.1f}K"
-    return f"${v:,.2f}"
+        return f"${v/1_000:.2f}K"
+    return f"${v:,.0f}"
 
 def _fmt_p(v, dec=1):
     if v is None: return "—"
@@ -2033,12 +2033,12 @@ def tab_comparison(dash):
         fig_drill.add_bar(x=_ms["_label"], y=_ms[f"{_scol}_a"] * _mult,
                           name=psA["label"], marker_color=RED, opacity=0.88,
                           text=(_ms[f"{_scol}_a"] * _mult).map(
-                              lambda v: f"${v:,.2f}" if _is_dollar else f"{v:.1f}%"),
+                              lambda v: f"${v:,.0f}" if _is_dollar else f"{v:.1f}%"),
                           textposition="outside", textfont=dict(size=9))
         fig_drill.add_bar(x=_ms["_label"], y=_ms[f"{_scol}_b"] * _mult,
                           name=psB["label"], marker_color=BLUE, opacity=0.65,
                           text=(_ms[f"{_scol}_b"] * _mult).map(
-                              lambda v: f"${v:,.2f}" if _is_dollar else f"{v:.1f}%"),
+                              lambda v: f"${v:,.0f}" if _is_dollar else f"{v:.1f}%"),
                           textposition="outside", textfont=dict(size=9))
         _title_region = sel_cmp_region if sel_cmp_region != "All Regions" else "ALL REGIONS"
         brew_fig(fig_drill, height=340)
@@ -2228,7 +2228,7 @@ def tab_stands(dash):
     k1, k2, k3, k4, k5, k6 = st.columns(6)
     k1.metric("Stands Shown",        n)
     k2.metric("Total Revenue",        f"${total_rev/1e6:.2f}M")
-    k3.metric("Avg Net Sales",        f"${avg_sales:,.2f}")
+    k3.metric("Avg Net Sales",        f"${avg_sales:,.0f}")
     k4.metric("Avg EBITDA%",          f"{avg_ebitda*100:.1f}%",
               delta=f"{(avg_ebitda - _BM['Store_EBITDA_pct']['t'])*100:+.1f}pp vs target",
               delta_color="normal" if avg_ebitda >= _BM["Store_EBITDA_pct"]["t"] else "inverse")
@@ -2291,7 +2291,7 @@ def tab_stands(dash):
     # Format display values
     for raw, lbl, fmt in avail_pl:
         if fmt == "$":
-            disp_full[raw] = disp_full[raw].map(lambda v: f"${v:,.2f}" if pd.notna(v) else "—")
+            disp_full[raw] = disp_full[raw].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
         else:
             disp_full[raw] = disp_full[raw].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
     disp_full = disp_full.rename(columns={raw: lbl for raw, lbl, _ in avail_pl})
@@ -2561,10 +2561,10 @@ renderTable(ROWS, CLS);
                     "Line Item": f"**{prefix}{lbl}**",
                     "Amount":    f"**${amt:,.0f}**" if pd.notna(amt) else "—",
                     "% of Sales":"**100.0%**",
-                    "Period Avg $": f"${avg_amt:,.2f}" if show_vs_avg and avg_amt is not None else "",
+                    "Period Avg $": f"${avg_amt:,.0f}" if show_vs_avg and avg_amt is not None else "",
                     "Period Avg %": "100.0%"                 if show_vs_avg else "",
                     "vs Avg":    ""                          if not show_vs_avg else (
-                                 f"+${(amt-avg_amt):,.2f}" if pd.notna(amt) and avg_amt else "—"),
+                                 f"+${(amt-avg_amt):,.0f}" if pd.notna(amt) and avg_amt else "—"),
                     "_type": rtype,
                 })
 
@@ -2579,9 +2579,9 @@ renderTable(ROWS, CLS);
                         "Line Item": f"**{prefix}{lbl}**",
                         "Amount":    f"**${gp:,.0f}**",
                         "% of Sales":f"**{gp_pct*100:.1f}%**",
-                        "Period Avg $": f"${avg_gp:,.2f}" if show_vs_avg else "",
+                        "Period Avg $": f"${avg_gp:,.0f}" if show_vs_avg else "",
                         "Period Avg %": f"{avg_gp_pct*100:.1f}%"   if show_vs_avg else "",
-                        "vs Avg":       f"+${(gp-avg_gp):,.2f}"    if show_vs_avg else "",
+                        "vs Avg":       f"+${(gp-avg_gp):,.0f}"    if show_vs_avg else "",
                         "_type": rtype,
                     })
 
@@ -2598,13 +2598,13 @@ renderTable(ROWS, CLS);
                 vs_str = ""
                 if show_vs_avg and avg_amt is not None and pd.notna(amt):
                     diff = amt - avg_amt
-                    vs_str = f"+${diff:,.2f}" if diff >= 0 else f"-${abs(diff):,.2f}"
+                    vs_str = f"+${diff:,.0f}" if diff >= 0 else f"-${abs(diff):,.0f}"
 
                 wf_rows.append({
                     "Line Item":   f"{bold}{prefix}{lbl}{bold}",
                     "Amount":      f"{bold}${amt:,.0f}{bold}" if pd.notna(amt) else "—",
                     "% of Sales":  f"{bold}{pct*100:.1f}%{bold} {color_mark}" if pd.notna(pct) else "—",
-                    "Period Avg $":f"${avg_amt:,.2f}" if show_vs_avg and avg_amt is not None else "",
+                    "Period Avg $":f"${avg_amt:,.0f}" if show_vs_avg and avg_amt is not None else "",
                     "Period Avg %":f"{avg_pct*100:.1f}%"  if show_vs_avg and avg_pct is not None else "",
                     "vs Avg":      vs_str if show_vs_avg else "",
                     "_type": rtype,
@@ -2642,7 +2642,7 @@ renderTable(ROWS, CLS);
             connector={"line":{"color":"rgba(0,0,0,0.15)","width":1}},
             decreasing={"marker":{"color":RED}},
             increasing={"marker":{"color":GREEN}},
-            text=[f"${v:,.2f}" for v in _wf_vals[:-1]] + [f"${_wf_vals[-1]:,.2f}"],
+            text=[f"${v:,.0f}" for v in _wf_vals[:-1]] + [f"${_wf_vals[-1]:,.0f}"],
             textposition="outside",
         ))
         fig_wf.update_layout(
@@ -2710,7 +2710,7 @@ renderTable(ROWS, CLS);
                                 line=dict(width=1, color="white")),
                     hovertemplate=(
                         "<b>%{x}</b><br>" +
-                        ("$%{y:,.2f}" if fmt=="$" else "%{y:.1f}%") +
+                        ("$%{y:,.0f}" if fmt=="$" else "%{y:.1f}%") +
                         "<extra></extra>"
                     ),
                 )
@@ -2718,7 +2718,7 @@ renderTable(ROWS, CLS);
                     fig_t.add_hline(
                         y=tgt * (100 if fmt=="%" else 1),
                         line_dash="dash", line_color=GREEN, line_width=1.5,
-                        annotation_text=f"Target {tgt*100:.1f}%" if fmt=="%" else f"Target ${tgt:,.2f}",
+                        annotation_text=f"Target {tgt*100:.1f}%" if fmt=="%" else f"Target ${tgt:,.0f}",
                         annotation_position="right",
                         annotation_font_size=11,
                     )
@@ -2759,7 +2759,7 @@ renderTable(ROWS, CLS);
             marker_color=colors,
             text=[f"{v*100:.1f}%" for v in sub[col_pct]],
             textposition="outside",
-            customdata=sub[col_dollar].map(lambda v: f"${v:,.2f}" if pd.notna(v) else "—"),
+            customdata=sub[col_dollar].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—"),
             hovertemplate="<b>%{y}</b><br>%{x:.1f}%  (%{customdata})<extra></extra>",
         ))
         if target is not None:
@@ -2792,11 +2792,11 @@ renderTable(ROWS, CLS);
                 y=sub_rev["Stand_Short"], x=sub_rev["Net_Sales"],
                 orientation="h",
                 marker_color=[GREEN if v >= avg_sales else AMBER for v in sub_rev["Net_Sales"]],
-                text=[f"${v:,.2f}" for v in sub_rev["Net_Sales"]],
+                text=[f"${v:,.0f}" for v in sub_rev["Net_Sales"]],
                 textposition="outside",
             )
             fig_rev.add_vline(x=avg_sales, line_dash="dash", line_color=RED, line_width=1.5,
-                              annotation_text=f"Avg ${avg_sales:,.2f}",
+                              annotation_text=f"Avg ${avg_sales:,.0f}",
                               annotation_position="top right", annotation_font_size=11)
             fig_rev.update_layout(title_text="Net Sales by Stand", xaxis_tickprefix="$",
                                   yaxis=dict(autorange="reversed"))
@@ -2809,7 +2809,7 @@ renderTable(ROWS, CLS);
                 hovertemplate="$%{x:,.0f}<br>Count: %{y}<extra></extra>",
             ))
             fig_hist.add_vline(x=avg_sales, line_dash="dash", line_color=RED,
-                               annotation_text=f"Avg ${avg_sales:,.2f}")
+                               annotation_text=f"Avg ${avg_sales:,.0f}")
             fig_hist.update_layout(title_text="Revenue Distribution",
                                    xaxis_tickprefix="$", yaxis_title="# Stands")
             brew_fig(fig_hist, height=350)
@@ -2820,14 +2820,14 @@ renderTable(ROWS, CLS);
         with tt1:
             st.markdown("**Top 5 by Net Sales**")
             top5 = df.nlargest(5,"Net_Sales")[["Stand","Net_Sales","Store_EBITDA_pct"]].copy()
-            top5["Net_Sales"] = top5["Net_Sales"].map(lambda v: f"${v:,.2f}")
+            top5["Net_Sales"] = top5["Net_Sales"].map(lambda v: f"${v:,.0f}")
             top5["Store_EBITDA_pct"] = top5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
             top5 = top5.rename(columns={"Stand":"Stand","Net_Sales":"Net Sales","Store_EBITDA_pct":"EBITDA%"})
             st.dataframe(top5, hide_index=True, use_container_width=True)
         with tt2:
             st.markdown("**Bottom 5 by Net Sales**")
             bot5 = df.nsmallest(5,"Net_Sales")[["Stand","Net_Sales","Store_EBITDA_pct"]].copy()
-            bot5["Net_Sales"] = bot5["Net_Sales"].map(lambda v: f"${v:,.2f}")
+            bot5["Net_Sales"] = bot5["Net_Sales"].map(lambda v: f"${v:,.0f}")
             bot5["Store_EBITDA_pct"] = bot5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
             bot5 = bot5.rename(columns={"Stand":"Stand","Net_Sales":"Net Sales","Store_EBITDA_pct":"EBITDA%"})
             st.dataframe(bot5, hide_index=True, use_container_width=True)
@@ -2886,7 +2886,7 @@ renderTable(ROWS, CLS);
                     target=_BM["Total_RM_pct"]["t"])
         ra, rb = st.columns(2)
         with ra:
-            st.metric("Total R&M Spend (period)", f"${df['Total_RM'].sum():,.2f}")
+            st.metric("Total R&M Spend (period)", f"${df['Total_RM'].sum():,.0f}")
         with rb:
             over = df[df["Total_RM_pct"] > _BM["Total_RM_pct"]["t"]]
             st.metric("Stands Over R&M Target", f"{len(over)}/{n}")
@@ -2905,9 +2905,9 @@ renderTable(ROWS, CLS);
         if "Waste_Removal" in df.columns and "Landscaping" in df.columns:
             uc1, uc2 = st.columns(2)
             with uc1:
-                st.metric("Avg Waste Removal / Stand", f"${df['Waste_Removal'].mean():,.2f}")
+                st.metric("Avg Waste Removal / Stand", f"${df['Waste_Removal'].mean():,.0f}")
             with uc2:
-                st.metric("Avg Landscaping / Stand", f"${df['Landscaping'].mean():,.2f}")
+                st.metric("Avg Landscaping / Stand", f"${df['Landscaping'].mean():,.0f}")
 
     # ── Fixed Costs ───────────────────────────────────────────────────────────
     with st.expander("🏢 FIXED COSTS", expanded=False):
@@ -2973,7 +2973,7 @@ renderTable(ROWS, CLS);
         st.caption(f"Target: {_BM['Discounts_pct']['t']*100:.1f}% · System avg: {df['Discounts_pct'].mean()*100:.1f}%")
         _ranked_bar("Discounts_pct","Discounts","Discount% by Stand",
                     target=_BM["Discounts_pct"]["t"])
-        st.metric("Total Discounts Given (period)", f"${df['Discounts'].sum():,.2f}")
+        st.metric("Total Discounts Given (period)", f"${df['Discounts'].sum():,.0f}")
 
     st.divider()
 
@@ -2988,7 +2988,7 @@ renderTable(ROWS, CLS);
 
     def _fmt_rank(sub):
         out = sub.copy()
-        if "Net_Sales"        in out: out["Net_Sales"]        = out["Net_Sales"].map(lambda v: f"${v:,.2f}")
+        if "Net_Sales"        in out: out["Net_Sales"]        = out["Net_Sales"].map(lambda v: f"${v:,.0f}")
         if "Store_EBITDA_pct" in out: out["Store_EBITDA_pct"] = out["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
         if "Total_Labor_pct"  in out: out["Total_Labor_pct"]  = out["Total_Labor_pct"].map(lambda v: f"{v*100:.1f}%")
         if "Total_COGS_pct"   in out: out["Total_COGS_pct"]   = out["Total_COGS_pct"].map(lambda v: f"{v*100:.1f}%")
@@ -3071,7 +3071,7 @@ def tab_regions(dash):
             display_cols_region = [c for c in display_cols_region if c in region_stands.columns]
             tbl = region_stands[display_cols_region].copy()
             if "Net_Sales" in tbl.columns:
-                tbl["Net_Sales"] = tbl["Net_Sales"].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "—")
+                tbl["Net_Sales"] = tbl["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
             for pct_col in ["Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]:
                 if pct_col in tbl.columns:
                     tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
@@ -3177,7 +3177,7 @@ def tab_regions(dash):
         if col in disp.columns:
             disp[col] = disp[col].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
     if "Net Sales" in disp.columns:
-        disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.2f}" if pd.notna(v) else "—")
+        disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
     render_table(disp)
 
     # ── 🌱 Store Cohort / Ramp Analysis ─────────────────────────────────────
@@ -3251,9 +3251,9 @@ def tab_regions(dash):
     dilution    = mature_avg - blend_avg
 
     ck1, ck2, ck3, ck4 = st.columns(4)
-    ck1.metric("Mature Store Avg Sales", f"${mature_avg:,.2f}",
+    ck1.metric("Mature Store Avg Sales", f"${mature_avg:,.0f}",
                help=f"Avg net sales for 2yr+ stands in {period_lbl}")
-    ck2.metric(f"{period_lbl} System Avg", f"${blend_avg:,.2f}",
+    ck2.metric(f"{period_lbl} System Avg", f"${blend_avg:,.0f}",
                delta=f"${dilution:+,.0f} vs mature",
                delta_color="inverse" if dilution < 0 else "normal",
                help="Blended average across all stands this period — matches Period Summary above")
@@ -3284,7 +3284,7 @@ def tab_regions(dash):
             )
         fig_sales.add_hline(y=blend_avg, line_dash="dash",
                             line_color="rgba(255,255,255,0.4)",
-                            annotation_text=f"Period avg ${blend_avg:,.2f}",
+                            annotation_text=f"Period avg ${blend_avg:,.0f}",
                             annotation_position="top right",
                             annotation_font_color="rgba(255,255,255,0.5)")
         fig_sales.update_layout(template="plotly_dark", height=300,
@@ -3664,10 +3664,10 @@ def tab_insights(dash):
             sv = subset["Net_Sales"].fillna(0).tolist()
             f1 = go.Figure()
             f1.add_bar(x=names, y=sv, name="Actual", marker_color=accent_color, opacity=0.88,
-                       text=[f"${v:,.2f}" for v in sv],
+                       text=[f"${v:,.0f}" for v in sv],
                        textposition="outside", textfont=dict(size=12))
             f1.add_bar(x=names, y=[_sys_sales]*n, name="System Avg", marker_color=MUTED, opacity=0.55,
-                       text=[f"${_sys_sales:,.2f}"]*n,
+                       text=[f"${_sys_sales:,.0f}"]*n,
                        textposition="outside", textfont=dict(size=12))
             _rc(f1, f"NET SALES — {group_label}", dict(tickprefix="$", tickformat=",.0f"))
 
@@ -5182,7 +5182,7 @@ def tab_sos(dash):
         st.plotly_chart(fig_sv, use_container_width=True)
 
         # Summary table
-        sv_hourly["Sales"] = sv_hourly["Total_Sales"].apply(lambda v: f"${v:,.2f}")
+        sv_hourly["Sales"] = sv_hourly["Total_Sales"].apply(lambda v: f"${v:,.0f}")
         sv_hourly["Avg SOS"] = sv_hourly["Avg_SOS"].apply(_fmt_sos)
         sv_hourly["Txns"] = sv_hourly["Transactions"].apply(lambda v: f"{int(v):,}")
         sv_hourly["vs Goal"] = sv_hourly["Avg_SOS"].apply(
@@ -5336,7 +5336,7 @@ def tab_forecast(dash):
     fc_display["Watch Note"] = fc_display["period"].map(lambda p: watchpts.get(p, ""))
     fc_display["Type"]       = fc_display["is_actual"].map(lambda v: "★ Actual" if v else "Forecast")
     for col in ["ns_base", "ns_opt", "ns_risk", "prior_yr_sales"]:
-        fc_display[col] = fc_display[col].map(lambda v: f"${v:,.2f}")
+        fc_display[col] = fc_display[col].map(lambda v: f"${v:,.0f}")
     for col in ["ebitda_base", "ebitda_opt", "ebitda_risk", "prior_yr_ebitda"]:
         fc_display[col] = fc_display[col].map(lambda v: f"{v*100:.1f}%")
     fc_display = fc_display.drop(columns=["is_actual"])
@@ -5570,7 +5570,7 @@ def tab_potholes(dash):
             ramp_cols = ["Stand", "Net_Sales", "Total_Labor_pct", "Total_COGS_pct",
                          "Store_EBITDA_pct", "Age_Bucket"]
             ramp_show = new_stands[[c for c in ramp_cols if c in new_stands.columns]].copy()
-            ramp_show["Net_Sales"] = ramp_show["Net_Sales"].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "—")
+            ramp_show["Net_Sales"] = ramp_show["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
             for pct_col in ["Total_Labor_pct", "Total_COGS_pct", "Store_EBITDA_pct"]:
                 if pct_col in ramp_show.columns:
                     ramp_show[pct_col] = ramp_show[pct_col].apply(
@@ -5973,12 +5973,12 @@ def tab_utilities(dash):
                     for i, (col, lbl) in enumerate(items):
                         with met_cols[i]:
                             val = float(stand_row[col])
-                            st.metric(lbl, f"${val:,.2f}", f"{val/sales*100:.2f}% of sales")
+                            st.metric(lbl, f"${val:,.0f}", f"{val/sales*100:.2f}% of sales")
     else:
         st.caption("Upload P&L files to activate stand-level utility drill-down.")
         if not drill_stands.empty:
             disp = drill_stands[["Stand", "Net_Sales"]].copy()
-            disp["Net_Sales"] = disp["Net_Sales"].apply(lambda v: f"${v:,.2f}" if pd.notna(v) else "—")
+            disp["Net_Sales"] = disp["Net_Sales"].apply(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
             render_table(disp.reset_index(drop=True))
 
     st.html('<hr class="brew">')
@@ -7190,10 +7190,10 @@ def tab_pipeline(dash):
     if not sense_df.empty:
         sense_df["Stand"]    = sense_df.apply(lambda r: f"{r['city']}, {r['state']} (#{r['store']})", axis=1)
         sense_df["Est. Open"] = sense_df["open"].astype(str)
-        sense_df["+4 Wks"]   = f"${4  * AVG_REV_PER_WEEK:,.2f}"
-        sense_df["+8 Wks"]   = f"${8  * AVG_REV_PER_WEEK:,.2f}"
-        sense_df["+12 Wks"]  = f"${12 * AVG_REV_PER_WEEK:,.2f}"
-        sense_df["+26 Wks"]  = f"${26 * AVG_REV_PER_WEEK:,.2f}"
+        sense_df["+4 Wks"]   = f"${4  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+8 Wks"]   = f"${8  * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+12 Wks"]  = f"${12 * AVG_REV_PER_WEEK:,.0f}"
+        sense_df["+26 Wks"]  = f"${26 * AVG_REV_PER_WEEK:,.0f}"
         st.dataframe(sense_df[["Stand","Est. Open","+4 Wks","+8 Wks","+12 Wks","+26 Wks"]],
                      use_container_width=True, hide_index=True,
                      height=min(50 + len(sense_df) * 35, 400))
