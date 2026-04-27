@@ -210,7 +210,7 @@ def _fmt_d_short(v):
     """
     if v is None: return "—"
     v = abs(float(v))
-    if v >= 1_000_000:
+    if v >= 999_500:
         return f"${v/1_000_000:.2f}M"
     if v >= 1_000:
         return f"${v/1_000:.2f}K"
