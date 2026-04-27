@@ -2141,7 +2141,7 @@ def tab_stands(dash):
         "Total_Marketing_pct":  {"t": 0.111, "hi": False, "label": "Marketing"},
         "Unit_EBITDAR_pct":     {"t": 0.200, "hi": True,  "label": "EBITDAR"},
         "Total_Rent_pct":       {"t": 0.072, "hi": False, "label": "Rent"},
-        "Store_EBITDA_pct":     {"t": 0.130, "hi": True,  "label": "EBITDA"},
+        "Store_EBITDA_pct":     {"t": 0.200, "hi": True,  "label": "EBITDA"},
         "Discounts_pct":        {"t": 0.005, "hi": False, "label": "Discounts"},
     }
 
