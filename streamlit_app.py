@@ -1084,7 +1084,7 @@ def tab_ceo(dash):
                         line=dict(color=RED, width=2.5), marker=dict(size=6),
                         yaxis="y2")
         fig.update_layout(
-            xaxis=dict(tickangle=-35),
+            xaxis=dict(tickangle=-35, categoryorder="trace"),
             yaxis=dict(title="Avg Sales / Stand ($)", tickprefix="$", tickformat=",.0f",
                        title_font=dict(size=10, color=MID)),
             yaxis2=dict(title="EBITDA %", overlaying="y", side="right",
@@ -1111,7 +1111,7 @@ def tab_ceo(dash):
                 line=dict(color=BLUE, width=2.5), marker=dict(size=6),
             )
         fig_lc.update_layout(
-            xaxis=dict(tickangle=-35),
+            xaxis=dict(tickangle=-35, categoryorder="trace"),
             yaxis=dict(ticksuffix="%", tickformat=".1f"),
             legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
         )
@@ -2656,7 +2656,9 @@ renderTable(ROWS, CLS);
         st.markdown("##### Period-Over-Period Trend")
         stand_hist = stands_df[stands_df["Stand"] == sel_stand].copy()
         if len(stand_hist) > 1:
-            stand_hist = stand_hist.sort_values("Period_Key")
+            stand_hist["_sort_year"] = stand_hist["Period_Key"].apply(lambda x: int(x.split("_")[0]) if "_" in x else 0)
+            stand_hist["_sort_period"] = stand_hist["Period_Key"].apply(lambda x: int(x.split("_P")[1]) if "_P" in x else 0)
+            stand_hist = stand_hist.sort_values(["_sort_year", "_sort_period"])
 
             # Opening-period filter — new stands have extreme values that
             # compress the scale and hide steady-state performance
@@ -2726,7 +2728,7 @@ renderTable(ROWS, CLS);
                     title_text=metric_lbl,
                     yaxis=dict(ticksuffix="%" if fmt=="%" else "",
                                tickprefix="$" if fmt=="$" else ""),
-                    xaxis=dict(tickangle=-35),
+                    xaxis=dict(tickangle=-35, categoryorder="trace"),
                 )
                 brew_fig(fig_t, height=260)
                 (tc1 if i%2==0 else tc2).plotly_chart(
