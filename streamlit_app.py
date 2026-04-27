@@ -1118,6 +1118,37 @@ def tab_ceo(dash):
         brew_fig(fig_lc, height=280)
         st.plotly_chart(fig_lc, config={"displayModeBar": False})
 
+        # ── Prime Cost vs EBITDA % ────────────────────────────────────────
+        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">PRIME COST vs EBITDA % — {period_range}</div>')
+        fig_pc = go.Figure()
+        if "labor_pct" in filtered_df.columns and "cogs_pct" in filtered_df.columns:
+            prime_cost = (filtered_df["labor_pct"] + filtered_df["cogs_pct"]) * 100
+            fig_pc.add_bar(
+                x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
+                name="EBITDA %", marker_color=GREEN, opacity=0.75,
+                yaxis="y1",
+            )
+            fig_pc.add_scatter(
+                x=filtered_df["label"], y=prime_cost,
+                name="Prime Cost %", mode="lines+markers",
+                line=dict(color=RED, width=2.5), marker=dict(size=6),
+                yaxis="y2",
+            )
+            fig_pc.update_layout(
+                xaxis=dict(tickangle=-35, categoryorder="trace"),
+                yaxis=dict(title="EBITDA %", ticksuffix="%", tickformat=".1f",
+                           title_font=dict(size=10, color=GREEN),
+                           tickfont=dict(size=9, color=GREEN)),
+                yaxis2=dict(title="Prime Cost %", overlaying="y", side="right",
+                            ticksuffix="%", tickformat=".1f",
+                            title_font=dict(size=10, color=RED),
+                            tickfont=dict(size=9, color=RED)),
+                legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
+                barmode="overlay",
+            )
+            brew_fig(fig_pc, height=280)
+            st.plotly_chart(fig_pc, config={"displayModeBar": False})
+
     with col2:
         # ── Board Narrative — computed from live data ──────────────────────
 
