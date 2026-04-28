@@ -1118,102 +1118,6 @@ def tab_ceo(dash):
         brew_fig(fig_lc, height=280)
         st.plotly_chart(fig_lc, config={"displayModeBar": False})
 
-        # ── Prime Cost vs EBITDA % ────────────────────────────────────────
-        fig_pc = go.Figure()
-        if "labor_pct" in filtered_df.columns and "cogs_pct" in filtered_df.columns:
-            st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">PRIME COST vs EBITDA % — {period_range}</div>')
-            prime_cost = (filtered_df["labor_pct"] + filtered_df["cogs_pct"]) * 100
-            fig_pc.add_bar(
-                x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
-                name="EBITDA %", marker_color=GREEN, opacity=0.75,
-                yaxis="y1",
-            )
-            fig_pc.add_scatter(
-                x=filtered_df["label"], y=prime_cost,
-                name="Prime Cost %", mode="lines+markers",
-                line=dict(color=RED, width=2.5), marker=dict(size=6),
-                yaxis="y2",
-            )
-            fig_pc.update_layout(
-                xaxis=dict(tickangle=-35, categoryorder="trace"),
-                yaxis=dict(title="EBITDA %", ticksuffix="%", tickformat=".1f",
-                           title_font=dict(size=10, color=GREEN),
-                           tickfont=dict(size=9, color=GREEN)),
-                yaxis2=dict(title="Prime Cost %", overlaying="y", side="right",
-                            ticksuffix="%", tickformat=".1f",
-                            title_font=dict(size=10, color=RED),
-                            tickfont=dict(size=9, color=RED)),
-                legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
-                barmode="overlay",
-            )
-            brew_fig(fig_pc, height=280)
-            st.plotly_chart(fig_pc, config={"displayModeBar": False})
-
-        # ── New Stand Openings by Period ──────────────────────────────────────
-        import datetime as _dt
-        _P1_STARTS = {
-            2024: _dt.date(2024,  1,  1),
-            2025: _dt.date(2024, 12, 30),
-            2026: _dt.date(2025, 12, 29),
-        }
-        def _date_to_period_key(d):
-            """Map a date to its fiscal period key, e.g. '2025_P3'."""
-            for yr in sorted(_P1_STARTS.keys(), reverse=True):
-                p1 = _P1_STARTS[yr]
-                if d >= p1:
-                    pnum = (d - p1).days // 28 + 1
-                    if 1 <= pnum <= 13:
-                        return f"{yr}_P{pnum}"
-            return None
-
-        # Collect unique stands + open dates (deduplicate across periods)
-        _seen_stands = {}
-        for _r in dash.get("stand_records", []):
-            _s = _r.get("Stand")
-            _od = _r.get("Open Date")
-            if _s and _od and str(_od) not in ("", "nan", "None", "0") and _s not in _seen_stands:
-                try:
-                    _seen_stands[_s] = pd.to_datetime(str(_od)).date()
-                except Exception:
-                    pass
-
-        # Count openings per period key
-        from collections import Counter as _Counter
-        _open_counts = _Counter()
-        for _s, _d in _seen_stands.items():
-            _pk = _date_to_period_key(_d)
-            if _pk:
-                _open_counts[_pk] += 1
-
-        # Build a df aligned to the filtered_df period labels
-        _all_periods_df = get_periods_df(dash)
-        _open_rows = []
-        for _, _row in _all_periods_df.iterrows():
-            _pk = _row["period_key"]
-            _open_rows.append({"label": _row["label"], "period_key": _pk, "new_stands": _open_counts.get(_pk, 0)})
-        _open_df = pd.DataFrame(_open_rows)
-
-        # Filter to the same year/periods as filtered_df
-        _open_df = _open_df[_open_df["label"].isin(filtered_df["label"])]
-
-        if not _open_df.empty and _open_df["new_stands"].sum() > 0:
-            st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">NEW STAND OPENINGS BY PERIOD — {period_range}</div>')
-            fig_op = go.Figure()
-            fig_op.add_bar(
-                x=_open_df["label"], y=_open_df["new_stands"],
-                marker_color=GREEN, opacity=0.8,
-                text=_open_df["new_stands"].apply(lambda v: str(v) if v > 0 else ""),
-                textposition="outside",
-                name="New Stands",
-            )
-            fig_op.update_layout(
-                xaxis=dict(tickangle=-35, categoryorder="trace"),
-                yaxis=dict(title="# Stands Opened", dtick=1, rangemode="tozero"),
-                showlegend=False,
-            )
-            brew_fig(fig_op, height=240)
-            st.plotly_chart(fig_op, config={"displayModeBar": False})
-
     with col2:
         # ── Board Narrative — computed from live data ──────────────────────
 
@@ -1410,6 +1314,97 @@ def tab_ceo(dash):
                 brew_fig(fig3, height=320)
                 fig3.update_layout(yaxis=dict(ticksuffix="%"), showlegend=False)
                 st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
+
+    # ── Row 2: Prime Cost vs EBITDA | New Stand Openings ──────────────────────
+    col5, col6 = st.columns(2)
+    with col5:
+        if "labor_pct" in filtered_df.columns and "cogs_pct" in filtered_df.columns:
+            section("PRIME COST vs EBITDA %", f"Labor + COGs vs EBITDA margin — {period_range}")
+            prime_cost = (filtered_df["labor_pct"] + filtered_df["cogs_pct"]) * 100
+            fig_pc = go.Figure()
+            fig_pc.add_bar(
+                x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
+                name="EBITDA %", marker_color=GREEN, opacity=0.75,
+                yaxis="y1",
+            )
+            fig_pc.add_scatter(
+                x=filtered_df["label"], y=prime_cost,
+                name="Prime Cost %", mode="lines+markers",
+                line=dict(color=RED, width=2.5), marker=dict(size=6),
+                yaxis="y2",
+            )
+            fig_pc.update_layout(
+                xaxis=dict(tickangle=-35, categoryorder="trace"),
+                yaxis=dict(title="EBITDA %", ticksuffix="%", tickformat=".1f",
+                           title_font=dict(size=10, color=GREEN),
+                           tickfont=dict(size=9, color=GREEN)),
+                yaxis2=dict(title="Prime Cost %", overlaying="y", side="right",
+                            ticksuffix="%", tickformat=".1f",
+                            title_font=dict(size=10, color=RED),
+                            tickfont=dict(size=9, color=RED)),
+                legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
+                barmode="overlay",
+            )
+            brew_fig(fig_pc, height=300)
+            st.plotly_chart(fig_pc, config={"displayModeBar": False}, use_container_width=True)
+
+    with col6:
+        import datetime as _dt
+        _P1_STARTS = {
+            2024: _dt.date(2024,  1,  1),
+            2025: _dt.date(2024, 12, 30),
+            2026: _dt.date(2025, 12, 29),
+        }
+        def _date_to_period_key(d):
+            for yr in sorted(_P1_STARTS.keys(), reverse=True):
+                p1 = _P1_STARTS[yr]
+                if d >= p1:
+                    pnum = (d - p1).days // 28 + 1
+                    if 1 <= pnum <= 13:
+                        return f"{yr}_P{pnum}"
+            return None
+
+        _seen_stands = {}
+        for _r in dash.get("stand_records", []):
+            _s = _r.get("Stand")
+            _od = _r.get("Open Date")
+            if _s and _od and str(_od) not in ("", "nan", "None", "0") and _s not in _seen_stands:
+                try:
+                    _seen_stands[_s] = pd.to_datetime(str(_od)).date()
+                except Exception:
+                    pass
+
+        from collections import Counter as _Counter
+        _open_counts = _Counter()
+        for _s, _d in _seen_stands.items():
+            _pk = _date_to_period_key(_d)
+            if _pk:
+                _open_counts[_pk] += 1
+
+        _all_periods_df = get_periods_df(dash)
+        _open_rows = []
+        for _, _row in _all_periods_df.iterrows():
+            _pk = _row["period_key"]
+            _open_rows.append({"label": _row["label"], "period_key": _pk, "new_stands": _open_counts.get(_pk, 0)})
+        _open_df = pd.DataFrame(_open_rows)
+        _open_df = _open_df[_open_df["label"].isin(filtered_df["label"])]
+
+        section("NEW STAND OPENINGS", f"Stands opened per period — {period_range}")
+        fig_op = go.Figure()
+        fig_op.add_bar(
+            x=_open_df["label"], y=_open_df["new_stands"],
+            marker_color=BLUE, opacity=0.8,
+            text=_open_df["new_stands"].apply(lambda v: str(v) if v > 0 else ""),
+            textposition="outside",
+            name="New Stands",
+        )
+        fig_op.update_layout(
+            xaxis=dict(tickangle=-35, categoryorder="trace"),
+            yaxis=dict(title="# Stands Opened", dtick=1, rangemode="tozero"),
+            showlegend=False,
+        )
+        brew_fig(fig_op, height=300)
+        st.plotly_chart(fig_op, config={"displayModeBar": False}, use_container_width=True)
 
     st.html('<hr class="brew">')
 
