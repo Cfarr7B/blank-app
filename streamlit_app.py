@@ -1071,8 +1071,128 @@ def tab_ceo(dash):
     else:
         goal_ebitda_pct = 0.20   # fallback PE benchmark for non-goal years
 
-    # ── Revenue + EBITDA Trend (all periods) ──
-    col1, col2 = st.columns([3, 2])
+    # ── Board Narrative (full width) ─────────────────────────────────────────
+    PE_TARGET = goal_ebitda_pct if sel_year in ANNUAL_GOALS else 0.20
+
+    n_f = len(filtered_df)
+    seg = max(n_f // 3, 1)
+    rev_trend    = (filtered_df.iloc[-seg:]["avg_sales"].mean() /
+                    filtered_df.iloc[:seg]["avg_sales"].mean() - 1) if n_f >= 2 else 0
+    ebitda_trend = (filtered_df.iloc[-seg:]["ebitda_pct"].mean() -
+                    filtered_df.iloc[:seg]["ebitda_pct"].mean()) if n_f >= 2 else 0
+
+    first_stand_cnt = int(filtered_df.iloc[0]["stands"])
+    last_stand_cnt  = int(latest["stands"])
+    net_new_stands  = last_stand_cnt - first_stand_cnt
+    gap_pts = (avg_ebitda_pct - PE_TARGET) * 100
+
+    latest_reg_df = get_regions_df(dash, latest["period_key"])
+    best_reg  = worst_reg = None
+    if not latest_reg_df.empty and "ebitda_pct" in latest_reg_df.columns:
+        best_reg  = latest_reg_df.loc[latest_reg_df["ebitda_pct"].idxmax()]
+        worst_reg = latest_reg_df.loc[latest_reg_df["ebitda_pct"].idxmin()]
+
+    mature_premium_txt = ""
+    if "Age_Bucket" in filtered_stands.columns:
+        mature = filtered_stands[filtered_stands["Age_Bucket"] == "Mature (2yr+)"]
+        if not mature.empty and mature["Store_EBITDA_pct"].notna().any():
+            mat_ebitda = mature["Store_EBITDA_pct"].mean()
+            delta_pts   = (mat_ebitda - avg_ebitda_pct) * 100
+            mature_premium_txt = (
+                f"Mature stands avg <strong>{_fmt_p(mat_ebitda)}</strong> "
+                f"({delta_pts:+.1f}pts vs system)."
+            )
+
+    if gap_pts >= 0:
+        hl_color = GREEN
+        hl_text  = f"ON TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · ${total_revenue_ytd/1e6:.1f}M"
+    elif gap_pts >= -2:
+        hl_color = AMBER
+        hl_text  = f"NEAR TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.1f}PTS BELOW 20%"
+    else:
+        hl_color = RED
+        hl_text  = f"BELOW TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.1f}PTS GAP"
+
+    if abs(ebitda_trend * 100) < 0.3:
+        ebitda_phrase = "margins are <strong>holding steady</strong>"
+    elif ebitda_trend > 0:
+        ebitda_phrase = f"margins are <strong>expanding +{ebitda_trend*100:.1f}pts</strong>"
+    else:
+        ebitda_phrase = f"margins are <strong>compressing {ebitda_trend*100:.1f}pts</strong>"
+
+    rev_arrow  = "▲" if rev_trend > 0.005 else ("▼" if rev_trend < -0.005 else "→")
+    rev_color  = GREEN if rev_trend > 0 else (RED if rev_trend < -0.01 else MID)
+    ebi_arrow  = "▲" if ebitda_trend > 0.001 else ("▼" if ebitda_trend < -0.001 else "→")
+    ebi_color  = GREEN if ebitda_trend > 0 else (RED if ebitda_trend < -0.005 else AMBER)
+    net_color  = GREEN if net_new_stands > 0 else MID
+    gap_color  = GREEN if gap_pts >= 0 else (AMBER if gap_pts >= -2 else RED)
+
+    if gap_pts < 0:
+        lever = (f"Closing the {abs(gap_pts):.1f}pt gap requires ~${abs(gap_pts)/100 * total_revenue_ytd/n_f/1e3:.0f}k "
+                 f"EBITDA improvement per period — achievable through labor scheduling "
+                 f"discipline and utility cost control at underperforming stands.")
+    else:
+        lever = ("Margin is on target. Sustaining performance as new stands ramp "
+                 "and protecting labor% during peak seasons are the primary risks.")
+
+    reg_html = ""
+    if best_reg is not None and worst_reg is not None and best_reg["region"] != worst_reg["region"]:
+        spread_pts = (best_reg["ebitda_pct"] - worst_reg["ebitda_pct"]) * 100
+        reg_html = (f'<div style="font-size:13px;color:{MID};margin-top:8px;line-height:1.5;">'
+                    f'<strong>{best_reg["region"]}</strong> leads at {_fmt_p(best_reg["ebitda_pct"])} · '
+                    f'<strong>{worst_reg["region"]}</strong> lags at {_fmt_p(worst_reg["ebitda_pct"])} · '
+                    f'{spread_pts:.1f}pt regional spread</div>')
+
+    st.html(f"""
+    <div class="story-block">
+      <div class="story-label">BOARD NARRATIVE · {period_range}</div>
+      <div class="story-headline" style="font-size:24px;color:{hl_color};line-height:1.2;margin-bottom:16px;">
+        {hl_text}
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;">
+
+        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Avg Sales / Stand</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{_fmt_d(latest['avg_sales'])}</div>
+          <div style="font-size:12px;color:{rev_color};font-weight:600;">{rev_arrow} {rev_trend*100:+.1f}% over period</div>
+        </div>
+
+        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">EBITDA Margin</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{_fmt_p(avg_ebitda_pct)}</div>
+          <div style="font-size:12px;color:{gap_color};font-weight:600;">{gap_pts:+.1f}pts vs 20% target {ebi_arrow}</div>
+        </div>
+
+        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Network Size</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{last_stand_cnt} Stands</div>
+          <div style="font-size:12px;color:{net_color};font-weight:600;">+{net_new_stands} added · {n_periods} periods shown</div>
+        </div>
+
+        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">EBITDA Trend</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:{ebi_color};">{ebitda_trend*100:+.1f}pts</div>
+          <div style="font-size:12px;color:{MID};">first → last third of range</div>
+        </div>
+
+      </div>
+
+      {reg_html}
+
+      <div style="font-size:13px;color:#595959;line-height:1.7;margin-top:12px;border-top:1px solid #e2e4e9;padding-top:12px;">
+        Over {period_range}, {ebitda_phrase} while avg sales/stand
+        {"improved" if rev_trend > 0.005 else ("softened" if rev_trend < -0.005 else "held flat")}
+        at {_fmt_d(latest['avg_sales'])}.
+        {mature_premium_txt}
+        <br>{lever}
+      </div>
+    </div>""")
+
+    st.html('<hr class="brew">')
+
+    # ── Trend Charts (1 × 2) ─────────────────────────────────────────────────
+    col1, col2 = st.columns(2)
     with col1:
         st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">REVENUE & EBITDA TREND — {period_range}</div>')
         fig = go.Figure()
@@ -1093,9 +1213,9 @@ def tab_ceo(dash):
             barmode="overlay",
         )
         brew_fig(fig, height=300)
-        st.plotly_chart(fig, config={"displayModeBar": False})
+        st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
-        # ── Labor % & COGs % Trend ────────────────────────────────────────
+    with col2:
         st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">LABOR % & COGS % TREND — {period_range}</div>')
         fig_lc = go.Figure()
         if "labor_pct" in filtered_df.columns:
@@ -1115,140 +1235,8 @@ def tab_ceo(dash):
             yaxis=dict(ticksuffix="%", tickformat=".1f"),
             legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
         )
-        brew_fig(fig_lc, height=280)
-        st.plotly_chart(fig_lc, config={"displayModeBar": False})
-
-    with col2:
-        # ── Board Narrative — computed from live data ──────────────────────
-
-        # Use the actual company goal if defined for this year, otherwise 20% PE benchmark
-        PE_TARGET = goal_ebitda_pct if sel_year in ANNUAL_GOALS else 0.20
-
-        # Trend: first-third vs last-third of selected range
-        n_f = len(filtered_df)
-        seg = max(n_f // 3, 1)
-        rev_trend    = (filtered_df.iloc[-seg:]["avg_sales"].mean() /
-                        filtered_df.iloc[:seg]["avg_sales"].mean() - 1) if n_f >= 2 else 0
-        ebitda_trend = (filtered_df.iloc[-seg:]["ebitda_pct"].mean() -
-                        filtered_df.iloc[:seg]["ebitda_pct"].mean()) if n_f >= 2 else 0
-
-        # Network growth across selected range
-        first_stand_cnt = int(filtered_df.iloc[0]["stands"])
-        last_stand_cnt  = int(latest["stands"])
-        net_new_stands  = last_stand_cnt - first_stand_cnt
-
-        # Gap to PE target
-        gap_pts = (avg_ebitda_pct - PE_TARGET) * 100   # positive = above target
-
-        # Best / worst region for the latest period
-        latest_reg_df = get_regions_df(dash, latest["period_key"])
-        best_reg  = worst_reg = None
-        if not latest_reg_df.empty and "ebitda_pct" in latest_reg_df.columns:
-            best_reg  = latest_reg_df.loc[latest_reg_df["ebitda_pct"].idxmax()]
-            worst_reg = latest_reg_df.loc[latest_reg_df["ebitda_pct"].idxmin()]
-
-        # Mature-stand premium over system
-        mature_premium_txt = ""
-        if "Age_Bucket" in filtered_stands.columns:
-            mature = filtered_stands[filtered_stands["Age_Bucket"] == "Mature (2yr+)"]
-            if not mature.empty and mature["Store_EBITDA_pct"].notna().any():
-                mat_ebitda = mature["Store_EBITDA_pct"].mean()
-                delta_pts   = (mat_ebitda - avg_ebitda_pct) * 100
-                mature_premium_txt = (
-                    f"Mature stands avg <strong>{_fmt_p(mat_ebitda)}</strong> "
-                    f"({delta_pts:+.1f}pts vs system)."
-                )
-
-        # Headline + color
-        if gap_pts >= 0:
-            hl_color = GREEN
-            hl_text  = f"ON TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · ${total_revenue_ytd/1e6:.1f}M"
-        elif gap_pts >= -2:
-            hl_color = AMBER
-            hl_text  = f"NEAR TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.1f}PTS BELOW 20%"
-        else:
-            hl_color = RED
-            hl_text  = f"BELOW TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.1f}PTS GAP"
-
-        # EBITDA trend phrase
-        if abs(ebitda_trend * 100) < 0.3:
-            ebitda_phrase = "margins are <strong>holding steady</strong>"
-        elif ebitda_trend > 0:
-            ebitda_phrase = f"margins are <strong>expanding +{ebitda_trend*100:.1f}pts</strong>"
-        else:
-            ebitda_phrase = f"margins are <strong>compressing {ebitda_trend*100:.1f}pts</strong>"
-
-        # Revenue trend phrase
-        rev_arrow  = "▲" if rev_trend > 0.005 else ("▼" if rev_trend < -0.005 else "→")
-        rev_color  = GREEN if rev_trend > 0 else (RED if rev_trend < -0.01 else MID)
-        ebi_arrow  = "▲" if ebitda_trend > 0.001 else ("▼" if ebitda_trend < -0.001 else "→")
-        ebi_color  = GREEN if ebitda_trend > 0 else (RED if ebitda_trend < -0.005 else AMBER)
-        net_color  = GREEN if net_new_stands > 0 else MID
-        gap_color  = GREEN if gap_pts >= 0 else (AMBER if gap_pts >= -2 else RED)
-
-        # Key lever sentence
-        if gap_pts < 0:
-            lever = (f"Closing the {abs(gap_pts):.1f}pt gap requires ~${abs(gap_pts)/100 * total_revenue_ytd/n_f/1e3:.0f}k "
-                     f"EBITDA improvement per period — achievable through labor scheduling "
-                     f"discipline and utility cost control at underperforming stands.")
-        else:
-            lever = ("Margin is on target. Sustaining performance as new stands ramp "
-                     "and protecting labor% during peak seasons are the primary risks.")
-
-        # Regional spread
-        reg_html = ""
-        if best_reg is not None and worst_reg is not None and best_reg["region"] != worst_reg["region"]:
-            spread_pts = (best_reg["ebitda_pct"] - worst_reg["ebitda_pct"]) * 100
-            reg_html = (f'<div style="font-size:12px;color:{MID};margin-top:6px;line-height:1.5;">'
-                        f'<strong>{best_reg["region"]}</strong> leads at {_fmt_p(best_reg["ebitda_pct"])} · '
-                        f'<strong>{worst_reg["region"]}</strong> lags at {_fmt_p(worst_reg["ebitda_pct"])} · '
-                        f'{spread_pts:.1f}pt regional spread</div>')
-
-        st.html(f"""
-        <div class="story-block" style="height:100%;">
-          <div class="story-label">BOARD NARRATIVE · {period_range}</div>
-          <div class="story-headline" style="font-size:20px;color:{hl_color};line-height:1.2;margin-bottom:12px;">
-            {hl_text}
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-
-            <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Avg Sales / Stand</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#1A1919;">{_fmt_d(latest['avg_sales'])}</div>
-              <div style="font-size:11px;color:{rev_color};font-weight:600;">{rev_arrow} {rev_trend*100:+.1f}% over period</div>
-            </div>
-
-            <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">EBITDA Margin</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#1A1919;">{_fmt_p(avg_ebitda_pct)}</div>
-              <div style="font-size:11px;color:{gap_color};font-weight:600;">{gap_pts:+.1f}pts vs 20% target {ebi_arrow}</div>
-            </div>
-
-            <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Network Size</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#1A1919;">{last_stand_cnt} Stands</div>
-              <div style="font-size:11px;color:{net_color};font-weight:600;">+{net_new_stands} added · {n_periods} periods shown</div>
-            </div>
-
-            <div style="background:#f5f6f8;border-radius:8px;padding:10px 12px;">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">EBITDA Trend</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:{ebi_color};">{ebitda_trend*100:+.1f}pts</div>
-              <div style="font-size:11px;color:{MID};">first → last third of range</div>
-            </div>
-
-          </div>
-
-          {reg_html}
-
-          <div style="font-size:12px;color:#595959;line-height:1.6;margin-top:10px;border-top:1px solid #e2e4e9;padding-top:10px;">
-            Over {period_range}, {ebitda_phrase} while avg sales/stand
-            {"improved" if rev_trend > 0.005 else ("softened" if rev_trend < -0.005 else "held flat")}
-            at {_fmt_d(latest['avg_sales'])}.
-            {mature_premium_txt}
-            <br>{lever}
-          </div>
-        </div>""")
+        brew_fig(fig_lc, height=300)
+        st.plotly_chart(fig_lc, config={"displayModeBar": False}, use_container_width=True)
 
     st.html('<hr class="brew">')
 
@@ -1323,25 +1311,25 @@ def tab_ceo(dash):
             prime_cost = (filtered_df["labor_pct"] + filtered_df["cogs_pct"]) * 100
             fig_pc = go.Figure()
             fig_pc.add_bar(
-                x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
-                name="EBITDA %", marker_color=GREEN, opacity=0.75,
+                x=filtered_df["label"], y=prime_cost,
+                name="Prime Cost %", marker_color=RED, opacity=0.65,
                 yaxis="y1",
             )
             fig_pc.add_scatter(
-                x=filtered_df["label"], y=prime_cost,
-                name="Prime Cost %", mode="lines+markers",
-                line=dict(color=RED, width=2.5), marker=dict(size=6),
+                x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
+                name="EBITDA %", mode="lines+markers",
+                line=dict(color=GREEN, width=2.5), marker=dict(size=6),
                 yaxis="y2",
             )
             fig_pc.update_layout(
                 xaxis=dict(tickangle=-35, categoryorder="trace"),
-                yaxis=dict(title="EBITDA %", ticksuffix="%", tickformat=".1f",
-                           title_font=dict(size=10, color=GREEN),
-                           tickfont=dict(size=9, color=GREEN)),
-                yaxis2=dict(title="Prime Cost %", overlaying="y", side="right",
+                yaxis=dict(title="Prime Cost %", ticksuffix="%", tickformat=".1f",
+                           title_font=dict(size=10, color=RED),
+                           tickfont=dict(size=9, color=RED)),
+                yaxis2=dict(title="EBITDA %", overlaying="y", side="right",
                             ticksuffix="%", tickformat=".1f",
-                            title_font=dict(size=10, color=RED),
-                            tickfont=dict(size=9, color=RED)),
+                            title_font=dict(size=10, color=GREEN),
+                            tickfont=dict(size=9, color=GREEN)),
                 legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
                 barmode="overlay",
             )
