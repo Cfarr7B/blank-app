@@ -1081,9 +1081,14 @@ def tab_ceo(dash):
     ebitda_trend = (filtered_df.iloc[-seg:]["ebitda_pct"].mean() -
                     filtered_df.iloc[:seg]["ebitda_pct"].mean()) if n_f >= 2 else 0
 
-    first_stand_cnt = int(filtered_df.iloc[0]["stands"])
     last_stand_cnt  = int(latest["stands"])
-    net_new_stands  = last_stand_cnt - first_stand_cnt
+    # Compare against end of prior year (P13 or last period of prior year)
+    prior_year_df = periods_df[(periods_df["year"] == sel_year - 1)]
+    if not prior_year_df.empty:
+        prior_year_end_cnt = int(prior_year_df.iloc[-1]["stands"])
+    else:
+        prior_year_end_cnt = int(filtered_df.iloc[0]["stands"])
+    net_new_stands  = last_stand_cnt - prior_year_end_cnt
     gap_pts = (avg_ebitda_pct - PE_TARGET) * 100
 
     latest_reg_df = get_regions_df(dash, latest["period_key"])
@@ -1167,7 +1172,7 @@ def tab_ceo(dash):
         <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
           <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Network Size</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{last_stand_cnt} Stands</div>
-          <div style="font-size:12px;color:{net_color};font-weight:600;">+{net_new_stands} added · {n_periods} periods shown</div>
+          <div style="font-size:12px;color:{net_color};font-weight:600;">+{net_new_stands} since end of {sel_year - 1} · {n_periods} periods shown</div>
         </div>
 
         <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
@@ -6975,7 +6980,16 @@ def tab_pipeline(dash):
     if sel_region != "All Regions": dff = dff[dff["region"] == sel_region]
 
     stands_df_pipe = get_stands_df(dash)
-    existing_rows  = stands_df_pipe.to_dict("records") if not stands_df_pipe.empty else []
+    # Only count stores from the most recent period to exclude sold/divested markets
+    if not stands_df_pipe.empty:
+        _latest_pk = sorted(
+            stands_df_pipe["Period_Key"].unique(),
+            key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1]))
+        )[-1]
+        _latest_pipe_stands = stands_df_pipe[stands_df_pipe["Period_Key"] == _latest_pk]
+    else:
+        _latest_pipe_stands = stands_df_pipe
+    existing_rows  = _latest_pipe_stands.to_dict("records")
     open_store_ids = set()
     for row in existing_rows:
         raw = row.get("Stand", "")
