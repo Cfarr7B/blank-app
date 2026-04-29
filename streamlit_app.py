@@ -7413,7 +7413,12 @@ def tab_pipeline(dash):
     with _cap_col1:
         st.markdown("**Cumulative Stand Count by Quarter**")
         _display_df = _cap_df[["Region","Current"] + _quarter_order].copy()
-        st.dataframe(_display_df, use_container_width=True, hide_index=True, height=280)
+        # Add a Total row summing all regions per column
+        _total_row = {"Region": "TOTAL"}
+        for _col in ["Current"] + _quarter_order:
+            _total_row[_col] = _display_df[_col].sum()
+        _display_df = pd.concat([_display_df, pd.DataFrame([_total_row])], ignore_index=True)
+        st.dataframe(_display_df, use_container_width=True, hide_index=True, height=310)
 
     with _cap_col2:
         st.markdown("**Growth Trajectory by Region**")
