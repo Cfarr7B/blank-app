@@ -3116,14 +3116,41 @@ def tab_regions(dash):
 
     all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
     label_to_key = {l: pk for l, pk in all_options}
-    sel_lbl = st.selectbox("Period", [l for l, _ in all_options], key="reg_period")
-    pk = label_to_key[sel_lbl]
-    ps = periods_df[periods_df["period_key"] == pk].iloc[0]
-    reg_df = get_regions_df(dash, pk)
+    all_labels   = [l for l, _ in all_options]
 
-    if reg_df.empty:
-        st.info("No regional data for this period.")
+    sel_lbls = st.multiselect(
+        "Period(s)", all_labels,
+        default=[all_labels[0]] if all_labels else [],
+        key="reg_period",
+        help="Select one or more periods — metrics are aggregated across all selected periods",
+    )
+    if not sel_lbls:
+        st.info("Select at least one period above.")
         return
+
+    sel_pks  = [label_to_key[l] for l in sel_lbls]
+    # For display labels and single-period references use the most-recent selected period
+    pk       = sorted(sel_pks, key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))[-1]
+    sel_lbl  = periods_df[periods_df["period_key"] == pk].iloc[0]["label"]
+
+    # Aggregate regional data across all selected periods
+    _reg_frames = [get_regions_df(dash, _pk) for _pk in sel_pks]
+    _reg_frames = [f for f in _reg_frames if not f.empty]
+    if not _reg_frames:
+        st.info("No regional data for the selected period(s).")
+        return
+    _reg_all = pd.concat(_reg_frames, ignore_index=True)
+    _pct_cols_r = [c for c in _reg_all.columns if c.endswith("_pct")]
+    reg_df = _reg_all.groupby("region").agg({"net_sales": "sum", "stands": "mean"}).reset_index()
+    reg_df["stands"] = reg_df["stands"].round(0).astype(int)
+    reg_df["avg_sales"] = reg_df["net_sales"] / reg_df["stands"]
+    for _c in _pct_cols_r:
+        if _c in _reg_all.columns:
+            reg_df[_c] = _reg_all.groupby("region").apply(
+                lambda g: (g[_c] * g["net_sales"]).sum() / g["net_sales"].sum()
+                if g["net_sales"].sum() > 0 else 0
+            ).values
+    period_range_lbl = sel_lbl if len(sel_lbls) == 1 else f"{sel_lbls[-1]} – {sel_lbls[0]}"
 
     # Region cards
     reg_sorted = reg_df.sort_values("net_sales", ascending=False)
@@ -3149,7 +3176,13 @@ def tab_regions(dash):
     sel_region = st.selectbox("Select Region to Drill Down", region_list, key="region_drilldown")
 
     if sel_region:
-        region_stands = stands_df[(stands_df["Period_Key"] == pk) & (stands_df["Region"] == sel_region)].copy()
+        region_stands = stands_df[(stands_df["Period_Key"].isin(sel_pks)) & (stands_df["Region"] == sel_region)].copy()
+        # For multi-period, keep only the most recent record per stand
+        if len(sel_pks) > 1:
+            region_stands["_sort"] = region_stands["Period_Key"].apply(
+                lambda x: (int(x.split("_")[0]), int(x.split("_P")[1]))
+            )
+            region_stands = region_stands.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
         if not region_stands.empty:
             st.caption(f"**{sel_region}** - {len(region_stands)} stands")
             # Display stands in selected region
@@ -3170,7 +3203,7 @@ def tab_regions(dash):
     col1, col2 = st.columns(2)
     with col1:
         # Labor vs EBITDA scatter
-        ps_stands = stands_df[stands_df["Period_Key"] == pk]
+        ps_stands = sd_df  # already filtered + deduped above
         reg_agg = ps_stands.groupby("Region").agg(
             ebitda_pct=("Store_EBITDA_pct", "mean"),
             labor_pct=("Total_Labor_pct", "mean"),
@@ -3219,7 +3252,7 @@ def tab_regions(dash):
 
     # ── STAND DETAIL ──────────────────────────────────────────────────────────
     st.html('<hr class="brew">')
-    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {sel_lbl}")
+    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {period_range_lbl}")
 
     sd_c1, sd_c2, sd_c3 = st.columns([1.5, 1.5, 2])
     with sd_c1:
@@ -3237,7 +3270,11 @@ def tab_regions(dash):
     with sd_c3:
         sd_search = st.text_input("Search Stands", placeholder="Type stand name...", key="reg_sd_search")
 
-    sd_df = stands_df[stands_df["Period_Key"] == pk].copy()
+    sd_df = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
+    # Keep most recent period per stand when multiple periods selected
+    if len(sel_pks) > 1:
+        sd_df["_sort"] = sd_df["Period_Key"].apply(lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))
+        sd_df = sd_df.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
     if sd_reg != "All Regions" and "Region" in sd_df.columns:
         sd_df = sd_df[sd_df["Region"] == sd_reg]
     if sd_age != "All Ages" and "Age_Bucket" in sd_df.columns:
@@ -7276,6 +7313,129 @@ def tab_pipeline(dash):
         type="primary",
         key="dl_pipeline_pdf",
     )
+
+    st.divider()
+
+    # ── Regional Capacity Planning ────────────────────────────────────────────
+    st.markdown("#### 🗺️ Regional Stand Count — Current + Pipeline Projection")
+    st.caption("Shows total stands per region by quarter, combining current open locations and projected pipeline opens. Use to identify when a region may need an additional RM.")
+
+    # Map P&L region labels → pipeline region labels
+    _PL_TO_PIPE = {
+        "FL Panhandle East":  "FLPH",
+        "FL Panhandle West":  "FLPH",
+        "FL West Coast":      "FLSW",
+        "South Central TX":   "C. TX",
+        "North Central TX":   "C. TX",
+        "West TX":            "W. TX",
+        "Permian Basin":      "W. TX",
+        "North OK":           "OKC",
+        "Central OK":         "OKC",
+        "South OK":           "OKC",
+        "Middle Earth":       "OKC",
+        "NM":                 "NM",
+    }
+
+    # Current stand count per pipeline region (from latest P&L period)
+    _stands_all = get_stands_df(dash)
+    _all_regions_pipe = ["FLPH", "FLSW", "C. TX", "OKC", "W. TX", "NM"]
+    if not _stands_all.empty:
+        _latest_pk2 = sorted(
+            _stands_all["Period_Key"].unique(),
+            key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1]))
+        )[-1]
+        _current_stands = _stands_all[_stands_all["Period_Key"] == _latest_pk2]
+        _current_by_region = {}
+        for reg in _all_regions_pipe:
+            _current_by_region[reg] = 0
+        for _, row in _current_stands.iterrows():
+            pl_reg = row.get("Region", "")
+            pipe_reg = _PL_TO_PIPE.get(pl_reg)
+            if pipe_reg:
+                _current_by_region[pipe_reg] = _current_by_region.get(pipe_reg, 0) + 1
+    else:
+        _current_by_region = {r: 0 for r in _all_regions_pipe}
+
+    # Build quarter labels Q2'26 through Q4'27+
+    def _to_quarter(date_str):
+        if not date_str: return None
+        for fmt in ["%m/%d/%y", "%m/%d/%Y"]:
+            try:
+                dt = _dt.datetime.strptime(date_str, fmt)
+                q = (dt.month - 1) // 3 + 1
+                yr = str(dt.year)[-2:]
+                return f"Q{q}'{yr}"
+            except: pass
+        return None
+
+    _quarter_order = ["Q2'26","Q3'26","Q4'26","Q1'27","Q2'27","Q3'27","Q4'27","Q1'28+"]
+
+    def _qkey(qs):
+        if qs is None: return 99
+        try:
+            q, y = qs.split("'")
+            return int(y) * 10 + int(q[1])
+        except: return 99
+
+    # Count pipeline opens by region × quarter
+    _pipe_opens = {r: {q: 0 for q in _quarter_order} for r in _all_regions_pipe}
+    for _s in _pdata.get("upcoming", []):
+        _reg = _s.get("region", "")
+        if _reg not in _all_regions_pipe:
+            continue
+        _q = _to_quarter(_s.get("open", ""))
+        if _q is None: continue
+        # Bucket anything beyond Q4'27 into Q1'28+
+        if _qkey(_q) > _qkey("Q4'27"):
+            _q = "Q1'28+"
+        if _q in _quarter_order:
+            _pipe_opens[_reg][_q] += 1
+
+    # Build cumulative table
+    _cap_rows = []
+    for reg in _all_regions_pipe:
+        row = {"Region": reg, "Current": _current_by_region.get(reg, 0)}
+        running = row["Current"]
+        for q in _quarter_order:
+            running += _pipe_opens[reg].get(q, 0)
+            row[q] = running
+        row["Opens 2026+"] = sum(_pipe_opens[reg].values())
+        _cap_rows.append(row)
+
+    _cap_df = pd.DataFrame(_cap_rows)
+
+    # Display as styled table + line chart
+    _cap_col1, _cap_col2 = st.columns([1, 2])
+    with _cap_col1:
+        st.markdown("**Cumulative Stand Count by Quarter**")
+        _display_df = _cap_df[["Region","Current"] + _quarter_order].copy()
+        st.dataframe(_display_df, use_container_width=True, hide_index=True, height=280)
+
+    with _cap_col2:
+        st.markdown("**Growth Trajectory by Region**")
+        _fig_cap = go.Figure()
+        _reg_colors_cap = {
+            "FLPH": "#0ea5e9", "FLSW": "#2563eb",
+            "C. TX": "#AC2430", "W. TX": "#e97316",
+            "OKC":  "#16a34a", "NM":   "#9333ea",
+        }
+        _x_labels = ["Current"] + _quarter_order
+        for reg in _all_regions_pipe:
+            row = _cap_df[_cap_df["Region"] == reg].iloc[0]
+            _y = [row["Current"]] + [row[q] for q in _quarter_order]
+            _fig_cap.add_scatter(
+                x=_x_labels, y=_y,
+                name=reg, mode="lines+markers",
+                line=dict(color=_reg_colors_cap.get(reg, MID), width=2.5),
+                marker=dict(size=7),
+            )
+        brew_fig(_fig_cap, height=300)
+        _fig_cap.update_layout(
+            xaxis=dict(tickangle=-35),
+            yaxis=dict(title="Total Stands", dtick=2),
+            legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
+        )
+        st.plotly_chart(_fig_cap, config={"displayModeBar": False}, use_container_width=True)
 
     st.divider()
     st.markdown("#### ⚠️ Opening Date Delay Sensitivity")
