@@ -3131,7 +3131,8 @@ def tab_regions(dash):
     sel_pks  = [label_to_key[l] for l in sel_lbls]
     # For display labels and single-period references use the most-recent selected period
     pk       = sorted(sel_pks, key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))[-1]
-    sel_lbl  = periods_df[periods_df["period_key"] == pk].iloc[0]["label"]
+    ps       = periods_df[periods_df["period_key"] == pk].iloc[0]
+    sel_lbl  = ps["label"]
 
     # Aggregate regional data across all selected periods
     _reg_frames = [get_regions_df(dash, _pk) for _pk in sel_pks]
