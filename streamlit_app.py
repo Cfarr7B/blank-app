@@ -3203,7 +3203,10 @@ def tab_regions(dash):
     col1, col2 = st.columns(2)
     with col1:
         # Labor vs EBITDA scatter
-        ps_stands = sd_df  # already filtered + deduped above
+        ps_stands = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
+        if len(sel_pks) > 1:
+            ps_stands["_sort"] = ps_stands["Period_Key"].apply(lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))
+            ps_stands = ps_stands.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
         reg_agg = ps_stands.groupby("Region").agg(
             ebitda_pct=("Store_EBITDA_pct", "mean"),
             labor_pct=("Total_Labor_pct", "mean"),
