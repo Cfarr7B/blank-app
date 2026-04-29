@@ -5378,7 +5378,7 @@ def tab_sos(dash):
 # TAB: FORECAST
 # ─────────────────────────────────────────────
 def tab_forecast(dash):
-    section("FORECAST P4–P13 2026 (Draft)", "P1–P3 actuals locked · P4–P13 projected · 3 scenarios · Seasonal watch notes")
+    section("FORECAST P5–P13 2026 (Draft)", "P1–P4 actuals locked · P5–P13 recalibrated from P1–P4 YoY lift · 3 scenarios · Seasonal watch notes")
 
     fc = dash.get("forecast_26", [])
     if not fc:
