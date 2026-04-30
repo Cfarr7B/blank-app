@@ -1,6 +1,6 @@
 {
   "_schema_version": "2.2",
-  "_last_updated": "2026-04-16",
+  "_last_updated": "2026-04-30",
   "_source": "7Crew Pipeline Report_4.16.2026.xlsx",
   "report_snapshots": [
     {
@@ -19,6 +19,11 @@
       "key": "apr9",
       "label": "Apr 16",
       "date": "2026-04-16"
+    },
+    {
+      "key": "apr30",
+      "label": "Apr 30",
+      "date": "2026-04-30"
     }
   ],
   "upcoming": [
@@ -35,7 +40,7 @@
       "cs": "11/19/25",
       "bd": "3/6/26",
       "open": "5/4/26",
-      "notes": "water and sewer and tied . elec meter installed 3/24. Paving 4/2 . Target TCO for 4/2. Full CO by 4/8"
+      "notes": ""
     },
     {
       "rsh": "RSH-00096",
@@ -50,22 +55,7 @@
       "cs": "2/2/26",
       "bd": "3/19/26",
       "open": "5/18/26",
-      "notes": "water taps done & power on. signage - good to re-use existing sign. pouring concrete, sewer by 4/17"
-    },
-    {
-      "rsh": "RSH-00091",
-      "store": "001122",
-      "phase": "5. Construction",
-      "address": "3008 W Stan Schlueter Loop",
-      "city": "Killeen",
-      "state": "TX",
-      "region": "C. TX",
-      "permit_sub": "7/21/25",
-      "permit_appr": "2/5/26",
-      "cs": "2/18/26",
-      "bd": "3/25/26",
-      "open": "5/18/26",
-      "notes": "RW drawing received from struc. 3/31.  Elevations around canopy.  Issues with elevations under canopy.  W/S connected. Power is pending."
+      "notes": "TCO (30 day) by 4/30. (full pending rails around cooler and building RTU)"
     },
     {
       "rsh": "RSH-00101",
@@ -80,7 +70,22 @@
       "cs": "2/23/26",
       "bd": "4/1/26",
       "open": "5/18/26",
-      "notes": "CO pending LS lead time (should be good). Elec meter set on 4/15 (power should be same day)"
+      "notes": "CO on 4/24"
+    },
+    {
+      "rsh": "RSH-00091",
+      "store": "001122",
+      "phase": "5. Construction",
+      "address": "3008 W Stan Schlueter Loop",
+      "city": "Killeen",
+      "state": "TX",
+      "region": "C. TX",
+      "permit_sub": "7/21/25",
+      "permit_appr": "2/5/26",
+      "cs": "2/18/26",
+      "bd": "3/25/26",
+      "open": "5/25/26",
+      "notes": "CO might move to 5/5 for inspectors"
     },
     {
       "rsh": "RSH-00095",
@@ -95,7 +100,7 @@
       "cs": "1/22/26",
       "bd": "2/18/26",
       "open": "6/1/26",
-      "notes": "Nichia for muffin top. CO pending soft soil removal. Power ready once we get meter can.  w/s taps are done"
+      "notes": "Backfilling for demuck started 4/29."
     },
     {
       "rsh": "RSH-00081",
@@ -110,7 +115,22 @@
       "cs": "1/26/26",
       "bd": "2/26/26",
       "open": "6/1/26",
-      "notes": "water and power on. storm/sewer conflict"
+      "notes": "water, sewer and power on. storm/sewer conflict"
+    },
+    {
+      "rsh": "RSH-00079",
+      "store": "000547",
+      "phase": "5. Construction",
+      "address": "833 W. Edmond Rd.",
+      "city": "Edmond",
+      "state": "OK",
+      "region": "OKC",
+      "permit_sub": "10/29/24",
+      "permit_appr": "12/1/25",
+      "cs": "2/16/26",
+      "bd": "3/17/26",
+      "open": "6/8/26",
+      "notes": "power, water, sewer all connected. concrete by 5/1."
     },
     {
       "rsh": "RSH-00071",
@@ -125,22 +145,7 @@
       "cs": "1/12/26",
       "bd": "3/11/26",
       "open": "6/8/26",
-      "notes": "GC confirmed CO target of 5/22"
-    },
-    {
-      "rsh": "RSH-00079",
-      "store": "000547",
-      "phase": "5. Construction",
-      "address": "833 W. Edmond Rd.",
-      "city": "Edmond",
-      "state": "OK",
-      "region": "OKC",
-      "permit_sub": "10/29/24",
-      "permit_appr": "12/1/25",
-      "cs": "2/16/26",
-      "bd": "3/17/26",
-      "open": "6/15/26",
-      "notes": "Electric line relocation by City and 7Crew = done"
+      "notes": "*Need RW CO approved by 7C. CO target of 5/22 pending wall and Duke power pole"
     },
     {
       "rsh": "RSH-00069",
@@ -155,7 +160,22 @@
       "cs": "12/17/25",
       "bd": "3/4/26",
       "open": "6/22/26",
-      "notes": "power pending city/GC. water tapped, sewer done, storm almost done"
+      "notes": "dates at risk for RW revision requiring neighbor coordination"
+    },
+    {
+      "rsh": "RSH-00123",
+      "store": "001332",
+      "phase": "5. Construction",
+      "address": "108 Sequoyah Ln",
+      "city": "Altus",
+      "state": "OK",
+      "region": "OKC",
+      "permit_sub": "1/21/26",
+      "permit_appr": "2/20/26",
+      "cs": "4/6/26",
+      "bd": "4/21/26",
+      "open": "6/22/26",
+      "notes": "GC reporting CO of 5/29"
     },
     {
       "rsh": "RSH-00116",
@@ -170,7 +190,7 @@
       "cs": "3/2/26",
       "bd": "4/15/26",
       "open": "6/22/26",
-      "notes": "confirm CO date with GC. need building payment ASAP"
+      "notes": "confirm CO date with GC.  water tapped.  Sewer and Gt go in week of 4/24"
     },
     {
       "rsh": "RSH-00109",
@@ -183,9 +203,9 @@
       "permit_sub": "11/6/25",
       "permit_appr": "1/21/26",
       "cs": "2/23/26",
-      "bd": "5/13/26",
-      "open": "6/29/26",
-      "notes": "UES provided recs for soil mitigation 4/10.  5/13 good with CTAR (pending dirt)"
+      "bd": "5/26/26",
+      "open": "7/13/26",
+      "notes": "UES out for testing on 4/21/. BD of 5/26 to be confirmed with CTAR"
     },
     {
       "rsh": "RSH-00106",
@@ -199,22 +219,8 @@
       "permit_appr": "4/9/26",
       "cs": "4/8/26",
       "bd": "4/24/26",
-      "open": "7/27/26"
-    },
-    {
-      "rsh": "RSH-00123",
-      "store": "001332",
-      "phase": "5. Construction",
-      "address": "108 Sequoyah Ln",
-      "city": "Altus",
-      "state": "OK",
-      "region": "OKC",
-      "permit_sub": "1/21/26",
-      "permit_appr": "2/20/26",
-      "cs": "4/6/26",
-      "bd": "4/21/26",
-      "open": "8/3/26",
-      "notes": "GC reporting CO of 5/29"
+      "open": "7/27/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00078",
@@ -224,12 +230,42 @@
       "city": "Holiday",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "12/10/24",
+      "permit_sub": "10/31/24",
       "permit_appr": "2/17/26",
       "cs": "4/6/26",
       "bd": "4/29/26",
       "open": "8/10/26",
       "notes": "Site Plan approved 12/2. Site Permit Placard issues 2.17. All permits in hand on 3/25"
+    },
+    {
+      "rsh": "RSH-00089",
+      "store": "000327",
+      "phase": "5. Construction",
+      "address": "401 Gulf Breeze Pkwy.",
+      "city": "Gulf Breeze",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "11/6/24",
+      "permit_appr": "8/27/25",
+      "cs": "1/5/26",
+      "bd": "",
+      "open": "8/10/26",
+      "notes": "GC building final target = 7/16 & CO target date = 8/14"
+    },
+    {
+      "rsh": "RSH-00114",
+      "store": "001154",
+      "phase": "5. Construction",
+      "address": "8106 N Davis Hwy",
+      "city": "Pensacola",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "11/14/25",
+      "permit_appr": "2/25/26",
+      "cs": "4/7/26",
+      "bd": "5/26/26",
+      "open": "8/10/26",
+      "notes": "BD has been confirmed with NM"
     },
     {
       "rsh": "RSH-00110",
@@ -244,7 +280,7 @@
       "cs": "4/20/26",
       "bd": "5/20/26",
       "open": "8/10/26",
-      "notes": "electric review last pending item for full permit approval - resubmitted 2/3. getting tight with elec devision"
+      "notes": ""
     },
     {
       "rsh": "RSH-00133",
@@ -256,39 +292,10 @@
       "region": "OKC",
       "permit_sub": "12/3/25",
       "permit_appr": "4/8/26",
-      "cs": "4/20/26",
+      "cs": "4/27/26",
       "bd": "5/27/26",
       "open": "8/10/26",
-      "notes": "Permit expected 4/7. Need GC to verify construction schedule"
-    },
-    {
-      "rsh": "RSH-00114",
-      "store": "001154",
-      "phase": "5. Construction",
-      "address": "8106 N Davis Hwy",
-      "city": "Pensacola",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "11/14/25",
-      "permit_appr": "2/25/26",
-      "cs": "4/7/26",
-      "bd": "6/3/26",
-      "open": "8/10/26"
-    },
-    {
-      "rsh": "RSH-00089",
-      "store": "000327",
-      "phase": "5. Construction",
-      "address": "401 Gulf Breeze Pkwy.",
-      "city": "Gulf Breeze",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "11/6/24",
-      "permit_appr": "8/27/25",
-      "cs": "1/5/26",
-      "bd": "N/A STICK BUILD",
-      "open": "8/10/26",
-      "notes": "GC building final target = 7/16 & CO target date = 8/14"
+      "notes": "Permit expected 4/7. Need GC to verify construction schedule on kickoff call 4/30"
     },
     {
       "rsh": "RSH-00092",
@@ -301,9 +308,9 @@
       "permit_sub": "11/21/24",
       "permit_appr": "2/26/26",
       "cs": "4/8/26",
-      "bd": "5/13/26",
+      "bd": "5/27/26",
       "open": "8/17/26",
-      "notes": "CS looking like 4/6 pending billboard power. schedule pending billboard and owls"
+      "notes": "Owl is gone.  BD of 5/27 to be confirmed with NM & GC"
     },
     {
       "rsh": "RSH-00087",
@@ -315,10 +322,25 @@
       "region": "FLSW",
       "permit_sub": "5/2/25",
       "permit_appr": "4/17/26",
-      "cs": "4/27/26",
+      "cs": "5/6/26",
       "bd": "6/3/26",
       "open": "9/14/26",
-      "notes": "Permits delayed for FDOT Drainage comment. Need to verify property boundary"
+      "notes": ""
+    },
+    {
+      "rsh": "RSH-00104",
+      "store": "001693",
+      "phase": "4. Permitting",
+      "address": "13500 N Rockwell Ave",
+      "city": "OKC",
+      "state": "OK",
+      "region": "OKC",
+      "permit_sub": "3/25/26",
+      "permit_appr": "8/21/26",
+      "cs": "5/27/26",
+      "bd": "",
+      "open": "9/21/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00094",
@@ -329,10 +351,26 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "4/15/25",
-      "permit_appr": "4/17/26",
-      "cs": "4/20/26",
-      "bd": "6/3/26",
-      "open": "9/28/26"
+      "permit_appr": "4/10/26",
+      "cs": "5/6/26",
+      "bd": "6/24/26",
+      "open": "9/28/26",
+      "notes": ""
+    },
+    {
+      "rsh": "RSH-00102",
+      "store": "001118",
+      "phase": "5. Construction",
+      "address": "3700 College Ave",
+      "city": "Snyder",
+      "state": "TX",
+      "region": "W. TX",
+      "permit_sub": "9/6/25",
+      "permit_appr": "4/13/26",
+      "cs": "4/13/26",
+      "bd": "",
+      "open": "9/28/26",
+      "notes": "Demo Done. Oncor pole relocation = Oncor meet GC onsite 5/5."
     },
     {
       "rsh": "RSH-00084",
@@ -346,22 +384,8 @@
       "permit_appr": "5/22/26",
       "cs": "6/1/26",
       "bd": "7/1/26",
-      "open": "9/28/26"
-    },
-    {
-      "rsh": "RSH-00102",
-      "store": "001118",
-      "phase": "5. Construction",
-      "address": "3700 College Ave",
-      "city": "Snyder",
-      "state": "TX",
-      "region": "W. TX",
-      "permit_sub": "9/16/25",
-      "permit_appr": "4/13/26",
-      "cs": "4/13/26",
-      "bd": "Stick Build",
       "open": "9/28/26",
-      "notes": "TXDOT approved 3/16. Oncor needs 4 weeks from KO to move poles. tracking pole move for 4/22 based on 3/25 KO.  parking agreement submitted 4/7"
+      "notes": ""
     },
     {
       "rsh": "RSH-00112",
@@ -389,24 +413,9 @@
       "permit_sub": "5/20/26",
       "permit_appr": "6/26/26",
       "cs": "7/6/26",
-      "bd": "N/A - Retrofit",
+      "bd": "",
       "open": "10/12/26",
       "notes": "need to confirm submittal date with citadel"
-    },
-    {
-      "rsh": "RSH-00088",
-      "store": "000404",
-      "phase": "4. Permitting",
-      "address": "1201 Homestead Rd N",
-      "city": "Lehigh Acres",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "11/8/24",
-      "permit_appr": "4/30/26",
-      "cs": "5/6/26",
-      "bd": "6/3/26",
-      "open": "10/19/26",
-      "notes": "Turn lane required and SWFWMD now required."
     },
     {
       "rsh": "RSH-00086",
@@ -435,7 +444,8 @@
       "permit_appr": "5/29/26",
       "cs": "6/15/26",
       "bd": "7/22/26",
-      "open": "11/2/26"
+      "open": "11/2/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00139",
@@ -453,21 +463,6 @@
       "notes": "City fully signed off pending ARB (3rd party review - no hearing)"
     },
     {
-      "rsh": "RSH-00134",
-      "store": "001686",
-      "phase": "4. Permitting",
-      "address": "803 NE Alsbury Blvd.",
-      "city": "Burleson",
-      "state": "TX",
-      "region": "C. TX",
-      "permit_sub": "3/25/26",
-      "permit_appr": "7/10/26",
-      "cs": "7/20/26",
-      "bd": "8/26/26",
-      "open": "11/9/26",
-      "notes": "Civils ONLY in 3/25"
-    },
-    {
       "rsh": "RSH-00083",
       "store": "000874",
       "phase": "4. Permitting",
@@ -483,19 +478,64 @@
       "notes": "Permits expire 7/7/26.  Lease - (appraisers to find Fair market value rent). expecting LL lease redlines 4/16 with goal to have leases agreed to by 4/17"
     },
     {
-      "rsh": "RSH-00129",
-      "store": "001714",
+      "rsh": "RSH-00134",
+      "store": "001686",
       "phase": "4. Permitting",
-      "address": "4111 East US Hwy 377",
-      "city": "Granbury",
+      "address": "803 NE Alsbury Blvd.",
+      "city": "Burleson",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "4/1/26",
-      "permit_appr": "7/31/26",
-      "cs": "8/10/26",
-      "bd": "9/16/26",
+      "permit_sub": "3/25/26",
+      "permit_appr": "7/10/26",
+      "cs": "7/20/26",
+      "bd": "8/26/26",
+      "open": "11/9/26",
+      "notes": "Civils ONLY in 3/25"
+    },
+    {
+      "rsh": "RSH-00180",
+      "store": "001404",
+      "phase": "4. Permitting",
+      "address": "2602 50th St. Suite 300",
+      "city": "Lubbock",
+      "state": "TX",
+      "region": "W. TX",
+      "permit_sub": "3/11/26",
+      "permit_appr": "7/17/26",
+      "cs": "7/13/26",
+      "bd": "9/2/26",
+      "open": "11/9/26",
+      "notes": "second round of city review"
+    },
+    {
+      "rsh": "RSH-00088",
+      "store": "000404",
+      "phase": "4. Permitting",
+      "address": "1201 Homestead Rd N",
+      "city": "Lehigh Acres",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "11/8/24",
+      "permit_appr": "5/18/26",
+      "cs": "6/8/26",
+      "bd": "7/8/26",
+      "open": "11/16/26",
+      "notes": ""
+    },
+    {
+      "rsh": "RSH-00077",
+      "store": "000607",
+      "phase": "4. Permitting",
+      "address": "160 Mariner Blvd",
+      "city": "Spring Hill",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "11/5/25",
+      "permit_appr": "6/5/26",
+      "cs": "7/6/26",
+      "bd": "10/21/26",
       "open": "12/7/26",
-      "notes": "Parking Variance approved 3/31.  LL to deliver pad & utilities in May (MH to confirm)"
+      "notes": "Corrected LL Applications on 12/16 (WMD might need clearer version)"
     },
     {
       "rsh": "RSH-00113",
@@ -508,8 +548,24 @@
       "permit_sub": "10/9/25",
       "permit_appr": "8/14/26",
       "cs": "8/24/26",
-      "bd": "Stick-built",
-      "open": "12/7/26"
+      "bd": "",
+      "open": "12/7/26",
+      "notes": ""
+    },
+    {
+      "rsh": "RSH-00129",
+      "store": "001714",
+      "phase": "4. Permitting",
+      "address": "4111 East US Hwy 377",
+      "city": "Granbury",
+      "state": "TX",
+      "region": "C. TX",
+      "permit_sub": "4/1/26",
+      "permit_appr": "7/31/26",
+      "cs": "8/10/26",
+      "bd": "9/16/26",
+      "open": "12/7/26",
+      "notes": "Academy and Hobby Lobby open in October '26. .  LL to deliver pad & utilities in May (MH to confirm)"
     },
     {
       "rsh": "RSH-00149",
@@ -522,9 +578,9 @@
       "permit_sub": "3/27/26",
       "permit_appr": "8/19/26",
       "cs": "9/7/26",
-      "bd": "Stick Build",
+      "bd": "",
       "open": "1/4/27",
-      "notes": "3/27 is civil only submittal"
+      "notes": "3/27 is civil only submittal. Holding building submit for LL/City comments (tracking for 5/12ish)"
     },
     {
       "rsh": "RSH-00100",
@@ -539,7 +595,7 @@
       "cs": "8/31/26",
       "bd": "9/30/26",
       "open": "1/18/27",
-      "notes": "Plat is approved. SP submitted late February, review commencing as of plat approval. Lease amendment for SP rights and IP extended signed 4/3.  Need REA and parking agreement (tracking 4/9)"
+      "notes": "Plat is approved. SP submitted late February, review commencing as of plat approval. Lease amendment for SP rights and IP extended signed 4/3.  Need REA and parking agreement (tracking 4/9??)"
     },
     {
       "rsh": "RSH-00151",
@@ -554,22 +610,7 @@
       "cs": "9/7/26",
       "bd": "10/7/26",
       "open": "1/18/27",
-      "notes": "LL provided Lease redlines 1/28. 7C sent redlines back 2/4.  LL reviewing 7C financials and other tenant plans (chick express & title max), legal call on 4/1. have not heard back since?  Need LL to demo building by early august for 2026"
-    },
-    {
-      "rsh": "RSH-00180",
-      "store": "001404",
-      "phase": "4. Permitting",
-      "address": "2602 50th St. Suite 300",
-      "city": "Lubbock",
-      "state": "TX",
-      "region": "W. TX",
-      "permit_sub": "3/11/26",
-      "permit_appr": "7/17/26",
-      "cs": "8/3/26",
-      "bd": "9/2/26",
-      "open": "1/25/27",
-      "notes": "second round of city review"
+      "notes": "LL provided Lease redlines 1/28. 7C sent redlines back 2/4.  LL reviewing 7C financials and other tenant plans (chick express & title max), legal call on 4/1. LL still owes REA response as of 4/22"
     },
     {
       "rsh": "RSH-00692",
@@ -584,21 +625,7 @@
       "cs": "10/26/26",
       "bd": "12/2/26",
       "open": "1/25/27",
-      "notes": "LL to design and permit all civil/site, 7C to drop building, landscape TBD.  LL prelim civils in review at City."
-    },
-    {
-      "rsh": "RSH-00104",
-      "store": "001693",
-      "phase": "4. Permitting",
-      "address": "13500 N Rockwell Ave",
-      "city": "OKC",
-      "state": "OK",
-      "region": "OKC",
-      "permit_sub": "3/25/26",
-      "permit_appr": "8/21/26",
-      "cs": "9/7/26",
-      "bd": "N/A - Retrofit",
-      "open": "1/25/27"
+      "notes": "LL to design and permit all civil/site, 7C to drop building, landscape TBD.  LL prelim civils in review at City. Lease in LL court as of 4/22ish"
     },
     {
       "rsh": "RSH-00528",
@@ -624,30 +651,16 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "12/17/25",
-      "permit_appr": "8/28/26",
+      "permit_appr": "3/27/26",
       "cs": "9/14/26",
       "bd": "10/14/26",
-      "open": "2/22/27"
-    },
-    {
-      "rsh": "RSH-00077",
-      "store": "000607",
-      "phase": "4. Permitting",
-      "address": "160 Mariner Blvd",
-      "city": "Spring Hill",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "11/5/25",
-      "permit_appr": "6/5/26",
-      "cs": "9/21/26",
-      "bd": "10/21/26",
       "open": "2/22/27",
-      "notes": "Corrected LL Applications on 12/16 (WMD might need clearer version)"
+      "notes": ""
     },
     {
       "rsh": "RSH-00111",
       "store": "",
-      "phase": "3. Design",
+      "phase": "4. Permitting",
       "address": "35910 US-27",
       "city": "Haines City",
       "state": "FL",
@@ -671,21 +684,8 @@
       "permit_appr": "9/9/26",
       "cs": "9/28/26",
       "bd": "9/9/26",
-      "open": "3/1/27"
-    },
-    {
-      "rsh": "RSH-00147",
-      "store": "001405",
-      "phase": "4. Permitting",
-      "address": "10581 Colonial Blvd",
-      "city": "Fort Myers",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "3/24/26",
-      "permit_appr": "10/16/26",
-      "cs": "11/4/26",
-      "bd": "12/9/26",
-      "open": "4/19/27"
+      "open": "3/1/27",
+      "notes": ""
     },
     {
       "rsh": "RSH-00592",
@@ -699,37 +699,23 @@
       "permit_appr": "11/6/26",
       "cs": "12/2/26",
       "bd": "1/13/27",
-      "open": "4/19/27"
+      "open": "4/19/27",
+      "notes": ""
     },
     {
-      "rsh": "RSH-00273",
-      "store": "001341",
-      "phase": "3. Design",
-      "address": "6875 N Church Ave",
-      "city": "Mulberry",
+      "rsh": "RSH-00147",
+      "store": "001405",
+      "phase": "4. Permitting",
+      "address": "10581 Colonial Blvd",
+      "city": "Fort Myers",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "5/22/26",
-      "permit_appr": "11/13/26",
-      "cs": "11/30/26",
-      "bd": "1/6/27",
-      "open": "5/3/27",
-      "notes": "Civil only KO on 3/18."
-    },
-    {
-      "rsh": "RSH-00617",
-      "store": "001723",
-      "phase": "2. Due Diligence",
-      "address": "390 TX-199",
-      "city": "Springtown",
-      "state": "TX",
-      "region": "C. TX",
-      "permit_sub": "5/15/26",
-      "permit_appr": "11/6/26",
-      "cs": "12/2/26",
-      "bd": "1/6/27",
-      "open": "5/3/27",
-      "notes": "PLACEHOLDER DATES. P&Z hearing for canopy in BS on 4/8"
+      "permit_sub": "3/24/26",
+      "permit_appr": "10/16/26",
+      "cs": "11/4/26",
+      "bd": "12/9/26",
+      "open": "4/19/27",
+      "notes": ""
     },
     {
       "rsh": "RSH-00231",
@@ -743,7 +729,8 @@
       "permit_appr": "11/13/26",
       "cs": "11/30/26",
       "bd": "1/13/27",
-      "open": "5/3/27"
+      "open": "5/3/27",
+      "notes": ""
     },
     {
       "rsh": "RSH-00606",
@@ -761,15 +748,45 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
+      "rsh": "RSH-00617",
+      "store": "001723",
+      "phase": "3. Design",
+      "address": "390 TX-199",
+      "city": "Springtown",
+      "state": "TX",
+      "region": "C. TX",
+      "permit_sub": "5/15/26",
+      "permit_appr": "11/6/26",
+      "cs": "12/2/26",
+      "bd": "1/6/27",
+      "open": "5/3/27",
+      "notes": "PLACEHOLDER DATES. P&Z hearing for canopy in BS on 4/8"
+    },
+    {
+      "rsh": "RSH-00273",
+      "store": "001341",
+      "phase": "3. Design",
+      "address": "6875 N Church Ave",
+      "city": "Mulberry",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "5/22/26",
+      "permit_appr": "11/13/26",
+      "cs": "11/30/26",
+      "bd": "1/6/27",
+      "open": "5/3/27",
+      "notes": "Civil only KO on 3/18."
+    },
+    {
       "rsh": "RSH-00127",
       "store": "001735",
-      "phase": "3. Design",
+      "phase": "4. Permitting",
       "address": "Covell and Sooner",
       "city": "Edmond",
       "state": "OK",
       "region": "OKC",
-      "permit_sub": "4/14/26",
-      "permit_appr": "12/11/26",
+      "permit_sub": "4/29/26",
+      "permit_appr": "12/26/26",
       "cs": "1/6/27",
       "bd": "2/10/27",
       "open": "5/24/27",
@@ -791,21 +808,6 @@
       "notes": "lease is close.  should be signed in next few days (note on 3/18)"
     },
     {
-      "rsh": "RSH-00205",
-      "store": "",
-      "phase": "2. Due Diligence",
-      "address": "2159 W 9 Mile Rd",
-      "city": "Pensacola",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "6/5/26",
-      "permit_appr": "1/8/27",
-      "cs": "1/25/27",
-      "bd": "3/10/27",
-      "open": "6/21/27",
-      "notes": "Pause for LOI delays from LL sale and use restriction concerns"
-    },
-    {
       "rsh": "RSH-00266",
       "store": "",
       "phase": "2. Due Diligence",
@@ -821,6 +823,21 @@
       "notes": "3/11 DKO is aggressive. 1/28 - LL receives first draft of lease. 7C got LL redlines on 2/10.  LL working on legal description. 3/11 is agressive for DKO"
     },
     {
+      "rsh": "RSH-00205",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "2159 W 9 Mile Rd",
+      "city": "Pensacola",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "6/5/26",
+      "permit_appr": "1/8/27",
+      "cs": "1/25/27",
+      "bd": "3/10/27",
+      "open": "6/21/27",
+      "notes": "Pause for LOI delays from LL sale and use restriction concerns"
+    },
+    {
       "rsh": "RSH-00211",
       "store": "001337",
       "phase": "2. Due Diligence",
@@ -833,22 +850,7 @@
       "cs": "2/22/27",
       "bd": "3/31/27",
       "open": "7/19/27",
-      "notes": "Need access through O'Reilly's"
-    },
-    {
-      "rsh": "RSH-00610",
-      "store": "",
-      "phase": "2. Due Diligence",
-      "address": "16564 US-331",
-      "city": "Freeport",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "8/7/26",
-      "permit_appr": "2/12/27",
-      "cs": "3/1/27",
-      "bd": "4/1/27",
-      "open": "7/26/27",
-      "notes": "PLACEHOLDER DATES"
+      "notes": ""
     },
     {
       "rsh": "RSH-00579",
@@ -866,14 +868,29 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
-      "rsh": "RSH-00108",
+      "rsh": "RSH-00610",
       "store": "",
       "phase": "2. Due Diligence",
+      "address": "16564 US-331",
+      "city": "Freeport",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "8/7/26",
+      "permit_appr": "2/12/27",
+      "cs": "3/1/27",
+      "bd": "4/1/27",
+      "open": "7/26/27",
+      "notes": "PLACEHOLDER DATES"
+    },
+    {
+      "rsh": "RSH-00108",
+      "store": "",
+      "phase": "3. Design",
       "address": "4801 Cortez Blvd",
       "city": "Bradenton",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "6/17/26",
+      "permit_sub": "5/31/26",
       "permit_appr": "2/19/27",
       "cs": "3/8/27",
       "bd": "4/7/27",
@@ -896,21 +913,6 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
-      "rsh": "RSH-00099",
-      "store": "000990",
-      "phase": "3. Design",
-      "address": "NWC of Alf Coleman & Hwy 98",
-      "city": "Panama City Beach",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "5/1/26",
-      "permit_appr": "1/15/27",
-      "cs": "2/1/27",
-      "bd": "4/16/27",
-      "open": "8/30/27",
-      "notes": "coordinate LL Delivery - KM & KB"
-    },
-    {
       "rsh": "RSH-00584",
       "store": "",
       "phase": "2. Due Diligence",
@@ -926,18 +928,34 @@
       "notes": "PLACEHOLDER DATES. Need 6-9 months for SUP"
     },
     {
-      "rsh": "RSH-00601",
+      "rsh": "RSH-00099",
+      "store": "000990",
+      "phase": "3. Design",
+      "address": "NWC of Alf Coleman & Hwy 98",
+      "city": "Panama City Beach",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "5/1/26",
+      "permit_appr": "1/15/27",
+      "cs": "2/1/27",
+      "bd": "4/16/27",
+      "open": "8/30/27",
+      "notes": "coordinate LL Delivery - KM & KB"
+    },
+    {
+      "rsh": "RSH-00213",
       "store": "",
       "phase": "2. Due Diligence",
-      "address": "1738 N Town E Blvd",
-      "city": "Mesquite",
+      "address": "1048 W HWY 67",
+      "city": "Alvarado",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "9/3/26",
-      "permit_appr": "3/12/27",
-      "cs": "5/3/27",
-      "bd": "6/9/27",
-      "open": "9/20/27"
+      "permit_sub": "",
+      "permit_appr": "",
+      "cs": "4/19/27",
+      "bd": "5/19/27",
+      "open": "9/6/27",
+      "notes": ""
     },
     {
       "rsh": "RSH-00596",
@@ -955,6 +973,21 @@
       "notes": "LL LOI comments back as of 1/28. &C send back 2/6.  Need utility easement agreement with smoothie king (3-6 month).  DIR = Dev Impact Review (PD mod - 6-9 months)"
     },
     {
+      "rsh": "RSH-00601",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "1738 N Town E Blvd",
+      "city": "Mesquite",
+      "state": "TX",
+      "region": "C. TX",
+      "permit_sub": "9/3/26",
+      "permit_appr": "3/12/27",
+      "cs": "5/3/27",
+      "bd": "6/9/27",
+      "open": "9/20/27",
+      "notes": ""
+    },
+    {
       "rsh": "RSH-00235",
       "store": "",
       "phase": "2. Due Diligence",
@@ -966,21 +999,8 @@
       "permit_appr": "3/26/27",
       "cs": "4/19/27",
       "bd": "6/2/27",
-      "open": "10/4/27"
-    },
-    {
-      "rsh": "RSH-00208",
-      "store": "",
-      "phase": "2. Due Diligence",
-      "address": "2511 Thomas Dr",
-      "city": "Panama City Beach",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "9/4/26",
-      "permit_appr": "5/14/27",
-      "cs": "5/31/27",
-      "bd": "10/28/26",
-      "open": "10/18/27"
+      "open": "10/4/27",
+      "notes": ""
     },
     {
       "rsh": "RSH-00575",
@@ -998,6 +1018,21 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
+      "rsh": "RSH-00208",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "2511 Thomas Dr",
+      "city": "Panama City Beach",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "9/4/26",
+      "permit_appr": "5/14/27",
+      "cs": "5/31/27",
+      "bd": "10/28/26",
+      "open": "10/18/27",
+      "notes": ""
+    },
+    {
       "rsh": "RSH-00126",
       "store": "",
       "phase": "2. Due Diligence",
@@ -1010,6 +1045,21 @@
       "cs": "5/17/27",
       "bd": "6/21/27",
       "open": "10/18/27",
+      "notes": "PLACEHOLDER DATES"
+    },
+    {
+      "rsh": "RSH-00233",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "15201 N Cleveland Ave",
+      "city": "Fort Myers",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "6/29/26",
+      "permit_appr": "5/28/27",
+      "cs": "6/14/27",
+      "bd": "7/14/27",
+      "open": "11/1/27",
       "notes": "PLACEHOLDER DATES"
     },
     {
@@ -1043,21 +1093,6 @@
       "notes": "PLACEHOLDER DATES. Lease draft went to LL around 4/1 and awaing LL reply"
     },
     {
-      "rsh": "RSH-00233",
-      "store": "",
-      "phase": "2. Due Diligence",
-      "address": "15201 N Cleveland Ave",
-      "city": "Fort Myers",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "6/29/26",
-      "permit_appr": "5/28/27",
-      "cs": "6/14/27",
-      "bd": "7/14/27",
-      "open": "11/1/27",
-      "notes": "PLACEHOLDER DATES. Lease in LL court for long time (noted 4/15)"
-    },
-    {
       "rsh": "RSH-00217",
       "store": "",
       "phase": "2. Due Diligence",
@@ -1088,21 +1123,6 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
-      "rsh": "RSH-00656",
-      "store": "",
-      "phase": "2. Due Diligence",
-      "address": "2317 Gunn Hwy",
-      "city": "Odessa",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "9/11/26",
-      "permit_appr": "5/28/27",
-      "cs": "6/21/27",
-      "bd": "7/21/27",
-      "open": "11/15/27",
-      "notes": "PLACEHOLDER DATES"
-    },
-    {
       "rsh": "RSH-00621",
       "store": "",
       "phase": "2. Due Diligence",
@@ -1128,7 +1148,22 @@
       "permit_sub": "10/9/26",
       "permit_appr": "4/30/27",
       "cs": "5/17/27",
-      "bd": "N/A",
+      "bd": "",
+      "open": "11/15/27",
+      "notes": "PLACEHOLDER DATES"
+    },
+    {
+      "rsh": "RSH-00656",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "2317 Gunn Hwy",
+      "city": "Odessa",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "9/11/26",
+      "permit_appr": "5/28/27",
+      "cs": "6/21/27",
+      "bd": "7/21/27",
       "open": "11/15/27",
       "notes": "PLACEHOLDER DATES"
     },
@@ -1178,6 +1213,21 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
+      "rsh": "RSH-00673",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "16991 Three Oaks Mkt PL",
+      "city": "Fort Myers",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "9/11/26",
+      "permit_appr": "7/16/27",
+      "cs": "8/9/27",
+      "bd": "9/15/27",
+      "open": "1/17/28",
+      "notes": "PLACEHOLDER DATES"
+    },
+    {
       "rsh": "RSH-00683",
       "store": "",
       "phase": "2. Due Diligence",
@@ -1193,129 +1243,235 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
-      "rsh": "RSH-00673",
+      "rsh": "RSH-00637",
       "store": "",
       "phase": "2. Due Diligence",
-      "address": "16991 Three Oaks Mkt PL",
-      "city": "Fort Myers",
+      "address": "2804 Santa Barbara Blvd",
+      "city": "Cape Coral",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "9/11/26",
-      "permit_appr": "7/16/27",
-      "cs": "8/9/27",
-      "bd": "9/15/27",
+      "permit_sub": "",
+      "permit_appr": "",
+      "cs": "7/26/27",
+      "bd": "8/25/27",
       "open": "1/17/28",
-      "notes": "PLACEHOLDER DATES"
+      "notes": ""
     }
   ],
   "open_pdf": [
     {
       "rsh": "RSH-00053",
       "store": "000356",
+      "phase": "8. Open",
+      "address": "685 Cortez Rd. W.",
       "city": "Bradenton",
       "state": "FL",
-      "open": "1/19/26"
+      "region": "FLSW",
+      "permit_sub": "12/21/23",
+      "permit_appr": "1/27/25",
+      "cs": "3/24/25",
+      "bd": "5/21/25",
+      "open": "1/19/26",
+      "notes": "sign permit CO?"
     },
     {
       "rsh": "RSH-00060",
       "store": "000570",
+      "phase": "8. Open",
+      "address": "5530 SE Abshier Blvd",
       "city": "Belleview",
       "state": "FL",
-      "open": "1/19/26"
+      "region": "FLSW",
+      "permit_sub": "12/9/24",
+      "permit_appr": "7/18/25",
+      "cs": "7/7/25",
+      "bd": "9/17/25",
+      "open": "1/19/26",
+      "notes": "Full CO 1/13"
     },
     {
       "rsh": "RSH-00070",
       "store": "000875",
+      "phase": "8. Open",
+      "address": "945 E Main St.",
       "city": "Weatherford",
       "state": "OK",
-      "open": "1/19/26"
+      "region": "OKC",
+      "permit_sub": "5/27/25",
+      "permit_appr": "7/9/25",
+      "cs": "9/3/25",
+      "bd": "10/28/25",
+      "open": "1/19/26",
+      "notes": "bollards blocking lanes - GC to correct"
     },
     {
       "rsh": "RSH-00073",
       "store": "000872",
+      "phase": "8. Open",
+      "address": "9281 N May Ave",
       "city": "Oklahoma City",
       "state": "OK",
-      "open": "1/26/26"
+      "region": "OKC",
+      "permit_sub": "3/24/25",
+      "permit_appr": "7/8/25",
+      "cs": "8/27/25",
+      "bd": "9/24/25",
+      "open": "1/26/26",
+      "notes": "TCO to operate tracking for 1/7. Guardrails installed as of 1/23. GC to call finals on 2/5 Tracking 2/6 for full CO."
     },
     {
       "rsh": "RSH-00085",
       "store": "000882",
+      "phase": "8. Open",
+      "address": "403 W US HWY 82",
       "city": "Gainesville",
       "state": "TX",
-      "open": "1/26/26"
+      "region": "C. TX",
+      "permit_sub": "4/15/25",
+      "permit_appr": "9/5/25",
+      "cs": "",
+      "bd": "11/4/25",
+      "open": "1/26/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00093",
       "store": "001117",
+      "phase": "8. Open",
+      "address": "6403 W Hwy 158",
       "city": "Midland",
       "state": "TX",
-      "open": "1/26/26"
+      "region": "W. TX",
+      "permit_sub": "7/29/25",
+      "permit_appr": "9/5/25",
+      "cs": "10/10/25",
+      "bd": "11/19/25",
+      "open": "1/26/26",
+      "notes": "TCO pending ADA sidewalk correction (expires 2/12)"
     },
     {
       "rsh": "RSH-00080",
       "store": "000877",
+      "phase": "8. Open",
+      "address": "300 E Nine Mile",
       "city": "Pensacola",
       "state": "FL",
-      "open": "2/9/26"
+      "region": "FLPH",
+      "permit_sub": "4/25/25",
+      "permit_appr": "9/19/25",
+      "cs": "9/22/25",
+      "bd": "11/7/25",
+      "open": "2/9/26",
+      "notes": "Full CO in hand"
     },
     {
       "rsh": "RSH-00054",
       "store": "000394",
+      "phase": "8. Open",
+      "address": "5787 Manatee Ave W",
       "city": "Bradenton",
       "state": "FL",
-      "open": "2/23/26"
+      "region": "FLSW",
+      "permit_sub": "5/20/24",
+      "permit_appr": "5/23/25",
+      "cs": "5/28/25",
+      "bd": "6/25/25",
+      "open": "2/23/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00074",
       "store": "000573",
+      "phase": "8. Open",
+      "address": "1321 Commercial Way",
       "city": "Spring Hill",
       "state": "FL",
-      "open": "3/9/26"
+      "region": "FLSW",
+      "permit_sub": "12/23/24",
+      "permit_appr": "9/26/25",
+      "cs": "10/16/25",
+      "bd": "11/12/25",
+      "open": "3/9/26",
+      "notes": "TCO to operate 2/23. Processing AB Cert for final CO"
     },
     {
       "rsh": "RSH-00090",
       "store": "000758",
+      "phase": "8. Open",
+      "address": "2304 N Main St",
       "city": "Belton",
       "state": "TX",
-      "open": "3/9/26"
+      "region": "C. TX",
+      "permit_sub": "6/12/25",
+      "permit_appr": "8/15/25",
+      "cs": "10/23/25",
+      "bd": "11/21/25",
+      "open": "3/9/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00075",
       "store": "000516",
+      "phase": "8. Open",
+      "address": "1211 W Henderson St.",
       "city": "Cleburne",
       "state": "TX",
-      "open": "3/30/26"
+      "region": "C. TX",
+      "permit_sub": "12/20/24",
+      "permit_appr": "9/5/25",
+      "cs": "11/3/25",
+      "bd": "12/10/25",
+      "open": "3/30/26",
+      "notes": "Canopies coming 2/13 (moved to 3/5). Pocket door/wall needs to be added for health (need to start this by 3/2 to CO 3/13)"
     },
     {
       "rsh": "RSH-00066",
       "store": "000709",
+      "phase": "8. Open",
+      "address": "1050 N Hobart St",
       "city": "Pampa",
       "state": "TX",
-      "open": "3/30/26"
-    }
-  ],
-  "open_count_from_report": 12,
-  "date_shifts": [
-    {
-      "rsh": "RSH-00068",
-      "city": "Waco",
-      "state": "TX",
-      "store": "000711",
-      "jan15": "2/23/26",
-      "apr2": "4/13/26",
-      "apr9": "4/13/26",
-      "delta_days": 49
+      "region": "W. TX",
+      "permit_sub": "7/9/25",
+      "permit_appr": "7/29/25",
+      "cs": "10/20/25",
+      "bd": "",
+      "open": "3/30/26",
+      "notes": "Full CO coming 3/11"
     },
     {
       "rsh": "RSH-00082",
+      "store": "",
+      "phase": "8. Open",
+      "address": "3617 Classen Blvd",
       "city": "Norman",
       "state": "OK",
-      "store": "000987",
-      "jan15": "4/6/26",
-      "apr2": "4/13/26",
-      "apr9": "4/13/26",
-      "delta_days": 7
+      "region": "OKC",
+      "permit_sub": "7/21/25",
+      "permit_appr": "9/5/25",
+      "cs": "12/1/25",
+      "bd": "3/4/26",
+      "open": "4/13/26",
+      "notes": "S&T CO 3/27. tracking full TCO 4/1 (raise FH for perm. CO).  porkchop for WM = done."
     },
+    {
+      "rsh": "RSH-00068",
+      "store": "",
+      "phase": "8. Open",
+      "address": "1540 N Valley Mills Drive",
+      "city": "Waco",
+      "state": "TX",
+      "region": "C. TX",
+      "permit_sub": "2/27/25",
+      "permit_appr": "5/23/25",
+      "cs": "11/3/25",
+      "bd": "12/3/25",
+      "open": "4/13/26",
+      "notes": "TCO to stock 3/23. Full CO on 3/27 per GC"
+    }
+  ],
+  "open_count_from_report": 14,
+  "date_shifts": [
     {
       "rsh": "RSH-00097",
       "city": "Panama City",
@@ -1324,7 +1480,8 @@
       "jan15": "4/13/26",
       "apr2": "4/20/26",
       "apr9": "5/4/26",
-      "delta_days": 21
+      "delta_days": 21,
+      "apr30": "5/4/26"
     },
     {
       "rsh": "RSH-00096",
@@ -1334,17 +1491,8 @@
       "jan15": "5/18/26",
       "apr2": "5/18/26",
       "apr9": "5/18/26",
-      "delta_days": 0
-    },
-    {
-      "rsh": "RSH-00091",
-      "city": "Killeen",
-      "state": "TX",
-      "store": "001122",
-      "jan15": "6/1/26",
-      "apr2": "5/18/26",
-      "apr9": "5/18/26",
-      "delta_days": -14
+      "delta_days": 0,
+      "apr30": "5/18/26"
     },
     {
       "rsh": "RSH-00101",
@@ -1354,7 +1502,19 @@
       "jan15": "6/15/26",
       "apr2": "5/18/26",
       "apr9": "5/18/26",
-      "delta_days": -28
+      "delta_days": -28,
+      "apr30": "5/18/26"
+    },
+    {
+      "rsh": "RSH-00091",
+      "city": "Killeen",
+      "state": "TX",
+      "store": "001122",
+      "jan15": "6/1/26",
+      "apr2": "5/18/26",
+      "apr9": "5/18/26",
+      "delta_days": -7,
+      "apr30": "5/25/26"
     },
     {
       "rsh": "RSH-00095",
@@ -1364,7 +1524,8 @@
       "jan15": "6/1/26",
       "apr2": "6/1/26",
       "apr9": "6/1/26",
-      "delta_days": 0
+      "delta_days": 0,
+      "apr30": "6/1/26"
     },
     {
       "rsh": "RSH-00081",
@@ -1374,17 +1535,8 @@
       "jan15": "5/18/26",
       "apr2": "6/1/26",
       "apr9": "6/1/26",
-      "delta_days": 14
-    },
-    {
-      "rsh": "RSH-00071",
-      "city": "Brooksville",
-      "state": "FL",
-      "store": "000520",
-      "jan15": "6/1/26",
-      "apr2": "6/8/26",
-      "apr9": "6/8/26",
-      "delta_days": 7
+      "delta_days": 14,
+      "apr30": "6/1/26"
     },
     {
       "rsh": "RSH-00079",
@@ -1394,17 +1546,19 @@
       "jan15": "5/18/26",
       "apr2": "6/15/26",
       "apr9": "6/15/26",
-      "delta_days": 28
+      "delta_days": 21,
+      "apr30": "6/8/26"
     },
     {
-      "rsh": "RSH-00109",
-      "city": "El Reno",
-      "state": "OK",
-      "store": "001234",
-      "jan15": "6/8/26",
+      "rsh": "RSH-00071",
+      "city": "Brooksville",
+      "state": "FL",
+      "store": "000520",
+      "jan15": "6/1/26",
       "apr2": "6/8/26",
-      "apr9": "6/15/26",
-      "delta_days": 7
+      "apr9": "6/8/26",
+      "delta_days": 7,
+      "apr30": "6/8/26"
     },
     {
       "rsh": "RSH-00069",
@@ -1414,27 +1568,8 @@
       "jan15": "4/27/26",
       "apr2": "6/22/26",
       "apr9": "6/22/26",
-      "delta_days": 56
-    },
-    {
-      "rsh": "RSH-00116",
-      "city": "Canyon",
-      "state": "TX",
-      "store": "001119",
-      "jan15": "6/8/26",
-      "apr2": "6/22/26",
-      "apr9": "6/22/26",
-      "delta_days": 14
-    },
-    {
-      "rsh": "RSH-00106",
-      "city": "Lubbock",
-      "state": "TX",
-      "store": "001236",
-      "jan15": "6/29/26",
-      "apr2": "7/27/26",
-      "apr9": "7/27/26",
-      "delta_days": 28
+      "delta_days": 56,
+      "apr30": "6/22/26"
     },
     {
       "rsh": "RSH-00123",
@@ -1444,17 +1579,41 @@
       "jan15": "8/3/26",
       "apr2": "8/3/26",
       "apr9": "8/3/26",
-      "delta_days": 0
+      "delta_days": -42,
+      "apr30": "6/22/26"
     },
     {
-      "rsh": "RSH-00114",
-      "city": "Pensacola",
-      "state": "FL",
-      "store": "001154",
-      "jan15": "9/7/26",
-      "apr2": "8/10/26",
-      "apr9": "8/10/26",
-      "delta_days": -28
+      "rsh": "RSH-00116",
+      "city": "Canyon",
+      "state": "TX",
+      "store": "001119",
+      "jan15": "6/8/26",
+      "apr2": "6/22/26",
+      "apr9": "6/22/26",
+      "delta_days": 14,
+      "apr30": "6/22/26"
+    },
+    {
+      "rsh": "RSH-00109",
+      "city": "El Reno",
+      "state": "OK",
+      "store": "001234",
+      "jan15": "6/8/26",
+      "apr2": "6/8/26",
+      "apr9": "6/15/26",
+      "delta_days": 35,
+      "apr30": "7/13/26"
+    },
+    {
+      "rsh": "RSH-00106",
+      "city": "Lubbock",
+      "state": "TX",
+      "store": "001236",
+      "jan15": "6/29/26",
+      "apr2": "7/27/26",
+      "apr9": "7/27/26",
+      "delta_days": 28,
+      "apr30": "7/27/26"
     },
     {
       "rsh": "RSH-00078",
@@ -1464,27 +1623,8 @@
       "jan15": "7/6/26",
       "apr2": "8/10/26",
       "apr9": "8/10/26",
-      "delta_days": 35
-    },
-    {
-      "rsh": "RSH-00110",
-      "city": "Granbury",
-      "state": "TX",
-      "store": "001156",
-      "jan15": "7/20/26",
-      "apr2": "8/10/26",
-      "apr9": "8/10/26",
-      "delta_days": 21
-    },
-    {
-      "rsh": "RSH-00133",
-      "city": "Oklahoma City",
-      "state": "OK",
-      "store": "001333",
-      "jan15": "8/10/26",
-      "apr2": "8/10/26",
-      "apr9": "8/10/26",
-      "delta_days": 0
+      "delta_days": 35,
+      "apr30": "8/10/26"
     },
     {
       "rsh": "RSH-00089",
@@ -1494,17 +1634,41 @@
       "jan15": "7/13/26",
       "apr2": "8/10/26",
       "apr9": "8/10/26",
-      "delta_days": 28
+      "delta_days": 28,
+      "apr30": "8/10/26"
     },
     {
-      "rsh": "RSH-00102",
-      "city": "Snyder",
-      "state": "TX",
-      "store": "001118",
-      "jan15": "6/15/26",
+      "rsh": "RSH-00114",
+      "city": "Pensacola",
+      "state": "FL",
+      "store": "001154",
+      "jan15": "9/7/26",
       "apr2": "8/10/26",
       "apr9": "8/10/26",
-      "delta_days": 56
+      "delta_days": -28,
+      "apr30": "8/10/26"
+    },
+    {
+      "rsh": "RSH-00110",
+      "city": "Granbury",
+      "state": "TX",
+      "store": "001156",
+      "jan15": "7/20/26",
+      "apr2": "8/10/26",
+      "apr9": "8/10/26",
+      "delta_days": 21,
+      "apr30": "8/10/26"
+    },
+    {
+      "rsh": "RSH-00133",
+      "city": "Oklahoma City",
+      "state": "OK",
+      "store": "001333",
+      "jan15": "8/10/26",
+      "apr2": "8/10/26",
+      "apr9": "8/10/26",
+      "delta_days": 0,
+      "apr30": "8/10/26"
     },
     {
       "rsh": "RSH-00092",
@@ -1514,7 +1678,8 @@
       "jan15": "7/20/26",
       "apr2": "8/17/26",
       "apr9": "8/17/26",
-      "delta_days": 28
+      "delta_days": 28,
+      "apr30": "8/17/26"
     },
     {
       "rsh": "RSH-00087",
@@ -1524,7 +1689,18 @@
       "jan15": "8/17/26",
       "apr2": "9/14/26",
       "apr9": "9/14/26",
-      "delta_days": 28
+      "delta_days": 28,
+      "apr30": "9/14/26"
+    },
+    {
+      "rsh": "RSH-00104",
+      "city": "OKC",
+      "state": "OK",
+      "store": "001693",
+      "jan15": "1/25/27",
+      "apr9": "9/21/26",
+      "apr30": "9/21/26",
+      "delta_days": -126
     },
     {
       "rsh": "RSH-00094",
@@ -1534,7 +1710,19 @@
       "jan15": "8/3/26",
       "apr2": "9/28/26",
       "apr9": "9/28/26",
-      "delta_days": 56
+      "delta_days": 56,
+      "apr30": "9/28/26"
+    },
+    {
+      "rsh": "RSH-00102",
+      "city": "Snyder",
+      "state": "TX",
+      "store": "001118",
+      "jan15": "6/15/26",
+      "apr2": "8/10/26",
+      "apr9": "8/10/26",
+      "delta_days": 105,
+      "apr30": "9/28/26"
     },
     {
       "rsh": "RSH-00084",
@@ -1544,7 +1732,8 @@
       "jan15": "8/17/26",
       "apr2": "9/28/26",
       "apr9": "9/28/26",
-      "delta_days": 42
+      "delta_days": 42,
+      "apr30": "9/28/26"
     },
     {
       "rsh": "RSH-00112",
@@ -1554,67 +1743,8 @@
       "jan15": "8/24/26",
       "apr2": "10/5/26",
       "apr9": "10/5/26",
-      "delta_days": 42
-    },
-    {
-      "rsh": "RSH-00088",
-      "city": "Lehigh Acres",
-      "state": "FL",
-      "store": "000404",
-      "jan15": "9/7/26",
-      "apr2": "10/19/26",
-      "apr9": "10/19/26",
-      "delta_days": 42
-    },
-    {
-      "rsh": "RSH-00086",
-      "city": "Ocala",
-      "state": "FL",
-      "store": "000414",
-      "jan15": "10/19/26",
-      "apr2": "11/2/26",
-      "apr9": "11/2/26",
-      "delta_days": 14
-    },
-    {
-      "rsh": "RSH-00229",
-      "city": "Pensacola",
-      "state": "FL",
-      "store": "001344",
-      "jan15": "11/30/26",
-      "apr2": "11/2/26",
-      "apr9": "11/2/26",
-      "delta_days": -28
-    },
-    {
-      "rsh": "RSH-00139",
-      "city": "Norman",
-      "state": "OK",
-      "store": "001383",
-      "jan15": "11/2/26",
-      "apr2": "11/2/26",
-      "apr9": "11/2/26",
-      "delta_days": 0
-    },
-    {
-      "rsh": "RSH-00134",
-      "city": "Burleson",
-      "state": "TX",
-      "store": "001686",
-      "jan15": "9/28/26",
-      "apr2": "11/9/26",
-      "apr9": "11/9/26",
-      "delta_days": 42
-    },
-    {
-      "rsh": "RSH-00083",
-      "city": "Oklahoma City",
-      "state": "OK",
-      "store": "000874",
-      "jan15": "10/26/26",
-      "apr2": "11/9/26",
-      "apr9": "11/9/26",
-      "delta_days": 14
+      "delta_days": 42,
+      "apr30": "10/5/26"
     },
     {
       "rsh": "RSH-00103",
@@ -1624,17 +1754,94 @@
       "jan15": "10/19/26",
       "apr2": "11/30/26",
       "apr9": "11/30/26",
-      "delta_days": 42
+      "delta_days": -7,
+      "apr30": "10/12/26"
     },
     {
-      "rsh": "RSH-00129",
-      "city": "Granbury",
+      "rsh": "RSH-00086",
+      "city": "Ocala",
+      "state": "FL",
+      "store": "000414",
+      "jan15": "10/19/26",
+      "apr2": "11/2/26",
+      "apr9": "11/2/26",
+      "delta_days": 14,
+      "apr30": "11/2/26"
+    },
+    {
+      "rsh": "RSH-00229",
+      "city": "Pensacola",
+      "state": "FL",
+      "store": "001344",
+      "jan15": "11/30/26",
+      "apr2": "11/2/26",
+      "apr9": "11/2/26",
+      "delta_days": -28,
+      "apr30": "11/2/26"
+    },
+    {
+      "rsh": "RSH-00139",
+      "city": "Norman",
+      "state": "OK",
+      "store": "001383",
+      "jan15": "11/2/26",
+      "apr2": "11/2/26",
+      "apr9": "11/2/26",
+      "delta_days": 0,
+      "apr30": "11/2/26"
+    },
+    {
+      "rsh": "RSH-00083",
+      "city": "Oklahoma City",
+      "state": "OK",
+      "store": "000874",
+      "jan15": "10/26/26",
+      "apr2": "11/9/26",
+      "apr9": "11/9/26",
+      "delta_days": 14,
+      "apr30": "11/9/26"
+    },
+    {
+      "rsh": "RSH-00134",
+      "city": "Burleson",
       "state": "TX",
-      "store": "001714",
-      "jan15": "12/7/26",
-      "apr2": "12/7/26",
+      "store": "001686",
+      "jan15": "9/28/26",
+      "apr2": "11/9/26",
+      "apr9": "11/9/26",
+      "delta_days": 42,
+      "apr30": "11/9/26"
+    },
+    {
+      "rsh": "RSH-00180",
+      "city": "Lubbock",
+      "state": "TX",
+      "store": "001404",
+      "jan15": "1/25/27",
+      "apr9": "11/9/26",
+      "apr30": "11/9/26",
+      "delta_days": -77
+    },
+    {
+      "rsh": "RSH-00088",
+      "city": "Lehigh Acres",
+      "state": "FL",
+      "store": "000404",
+      "jan15": "9/7/26",
+      "apr2": "10/19/26",
+      "apr9": "10/19/26",
+      "delta_days": 70,
+      "apr30": "11/16/26"
+    },
+    {
+      "rsh": "RSH-00077",
+      "city": "Spring Hill",
+      "state": "FL",
+      "store": "000607",
+      "jan15": "2/22/27",
       "apr9": "12/7/26",
-      "delta_days": 0
+      "apr30": "12/7/26",
+      "delta_days": -77
     },
     {
       "rsh": "RSH-00113",
@@ -1644,16 +1851,459 @@
       "jan15": "12/14/26",
       "apr2": "12/7/26",
       "apr9": "12/7/26",
-      "delta_days": -7
+      "delta_days": -7,
+      "apr30": "12/7/26"
+    },
+    {
+      "rsh": "RSH-00129",
+      "city": "Granbury",
+      "state": "TX",
+      "store": "001714",
+      "jan15": "12/7/26",
+      "apr2": "12/7/26",
+      "apr9": "12/7/26",
+      "delta_days": 0,
+      "apr30": "12/7/26"
+    },
+    {
+      "rsh": "RSH-00149",
+      "city": "Mustang",
+      "state": "OK",
+      "store": "001673",
+      "jan15": "1/4/27",
+      "apr9": "1/4/27",
+      "apr30": "1/4/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00100",
+      "city": "Odessa",
+      "state": "TX",
+      "store": "000966",
+      "jan15": "1/18/27",
+      "apr9": "1/18/27",
+      "apr30": "1/18/27",
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00151",
       "city": "Amarillo",
       "state": "TX",
-      "store": "TBD",
+      "store": "",
       "jan15": "12/7/26",
       "apr2": "12/7/26",
       "apr9": "12/7/26",
+      "delta_days": 42,
+      "apr30": "1/18/27"
+    },
+    {
+      "rsh": "RSH-00692",
+      "city": "Pinellas Park",
+      "state": "FL",
+      "store": "",
+      "jan15": "1/25/27",
+      "apr9": "1/25/27",
+      "apr30": "1/25/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00528",
+      "city": "Choctaw",
+      "state": "OK",
+      "store": "",
+      "jan15": "2/1/27",
+      "apr9": "2/1/27",
+      "apr30": "2/1/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00117",
+      "city": "Port Richey",
+      "state": "FL",
+      "store": "000967",
+      "jan15": "2/22/27",
+      "apr9": "2/22/27",
+      "apr30": "2/22/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00111",
+      "city": "Haines City",
+      "state": "FL",
+      "store": "",
+      "jan15": "2/22/27",
+      "apr9": "2/22/27",
+      "apr30": "2/22/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00146",
+      "city": "Palmetto",
+      "state": "FL",
+      "store": "001368",
+      "jan15": "3/1/27",
+      "apr9": "3/1/27",
+      "apr30": "3/1/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00592",
+      "city": "Killeen",
+      "state": "TX",
+      "store": "",
+      "jan15": "4/19/27",
+      "apr9": "4/19/27",
+      "apr30": "4/19/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00147",
+      "city": "Fort Myers",
+      "state": "FL",
+      "store": "001405",
+      "jan15": "4/19/27",
+      "apr9": "4/19/27",
+      "apr30": "4/19/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00231",
+      "city": "Fort Myers",
+      "state": "FL",
+      "store": "001323",
+      "jan15": "5/3/27",
+      "apr9": "5/3/27",
+      "apr30": "5/3/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00606",
+      "city": "Midland",
+      "state": "TX",
+      "store": "",
+      "jan15": "5/3/27",
+      "apr9": "5/3/27",
+      "apr30": "5/3/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00617",
+      "city": "Springtown",
+      "state": "TX",
+      "store": "001723",
+      "jan15": "5/3/27",
+      "apr9": "5/3/27",
+      "apr30": "5/3/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00273",
+      "city": "Mulberry",
+      "state": "FL",
+      "store": "001341",
+      "jan15": "5/3/27",
+      "apr9": "5/3/27",
+      "apr30": "5/3/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00127",
+      "city": "Edmond",
+      "state": "OK",
+      "store": "001735",
+      "jan15": "5/24/27",
+      "apr9": "5/24/27",
+      "apr30": "5/24/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00115",
+      "city": "Largo",
+      "state": "FL",
+      "store": "001280",
+      "jan15": "6/14/27",
+      "apr9": "6/14/27",
+      "apr30": "6/14/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00266",
+      "city": "Sebring",
+      "state": "FL",
+      "store": "",
+      "jan15": "6/21/27",
+      "apr9": "6/21/27",
+      "apr30": "6/21/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00205",
+      "city": "Pensacola",
+      "state": "FL",
+      "store": "",
+      "jan15": "6/21/27",
+      "apr9": "6/21/27",
+      "apr30": "6/21/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00211",
+      "city": "Hudson",
+      "state": "FL",
+      "store": "001337",
+      "jan15": "7/19/27",
+      "apr9": "7/19/27",
+      "apr30": "7/19/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00579",
+      "city": "Arcadia",
+      "state": "FL",
+      "store": "",
+      "jan15": "7/26/27",
+      "apr9": "7/26/27",
+      "apr30": "7/26/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00610",
+      "city": "Freeport",
+      "state": "FL",
+      "store": "",
+      "jan15": "7/26/27",
+      "apr9": "7/26/27",
+      "apr30": "7/26/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00108",
+      "city": "Bradenton",
+      "state": "FL",
+      "store": "",
+      "jan15": "8/2/27",
+      "apr9": "8/2/27",
+      "apr30": "8/2/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00582",
+      "city": "Davenport",
+      "state": "FL",
+      "store": "",
+      "jan15": "8/2/27",
+      "apr9": "8/2/27",
+      "apr30": "8/2/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00584",
+      "city": "Garland",
+      "state": "TX",
+      "store": "",
+      "jan15": "8/30/27",
+      "apr9": "8/30/27",
+      "apr30": "8/30/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00099",
+      "city": "Panama City Beach",
+      "state": "FL",
+      "store": "000990",
+      "jan15": "8/30/27",
+      "apr9": "8/30/27",
+      "apr30": "8/30/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00596",
+      "city": "Dallas",
+      "state": "TX",
+      "store": "",
+      "jan15": "9/20/27",
+      "apr9": "9/20/27",
+      "apr30": "9/20/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00601",
+      "city": "Mesquite",
+      "state": "TX",
+      "store": "",
+      "jan15": "9/20/27",
+      "apr9": "9/20/27",
+      "apr30": "9/20/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00235",
+      "city": "Cape Coral",
+      "state": "FL",
+      "store": "",
+      "jan15": "10/4/27",
+      "apr9": "10/4/27",
+      "apr30": "10/4/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00575",
+      "city": "Abilene",
+      "state": "TX",
+      "store": "",
+      "jan15": "10/18/27",
+      "apr9": "10/18/27",
+      "apr30": "10/18/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00208",
+      "city": "Panama City Beach",
+      "state": "FL",
+      "store": "",
+      "jan15": "10/18/27",
+      "apr9": "10/18/27",
+      "apr30": "10/18/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00126",
+      "city": "Edmond",
+      "state": "OK",
+      "store": "",
+      "jan15": "10/18/27",
+      "apr9": "10/18/27",
+      "apr30": "10/18/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00233",
+      "city": "Fort Myers",
+      "state": "FL",
+      "store": "",
+      "jan15": "11/1/27",
+      "apr9": "11/1/27",
+      "apr30": "11/1/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00239",
+      "city": "Fort Myers",
+      "state": "FL",
+      "store": "001724",
+      "jan15": "11/1/27",
+      "apr9": "11/1/27",
+      "apr30": "11/1/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00622",
+      "city": "St. Petersburg",
+      "state": "FL",
+      "store": "",
+      "jan15": "11/1/27",
+      "apr9": "11/1/27",
+      "apr30": "11/1/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00217",
+      "city": "Seminole",
+      "state": "FL",
+      "store": "",
+      "jan15": "11/8/27",
+      "apr9": "11/8/27",
+      "apr30": "11/8/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00634",
+      "city": "Destin",
+      "state": "FL",
+      "store": "",
+      "jan15": "11/8/27",
+      "apr9": "11/8/27",
+      "apr30": "11/8/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00621",
+      "city": "Plant City",
+      "state": "FL",
+      "store": "",
+      "jan15": "11/15/27",
+      "apr9": "11/15/27",
+      "apr30": "11/15/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00620",
+      "city": "Denton",
+      "state": "TX",
+      "store": "",
+      "jan15": "11/15/27",
+      "apr9": "11/15/27",
+      "apr30": "11/15/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00656",
+      "city": "Odessa",
+      "state": "FL",
+      "store": "",
+      "jan15": "11/15/27",
+      "apr9": "11/15/27",
+      "apr30": "11/15/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00119",
+      "city": "Pensacola",
+      "state": "FL",
+      "store": "001121",
+      "jan15": "11/22/27",
+      "apr9": "11/22/27",
+      "apr30": "11/22/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00666",
+      "city": "Ocala",
+      "state": "FL",
+      "store": "",
+      "jan15": "12/6/27",
+      "apr9": "12/6/27",
+      "apr30": "12/6/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00630",
+      "city": "Cape Coral",
+      "state": "FL",
+      "store": "",
+      "jan15": "12/6/27",
+      "apr9": "12/6/27",
+      "apr30": "12/6/27",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00673",
+      "city": "Fort Myers",
+      "state": "FL",
+      "store": "",
+      "jan15": "1/17/28",
+      "apr9": "1/17/28",
+      "apr30": "1/17/28",
+      "delta_days": 0
+    },
+    {
+      "rsh": "RSH-00683",
+      "city": "Dallas",
+      "state": "TX",
+      "store": "",
+      "jan15": "1/17/28",
+      "apr9": "1/17/28",
+      "apr30": "1/17/28",
       "delta_days": 0
     }
   ],
@@ -1772,52 +2422,54 @@
     }
   ],
   "new_since_jan15": [
-    "RSH-00634",
-    "RSH-00610",
-    "RSH-00621",
-    "RSH-00115",
-    "RSH-00575",
-    "RSH-00592",
-    "RSH-00146",
-    "RSH-00528",
-    "RSH-00273",
-    "RSH-00217",
-    "RSH-00231",
     "RSH-00266",
-    "RSH-00617",
-    "RSH-00119",
-    "RSH-00692",
-    "RSH-00077",
+    "RSH-00115",
     "RSH-00211",
-    "RSH-00622",
-    "RSH-00147",
-    "RSH-00596",
-    "RSH-00683",
-    "RSH-00100",
-    "RSH-00601",
-    "RSH-00673",
-    "RSH-00584",
-    "RSH-00127",
-    "RSH-00666",
-    "RSH-00099",
-    "RSH-00630",
+    "RSH-00231",
+    "RSH-00077",
     "RSH-00208",
-    "RSH-00104",
-    "RSH-00620",
+    "RSH-00205",
+    "RSH-00528",
+    "RSH-00146",
+    "RSH-00634",
+    "RSH-00100",
+    "RSH-00621",
+    "RSH-00601",
+    "RSH-00584",
+    "RSH-00147",
+    "RSH-00617",
+    "RSH-00126",
     "RSH-00579",
+    "RSH-00108",
+    "RSH-00180",
+    "RSH-00596",
+    "RSH-00630",
+    "RSH-00233",
     "RSH-00117",
     "RSH-00582",
-    "RSH-00108",
-    "RSH-00126",
-    "RSH-00111",
     "RSH-00239",
-    "RSH-00233",
+    "RSH-00235",
+    "RSH-00213",
+    "RSH-00119",
+    "RSH-00099",
+    "RSH-00592",
+    "RSH-00637",
+    "RSH-00273",
+    "RSH-00692",
+    "RSH-00620",
+    "RSH-00575",
     "RSH-00656",
-    "RSH-00205",
+    "RSH-00104",
+    "RSH-00666",
+    "RSH-00683",
+    "RSH-00111",
+    "RSH-00217",
+    "RSH-00127",
+    "RSH-00610",
+    "RSH-00622",
+    "RSH-00673",
     "RSH-00149",
-    "RSH-00606",
-    "RSH-00180",
-    "RSH-00235"
+    "RSH-00606"
   ],
   "milestone_shifts": [
     {
