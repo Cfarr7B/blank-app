@@ -7012,13 +7012,13 @@ def tab_pipeline(dash):
         state_opts = ["All States"] + sorted(df["state"].unique().tolist())
         sel_state = st.selectbox("State", state_opts, key="pipe_state")
     with fc3:
-        region_opts = ["All Regions"] + sorted(df["region"].dropna().unique().tolist())
-        sel_region = st.selectbox("Region", region_opts, key="pipe_region")
+        region_opts = sorted(df["region"].dropna().unique().tolist())
+        sel_regions = st.multiselect("Region(s)", region_opts, placeholder="All Regions", key="pipe_region")
 
     dff = df.copy()
-    if sel_phase != "All Phases":   dff = dff[dff["phase"] == sel_phase]
-    if sel_state != "All States":   dff = dff[dff["state"] == sel_state]
-    if sel_region != "All Regions": dff = dff[dff["region"] == sel_region]
+    if sel_phase != "All Phases":  dff = dff[dff["phase"] == sel_phase]
+    if sel_state != "All States":  dff = dff[dff["state"] == sel_state]
+    if sel_regions:                dff = dff[dff["region"].isin(sel_regions)]
 
     stands_df_pipe = get_stands_df(dash)
     # Only count stores from the most recent period to exclude sold/divested markets
@@ -7073,6 +7073,10 @@ def tab_pipeline(dash):
     shifts_df = shifts_df[shifts_df.apply(_is_2026_open, axis=1)]
     if sel_state != "All States":
         shifts_df = shifts_df[shifts_df["state"] == sel_state]
+    if sel_regions:
+        shifts_df = shifts_df[shifts_df["state"].isin(
+            dff["state"].unique().tolist()
+        )]
     dff_rshs = set(dff["rsh"].tolist())
     _new_since_jan15 = _pdata["new_since_jan15"]
     filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
@@ -7231,6 +7235,7 @@ def tab_pipeline(dash):
         r for r in _ms_data
         if (ms_phase == "All Phases" or r["phase"] == ms_phase)
         and (sel_state == "All States" or r["state"] == sel_state)
+        and (not sel_regions or r.get("region") in sel_regions)
         and any(r.get(f"{k}_delta") is not None for k in ["permit_sub","permit_appr","cs","open"])
     ]
     if not ms_rows:
