@@ -2217,6 +2217,7 @@ def tab_stands(dash):
     _BM = {
         "Total_COGS_pct":       {"t": 0.265, "hi": False, "label": "COGS"},
         "Total_Hourly_pct":     {"t": 0.171, "hi": False, "label": "Hourly Labor"},
+        "Overtime_pct":         {"t": 0.005, "hi": False, "label": "Overtime"},
         "Total_Labor_pct":      {"t": 0.245, "hi": False, "label": "Total Labor"},
         "Total_RM_pct":         {"t": 0.015, "hi": False, "label": "R&M"},
         "Controllable_pct":     {"t": 0.033, "hi": False, "label": "Controllable"},
