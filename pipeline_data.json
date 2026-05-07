@@ -2491,140 +2491,140 @@
       "city": "Bradenton",
       "state": "FL",
       "store": "000356",
-      "jan15": "",
+      "jan15": "1/19/26",
       "apr30": "1/19/26",
       "may7": "1/19/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00060",
       "city": "Belleview",
       "state": "FL",
       "store": "000570",
-      "jan15": "",
+      "jan15": "1/19/26",
       "apr30": "1/19/26",
       "may7": "1/19/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00070",
       "city": "Weatherford",
       "state": "OK",
       "store": "000875",
-      "jan15": "",
+      "jan15": "1/19/26",
       "apr30": "1/19/26",
       "may7": "1/19/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00073",
       "city": "Oklahoma City",
       "state": "OK",
       "store": "000872",
-      "jan15": "",
+      "jan15": "1/26/26",
       "apr30": "1/26/26",
       "may7": "1/26/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00085",
       "city": "Gainesville",
       "state": "TX",
       "store": "000882",
-      "jan15": "",
+      "jan15": "1/26/26",
       "apr30": "1/26/26",
       "may7": "1/26/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00093",
       "city": "Midland",
       "state": "TX",
       "store": "001117",
-      "jan15": "",
+      "jan15": "1/26/26",
       "apr30": "1/26/26",
       "may7": "1/26/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00080",
       "city": "Pensacola",
       "state": "FL",
       "store": "000877",
-      "jan15": "",
+      "jan15": "2/9/26",
       "apr30": "2/9/26",
       "may7": "2/9/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00054",
       "city": "Bradenton",
       "state": "FL",
       "store": "000394",
-      "jan15": "",
+      "jan15": "2/23/26",
       "apr30": "2/23/26",
       "may7": "2/23/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00074",
       "city": "Spring Hill",
       "state": "FL",
       "store": "000573",
-      "jan15": "",
+      "jan15": "3/2/26",
       "apr30": "3/9/26",
       "may7": "3/9/26",
-      "delta_days": null
+      "delta_days": 7
     },
     {
       "rsh": "RSH-00090",
       "city": "Belton",
       "state": "TX",
       "store": "000758",
-      "jan15": "",
+      "jan15": "2/16/26",
       "apr30": "3/9/26",
       "may7": "3/9/26",
-      "delta_days": null
+      "delta_days": 21
     },
     {
       "rsh": "RSH-00075",
       "city": "Cleburne",
       "state": "TX",
       "store": "000516",
-      "jan15": "",
+      "jan15": "3/30/26",
       "apr30": "3/30/26",
       "may7": "3/30/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00066",
       "city": "Pampa",
       "state": "TX",
       "store": "000709",
-      "jan15": "",
+      "jan15": "3/30/26",
       "apr30": "3/30/26",
       "may7": "3/30/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00082",
       "city": "Norman",
       "state": "OK",
       "store": "",
-      "jan15": "",
+      "jan15": "4/13/26",
       "apr30": "4/13/26",
       "may7": "4/13/26",
-      "delta_days": null
+      "delta_days": 0
     },
     {
       "rsh": "RSH-00068",
       "city": "Waco",
       "state": "TX",
       "store": "",
-      "jan15": "",
+      "jan15": "4/13/26",
       "apr30": "4/13/26",
       "may7": "4/13/26",
-      "delta_days": null
+      "delta_days": 0
     }
   ],
   "opened_shifts": [
