@@ -1,7 +1,7 @@
 {
   "_schema_version": "2.2",
-  "_last_updated": "2026-04-30",
-  "_source": "7Crew Pipeline Report_4.16.2026.xlsx",
+  "_last_updated": "2026-05-07",
+  "_source": "7Crew Pipeline Report_5.7.2026.xlsx",
   "report_snapshots": [
     {
       "key": "jan15",
@@ -24,29 +24,19 @@
       "key": "apr30",
       "label": "Apr 30",
       "date": "2026-04-30"
+    },
+    {
+      "key": "may7",
+      "label": "May 7",
+      "date": "2026-05-07"
     }
   ],
   "upcoming": [
     {
-      "rsh": "RSH-00097",
-      "store": "000878",
-      "phase": "5. Construction",
-      "address": "2105 MLK Blvd",
-      "city": "Panama City",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "5/21/25",
-      "permit_appr": "10/31/25",
-      "cs": "11/19/25",
-      "bd": "3/6/26",
-      "open": "5/4/26",
-      "notes": ""
-    },
-    {
       "rsh": "RSH-00096",
       "store": "000968",
       "phase": "5. Construction",
-      "address": "6518 NW Cache Road",
+      "address": "6618 NW Cache Road",
       "city": "Lawton",
       "state": "OK",
       "region": "OKC",
@@ -55,7 +45,7 @@
       "cs": "2/2/26",
       "bd": "3/19/26",
       "open": "5/18/26",
-      "notes": "TCO (30 day) by 4/30. (full pending rails around cooler and building RTU)"
+      "notes": "TCO (30 day) = 4/28. (full pending rails around cooler and building RTU). fixes tracking for 5/13"
     },
     {
       "rsh": "RSH-00101",
@@ -85,37 +75,7 @@
       "cs": "2/18/26",
       "bd": "3/25/26",
       "open": "5/25/26",
-      "notes": "CO might move to 5/5 for inspectors"
-    },
-    {
-      "rsh": "RSH-00095",
-      "store": "000518",
-      "phase": "5. Construction",
-      "address": "1420 Ohio Avenue",
-      "city": "Lynn Haven",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "3/14/25",
-      "permit_appr": "1/2/26",
-      "cs": "1/22/26",
-      "bd": "2/18/26",
-      "open": "6/1/26",
-      "notes": "Backfilling for demuck started 4/29."
-    },
-    {
-      "rsh": "RSH-00081",
-      "store": "000986",
-      "phase": "5. Construction",
-      "address": "490 Mary Esther Blvd.",
-      "city": "Mary Esther",
-      "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "7/10/25",
-      "permit_appr": "1/2/26",
-      "cs": "1/26/26",
-      "bd": "2/26/26",
-      "open": "6/1/26",
-      "notes": "water, sewer and power on. storm/sewer conflict"
+      "notes": "working solution for short canopy"
     },
     {
       "rsh": "RSH-00079",
@@ -145,22 +105,22 @@
       "cs": "1/12/26",
       "bd": "3/11/26",
       "open": "6/8/26",
-      "notes": "*Need RW CO approved by 7C. CO target of 5/22 pending wall and Duke power pole"
+      "notes": "*Need RW CO approved by 7C. CO target of 5/22 pending wall and Duke power pole. water account set up as of 5/6."
     },
     {
-      "rsh": "RSH-00069",
-      "store": "000571",
+      "rsh": "RSH-00081",
+      "store": "000986",
       "phase": "5. Construction",
-      "address": "801 Beal Pkwy N",
-      "city": "Fort Walton Beach",
+      "address": "490 Mary Esther Blvd.",
+      "city": "Mary Esther",
       "state": "FL",
       "region": "FLPH",
-      "permit_sub": "1/28/25",
-      "permit_appr": "10/10/25",
-      "cs": "12/17/25",
-      "bd": "3/4/26",
-      "open": "6/22/26",
-      "notes": "dates at risk for RW revision requiring neighbor coordination"
+      "permit_sub": "7/10/25",
+      "permit_appr": "1/2/26",
+      "cs": "1/26/26",
+      "bd": "2/26/26",
+      "open": "6/8/26",
+      "notes": "water, sewer and power on. storm/sewer conflict"
     },
     {
       "rsh": "RSH-00123",
@@ -175,7 +135,7 @@
       "cs": "4/6/26",
       "bd": "4/21/26",
       "open": "6/22/26",
-      "notes": "GC reporting CO of 5/29"
+      "notes": "GC reporting CO of 5/29. all utilities connected as of 5/6."
     },
     {
       "rsh": "RSH-00116",
@@ -190,7 +150,37 @@
       "cs": "3/2/26",
       "bd": "4/15/26",
       "open": "6/22/26",
-      "notes": "confirm CO date with GC.  water tapped.  Sewer and Gt go in week of 4/24"
+      "notes": "confirm CO date with GC.  water and sewer tapped."
+    },
+    {
+      "rsh": "RSH-00069",
+      "store": "000571",
+      "phase": "5. Construction",
+      "address": "801 Beal Pkwy N",
+      "city": "Fort Walton Beach",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "1/28/25",
+      "permit_appr": "10/10/25",
+      "cs": "12/17/25",
+      "bd": "3/4/26",
+      "open": "6/29/26",
+      "notes": "dates at risk for RW revision requiring neighbor coordination. water and sewer connected. power - secondary getting pulled 4/30-5/7 (Pedestal has already been set by FPL)."
+    },
+    {
+      "rsh": "RSH-00095",
+      "store": "000518",
+      "phase": "5. Construction",
+      "address": "1420 Ohio Avenue",
+      "city": "Lynn Haven",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "3/14/25",
+      "permit_appr": "1/2/26",
+      "cs": "1/22/26",
+      "bd": "2/18/26",
+      "open": "6/29/26",
+      "notes": "Backfilling for demuck started 4/29."
     },
     {
       "rsh": "RSH-00109",
@@ -220,7 +210,7 @@
       "cs": "4/8/26",
       "bd": "4/24/26",
       "open": "7/27/26",
-      "notes": ""
+      "notes": "GC looking to pull CO by as much as a month"
     },
     {
       "rsh": "RSH-00078",
@@ -248,7 +238,7 @@
       "permit_sub": "11/6/24",
       "permit_appr": "8/27/25",
       "cs": "1/5/26",
-      "bd": "",
+      "bd": null,
       "open": "8/10/26",
       "notes": "GC building final target = 7/16 & CO target date = 8/14"
     },
@@ -280,12 +270,12 @@
       "cs": "4/20/26",
       "bd": "5/20/26",
       "open": "8/10/26",
-      "notes": ""
+      "notes": "may need to push BD to 5/27 (busy week for CTAR). not anticipating changes to CO"
     },
     {
       "rsh": "RSH-00133",
       "store": "001333",
-      "phase": "4. Permitting",
+      "phase": "5. Construction",
       "address": "2917 SW 104th St.",
       "city": "Oklahoma City",
       "state": "OK",
@@ -295,7 +285,7 @@
       "cs": "4/27/26",
       "bd": "5/27/26",
       "open": "8/10/26",
-      "notes": "Permit expected 4/7. Need GC to verify construction schedule on kickoff call 4/30"
+      "notes": ""
     },
     {
       "rsh": "RSH-00092",
@@ -338,23 +328,8 @@
       "permit_sub": "3/25/26",
       "permit_appr": "8/21/26",
       "cs": "5/27/26",
-      "bd": "",
+      "bd": null,
       "open": "9/21/26",
-      "notes": ""
-    },
-    {
-      "rsh": "RSH-00094",
-      "store": "000757",
-      "phase": "5. Construction",
-      "address": "4102 Cleveland Ave",
-      "city": "Fort Myers",
-      "state": "FL",
-      "region": "FLSW",
-      "permit_sub": "4/15/25",
-      "permit_appr": "4/10/26",
-      "cs": "5/6/26",
-      "bd": "6/24/26",
-      "open": "9/28/26",
       "notes": ""
     },
     {
@@ -368,9 +343,9 @@
       "permit_sub": "9/6/25",
       "permit_appr": "4/13/26",
       "cs": "4/13/26",
-      "bd": "",
+      "bd": null,
       "open": "9/28/26",
-      "notes": "Demo Done. Oncor pole relocation = Oncor meet GC onsite 5/5."
+      "notes": "building pad planned for 5/8.  pavement base and curb by 5/15"
     },
     {
       "rsh": "RSH-00084",
@@ -400,7 +375,7 @@
       "cs": "6/22/26",
       "bd": "7/15/26",
       "open": "10/5/26",
-      "notes": "TXDOT work during opening"
+      "notes": "TXDOT work during opening. City comments due 5/8"
     },
     {
       "rsh": "RSH-00103",
@@ -413,9 +388,24 @@
       "permit_sub": "5/20/26",
       "permit_appr": "6/26/26",
       "cs": "7/6/26",
-      "bd": "",
+      "bd": null,
       "open": "10/12/26",
       "notes": "need to confirm submittal date with citadel"
+    },
+    {
+      "rsh": "RSH-00094",
+      "store": "000757",
+      "phase": "5. Construction",
+      "address": "4102 Cleveland Ave",
+      "city": "Fort Myers",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "4/15/25",
+      "permit_appr": "4/10/26",
+      "cs": "6/2/26",
+      "bd": "7/22/26",
+      "open": "10/26/26",
+      "notes": ""
     },
     {
       "rsh": "RSH-00086",
@@ -490,7 +480,7 @@
       "cs": "7/20/26",
       "bd": "8/26/26",
       "open": "11/9/26",
-      "notes": "Civils ONLY in 3/25"
+      "notes": "Arch submitted 4/22. Site plan resubmit for LL comments tracking 5/11."
     },
     {
       "rsh": "RSH-00180",
@@ -548,7 +538,7 @@
       "permit_sub": "10/9/25",
       "permit_appr": "8/14/26",
       "cs": "8/24/26",
-      "bd": "",
+      "bd": null,
       "open": "12/7/26",
       "notes": ""
     },
@@ -561,8 +551,8 @@
       "state": "TX",
       "region": "C. TX",
       "permit_sub": "4/1/26",
-      "permit_appr": "7/31/26",
-      "cs": "8/10/26",
+      "permit_appr": "7/15/26",
+      "cs": "8/3/26",
       "bd": "9/16/26",
       "open": "12/7/26",
       "notes": "Academy and Hobby Lobby open in October '26. .  LL to deliver pad & utilities in May (MH to confirm)"
@@ -578,9 +568,9 @@
       "permit_sub": "3/27/26",
       "permit_appr": "8/19/26",
       "cs": "9/7/26",
-      "bd": "",
+      "bd": null,
       "open": "1/4/27",
-      "notes": "3/27 is civil only submittal. Holding building submit for LL/City comments (tracking for 5/12ish)"
+      "notes": "Combined plan submittal 5/5. LL permits tracking for approval in June."
     },
     {
       "rsh": "RSH-00100",
@@ -595,7 +585,7 @@
       "cs": "8/31/26",
       "bd": "9/30/26",
       "open": "1/18/27",
-      "notes": "Plat is approved. SP submitted late February, review commencing as of plat approval. Lease amendment for SP rights and IP extended signed 4/3.  Need REA and parking agreement (tracking 4/9??)"
+      "notes": "Plat is approved w/ comments. SP approved 4/14 .  BP submitted 4/10.  couple dept. approved. Need REA and parking agreement (tracking 4/9??)"
     },
     {
       "rsh": "RSH-00151",
@@ -640,7 +630,7 @@
       "cs": "9/21/26",
       "bd": "11/4/26",
       "open": "2/1/27",
-      "notes": "LL has to complete lot split and record utility easement before 7C can submit for plans and review.  Need to confirm no CLOMR (adds 6 - 9 months)"
+      "notes": "LL has completed lot split. record utility easement (need to verify)."
     },
     {
       "rsh": "RSH-00117",
@@ -748,6 +738,21 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
+      "rsh": "RSH-00689",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "980 Pasadena Ave S",
+      "city": "St. Petersburg",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "7/30/26",
+      "permit_appr": "12/11/26",
+      "cs": "1/6/27",
+      "bd": null,
+      "open": "5/3/27",
+      "notes": ""
+    },
+    {
       "rsh": "RSH-00617",
       "store": "001723",
       "phase": "3. Design",
@@ -800,8 +805,8 @@
       "city": "Largo",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "5/1/26",
-      "permit_appr": "1/6/27",
+      "permit_sub": "5/8/26",
+      "permit_appr": "1/13/27",
       "cs": "1/25/27",
       "bd": "3/3/27",
       "open": "6/14/27",
@@ -836,6 +841,21 @@
       "bd": "3/10/27",
       "open": "6/21/27",
       "notes": "Pause for LOI delays from LL sale and use restriction concerns"
+    },
+    {
+      "rsh": "RSH-00694",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "5962 S Soncy Rd",
+      "city": "Amarillo",
+      "state": "TX",
+      "region": "W. TX",
+      "permit_sub": null,
+      "permit_appr": null,
+      "cs": null,
+      "bd": "4/14/27",
+      "open": "7/12/27",
+      "notes": "PLACEHOLDER DATES"
     },
     {
       "rsh": "RSH-00211",
@@ -885,7 +905,7 @@
     {
       "rsh": "RSH-00108",
       "store": "",
-      "phase": "3. Design",
+      "phase": "2. Due Diligence",
       "address": "4801 Cortez Blvd",
       "city": "Bradenton",
       "state": "FL",
@@ -950,8 +970,8 @@
       "city": "Alvarado",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "",
-      "permit_appr": "",
+      "permit_sub": null,
+      "permit_appr": null,
       "cs": "4/19/27",
       "bd": "5/19/27",
       "open": "9/6/27",
@@ -1148,7 +1168,7 @@
       "permit_sub": "10/9/26",
       "permit_appr": "4/30/27",
       "cs": "5/17/27",
-      "bd": "",
+      "bd": null,
       "open": "11/15/27",
       "notes": "PLACEHOLDER DATES"
     },
@@ -1213,6 +1233,21 @@
       "notes": "PLACEHOLDER DATES"
     },
     {
+      "rsh": "RSH-00675",
+      "store": "",
+      "phase": "2. Due Diligence",
+      "address": "707 W Dr Martin Luther King Jr",
+      "city": "Seffner",
+      "state": "FL",
+      "region": "FLSW",
+      "permit_sub": "10/16/26",
+      "permit_appr": "6/18/27",
+      "cs": "7/12/27",
+      "bd": "8/11/27",
+      "open": "12/6/27",
+      "notes": "PLACEHOLDER DATES"
+    },
+    {
       "rsh": "RSH-00673",
       "store": "",
       "phase": "2. Due Diligence",
@@ -1250,8 +1285,8 @@
       "city": "Cape Coral",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "",
-      "permit_appr": "",
+      "permit_sub": null,
+      "permit_appr": null,
       "cs": "7/26/27",
       "bd": "8/25/27",
       "open": "1/17/28",
@@ -1329,7 +1364,7 @@
       "region": "C. TX",
       "permit_sub": "4/15/25",
       "permit_appr": "9/5/25",
-      "cs": "",
+      "cs": null,
       "bd": "11/4/25",
       "open": "1/26/26",
       "notes": ""
@@ -1435,7 +1470,7 @@
       "permit_sub": "7/9/25",
       "permit_appr": "7/29/25",
       "cs": "10/20/25",
-      "bd": "",
+      "bd": null,
       "open": "3/30/26",
       "notes": "Full CO coming 3/11"
     },
@@ -1468,9 +1503,24 @@
       "bd": "12/3/25",
       "open": "4/13/26",
       "notes": "TCO to stock 3/23. Full CO on 3/27 per GC"
+    },
+    {
+      "rsh": "RSH-00097",
+      "store": "000878",
+      "phase": "8. Open",
+      "address": "2105 MLK Blvd",
+      "city": "Panama City",
+      "state": "FL",
+      "region": "FLPH",
+      "permit_sub": "5/21/25",
+      "permit_appr": "10/31/25",
+      "cs": "11/19/25",
+      "bd": "3/6/26",
+      "open": "5/4/26",
+      "notes": ""
     }
   ],
-  "open_count_from_report": 14,
+  "open_count_from_report": 15,
   "date_shifts": [
     {
       "rsh": "RSH-00097",
@@ -1481,7 +1531,8 @@
       "apr2": "4/20/26",
       "apr9": "5/4/26",
       "delta_days": 21,
-      "apr30": "5/4/26"
+      "apr30": "5/4/26",
+      "may7": "5/4/26"
     },
     {
       "rsh": "RSH-00096",
@@ -1492,7 +1543,8 @@
       "apr2": "5/18/26",
       "apr9": "5/18/26",
       "delta_days": 0,
-      "apr30": "5/18/26"
+      "apr30": "5/18/26",
+      "may7": "5/18/26"
     },
     {
       "rsh": "RSH-00101",
@@ -1503,7 +1555,8 @@
       "apr2": "5/18/26",
       "apr9": "5/18/26",
       "delta_days": -28,
-      "apr30": "5/18/26"
+      "apr30": "5/18/26",
+      "may7": "5/18/26"
     },
     {
       "rsh": "RSH-00091",
@@ -1514,7 +1567,8 @@
       "apr2": "5/18/26",
       "apr9": "5/18/26",
       "delta_days": -7,
-      "apr30": "5/25/26"
+      "apr30": "5/25/26",
+      "may7": "5/25/26"
     },
     {
       "rsh": "RSH-00095",
@@ -1525,7 +1579,8 @@
       "apr2": "6/1/26",
       "apr9": "6/1/26",
       "delta_days": 0,
-      "apr30": "6/1/26"
+      "apr30": "6/1/26",
+      "may7": "6/29/26"
     },
     {
       "rsh": "RSH-00081",
@@ -1536,7 +1591,8 @@
       "apr2": "6/1/26",
       "apr9": "6/1/26",
       "delta_days": 14,
-      "apr30": "6/1/26"
+      "apr30": "6/1/26",
+      "may7": "6/8/26"
     },
     {
       "rsh": "RSH-00079",
@@ -1547,7 +1603,8 @@
       "apr2": "6/15/26",
       "apr9": "6/15/26",
       "delta_days": 21,
-      "apr30": "6/8/26"
+      "apr30": "6/8/26",
+      "may7": "6/8/26"
     },
     {
       "rsh": "RSH-00071",
@@ -1558,7 +1615,8 @@
       "apr2": "6/8/26",
       "apr9": "6/8/26",
       "delta_days": 7,
-      "apr30": "6/8/26"
+      "apr30": "6/8/26",
+      "may7": "6/8/26"
     },
     {
       "rsh": "RSH-00069",
@@ -1569,7 +1627,8 @@
       "apr2": "6/22/26",
       "apr9": "6/22/26",
       "delta_days": 56,
-      "apr30": "6/22/26"
+      "apr30": "6/22/26",
+      "may7": "6/29/26"
     },
     {
       "rsh": "RSH-00123",
@@ -1580,7 +1639,8 @@
       "apr2": "8/3/26",
       "apr9": "8/3/26",
       "delta_days": -42,
-      "apr30": "6/22/26"
+      "apr30": "6/22/26",
+      "may7": "6/22/26"
     },
     {
       "rsh": "RSH-00116",
@@ -1591,7 +1651,8 @@
       "apr2": "6/22/26",
       "apr9": "6/22/26",
       "delta_days": 14,
-      "apr30": "6/22/26"
+      "apr30": "6/22/26",
+      "may7": "6/22/26"
     },
     {
       "rsh": "RSH-00109",
@@ -1602,7 +1663,8 @@
       "apr2": "6/8/26",
       "apr9": "6/15/26",
       "delta_days": 35,
-      "apr30": "7/13/26"
+      "apr30": "7/13/26",
+      "may7": "7/13/26"
     },
     {
       "rsh": "RSH-00106",
@@ -1613,7 +1675,8 @@
       "apr2": "7/27/26",
       "apr9": "7/27/26",
       "delta_days": 28,
-      "apr30": "7/27/26"
+      "apr30": "7/27/26",
+      "may7": "7/27/26"
     },
     {
       "rsh": "RSH-00078",
@@ -1624,7 +1687,8 @@
       "apr2": "8/10/26",
       "apr9": "8/10/26",
       "delta_days": 35,
-      "apr30": "8/10/26"
+      "apr30": "8/10/26",
+      "may7": "8/10/26"
     },
     {
       "rsh": "RSH-00089",
@@ -1635,7 +1699,8 @@
       "apr2": "8/10/26",
       "apr9": "8/10/26",
       "delta_days": 28,
-      "apr30": "8/10/26"
+      "apr30": "8/10/26",
+      "may7": "8/10/26"
     },
     {
       "rsh": "RSH-00114",
@@ -1646,7 +1711,8 @@
       "apr2": "8/10/26",
       "apr9": "8/10/26",
       "delta_days": -28,
-      "apr30": "8/10/26"
+      "apr30": "8/10/26",
+      "may7": "8/10/26"
     },
     {
       "rsh": "RSH-00110",
@@ -1657,7 +1723,8 @@
       "apr2": "8/10/26",
       "apr9": "8/10/26",
       "delta_days": 21,
-      "apr30": "8/10/26"
+      "apr30": "8/10/26",
+      "may7": "8/10/26"
     },
     {
       "rsh": "RSH-00133",
@@ -1668,7 +1735,8 @@
       "apr2": "8/10/26",
       "apr9": "8/10/26",
       "delta_days": 0,
-      "apr30": "8/10/26"
+      "apr30": "8/10/26",
+      "may7": "8/10/26"
     },
     {
       "rsh": "RSH-00092",
@@ -1679,7 +1747,8 @@
       "apr2": "8/17/26",
       "apr9": "8/17/26",
       "delta_days": 28,
-      "apr30": "8/17/26"
+      "apr30": "8/17/26",
+      "may7": "8/17/26"
     },
     {
       "rsh": "RSH-00087",
@@ -1690,7 +1759,8 @@
       "apr2": "9/14/26",
       "apr9": "9/14/26",
       "delta_days": 28,
-      "apr30": "9/14/26"
+      "apr30": "9/14/26",
+      "may7": "9/14/26"
     },
     {
       "rsh": "RSH-00104",
@@ -1700,7 +1770,8 @@
       "jan15": "1/25/27",
       "apr9": "9/21/26",
       "apr30": "9/21/26",
-      "delta_days": -126
+      "delta_days": -126,
+      "may7": "9/21/26"
     },
     {
       "rsh": "RSH-00094",
@@ -1711,7 +1782,8 @@
       "apr2": "9/28/26",
       "apr9": "9/28/26",
       "delta_days": 56,
-      "apr30": "9/28/26"
+      "apr30": "9/28/26",
+      "may7": "10/26/26"
     },
     {
       "rsh": "RSH-00102",
@@ -1722,7 +1794,8 @@
       "apr2": "8/10/26",
       "apr9": "8/10/26",
       "delta_days": 105,
-      "apr30": "9/28/26"
+      "apr30": "9/28/26",
+      "may7": "9/28/26"
     },
     {
       "rsh": "RSH-00084",
@@ -1733,7 +1806,8 @@
       "apr2": "9/28/26",
       "apr9": "9/28/26",
       "delta_days": 42,
-      "apr30": "9/28/26"
+      "apr30": "9/28/26",
+      "may7": "9/28/26"
     },
     {
       "rsh": "RSH-00112",
@@ -1744,7 +1818,8 @@
       "apr2": "10/5/26",
       "apr9": "10/5/26",
       "delta_days": 42,
-      "apr30": "10/5/26"
+      "apr30": "10/5/26",
+      "may7": "10/5/26"
     },
     {
       "rsh": "RSH-00103",
@@ -1755,7 +1830,8 @@
       "apr2": "11/30/26",
       "apr9": "11/30/26",
       "delta_days": -7,
-      "apr30": "10/12/26"
+      "apr30": "10/12/26",
+      "may7": "10/12/26"
     },
     {
       "rsh": "RSH-00086",
@@ -1766,7 +1842,8 @@
       "apr2": "11/2/26",
       "apr9": "11/2/26",
       "delta_days": 14,
-      "apr30": "11/2/26"
+      "apr30": "11/2/26",
+      "may7": "11/2/26"
     },
     {
       "rsh": "RSH-00229",
@@ -1777,7 +1854,8 @@
       "apr2": "11/2/26",
       "apr9": "11/2/26",
       "delta_days": -28,
-      "apr30": "11/2/26"
+      "apr30": "11/2/26",
+      "may7": "11/2/26"
     },
     {
       "rsh": "RSH-00139",
@@ -1788,7 +1866,8 @@
       "apr2": "11/2/26",
       "apr9": "11/2/26",
       "delta_days": 0,
-      "apr30": "11/2/26"
+      "apr30": "11/2/26",
+      "may7": "11/2/26"
     },
     {
       "rsh": "RSH-00083",
@@ -1799,7 +1878,8 @@
       "apr2": "11/9/26",
       "apr9": "11/9/26",
       "delta_days": 14,
-      "apr30": "11/9/26"
+      "apr30": "11/9/26",
+      "may7": "11/9/26"
     },
     {
       "rsh": "RSH-00134",
@@ -1810,7 +1890,8 @@
       "apr2": "11/9/26",
       "apr9": "11/9/26",
       "delta_days": 42,
-      "apr30": "11/9/26"
+      "apr30": "11/9/26",
+      "may7": "11/9/26"
     },
     {
       "rsh": "RSH-00180",
@@ -1820,7 +1901,8 @@
       "jan15": "1/25/27",
       "apr9": "11/9/26",
       "apr30": "11/9/26",
-      "delta_days": -77
+      "delta_days": -77,
+      "may7": "11/9/26"
     },
     {
       "rsh": "RSH-00088",
@@ -1831,7 +1913,8 @@
       "apr2": "10/19/26",
       "apr9": "10/19/26",
       "delta_days": 70,
-      "apr30": "11/16/26"
+      "apr30": "11/16/26",
+      "may7": "11/16/26"
     },
     {
       "rsh": "RSH-00077",
@@ -1841,7 +1924,8 @@
       "jan15": "2/22/27",
       "apr9": "12/7/26",
       "apr30": "12/7/26",
-      "delta_days": -77
+      "delta_days": -77,
+      "may7": "12/7/26"
     },
     {
       "rsh": "RSH-00113",
@@ -1852,7 +1936,8 @@
       "apr2": "12/7/26",
       "apr9": "12/7/26",
       "delta_days": -7,
-      "apr30": "12/7/26"
+      "apr30": "12/7/26",
+      "may7": "12/7/26"
     },
     {
       "rsh": "RSH-00129",
@@ -1863,7 +1948,8 @@
       "apr2": "12/7/26",
       "apr9": "12/7/26",
       "delta_days": 0,
-      "apr30": "12/7/26"
+      "apr30": "12/7/26",
+      "may7": "12/7/26"
     },
     {
       "rsh": "RSH-00149",
@@ -1873,7 +1959,8 @@
       "jan15": "1/4/27",
       "apr9": "1/4/27",
       "apr30": "1/4/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "1/4/27"
     },
     {
       "rsh": "RSH-00100",
@@ -1883,7 +1970,8 @@
       "jan15": "1/18/27",
       "apr9": "1/18/27",
       "apr30": "1/18/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "1/18/27"
     },
     {
       "rsh": "RSH-00151",
@@ -1894,7 +1982,8 @@
       "apr2": "12/7/26",
       "apr9": "12/7/26",
       "delta_days": 42,
-      "apr30": "1/18/27"
+      "apr30": "1/18/27",
+      "may7": "1/18/27"
     },
     {
       "rsh": "RSH-00692",
@@ -1904,7 +1993,8 @@
       "jan15": "1/25/27",
       "apr9": "1/25/27",
       "apr30": "1/25/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "1/25/27"
     },
     {
       "rsh": "RSH-00528",
@@ -1914,7 +2004,8 @@
       "jan15": "2/1/27",
       "apr9": "2/1/27",
       "apr30": "2/1/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "2/1/27"
     },
     {
       "rsh": "RSH-00117",
@@ -1924,7 +2015,8 @@
       "jan15": "2/22/27",
       "apr9": "2/22/27",
       "apr30": "2/22/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "2/22/27"
     },
     {
       "rsh": "RSH-00111",
@@ -1934,7 +2026,8 @@
       "jan15": "2/22/27",
       "apr9": "2/22/27",
       "apr30": "2/22/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "2/22/27"
     },
     {
       "rsh": "RSH-00146",
@@ -1944,7 +2037,8 @@
       "jan15": "3/1/27",
       "apr9": "3/1/27",
       "apr30": "3/1/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "3/1/27"
     },
     {
       "rsh": "RSH-00592",
@@ -1954,7 +2048,8 @@
       "jan15": "4/19/27",
       "apr9": "4/19/27",
       "apr30": "4/19/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "4/19/27"
     },
     {
       "rsh": "RSH-00147",
@@ -1964,7 +2059,8 @@
       "jan15": "4/19/27",
       "apr9": "4/19/27",
       "apr30": "4/19/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "4/19/27"
     },
     {
       "rsh": "RSH-00231",
@@ -1974,7 +2070,8 @@
       "jan15": "5/3/27",
       "apr9": "5/3/27",
       "apr30": "5/3/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "5/3/27"
     },
     {
       "rsh": "RSH-00606",
@@ -1984,7 +2081,8 @@
       "jan15": "5/3/27",
       "apr9": "5/3/27",
       "apr30": "5/3/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "5/3/27"
     },
     {
       "rsh": "RSH-00617",
@@ -1994,7 +2092,8 @@
       "jan15": "5/3/27",
       "apr9": "5/3/27",
       "apr30": "5/3/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "5/3/27"
     },
     {
       "rsh": "RSH-00273",
@@ -2004,7 +2103,8 @@
       "jan15": "5/3/27",
       "apr9": "5/3/27",
       "apr30": "5/3/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "5/3/27"
     },
     {
       "rsh": "RSH-00127",
@@ -2014,7 +2114,8 @@
       "jan15": "5/24/27",
       "apr9": "5/24/27",
       "apr30": "5/24/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "5/24/27"
     },
     {
       "rsh": "RSH-00115",
@@ -2024,7 +2125,8 @@
       "jan15": "6/14/27",
       "apr9": "6/14/27",
       "apr30": "6/14/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "6/14/27"
     },
     {
       "rsh": "RSH-00266",
@@ -2034,7 +2136,8 @@
       "jan15": "6/21/27",
       "apr9": "6/21/27",
       "apr30": "6/21/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "6/21/27"
     },
     {
       "rsh": "RSH-00205",
@@ -2044,7 +2147,8 @@
       "jan15": "6/21/27",
       "apr9": "6/21/27",
       "apr30": "6/21/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "6/21/27"
     },
     {
       "rsh": "RSH-00211",
@@ -2054,7 +2158,8 @@
       "jan15": "7/19/27",
       "apr9": "7/19/27",
       "apr30": "7/19/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "7/19/27"
     },
     {
       "rsh": "RSH-00579",
@@ -2064,7 +2169,8 @@
       "jan15": "7/26/27",
       "apr9": "7/26/27",
       "apr30": "7/26/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "7/26/27"
     },
     {
       "rsh": "RSH-00610",
@@ -2074,7 +2180,8 @@
       "jan15": "7/26/27",
       "apr9": "7/26/27",
       "apr30": "7/26/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "7/26/27"
     },
     {
       "rsh": "RSH-00108",
@@ -2084,7 +2191,8 @@
       "jan15": "8/2/27",
       "apr9": "8/2/27",
       "apr30": "8/2/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "8/2/27"
     },
     {
       "rsh": "RSH-00582",
@@ -2094,7 +2202,8 @@
       "jan15": "8/2/27",
       "apr9": "8/2/27",
       "apr30": "8/2/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "8/2/27"
     },
     {
       "rsh": "RSH-00584",
@@ -2104,7 +2213,8 @@
       "jan15": "8/30/27",
       "apr9": "8/30/27",
       "apr30": "8/30/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "8/30/27"
     },
     {
       "rsh": "RSH-00099",
@@ -2114,7 +2224,8 @@
       "jan15": "8/30/27",
       "apr9": "8/30/27",
       "apr30": "8/30/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "8/30/27"
     },
     {
       "rsh": "RSH-00596",
@@ -2124,7 +2235,8 @@
       "jan15": "9/20/27",
       "apr9": "9/20/27",
       "apr30": "9/20/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "9/20/27"
     },
     {
       "rsh": "RSH-00601",
@@ -2134,7 +2246,8 @@
       "jan15": "9/20/27",
       "apr9": "9/20/27",
       "apr30": "9/20/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "9/20/27"
     },
     {
       "rsh": "RSH-00235",
@@ -2144,7 +2257,8 @@
       "jan15": "10/4/27",
       "apr9": "10/4/27",
       "apr30": "10/4/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "10/4/27"
     },
     {
       "rsh": "RSH-00575",
@@ -2154,7 +2268,8 @@
       "jan15": "10/18/27",
       "apr9": "10/18/27",
       "apr30": "10/18/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "10/18/27"
     },
     {
       "rsh": "RSH-00208",
@@ -2164,7 +2279,8 @@
       "jan15": "10/18/27",
       "apr9": "10/18/27",
       "apr30": "10/18/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "10/18/27"
     },
     {
       "rsh": "RSH-00126",
@@ -2174,7 +2290,8 @@
       "jan15": "10/18/27",
       "apr9": "10/18/27",
       "apr30": "10/18/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "10/18/27"
     },
     {
       "rsh": "RSH-00233",
@@ -2184,7 +2301,8 @@
       "jan15": "11/1/27",
       "apr9": "11/1/27",
       "apr30": "11/1/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/1/27"
     },
     {
       "rsh": "RSH-00239",
@@ -2194,7 +2312,8 @@
       "jan15": "11/1/27",
       "apr9": "11/1/27",
       "apr30": "11/1/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/1/27"
     },
     {
       "rsh": "RSH-00622",
@@ -2204,7 +2323,8 @@
       "jan15": "11/1/27",
       "apr9": "11/1/27",
       "apr30": "11/1/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/1/27"
     },
     {
       "rsh": "RSH-00217",
@@ -2214,7 +2334,8 @@
       "jan15": "11/8/27",
       "apr9": "11/8/27",
       "apr30": "11/8/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/8/27"
     },
     {
       "rsh": "RSH-00634",
@@ -2224,7 +2345,8 @@
       "jan15": "11/8/27",
       "apr9": "11/8/27",
       "apr30": "11/8/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/8/27"
     },
     {
       "rsh": "RSH-00621",
@@ -2234,7 +2356,8 @@
       "jan15": "11/15/27",
       "apr9": "11/15/27",
       "apr30": "11/15/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/15/27"
     },
     {
       "rsh": "RSH-00620",
@@ -2244,7 +2367,8 @@
       "jan15": "11/15/27",
       "apr9": "11/15/27",
       "apr30": "11/15/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/15/27"
     },
     {
       "rsh": "RSH-00656",
@@ -2254,7 +2378,8 @@
       "jan15": "11/15/27",
       "apr9": "11/15/27",
       "apr30": "11/15/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/15/27"
     },
     {
       "rsh": "RSH-00119",
@@ -2264,7 +2389,8 @@
       "jan15": "11/22/27",
       "apr9": "11/22/27",
       "apr30": "11/22/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "11/22/27"
     },
     {
       "rsh": "RSH-00666",
@@ -2274,7 +2400,8 @@
       "jan15": "12/6/27",
       "apr9": "12/6/27",
       "apr30": "12/6/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "12/6/27"
     },
     {
       "rsh": "RSH-00630",
@@ -2284,7 +2411,8 @@
       "jan15": "12/6/27",
       "apr9": "12/6/27",
       "apr30": "12/6/27",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "12/6/27"
     },
     {
       "rsh": "RSH-00673",
@@ -2294,7 +2422,8 @@
       "jan15": "1/17/28",
       "apr9": "1/17/28",
       "apr30": "1/17/28",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "1/17/28"
     },
     {
       "rsh": "RSH-00683",
@@ -2304,7 +2433,198 @@
       "jan15": "1/17/28",
       "apr9": "1/17/28",
       "apr30": "1/17/28",
-      "delta_days": 0
+      "delta_days": 0,
+      "may7": "1/17/28"
+    },
+    {
+      "rsh": "RSH-00689",
+      "city": "St. Petersburg",
+      "state": "FL",
+      "store": "",
+      "jan15": "",
+      "apr30": "5/3/27",
+      "may7": "5/3/27",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00694",
+      "city": "Amarillo",
+      "state": "TX",
+      "store": "",
+      "jan15": "",
+      "apr30": "7/12/27",
+      "may7": "7/12/27",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00213",
+      "city": "Alvarado",
+      "state": "TX",
+      "store": "",
+      "jan15": "",
+      "apr30": "9/6/27",
+      "may7": "9/6/27",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00675",
+      "city": "Seffner",
+      "state": "FL",
+      "store": "",
+      "jan15": "",
+      "apr30": "12/6/27",
+      "may7": "12/6/27",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00637",
+      "city": "Cape Coral",
+      "state": "FL",
+      "store": "",
+      "jan15": "",
+      "apr30": "1/17/28",
+      "may7": "1/17/28",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00053",
+      "city": "Bradenton",
+      "state": "FL",
+      "store": "000356",
+      "jan15": "",
+      "apr30": "1/19/26",
+      "may7": "1/19/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00060",
+      "city": "Belleview",
+      "state": "FL",
+      "store": "000570",
+      "jan15": "",
+      "apr30": "1/19/26",
+      "may7": "1/19/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00070",
+      "city": "Weatherford",
+      "state": "OK",
+      "store": "000875",
+      "jan15": "",
+      "apr30": "1/19/26",
+      "may7": "1/19/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00073",
+      "city": "Oklahoma City",
+      "state": "OK",
+      "store": "000872",
+      "jan15": "",
+      "apr30": "1/26/26",
+      "may7": "1/26/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00085",
+      "city": "Gainesville",
+      "state": "TX",
+      "store": "000882",
+      "jan15": "",
+      "apr30": "1/26/26",
+      "may7": "1/26/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00093",
+      "city": "Midland",
+      "state": "TX",
+      "store": "001117",
+      "jan15": "",
+      "apr30": "1/26/26",
+      "may7": "1/26/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00080",
+      "city": "Pensacola",
+      "state": "FL",
+      "store": "000877",
+      "jan15": "",
+      "apr30": "2/9/26",
+      "may7": "2/9/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00054",
+      "city": "Bradenton",
+      "state": "FL",
+      "store": "000394",
+      "jan15": "",
+      "apr30": "2/23/26",
+      "may7": "2/23/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00074",
+      "city": "Spring Hill",
+      "state": "FL",
+      "store": "000573",
+      "jan15": "",
+      "apr30": "3/9/26",
+      "may7": "3/9/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00090",
+      "city": "Belton",
+      "state": "TX",
+      "store": "000758",
+      "jan15": "",
+      "apr30": "3/9/26",
+      "may7": "3/9/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00075",
+      "city": "Cleburne",
+      "state": "TX",
+      "store": "000516",
+      "jan15": "",
+      "apr30": "3/30/26",
+      "may7": "3/30/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00066",
+      "city": "Pampa",
+      "state": "TX",
+      "store": "000709",
+      "jan15": "",
+      "apr30": "3/30/26",
+      "may7": "3/30/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00082",
+      "city": "Norman",
+      "state": "OK",
+      "store": "",
+      "jan15": "",
+      "apr30": "4/13/26",
+      "may7": "4/13/26",
+      "delta_days": null
+    },
+    {
+      "rsh": "RSH-00068",
+      "city": "Waco",
+      "state": "TX",
+      "store": "",
+      "jan15": "",
+      "apr30": "4/13/26",
+      "may7": "4/13/26",
+      "delta_days": null
     }
   ],
   "opened_shifts": [
@@ -2419,6 +2739,14 @@
       "state": "TX",
       "jan15": "4/13/26",
       "actual_open": "4/13/26"
+    },
+    {
+      "store": "000878",
+      "rsh": "RSH-00097",
+      "city": "Panama City",
+      "state": "FL",
+      "jan15": "4/13/26",
+      "actual_open": "5/4/26"
     }
   ],
   "new_since_jan15": [
@@ -2469,7 +2797,10 @@
     "RSH-00622",
     "RSH-00673",
     "RSH-00149",
-    "RSH-00606"
+    "RSH-00606",
+    "RSH-00689",
+    "RSH-00694",
+    "RSH-00675"
   ],
   "milestone_shifts": [
     {
