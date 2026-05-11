@@ -7137,12 +7137,23 @@ def tab_pipeline(dash):
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 8 baseline")
     st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 8** = total drift from baseline")
 
-    sort_col1, _ = st.columns([2, 4])
+    sort_col1, toggle_col, _ = st.columns([2, 2, 2])
     with sort_col1:
         sort_opt = st.selectbox("Sort by",
             ["Opening Date (earliest first)", "Opening Date (latest first)",
              "Slippage (most delayed first)", "Stand Name (A–Z)"],
             key="si_sort_opt")
+    with toggle_col:
+        show_all_snaps = st.toggle("Show all weeks", value=False, key="si_show_all_snaps")
+
+    # Default view: Jan 8 baseline + last 2 snapshots only
+    _baseline_key = "jan8"
+    _baseline_snap = next((s for s in _report_snapshots if s.get("key") == _baseline_key), None)
+    _recent_snaps  = _report_snapshots[-2:]   # prev week + current week
+    _visible_snaps = _report_snapshots if show_all_snaps else (
+        ([_baseline_snap] if _baseline_snap and _baseline_snap not in _recent_snaps else [])
+        + _recent_snaps
+    )
 
     def _parse_open_date(r):
         v = str(r.get(curr_snap, "") or "")
@@ -7167,7 +7178,7 @@ def tab_pipeline(dash):
     hist_rows = []
     for _, r in shifts_sorted.iterrows():
         row_dict = {"Stand": f"{r['city']}, {r['state']}", "Store": r.get("store","")}
-        for snap in _report_snapshots:
+        for snap in _visible_snaps:
             val = r.get(snap.get("key",""), "")
             row_dict[snap["label"]] = str(val) if val and str(val) not in ("","nan","None") else "—"
         wow = r["_wow"]; wow_wks = wow // 7
