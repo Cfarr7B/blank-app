@@ -7039,7 +7039,9 @@ def tab_pipeline(dash):
         if parts:
             open_store_ids.add(parts[0].strip())
     for r in _pdata["open_pdf"]:
-        open_store_ids.add(r.get("store", ""))
+        s = r.get("store", "")
+        if s:
+            open_store_ids.add(s)
     total_open = len(open_store_ids)
 
     mc = st.columns(6)
