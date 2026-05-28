@@ -216,7 +216,7 @@ def _fmt_d_short(v):
         return f"${v/1_000:.2f}K"
     return f"${v:,.0f}"
 
-def _fmt_p(v, dec=1):
+def _fmt_p(v, dec=2):
     if v is None: return "—"
     return f"{float(v)*100:.{dec}f}%"
 
@@ -770,10 +770,10 @@ def tab_ceo(dash):
     n_periods = len(filtered_df)
 
     kpi_row([
-        {"label": f"{year_label} Total Revenue",     "value": f"${total_revenue_ytd/1e6:.1f}M",  "sub": f"{n_periods}-period total",   "color": "red"},
-        {"label": "YoY Revenue Growth",       "value": f"+{growth_rate*100:.1f}%",        "sub": "vs prior year class",         "color": "green",
+        {"label": f"{year_label} Total Revenue",     "value": f"${total_revenue_ytd/1e6:.2f}M",  "sub": f"{n_periods}-period total",   "color": "red"},
+        {"label": "YoY Revenue Growth",       "value": f"+{growth_rate*100:.2f}%",        "sub": "vs prior year class",         "color": "green",
          "valcls": "good"},
-        {"label": f"{year_label} Total EBITDA",      "value": f"${total_ebitda_ytd/1e6:.1f}M",  "sub": "after rent",                  "color": "blue"},
+        {"label": f"{year_label} Total EBITDA",      "value": f"${total_ebitda_ytd/1e6:.2f}M",  "sub": "after rent",                  "color": "blue"},
         {"label": f"{year_label} Avg EBITDA%",       "value": _fmt_p(avg_ebitda_pct),             "sub": "sales-weighted average",      "color": "green",
          "valcls": "good" if avg_ebitda_pct >= 0.18 else "warn"},
         {"label": f"{latest['label']} Stands","value": str(int(latest["stands"])),        "sub": "active this period",          "color": "grey"},
@@ -852,7 +852,7 @@ def tab_ceo(dash):
                 {(" · " + detail) if detail else ""}
               </div>
               <div style="background:#f0f1f3;border-radius:4px;height:6px;overflow:hidden;">
-                <div style="background:{bar_color};width:{bar_w:.1f}%;height:100%;
+                <div style="background:{bar_color};width:{bar_w:.2f}%;height:100%;
                             border-radius:4px;transition:width .3s;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:4px;">
@@ -882,14 +882,14 @@ def tab_ceo(dash):
             better = delta < 0 if lower_is_better else delta > 0
             on_target = abs(delta) <= 0.3
             if on_target:
-                return f"→ ON TARGET ({actual*100:.1f}%)", BLUE
+                return f"→ ON TARGET ({actual*100:.2f}%)", BLUE
             elif better:
                 return f"▲ {'BELOW' if lower_is_better else 'ABOVE'} TARGET ({delta:+.1f}pts)", GREEN
             else:
                 return f"▼ {'ABOVE' if lower_is_better else 'BELOW'} TARGET ({delta:+.1f}pts)", RED
 
-        ytd_sales_goal_fmt  = f"${pace_sales/1e6:.1f}M"  if n_completed > 0 else "—"
-        ytd_ebitda_goal_fmt = f"${pace_ebitda/1e6:.1f}M" if n_completed > 0 else "—"
+        ytd_sales_goal_fmt  = f"${pace_sales/1e6:.2f}M"  if n_completed > 0 else "—"
+        ytd_ebitda_goal_fmt = f"${pace_ebitda/1e6:.2f}M" if n_completed > 0 else "—"
         st.html(f"""
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
                     color:#1A1919;margin:16px 0 4px;display:flex;align-items:center;gap:10px;">
@@ -915,42 +915,42 @@ def tab_ceo(dash):
         with g1:
             st.html(_goal_card(
                 label="Net Sales (YTD)",
-                actual_fmt=f"${ytd_sales/1e6:.1f}M",
-                goal_fmt=f"${goals['net_sales']/1e6:.1f}M",
+                actual_fmt=f"${ytd_sales/1e6:.2f}M",
+                goal_fmt=f"${goals['net_sales']/1e6:.2f}M",
                 progress_pct=ytd_sales / goals["net_sales"],
                 status=sales_status, status_color=sales_color,
-                detail=f"YTD goal: ${pace_sales/1e6:.1f}M",
+                detail=f"YTD goal: ${pace_sales/1e6:.2f}M",
                 bar_color=sales_color,
             ))
         with g2:
             st.html(_goal_card(
                 label="EBITDA (YTD)",
-                actual_fmt=f"${ytd_ebitda/1e6:.1f}M",
-                goal_fmt=f"${goals['ebitda']/1e6:.1f}M",
+                actual_fmt=f"${ytd_ebitda/1e6:.2f}M",
+                goal_fmt=f"${goals['ebitda']/1e6:.2f}M",
                 progress_pct=ytd_ebitda / goals["ebitda"] if goals["ebitda"] else 0,
                 status=ebi_status, status_color=ebi_color,
-                detail=f"YTD goal: ${pace_ebitda/1e6:.1f}M",
+                detail=f"YTD goal: ${pace_ebitda/1e6:.2f}M",
                 bar_color=ebi_color,
             ))
         with g3:
-            cogs_actual_fmt = f"{ytd_cogs_pct*100:.1f}%" if ytd_cogs_pct is not None else "—"
+            cogs_actual_fmt = f"{ytd_cogs_pct*100:.2f}%" if ytd_cogs_pct is not None else "—"
             cogs_prog = max(0, 1 - (ytd_cogs_pct - goals["cogs_pct"]) * 10) if ytd_cogs_pct else 0.5
             st.html(_goal_card(
                 label="COGs % (YTD avg)",
                 actual_fmt=cogs_actual_fmt,
-                goal_fmt=f"{goals['cogs_pct']*100:.1f}%",
+                goal_fmt=f"{goals['cogs_pct']*100:.2f}%",
                 progress_pct=min(cogs_prog, 1.0),
                 status=cogs_status, status_color=cogs_color,
                 detail="lower is better",
                 bar_color=cogs_color,
             ))
         with g4:
-            labor_actual_fmt = f"{ytd_labor_pct*100:.1f}%" if ytd_labor_pct is not None else "—"
+            labor_actual_fmt = f"{ytd_labor_pct*100:.2f}%" if ytd_labor_pct is not None else "—"
             labor_prog = max(0, 1 - (ytd_labor_pct - goals["labor_pct"]) * 10) if ytd_labor_pct else 0.5
             st.html(_goal_card(
                 label="Labor % All-In (YTD avg)",
                 actual_fmt=labor_actual_fmt,
-                goal_fmt=f"{goals['labor_pct']*100:.1f}%",
+                goal_fmt=f"{goals['labor_pct']*100:.2f}%",
                 progress_pct=min(labor_prog, 1.0),
                 status=labor_status, status_color=labor_color,
                 detail="lower is better",
@@ -1043,7 +1043,7 @@ def tab_ceo(dash):
                 fig_e.add_hline(
                     y=goal_ebitda_pct * 100,
                     line_dash="dash", line_color=GREEN, line_width=1,
-                    annotation_text=f"FY Goal {goal_ebitda_pct*100:.1f}%",
+                    annotation_text=f"FY Goal {goal_ebitda_pct*100:.2f}%",
                     annotation_font=dict(size=9, color=GREEN),
                     annotation_position="top right",
                 )
@@ -1113,20 +1113,20 @@ def tab_ceo(dash):
 
     if gap_pts >= 0:
         hl_color = GREEN
-        hl_text  = f"ON TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · ${total_revenue_ytd/1e6:.1f}M"
+        hl_text  = f"ON TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · ${total_revenue_ytd/1e6:.2f}M"
     elif gap_pts >= -2:
         hl_color = AMBER
-        hl_text  = f"NEAR TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.1f}PTS BELOW 20%"
+        hl_text  = f"NEAR TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.2f}PTS BELOW 20%"
     else:
         hl_color = RED
-        hl_text  = f"BELOW TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.1f}PTS GAP"
+        hl_text  = f"BELOW TARGET · {_fmt_p(avg_ebitda_pct)} EBITDA · {abs(gap_pts):.2f}PTS GAP"
 
     if abs(ebitda_trend * 100) < 0.3:
         ebitda_phrase = "margins are <strong>holding steady</strong>"
     elif ebitda_trend > 0:
-        ebitda_phrase = f"margins are <strong>expanding +{ebitda_trend*100:.1f}pts</strong>"
+        ebitda_phrase = f"margins are <strong>expanding +{ebitda_trend*100:.2f}pts</strong>"
     else:
-        ebitda_phrase = f"margins are <strong>compressing {ebitda_trend*100:.1f}pts</strong>"
+        ebitda_phrase = f"margins are <strong>compressing {ebitda_trend*100:.2f}pts</strong>"
 
     rev_arrow  = "▲" if rev_trend > 0.005 else ("▼" if rev_trend < -0.005 else "→")
     rev_color  = GREEN if rev_trend > 0 else (RED if rev_trend < -0.01 else MID)
@@ -1136,7 +1136,7 @@ def tab_ceo(dash):
     gap_color  = GREEN if gap_pts >= 0 else (AMBER if gap_pts >= -2 else RED)
 
     if gap_pts < 0:
-        lever = (f"Closing the {abs(gap_pts):.1f}pt gap requires ~${abs(gap_pts)/100 * total_revenue_ytd/n_f/1e3:.0f}k "
+        lever = (f"Closing the {abs(gap_pts):.2f}pt gap requires ~${abs(gap_pts)/100 * total_revenue_ytd/n_f/1e3:.0f}k "
                  f"EBITDA improvement per period — achievable through labor scheduling "
                  f"discipline and utility cost control at underperforming stands.")
     else:
@@ -1149,7 +1149,7 @@ def tab_ceo(dash):
         reg_html = (f'<div style="font-size:13px;color:{MID};margin-top:8px;line-height:1.5;">'
                     f'<strong>{best_reg["region"]}</strong> leads at {_fmt_p(best_reg["ebitda_pct"])} · '
                     f'<strong>{worst_reg["region"]}</strong> lags at {_fmt_p(worst_reg["ebitda_pct"])} · '
-                    f'{spread_pts:.1f}pt regional spread</div>')
+                    f'{spread_pts:.2f}pt regional spread</div>')
 
     st.html(f"""
     <div class="story-block">
@@ -1300,7 +1300,7 @@ def tab_ceo(dash):
                 fig3 = go.Figure(go.Bar(
                     x=reg_df["region"], y=reg_df["ebitda_pct"] * 100,
                     marker_color=[REGION_COLORS.get(r, MID) for r in reg_df["region"]],
-                    text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
+                    text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.2f}%"),
                     textposition="outside",
                 ))
                 fig3.add_hline(y=avg_ebitda_pct * 100, line_dash="dot",
@@ -1424,7 +1424,7 @@ def tab_ceo(dash):
             y=heat_df.index.tolist(),
             colorscale=[[0, "#AC2430"], [0.5, "#e8940a"], [1, "#12a06e"]],
             zmid=18, zmin=5, zmax=30,
-            text=[[f"{v:.1f}%" if v is not None else "—" for v in row] for row in heat_df.values],
+            text=[[f"{v:.2f}%" if v is not None else "—" for v in row] for row in heat_df.values],
             texttemplate="%{text}",
             textfont=dict(size=9, family="DM Mono"),
             hoverongaps=False,
@@ -1456,7 +1456,7 @@ def tab_ceo(dash):
         labor_trend = filtered_df["labor_pct"].iloc[-1] - filtered_df["labor_pct"].iloc[0]
         if labor_trend > 0.01:
             seasonal_alerts.append({
-                "title": f"📈 Labor Trending Up (+{labor_trend*100:.1f}% pts across selected periods)",
+                "title": f"📈 Labor Trending Up (+{labor_trend*100:.2f}% pts across selected periods)",
                 "body": f"Labor has increased from {_fmt_p(filtered_df['labor_pct'].iloc[0])} to {_fmt_p(filtered_df['labor_pct'].iloc[-1])}. "
                         f"If this trend continues, EBITDA compression of ~{abs(labor_trend)*100:.0f}bps is likely in the next 2–3 periods. "
                         f"Review scheduling compliance and overtime at high-labor stands.",
@@ -1467,7 +1467,7 @@ def tab_ceo(dash):
         cogs_trend = filtered_df["cogs_pct"].iloc[-1] - filtered_df["cogs_pct"].iloc[0]
         if cogs_trend > 0.005:
             seasonal_alerts.append({
-                "title": f"📦 COGS Creeping Up (+{cogs_trend*100:.1f}% pts)",
+                "title": f"📦 COGS Creeping Up (+{cogs_trend*100:.2f}% pts)",
                 "body": f"COGS moved from {_fmt_p(filtered_df['cogs_pct'].iloc[0])} to {_fmt_p(filtered_df['cogs_pct'].iloc[-1])}. "
                         f"Check vendor pricing, waste rates, and portion control. Even 50bps of COGS savings = ~${filtered_df['net_sales'].mean() * 0.005 / 1000:.0f}k/period.",
                 "cls": "watch", "tag_cls": "amber",
@@ -1645,7 +1645,7 @@ def tab_overview(dash):
         fig_bridge = go.Figure(go.Waterfall(
             orientation="v", measure=["absolute","relative","relative","relative","relative","total"],
             x=bridge_labels, y=bridge_values,
-            text=[f"{abs(v):.1f}%" for v in bridge_values], textposition="outside",
+            text=[f"{abs(v):.2f}%" for v in bridge_values], textposition="outside",
             connector=dict(line=dict(color=BORDER, width=1)),
             increasing=dict(marker_color=BLUE), decreasing=dict(marker_color=RED),
             totals=dict(marker_color=GREEN),
@@ -1683,7 +1683,7 @@ def tab_overview(dash):
             fig2 = go.Figure(go.Bar(
                 x=reg_ebi["region"], y=reg_ebi["ebitda_pct"] * 100,
                 marker_color=[REGION_COLORS.get(r, MID) for r in reg_ebi["region"]],
-                text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.1f}%"),
+                text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.2f}%"),
                 textposition="outside",
             ))
             fig2.add_hline(y=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
@@ -1699,7 +1699,7 @@ def tab_overview(dash):
                 fig_cogs = go.Figure(go.Bar(
                     x=reg_cogs["region"], y=reg_cogs["cogs_pct"] * 100,
                     marker_color=[REGION_COLORS.get(r, MID) for r in reg_cogs["region"]],
-                    text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.1f}%"),
+                    text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.2f}%"),
                     textposition="outside",
                 ))
                 fig_cogs.add_hline(y=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
@@ -1715,7 +1715,7 @@ def tab_overview(dash):
                 fig_labor = go.Figure(go.Bar(
                     x=reg_labor["region"], y=reg_labor["labor_pct"] * 100,
                     marker_color=[REGION_COLORS.get(r, MID) for r in reg_labor["region"]],
-                    text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.1f}%"),
+                    text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.2f}%"),
                     textposition="outside",
                 ))
                 fig_labor.add_hline(y=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
@@ -1773,7 +1773,7 @@ def tab_overview(dash):
             fig_s2 = go.Figure(go.Bar(
                 x=s_ebi["Stand"], y=s_ebi["Store_EBITDA_pct"] * 100,
                 marker_color=region_color,
-                text=s_ebi["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%"),
+                text=s_ebi["Store_EBITDA_pct"].map(lambda v: f"{v*100:.2f}%"),
                 textposition="outside",
             ))
             fig_s2.add_hline(y=sys_ebitda_avg, line_dash="dot", line_color=MID,
@@ -1793,7 +1793,7 @@ def tab_overview(dash):
             fig_s3 = go.Figure(go.Bar(
                 x=s_cogs["Stand"], y=s_cogs["Total_COGS_pct"] * 100,
                 marker_color=region_color,
-                text=s_cogs["Total_COGS_pct"].map(lambda v: f"{v*100:.1f}%"),
+                text=s_cogs["Total_COGS_pct"].map(lambda v: f"{v*100:.2f}%"),
                 textposition="outside",
             ))
             fig_s3.add_hline(y=sys_cogs_avg, line_dash="dot", line_color=MID,
@@ -1813,7 +1813,7 @@ def tab_overview(dash):
             fig_s4 = go.Figure(go.Bar(
                 x=s_labor["Stand"], y=s_labor["Total_Labor_pct"] * 100,
                 marker_color=region_color,
-                text=s_labor["Total_Labor_pct"].map(lambda v: f"{v*100:.1f}%"),
+                text=s_labor["Total_Labor_pct"].map(lambda v: f"{v*100:.2f}%"),
                 textposition="outside",
             ))
             fig_s4.add_hline(y=sys_labor_avg, line_dash="dot", line_color=MID,
@@ -1900,7 +1900,7 @@ def tab_comparison(dash):
         a_color = GREEN if is_better else RED
         fmt_va  = _fmt_d(va) if is_dollar else _fmt_p(va)
         fmt_vb  = _fmt_d(vb) if is_dollar else _fmt_p(vb)
-        fmt_d   = (f"+${abs(delta)/1000:.1f}k" if delta >= 0 else f"-${abs(delta)/1000:.1f}k") if is_dollar else _fmt_bps(delta)
+        fmt_d   = (f"+${abs(delta)/1000:.2f}k" if delta >= 0 else f"-${abs(delta)/1000:.2f}k") if is_dollar else _fmt_bps(delta)
         with score_cols[i]:
             st.html(f"""
             <div style="background:#f8f8f8;border-radius:10px;padding:14px 10px;text-align:center;
@@ -1954,7 +1954,7 @@ def tab_comparison(dash):
         st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
                 f'color:{GREEN};margin:12px 0 6px;">▲ BIGGEST IMPROVEMENTS — {psA["label"]} vs {psB["label"]}</div>')
         for r in top_improvements:
-            fmt_d = (f"+${r['delta']/1000:.1f}k" if r["is_dollar"] else _fmt_bps(r["delta"]))
+            fmt_d = (f"+${r['delta']/1000:.2f}k" if r["is_dollar"] else _fmt_bps(r["delta"]))
             insight_card(
                 f"↑ {r['label']}: {_fmt_d(r['va']) if r['is_dollar'] else _fmt_p(r['va'])}",
                 f"Up from {_fmt_d(r['vb']) if r['is_dollar'] else _fmt_p(r['vb'])} in {psB['label']} — a {fmt_d} improvement.",
@@ -1964,7 +1964,7 @@ def tab_comparison(dash):
         st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;'
                 f'color:{RED};margin:12px 0 6px;">▼ BIGGEST DECLINES — {psA["label"]} vs {psB["label"]}</div>')
         for r in top_concerns:
-            fmt_d = _fmt_bps(r["delta"]) if not r["is_dollar"] else f"-${abs(r['delta'])/1000:.1f}k"
+            fmt_d = _fmt_bps(r["delta"]) if not r["is_dollar"] else f"-${abs(r['delta'])/1000:.2f}k"
             insight_card(
                 f"↓ {r['label']}: {_fmt_d(r['va']) if r['is_dollar'] else _fmt_p(r['va'])}",
                 f"Down from {_fmt_d(r['vb']) if r['is_dollar'] else _fmt_p(r['vb'])} in {psB['label']} — a {fmt_d} move.",
@@ -2037,7 +2037,7 @@ def tab_comparison(dash):
                 measure=["absolute","relative","relative","relative","relative","total"],
                 x=["Net Sales","− COGS","− Labor","− Rent","− Other","EBITDA"],
                 y=bv,
-                text=[f"{abs(v):.1f}%" for v in bv], textposition="outside",
+                text=[f"{abs(v):.2f}%" for v in bv], textposition="outside",
                 connector=dict(line=dict(color=BORDER, width=1)),
                 increasing=dict(marker_color=color),
                 decreasing=dict(marker_color=RED),
@@ -2120,12 +2120,12 @@ def tab_comparison(dash):
         fig_drill.add_bar(x=_ms["_label"], y=_ms[f"{_scol}_a"] * _mult,
                           name=psA["label"], marker_color=RED, opacity=0.88,
                           text=(_ms[f"{_scol}_a"] * _mult).map(
-                              lambda v: f"${v:,.0f}" if _is_dollar else f"{v:.1f}%"),
+                              lambda v: f"${v:,.0f}" if _is_dollar else f"{v:.2f}%"),
                           textposition="outside", textfont=dict(size=9))
         fig_drill.add_bar(x=_ms["_label"], y=_ms[f"{_scol}_b"] * _mult,
                           name=psB["label"], marker_color=BLUE, opacity=0.65,
                           text=(_ms[f"{_scol}_b"] * _mult).map(
-                              lambda v: f"${v:,.0f}" if _is_dollar else f"{v:.1f}%"),
+                              lambda v: f"${v:,.0f}" if _is_dollar else f"{v:.2f}%"),
                           textposition="outside", textfont=dict(size=9))
         _title_region = sel_cmp_region if sel_cmp_region != "All Regions" else "ALL REGIONS"
         brew_fig(fig_drill, height=340)
@@ -2153,7 +2153,7 @@ def tab_comparison(dash):
                 "Metric": m_label,
                 f"{psA['label']} (A)": _fmt_d(va) if is_dollar else _fmt_p(va),
                 f"{psB['label']} (B)": _fmt_d(vb) if is_dollar else _fmt_p(vb),
-                "Δ A − B": (f"+${delta/1000:.1f}k" if is_dollar else _fmt_bps(delta)),
+                "Δ A − B": (f"+${delta/1000:.2f}k" if is_dollar else _fmt_bps(delta)),
                 "Signal": "↑ Better" if good else "↓ Worse",
             })
         render_table(pd.DataFrame(rows))
@@ -2317,10 +2317,10 @@ def tab_stands(dash):
     k1.metric("Stands Shown",        n)
     k2.metric("Total Revenue",        f"${total_rev/1e6:.2f}M")
     k3.metric("Avg Net Sales",        f"${avg_sales:,.0f}")
-    k4.metric("Avg EBITDA%",          f"{avg_ebitda*100:.1f}%",
+    k4.metric("Avg EBITDA%",          f"{avg_ebitda*100:.2f}%",
               delta=f"{(avg_ebitda - _BM['Store_EBITDA_pct']['t'])*100:+.1f}pp vs target",
               delta_color="normal" if avg_ebitda >= _BM["Store_EBITDA_pct"]["t"] else "inverse")
-    k5.metric("Avg Labor%",           f"{avg_labor*100:.1f}%",
+    k5.metric("Avg Labor%",           f"{avg_labor*100:.2f}%",
               delta=f"{(avg_labor - _BM['Total_Labor_pct']['t'])*100:+.1f}pp vs target",
               delta_color="inverse" if avg_labor > _BM["Total_Labor_pct"]["t"] else "normal")
     k6.metric("Stands At/Above Target EBITDA", f"{pct_above}/{n}",
@@ -2381,7 +2381,7 @@ def tab_stands(dash):
         if fmt == "$":
             disp_full[raw] = disp_full[raw].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
         else:
-            disp_full[raw] = disp_full[raw].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
+            disp_full[raw] = disp_full[raw].map(lambda v: f"{v*100:.2f}%" if pd.notna(v) else "—")
     disp_full = disp_full.rename(columns={raw: lbl for raw, lbl, _ in avail_pl})
 
     # Color coding on % columns via Styler
@@ -2579,10 +2579,10 @@ renderTable(ROWS, CLS);
 
     # Benchmark legend
     st.caption("🟢 At or better than benchmark  ·  🟡 Within 2pp  ·  🔴 Exceeds benchmark by >2pp  ·  "
-               f"System avg: COGS {df['Total_COGS_pct'].mean()*100:.1f}% · "
-               f"Labor {df['Total_Labor_pct'].mean()*100:.1f}% · "
-               f"EBITDA {df['Store_EBITDA_pct'].mean()*100:.1f}% · "
-               f"EBITDAR {df['Unit_EBITDAR_pct'].mean()*100:.1f}%")
+               f"System avg: COGS {df['Total_COGS_pct'].mean()*100:.2f}% · "
+               f"Labor {df['Total_Labor_pct'].mean()*100:.2f}% · "
+               f"EBITDA {df['Store_EBITDA_pct'].mean()*100:.2f}% · "
+               f"EBITDAR {df['Unit_EBITDAR_pct'].mean()*100:.2f}%")
 
     st.divider()
 
@@ -2666,9 +2666,9 @@ renderTable(ROWS, CLS);
                     wf_rows.append({
                         "Line Item": f"**{prefix}{lbl}**",
                         "Amount":    f"**${gp:,.0f}**",
-                        "% of Sales":f"**{gp_pct*100:.1f}%**",
+                        "% of Sales":f"**{gp_pct*100:.2f}%**",
                         "Period Avg $": f"${avg_gp:,.0f}" if show_vs_avg else "",
-                        "Period Avg %": f"{avg_gp_pct*100:.1f}%"   if show_vs_avg else "",
+                        "Period Avg %": f"{avg_gp_pct*100:.2f}%"   if show_vs_avg else "",
                         "vs Avg":       f"+${(gp-avg_gp):,.0f}"    if show_vs_avg else "",
                         "_type": rtype,
                     })
@@ -2691,9 +2691,9 @@ renderTable(ROWS, CLS);
                 wf_rows.append({
                     "Line Item":   f"{bold}{prefix}{lbl}{bold}",
                     "Amount":      f"{bold}${amt:,.0f}{bold}" if pd.notna(amt) else "—",
-                    "% of Sales":  f"{bold}{pct*100:.1f}%{bold} {color_mark}" if pd.notna(pct) else "—",
+                    "% of Sales":  f"{bold}{pct*100:.2f}%{bold} {color_mark}" if pd.notna(pct) else "—",
                     "Period Avg $":f"${avg_amt:,.0f}" if show_vs_avg and avg_amt is not None else "",
-                    "Period Avg %":f"{avg_pct*100:.1f}%"  if show_vs_avg and avg_pct is not None else "",
+                    "Period Avg %":f"{avg_pct*100:.2f}%"  if show_vs_avg and avg_pct is not None else "",
                     "vs Avg":      vs_str if show_vs_avg else "",
                     "_type": rtype,
                 })
@@ -2800,7 +2800,7 @@ renderTable(ROWS, CLS);
                                 line=dict(width=1, color="white")),
                     hovertemplate=(
                         "<b>%{x}</b><br>" +
-                        ("$%{y:,.0f}" if fmt=="$" else "%{y:.1f}%") +
+                        ("$%{y:,.0f}" if fmt=="$" else "%{y:.2f}%") +
                         "<extra></extra>"
                     ),
                 )
@@ -2808,7 +2808,7 @@ renderTable(ROWS, CLS);
                     fig_t.add_hline(
                         y=tgt * (100 if fmt=="%" else 1),
                         line_dash="dash", line_color=GREEN, line_width=1.5,
-                        annotation_text=f"Target {tgt*100:.1f}%" if fmt=="%" else f"Target ${tgt:,.0f}",
+                        annotation_text=f"Target {tgt*100:.2f}%" if fmt=="%" else f"Target ${tgt:,.0f}",
                         annotation_position="right",
                         annotation_font_size=11,
                     )
@@ -2847,19 +2847,19 @@ renderTable(ROWS, CLS);
             x=sub[col_pct]*100,
             orientation="h",
             marker_color=colors,
-            text=[f"{v*100:.1f}%" for v in sub[col_pct]],
+            text=[f"{v*100:.2f}%" for v in sub[col_pct]],
             textposition="outside",
             customdata=sub[col_dollar].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—"),
-            hovertemplate="<b>%{y}</b><br>%{x:.1f}%  (%{customdata})<extra></extra>",
+            hovertemplate="<b>%{y}</b><br>%{x:.2f}%  (%{customdata})<extra></extra>",
         ))
         if target is not None:
             fig.add_vline(x=target*100, line_dash="dash", line_color="#888",
-                          annotation_text=f"Target {target*100:.1f}%",
+                          annotation_text=f"Target {target*100:.2f}%",
                           annotation_position="top right",
                           annotation_font_size=11)
         sys_avg = sub[col_pct].mean()
         fig.add_vline(x=sys_avg*100, line_dash="dot", line_color=BLUE, line_width=1.5,
-                      annotation_text=f"Avg {sys_avg*100:.1f}%",
+                      annotation_text=f"Avg {sys_avg*100:.2f}%",
                       annotation_position="bottom right",
                       annotation_font_size=11)
         fig.update_layout(
@@ -2911,20 +2911,20 @@ renderTable(ROWS, CLS);
             st.markdown("**Top 5 by Net Sales**")
             top5 = df.nlargest(5,"Net_Sales")[["Stand","Net_Sales","Store_EBITDA_pct"]].copy()
             top5["Net_Sales"] = top5["Net_Sales"].map(lambda v: f"${v:,.0f}")
-            top5["Store_EBITDA_pct"] = top5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
+            top5["Store_EBITDA_pct"] = top5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.2f}%")
             top5 = top5.rename(columns={"Stand":"Stand","Net_Sales":"Net Sales","Store_EBITDA_pct":"EBITDA%"})
             st.dataframe(top5, hide_index=True, use_container_width=True)
         with tt2:
             st.markdown("**Bottom 5 by Net Sales**")
             bot5 = df.nsmallest(5,"Net_Sales")[["Stand","Net_Sales","Store_EBITDA_pct"]].copy()
             bot5["Net_Sales"] = bot5["Net_Sales"].map(lambda v: f"${v:,.0f}")
-            bot5["Store_EBITDA_pct"] = bot5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
+            bot5["Store_EBITDA_pct"] = bot5["Store_EBITDA_pct"].map(lambda v: f"{v*100:.2f}%")
             bot5 = bot5.rename(columns={"Stand":"Stand","Net_Sales":"Net Sales","Store_EBITDA_pct":"EBITDA%"})
             st.dataframe(bot5, hide_index=True, use_container_width=True)
 
     # ── COGS ─────────────────────────────────────────────────────────────────
     with st.expander("🛒 COST OF GOODS (COGS)", expanded=False):
-        st.caption(f"Target: {_BM['Total_COGS_pct']['t']*100:.1f}% · System avg this period: {df['Total_COGS_pct'].mean()*100:.1f}%")
+        st.caption(f"Target: {_BM['Total_COGS_pct']['t']*100:.2f}% · System avg this period: {df['Total_COGS_pct'].mean()*100:.2f}%")
         _ranked_bar("Total_COGS_pct","Total_COGS","COGS% by Stand (lower = better)",
                     higher_better=False, target=_BM["Total_COGS_pct"]["t"])
         cg1, cg2 = st.columns(2)
@@ -2933,14 +2933,14 @@ renderTable(ROWS, CLS);
             st.metric("Stands At/Below Target COGS", f"{at_or_below}/{n}")
         with cg2:
             worst = df.nlargest(1,"Total_COGS_pct").iloc[0]
-            st.metric("Highest COGS%", f"{worst['Total_COGS_pct']*100:.1f}%",
+            st.metric("Highest COGS%", f"{worst['Total_COGS_pct']*100:.2f}%",
                       delta=f"{(worst['Total_COGS_pct']-_BM['Total_COGS_pct']['t'])*100:+.1f}pp",
                       delta_color="inverse",
                       help=worst.get("Stand",""))
 
     # ── Labor ─────────────────────────────────────────────────────────────────
     with st.expander("👥 LABOR — Hourly & Total", expanded=False):
-        st.caption(f"Hourly target: {_BM['Total_Hourly_pct']['t']*100:.1f}% · Total Labor target: {_BM['Total_Labor_pct']['t']*100:.1f}%")
+        st.caption(f"Hourly target: {_BM['Total_Hourly_pct']['t']*100:.2f}% · Total Labor target: {_BM['Total_Labor_pct']['t']*100:.2f}%")
         la, lb = st.columns(2)
         with la:
             _ranked_bar("Total_Hourly_pct","Total_Hourly","Hourly Labor% by Stand",
@@ -2960,7 +2960,7 @@ renderTable(ROWS, CLS);
                        for v in df["Total_Labor_pct"]],
                 size=10, opacity=0.8,
             ),
-            hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Labor%: %{y:.1f}%<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Labor%: %{y:.2f}%<extra></extra>",
         ))
         fig_lab.add_hline(y=_BM["Total_Labor_pct"]["t"]*100, line_dash="dash",
                           line_color=RED, annotation_text="Target")
@@ -2971,7 +2971,7 @@ renderTable(ROWS, CLS);
 
     # ── R&M ──────────────────────────────────────────────────────────────────
     with st.expander("🔧 REPAIRS & MAINTENANCE (R&M)", expanded=False):
-        st.caption(f"Target: {_BM['Total_RM_pct']['t']*100:.1f}% · System avg: {df['Total_RM_pct'].mean()*100:.1f}%")
+        st.caption(f"Target: {_BM['Total_RM_pct']['t']*100:.2f}% · System avg: {df['Total_RM_pct'].mean()*100:.2f}%")
         _ranked_bar("Total_RM_pct","Total_RM","R&M% by Stand",
                     target=_BM["Total_RM_pct"]["t"])
         ra, rb = st.columns(2)
@@ -2983,13 +2983,13 @@ renderTable(ROWS, CLS);
 
     # ── Controllable ──────────────────────────────────────────────────────────
     with st.expander("🎛️ CONTROLLABLE EXPENSES", expanded=False):
-        st.caption(f"Target: {_BM['Controllable_pct']['t']*100:.1f}% · System avg: {df['Controllable_pct'].mean()*100:.1f}%")
+        st.caption(f"Target: {_BM['Controllable_pct']['t']*100:.2f}% · System avg: {df['Controllable_pct'].mean()*100:.2f}%")
         _ranked_bar("Controllable_pct","Controllable","Controllable% by Stand",
                     target=_BM["Controllable_pct"]["t"])
 
     # ── Utilities ─────────────────────────────────────────────────────────────
     with st.expander("⚡ UTILITIES", expanded=False):
-        st.caption(f"Target: {_BM['Total_Utilities_pct']['t']*100:.1f}% · System avg: {df['Total_Utilities_pct'].mean()*100:.1f}%")
+        st.caption(f"Target: {_BM['Total_Utilities_pct']['t']*100:.2f}% · System avg: {df['Total_Utilities_pct'].mean()*100:.2f}%")
         _ranked_bar("Total_Utilities_pct","Total_Utilities","Utilities% by Stand",
                     target=_BM["Total_Utilities_pct"]["t"])
         if "Waste_Removal" in df.columns and "Landscaping" in df.columns:
@@ -3001,7 +3001,7 @@ renderTable(ROWS, CLS);
 
     # ── Fixed Costs ───────────────────────────────────────────────────────────
     with st.expander("🏢 FIXED COSTS", expanded=False):
-        st.caption(f"Target: {_BM['Total_Fixed_pct']['t']*100:.1f}% · System avg: {df['Total_Fixed_pct'].mean()*100:.1f}%  "
+        st.caption(f"Target: {_BM['Total_Fixed_pct']['t']*100:.2f}% · System avg: {df['Total_Fixed_pct'].mean()*100:.2f}%  "
                    "Fixed costs benefit from high sales volume — stands with low sales will show higher Fixed%.")
         _ranked_bar("Total_Fixed_pct","Total_Fixed","Fixed Costs% by Stand",
                     target=_BM["Total_Fixed_pct"]["t"])
@@ -3011,7 +3011,7 @@ renderTable(ROWS, CLS);
             mode="markers",
             text=df["Stand"].apply(lambda x: x.split(" ",1)[1] if isinstance(x,str) and " " in x else str(x)),
             marker=dict(color=BLUE, size=9, opacity=0.7),
-            hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Fixed%: %{y:.1f}%<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>Sales: $%{x:,.0f}<br>Fixed%: %{y:.2f}%<extra></extra>",
         ))
         fig_fix.update_layout(title_text="Fixed Cost % vs Revenue (high sales dilutes fixed costs)",
                               xaxis_tickprefix="$", yaxis_ticksuffix="%")
@@ -3020,13 +3020,13 @@ renderTable(ROWS, CLS);
 
     # ── Marketing ─────────────────────────────────────────────────────────────
     with st.expander("📣 MARKETING", expanded=False):
-        st.caption(f"Target: {_BM['Total_Marketing_pct']['t']*100:.1f}% · System avg: {df['Total_Marketing_pct'].mean()*100:.1f}%")
+        st.caption(f"Target: {_BM['Total_Marketing_pct']['t']*100:.2f}% · System avg: {df['Total_Marketing_pct'].mean()*100:.2f}%")
         _ranked_bar("Total_Marketing_pct","Total_Marketing","Marketing% by Stand",
                     target=_BM["Total_Marketing_pct"]["t"])
 
     # ── EBITDAR → EBITDA ──────────────────────────────────────────────────────
     with st.expander("📈 EBITDAR → EBITDA (with Rent Analysis)", expanded=False):
-        st.caption(f"EBITDAR target: {_BM['Unit_EBITDAR_pct']['t']*100:.1f}% · EBITDA target: {_BM['Store_EBITDA_pct']['t']*100:.1f}%")
+        st.caption(f"EBITDAR target: {_BM['Unit_EBITDAR_pct']['t']*100:.2f}% · EBITDA target: {_BM['Store_EBITDA_pct']['t']*100:.2f}%")
         ea1, ea2 = st.columns(2)
         with ea1:
             _ranked_bar("Unit_EBITDAR_pct","Unit_EBITDAR","EBITDAR% by Stand (higher = better)",
@@ -3047,7 +3047,7 @@ renderTable(ROWS, CLS);
             marker=dict(color=[{"good":GREEN,"warn":AMBER,"bad":RED}.get(
                 _bm_color("Store_EBITDA_pct",v),BLUE) for v in df["Store_EBITDA_pct"]],
                 size=10, opacity=0.8),
-            hovertemplate="<b>%{text}</b><br>Rent%: %{x:.1f}%<br>EBITDA%: %{y:.1f}%<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>Rent%: %{x:.2f}%<br>EBITDA%: %{y:.2f}%<extra></extra>",
         ))
         fig_rent.add_hline(y=_BM["Store_EBITDA_pct"]["t"]*100, line_dash="dash",
                            line_color=GREEN, annotation_text="EBITDA Target")
@@ -3060,7 +3060,7 @@ renderTable(ROWS, CLS);
 
     # ── Discounts ─────────────────────────────────────────────────────────────
     with st.expander("🏷️ DISCOUNTS", expanded=False):
-        st.caption(f"Target: {_BM['Discounts_pct']['t']*100:.1f}% · System avg: {df['Discounts_pct'].mean()*100:.1f}%")
+        st.caption(f"Target: {_BM['Discounts_pct']['t']*100:.2f}% · System avg: {df['Discounts_pct'].mean()*100:.2f}%")
         _ranked_bar("Discounts_pct","Discounts","Discount% by Stand",
                     target=_BM["Discounts_pct"]["t"])
         st.metric("Total Discounts Given (period)", f"${df['Discounts'].sum():,.0f}")
@@ -3079,9 +3079,9 @@ renderTable(ROWS, CLS);
     def _fmt_rank(sub):
         out = sub.copy()
         if "Net_Sales"        in out: out["Net_Sales"]        = out["Net_Sales"].map(lambda v: f"${v:,.0f}")
-        if "Store_EBITDA_pct" in out: out["Store_EBITDA_pct"] = out["Store_EBITDA_pct"].map(lambda v: f"{v*100:.1f}%")
-        if "Total_Labor_pct"  in out: out["Total_Labor_pct"]  = out["Total_Labor_pct"].map(lambda v: f"{v*100:.1f}%")
-        if "Total_COGS_pct"   in out: out["Total_COGS_pct"]   = out["Total_COGS_pct"].map(lambda v: f"{v*100:.1f}%")
+        if "Store_EBITDA_pct" in out: out["Store_EBITDA_pct"] = out["Store_EBITDA_pct"].map(lambda v: f"{v*100:.2f}%")
+        if "Total_Labor_pct"  in out: out["Total_Labor_pct"]  = out["Total_Labor_pct"].map(lambda v: f"{v*100:.2f}%")
+        if "Total_COGS_pct"   in out: out["Total_COGS_pct"]   = out["Total_COGS_pct"].map(lambda v: f"{v*100:.2f}%")
         return out.rename(columns={"Net_Sales":"Sales","Store_EBITDA_pct":"EBITDA%",
                                    "Total_Labor_pct":"Labor%","Total_COGS_pct":"COGS%"})
 
@@ -3198,7 +3198,7 @@ def tab_regions(dash):
                 tbl["Net_Sales"] = tbl["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
             for pct_col in ["Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]:
                 if pct_col in tbl.columns:
-                    tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
+                    tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.2f}%" if pd.notna(x) else "—")
             render_table(tbl.reset_index(drop=True))
         else:
             st.info(f"No stand data available for {sel_region} in this period.")
@@ -3306,7 +3306,7 @@ def tab_regions(dash):
     for col in ["COGS%","Hourly%","Labor%","R&M%","Ctrl%","Util%",
                 "Fixed%","EBITDAR%","Rent%","EBITDA%","Disc%"]:
         if col in disp.columns:
-            disp[col] = disp[col].map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "—")
+            disp[col] = disp[col].map(lambda v: f"{v*100:.2f}%" if pd.notna(v) else "—")
     if "Net Sales" in disp.columns:
         disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
     render_table(disp)
@@ -3390,11 +3390,11 @@ def tab_regions(dash):
                help="Blended average across all stands this period — matches Period Summary above")
     if not mature_row.empty:
         ck3.metric("Mature Store Avg EBITDA%",
-                   f"{mature_row['avg_ebitda'].values[0]*100:.1f}%",
+                   f"{mature_row['avg_ebitda'].values[0]*100:.2f}%",
                    help="EBITDA margin for 2yr+ stands this period")
         new_row = cohort_agg[cohort_agg["Age_Bucket"] == "New (<6mo)"]
         ck4.metric("New Stand Avg EBITDA%",
-                   f"{new_row['avg_ebitda'].mean()*100:.1f}%" if not new_row.empty else "—",
+                   f"{new_row['avg_ebitda'].mean()*100:.2f}%" if not new_row.empty else "—",
                    help="EBITDA margin for stands in first 6 months this period")
 
     st.caption(f"All metrics above reflect {period_lbl} · {yr_label}. Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
@@ -3432,7 +3432,7 @@ def tab_regions(dash):
                 x=[bkt], y=[crow["avg_ebitda"] * 100],
                 name="EBITDA%", marker_color=bucket_colors.get(bkt, "#999"),
                 opacity=0.9, showlegend=False,
-                text=[f"{crow['avg_ebitda']*100:.1f}%"], textposition="outside",
+                text=[f"{crow['avg_ebitda']*100:.2f}%"], textposition="outside",
             )
         fig_pct.add_scatter(
             x=cohort_agg.dropna(subset=["avg_labor"])["Age_Bucket"].tolist(),
@@ -3808,11 +3808,11 @@ def tab_insights(dash):
             f2.add_bar(x=names, y=ev, name="Actual EBITDA %",
                        marker_color=[GREEN if v >= _sys_ebitda else AMBER if v >= _sys_ebitda * 0.6 else RED
                                      for v in ev],
-                       opacity=0.88, text=[f"{v:.1f}%" for v in ev],
+                       opacity=0.88, text=[f"{v:.2f}%" for v in ev],
                        textposition="outside", textfont=dict(size=12))
-            f2.add_bar(x=names, y=[_sys_ebitda]*n, name=f"Sys Avg ({_sys_ebitda:.1f}%)",
+            f2.add_bar(x=names, y=[_sys_ebitda]*n, name=f"Sys Avg ({_sys_ebitda:.2f}%)",
                        marker_color=MUTED, opacity=0.55,
-                       text=[f"{_sys_ebitda:.1f}%"]*n,
+                       text=[f"{_sys_ebitda:.2f}%"]*n,
                        textposition="outside", textfont=dict(size=12))
             _rc(f2, f"EBITDA % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
 
@@ -3822,11 +3822,11 @@ def tab_insights(dash):
             f3.add_bar(x=names, y=lv, name="Actual Labor %",
                        marker_color=[GREEN if v <= _sys_labor else AMBER if v <= _sys_labor + 5 else RED
                                      for v in lv],
-                       opacity=0.88, text=[f"{v:.1f}%" for v in lv],
+                       opacity=0.88, text=[f"{v:.2f}%" for v in lv],
                        textposition="outside", textfont=dict(size=12))
-            f3.add_bar(x=names, y=[_sys_labor]*n, name=f"Sys Avg ({_sys_labor:.1f}%)",
+            f3.add_bar(x=names, y=[_sys_labor]*n, name=f"Sys Avg ({_sys_labor:.2f}%)",
                        marker_color=MUTED, opacity=0.55,
-                       text=[f"{_sys_labor:.1f}%"]*n,
+                       text=[f"{_sys_labor:.2f}%"]*n,
                        textposition="outside", textfont=dict(size=12))
             _rc(f3, f"LABOR % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
 
@@ -3836,11 +3836,11 @@ def tab_insights(dash):
             f4.add_bar(x=names, y=cv, name="Actual COGS %",
                        marker_color=[GREEN if v <= _sys_cogs else AMBER if v <= _sys_cogs + 3 else RED
                                      for v in cv],
-                       opacity=0.88, text=[f"{v:.1f}%" for v in cv],
+                       opacity=0.88, text=[f"{v:.2f}%" for v in cv],
                        textposition="outside", textfont=dict(size=12))
-            f4.add_bar(x=names, y=[_sys_cogs]*n, name=f"Sys Avg ({_sys_cogs:.1f}%)",
+            f4.add_bar(x=names, y=[_sys_cogs]*n, name=f"Sys Avg ({_sys_cogs:.2f}%)",
                        marker_color=MUTED, opacity=0.55,
-                       text=[f"{_sys_cogs:.1f}%"]*n,
+                       text=[f"{_sys_cogs:.2f}%"]*n,
                        textposition="outside", textfont=dict(size=12))
             _rc(f4, f"COGS % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
 
@@ -4371,7 +4371,7 @@ def _sos_period_kpis(plabel: str, stands_info_json: str) -> dict | None:
         "_pct":                p_pct,
         "System Avg":          _fmt_sos(p_sys),
         "Prime Time Avg":      _fmt_sos(p_prime),
-        "Txns At Goal":        f"{p_pct:.1f}%",
+        "Txns At Goal":        f"{p_pct:.2f}%",
         "Stands Meeting Goal": n_at,
         "Stands Over Goal":    n_with_g - n_at,
     }
@@ -4627,7 +4627,7 @@ def tab_sos(dash):
         except (TypeError, ValueError):
             return None
         sign = "+" if diff > 0 else ""
-        return {"str": f"{sign}{diff:.1f}% vs {lbl}", "cls": "up" if diff > 0 else "down"}
+        return {"str": f"{sign}{diff:.2f}% vs {lbl}", "cls": "up" if diff > 0 else "down"}
 
     def _cnt_d(curr, prev, lbl, higher_better=True):
         """Delta badge for count metrics."""
@@ -4677,7 +4677,7 @@ def tab_sos(dash):
          "sub": best_label,                  "color": "green"},
         {"label": "WORST STAND",      "value": _fmt_sos(worst_val),
          "sub": worst_label,                 "color": "red"},
-        {"label": "TXNS AT/UNDER GOAL", "value": f"{pct_at_goal:.1f}%",
+        {"label": "TXNS AT/UNDER GOAL", "value": f"{pct_at_goal:.2f}%",
          "sub": "P1+ stands · excl. P0 opening period",
          "color": "green" if pct_at_goal >= 50 else "amber",
          "delta": _pct_d(pct_at_goal, prior["pct_at"], prior_lbl) if prior else None},
@@ -5469,7 +5469,7 @@ def tab_forecast(dash):
     for col in ["ns_base", "ns_opt", "ns_risk", "prior_yr_sales"]:
         fc_display[col] = fc_display[col].map(lambda v: f"${v:,.0f}")
     for col in ["ebitda_base", "ebitda_opt", "ebitda_risk", "prior_yr_ebitda"]:
-        fc_display[col] = fc_display[col].map(lambda v: f"{v*100:.1f}%")
+        fc_display[col] = fc_display[col].map(lambda v: f"{v*100:.2f}%")
     fc_display = fc_display.drop(columns=["is_actual"])
     fc_display.columns = ["Period", "Base Sales", "Opt Sales", "Risk Sales",
                            "Base EBITDA%", "Opt EBITDA%", "Risk EBITDA%",
@@ -5705,7 +5705,7 @@ def tab_potholes(dash):
             for pct_col in ["Total_Labor_pct", "Total_COGS_pct", "Store_EBITDA_pct"]:
                 if pct_col in ramp_show.columns:
                     ramp_show[pct_col] = ramp_show[pct_col].apply(
-                        lambda x: f"{x*100:.1f}%" if pd.notna(x) else "—")
+                        lambda x: f"{x*100:.2f}%" if pd.notna(x) else "—")
             ramp_show.columns = [c.replace("Total_","").replace("_pct"," %")
                                   .replace("Store_EBITDA","EBITDA").replace("Net_Sales","Sales")
                                   for c in ramp_show.columns]
@@ -6158,7 +6158,7 @@ def tab_utilities(dash):
     fig_s1 = go.Figure()
     fig_s1.add_scatter(x=pct_df["label"], y=pct_df["utilities_pct"] * 100,
                        mode="lines+markers+text",
-                       text=pct_df["utilities_pct"].map(lambda v: f"{v*100:.1f}%"),
+                       text=pct_df["utilities_pct"].map(lambda v: f"{v*100:.2f}%"),
                        textposition="top center", textfont=dict(size=8),
                        fill="tozeroy", fillcolor="rgba(29,111,207,0.08)",
                        line=dict(color=BLUE, width=2),
