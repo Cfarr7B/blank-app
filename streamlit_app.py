@@ -392,8 +392,9 @@ def render_table(df, max_rows=None, height=None):
 # DATA LOADING
 # ─────────────────────────────────────────────
 @st.cache_data
-def load_base_data():
-    """Load DASH data — tries data.json first, falls back to extracting from dashboard.html."""
+def load_base_data(_mtime: float = 0):
+    """Load DASH data — tries data.json first, falls back to extracting from dashboard.html.
+    _mtime is used as a cache-buster so the data reloads whenever data.json changes on disk."""
     base_dir = Path(__file__).parent
 
     # Prefer data.json if present (faster)
@@ -459,8 +460,10 @@ def save_to_base_data(merged_dash):
     delete_saved_uploads()
 
 def get_dash():
-    """Return base dashboard data. New periods are added via build_base_data.py."""
-    return load_base_data()
+    """Return base dashboard data. Cache invalidates automatically when data.json changes."""
+    _data_path = Path(__file__).parent / "data.json"
+    _mtime = _data_path.stat().st_mtime if _data_path.exists() else 0
+    return load_base_data(_mtime)
 
 QUARTER_MAP = {1: "Q1", 2: "Q1", 3: "Q1", 4: "Q2", 5: "Q2", 6: "Q2",
                7: "Q3", 8: "Q3", 9: "Q3", 10: "Q4", 11: "Q4", 12: "Q4", 13: "Q4"}
