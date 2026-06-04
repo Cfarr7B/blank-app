@@ -7191,8 +7191,12 @@ def tab_pipeline(dash):
                                    f"🔴 +{wow}d" if wow>0 else
                                    f"🟢 {wow_wks}wk" if wow<0 and wow_wks else
                                    f"🟢 {wow}d" if wow<0 else "—")
-        net = r["delta_days"]; net_wks = net // 7
-        row_dict["Net vs Jan 8"] = f"+{net_wks}wk" if net>0 else (f"{net_wks}wk" if net<0 else "±0")
+        net = r["delta_days"]
+        if net is None or (hasattr(net, '__class__') and net.__class__.__name__ == 'float' and str(net) == 'nan'):
+            row_dict["Net vs Jan 8"] = "🆕 New"
+        else:
+            net = int(net); net_wks = net // 7
+            row_dict["Net vs Jan 8"] = f"+{net_wks}wk" if net>0 else (f"{net_wks}wk" if net<0 else "±0")
         hist_rows.append(row_dict)
 
     if hist_rows:
