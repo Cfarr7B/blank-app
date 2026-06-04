@@ -7117,9 +7117,17 @@ def tab_pipeline(dash):
     opened_late   = [r for r in opened_rows_calc if r["delta_days"] > 0]
     opened_early  = [r for r in opened_rows_calc if r["delta_days"] < 0]
     opened_ontime = [r for r in opened_rows_calc if r["delta_days"] == 0]
+    # Net = late days + early days (early days are negative, so they offset late)
+    net_slip_days  = sum(r["delta_days"] for r in opened_rows_calc)
+    net_slip_weeks = net_slip_days / 7
+    net_rev_impact = net_slip_weeks * AVG_REV_PER_WEEK   # positive = net loss, negative = net gain
+    # Also keep gross late/early for reference
     opened_slip_days  = sum(r["delta_days"] for r in opened_late)
     opened_slip_weeks = opened_slip_days / 7
     opened_rev_lost   = opened_slip_weeks * AVG_REV_PER_WEEK
+    early_gain_days   = abs(sum(r["delta_days"] for r in opened_early))
+    early_gain_weeks  = early_gain_days / 7
+    early_rev_gained  = early_gain_weeks * AVG_REV_PER_WEEK
 
     total_slip_days  = pushed["delta_days"].sum()
     total_slip_weeks = total_slip_days / 7
@@ -7134,10 +7142,21 @@ def tab_pipeline(dash):
                help="Stands whose date changed since the previous report")
     si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
                help=f"{total_slip_weeks:.1f} wks pushed × $45K avg weekly revenue vs Jan 8")
-    si5.metric("Opened Late (2026 YTD)", len(opened_late),
-               delta=f"{opened_slip_weeks:.1f} wks lost · ${opened_rev_lost/1e3:.0f}K" if opened_late else "All on time",
-               delta_color="inverse" if opened_late else "normal",
-               help=f"{len(opened_rows_calc)} total · {len(opened_ontime)} on time · {len(opened_early)} early")
+    if net_slip_days > 0:
+        _net_label = f"Net {net_slip_weeks:.1f} wks lost · ${net_rev_impact/1e3:.0f}K"
+        _net_color = "inverse"
+    elif net_slip_days < 0:
+        _net_label = f"Net {abs(net_slip_weeks):.1f} wks gained · +${abs(net_rev_impact)/1e3:.0f}K"
+        _net_color = "normal"
+    else:
+        _net_label = "Net ±0 (late/early offset)"
+        _net_color = "normal"
+    si5.metric("Opened Late / Early (2026 YTD)", f"{len(opened_late)}L · {len(opened_early)}E",
+               delta=_net_label,
+               delta_color=_net_color,
+               help=f"{len(opened_rows_calc)} total · {len(opened_ontime)} on time · "
+                    f"{len(opened_late)} late ({opened_slip_weeks:.1f}wk, -${opened_rev_lost/1e3:.0f}K) · "
+                    f"{len(opened_early)} early (+{early_gain_weeks:.1f}wk, +${early_rev_gained/1e3:.0f}K)")
 
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 8 baseline")
     st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 8** = total drift from baseline")
@@ -7205,17 +7224,24 @@ def tab_pipeline(dash):
 
     opened_display_rows = []
     st.markdown("**✅ Already Opened 2026 — Schedule Performance**")
-    st.caption("🔴 = opened late · 🟢 = opened early · ⬜ = on time.")
+    st.caption("🔴 = opened late (lost sales) · 🟢 = opened early (gained sales) · ⬜ = on time.")
     for r in sorted(opened_rows_calc, key=lambda x: x["delta_days"], reverse=True):
-        delta = r["delta_days"]; wks = abs(delta) // 7
-        slip = (f"🔴 +{wks}wk" if delta>0 and wks else f"🔴 +{delta}d" if delta>0 else
-                f"🟢 -{wks}wk" if delta<0 and wks else f"🟢 {delta}d" if delta<0 else "⬜ On Time")
+        delta = r["delta_days"]; wks = abs(delta) // 7; days = abs(delta)
+        if delta > 0:
+            slip = f"🔴 +{wks}wk" if wks else f"🔴 +{days}d"
+            rev  = f"-${delta / 7 * AVG_REV_PER_WEEK / 1e3:.0f}K"
+        elif delta < 0:
+            slip = f"🟢 -{wks}wk" if wks else f"🟢 -{days}d"
+            rev  = f"+${days / 7 * AVG_REV_PER_WEEK / 1e3:.0f}K"
+        else:
+            slip = "⬜ On Time"; rev = "—"
         opened_display_rows.append({
             "Stand": f"{r['city']}, {r['state']}",
             "Store #": r.get("store",""),
             "Jan 8 Projected": r.get("jan8", r.get("jan15","")),
             "Actual Open": r.get("actual_open",""),
             "vs Jan 8": slip,
+            "Sales Impact": rev,
         })
     if opened_display_rows:
         st.dataframe(pd.DataFrame(opened_display_rows), use_container_width=True, hide_index=True,
