@@ -6894,7 +6894,7 @@ def _build_milestone_fig(ms_rows_json: str):
     ))
     fig.add_hline(y=0, line_color="white", line_width=1)
     fig.update_layout(
-        title="Avg Milestone Drift vs Jan 8 Baseline",
+        title="Avg Milestone Drift vs Dec 18 Baseline",
         height=360, yaxis_title="Avg Days Drifted",
         xaxis_title=None,
     )
@@ -7001,7 +7001,7 @@ def tab_pipeline(dash):
     st.caption(
         f"**Data source:** Drew Deagan's weekly opening schedule (last updated **{_last_updated}**). "
         "To refresh: replace `pipeline_data.json` with the latest export. "
-        "Jan 8, 2026 used as baseline for schedule shift analysis · 2027 dates are soft/indicative · $45K avg revenue/week assumed."
+        "Dec 18, 2025 used as baseline for schedule shift analysis · 2027 dates are soft/indicative · $45K avg revenue/week assumed."
     )
 
     _print_button("🖨️  Print / Save as PDF")
@@ -7062,8 +7062,8 @@ def tab_pipeline(dash):
     _report_snapshots = _pdata["report_snapshots"]
     snap_labels = [s["label"] for s in _report_snapshots]
     latest_snap = _report_snapshots[-1]
-    st.markdown("#### 📅 Schedule Intelligence — Opening Date Tracker  *(2026 opens · indexed to Jan 8 baseline)*")
-    st.caption(f"Tracks how opening dates move week-over-week vs the Jan 8 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
+    st.markdown("#### 📅 Schedule Intelligence — Opening Date Tracker  *(2026 opens · indexed to Dec 18 baseline)*")
+    st.caption(f"Tracks how opening dates move week-over-week vs the Dec 18 baseline. Latest report: **{latest_snap['label']}**. 2027 dates excluded.")
 
     shifts_df = shifts_df_base.copy()
     _curr_key = _pdata["report_snapshots"][-1].get("key", "apr9")
@@ -7084,10 +7084,10 @@ def tab_pipeline(dash):
             dff["state"].unique().tolist()
         )]
     dff_rshs = set(dff["rsh"].tolist())
-    _new_since_jan15 = _pdata.get("new_since_jan8", _pdata.get("new_since_jan15", []))
+    _new_since_jan15 = _pdata.get("new_since_dec18", _pdata.get("new_since_jan8", _pdata.get("new_since_jan15", [])))
     filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
 
-    prev_snap = _report_snapshots[-2].get("key", "jan8") if len(_report_snapshots) >= 2 else "jan8"
+    prev_snap = _report_snapshots[-2].get("key", "dec18") if len(_report_snapshots) >= 2 else "dec18"
     curr_snap = latest_snap.get("key", "apr9")
 
     def _parse_d(s):
@@ -7109,9 +7109,9 @@ def tab_pipeline(dash):
 
     opened_rows_calc = []
     for o in _pdata["opened_shifts"]:
-        d_jan8   = _parse_d(o.get("jan8", o.get("jan15","")))
+        d_base   = _parse_d(o.get("dec18", o.get("jan8", o.get("jan15",""))))
         d_actual = _parse_d(o.get("actual_open",""))
-        delta = (d_actual - d_jan8).days if d_jan8 and d_actual else 0
+        delta = (d_actual - d_base).days if d_base and d_actual else 0
         opened_rows_calc.append({**o, "delta_days": delta})
 
     opened_late   = [r for r in opened_rows_calc if r["delta_days"] > 0]
@@ -7134,14 +7134,14 @@ def tab_pipeline(dash):
     total_rev_risk   = total_slip_weeks * AVG_REV_PER_WEEK
 
     si1, si2, si3, si4, si5 = st.columns(5)
-    si1.metric("Stands Pushed Out (vs Jan 8)", len(pushed),
+    si1.metric("Stands Pushed Out (vs Dec 18)", len(pushed),
                delta=f"+{len(pushed)} delayed", delta_color="inverse")
-    si2.metric("Stands Pulled In (vs Jan 8)", len(pulled),
+    si2.metric("Stands Pulled In (vs Dec 18)", len(pulled),
                delta=f"{len(pulled)} accelerated", delta_color="normal")
     si3.metric(f"Moved This Week ({snap_labels[-2]}→{snap_labels[-1]})", len(wow_movers),
                help="Stands whose date changed since the previous report")
     si4.metric("Revenue at Risk (cumulative delay)", f"${total_rev_risk/1e6:.2f}M",
-               help=f"{total_slip_weeks:.1f} wks pushed × $45K avg weekly revenue vs Jan 8")
+               help=f"{total_slip_weeks:.1f} wks pushed × $45K avg weekly revenue vs Dec 18")
     if net_slip_days > 0:
         _net_label = f"Net {net_slip_weeks:.1f} wks lost · ${net_rev_impact/1e3:.0f}K"
         _net_color = "inverse"
@@ -7193,7 +7193,7 @@ def tab_pipeline(dash):
     <div>
       <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">Total 2026 Impact</div>
       <div style="font-size:24px;font-weight:800;color:{_text_color};">{_total_sign}${_total_abs/1e6:.2f}M</div>
-      <div style="font-size:10px;color:#9ca3af;">vs Jan 8 projected open dates · $45K/wk avg</div>
+      <div style="font-size:10px;color:#9ca3af;">vs Dec 18 projected open dates · $45K/wk avg</div>
     </div>
   </div>
 </div>
@@ -7202,11 +7202,11 @@ def tab_pipeline(dash):
     # ── Stands that slipped from 2026 → 2027 ─────────────────────────────────
     _slipped_to_2027 = []
     for _r in _pdata["date_shifts"]:
-        _jan8_d  = _parse_d(_r.get("jan8", ""))
+        _base_d  = _parse_d(_r.get("dec18", ""))
         _curr_d  = _parse_d(_r.get(curr_snap, ""))
-        if _jan8_d and _jan8_d.year == 2026 and _curr_d and _curr_d.year == 2027:
-            _slip = (_curr_d - _jan8_d).days
-            _slipped_to_2027.append({**_r, "_slip": _slip, "_curr_d": _curr_d, "_jan8_d": _jan8_d})
+        if _base_d and _base_d.year == 2026 and _curr_d and _curr_d.year == 2027:
+            _slip = (_curr_d - _base_d).days
+            _slipped_to_2027.append({**_r, "_slip": _slip, "_curr_d": _curr_d, "_base_d": _base_d})
     _slipped_to_2027.sort(key=lambda x: x["_curr_d"])
 
     if _slipped_to_2027:
@@ -7220,7 +7220,7 @@ def tab_pipeline(dash):
                 f'<div style="display:flex;justify-content:space-between;align-items:center;'
                 f'padding:6px 0;border-bottom:1px solid #fee2e2;">'
                 f'<div style="font-weight:600;color:#1f2937;">{_r["city"]}, {_r["state"]}</div>'
-                f'<div style="font-size:11px;color:#6b7280;">Jan 8: {_r["_jan8_d"].strftime("%-m/%-d/%y")} → Now: {_r["_curr_d"].strftime("%-m/%-d/%y")}</div>'
+                f'<div style="font-size:11px;color:#6b7280;">Dec 18: {_r["_base_d"].strftime("%-m/%-d/%y")} → Now: {_r["_curr_d"].strftime("%-m/%-d/%y")}</div>'
                 f'<div style="font-size:12px;color:#b91c1c;font-weight:700;">+{_wks}wk&nbsp;&nbsp;−${_rev/1e3:.0f}K</div>'
                 f'</div>'
             )
@@ -7239,8 +7239,8 @@ def tab_pipeline(dash):
 </div>
 """, unsafe_allow_html=True)
 
-    st.markdown("**📋 Full Date History** — every snapshot vs Jan 8 baseline")
-    st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 8** = total drift from baseline")
+    st.markdown("**📋 Full Date History** — every snapshot vs Dec 18 baseline")
+    st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Dec 18** = total drift from baseline")
 
     sort_col1, toggle_col, _ = st.columns([2, 2, 2])
     with sort_col1:
@@ -7250,8 +7250,8 @@ def tab_pipeline(dash):
     with toggle_col:
         show_all_snaps = st.toggle("Show all weeks", value=False, key="si_show_all_snaps")
 
-    # Default view: Jan 8 baseline + last 2 snapshots only
-    _baseline_key = "jan8"
+    # Default view: Dec 18 baseline + last 2 snapshots only
+    _baseline_key = "dec18"
     _baseline_snap = next((s for s in _report_snapshots if s.get("key") == _baseline_key), None)
     _recent_snaps  = _report_snapshots[-2:]   # prev week + current week
     _visible_snaps = _report_snapshots if show_all_snaps else (
@@ -7264,7 +7264,7 @@ def tab_pipeline(dash):
         for fs in ["%m/%d/%y", "%m/%d/%Y"]:
             try: return _dt.datetime.strptime(v, fs).date()
             except: pass
-        v2 = str(r.get("jan8", r.get("jan15","")) or "")
+        v2 = str(r.get("dec18", r.get("jan8", r.get("jan15",""))) or "")
         for fs in ["%m/%d/%y", "%m/%d/%Y"]:
             try: return _dt.datetime.strptime(v2, fs).date()
             except: pass
@@ -7290,10 +7290,10 @@ def tab_pipeline(dash):
                                    f"🟢 {wow}d" if wow<0 else "—")
         net = r["delta_days"]
         if net is None or (hasattr(net, '__class__') and net.__class__.__name__ == 'float' and str(net) == 'nan'):
-            row_dict["Net vs Jan 8"] = "🆕 New"
+            row_dict["Net vs Dec 18"] = "🆕 New"
         else:
             net = int(net); net_wks = net // 7
-            row_dict["Net vs Jan 8"] = f"+{net_wks}wk" if net>0 else (f"{net_wks}wk" if net<0 else "±0")
+            row_dict["Net vs Dec 18"] = f"+{net_wks}wk" if net>0 else (f"{net_wks}wk" if net<0 else "±0")
         hist_rows.append(row_dict)
 
     if hist_rows:
@@ -7322,9 +7322,9 @@ def tab_pipeline(dash):
         opened_display_rows.append({
             "Stand": f"{r['city']}, {r['state']}",
             "Store #": r.get("store",""),
-            "Jan 8 Projected": r.get("jan8", r.get("jan15","")),
+            "Dec 18 Projected": r.get("dec18", r.get("jan8", r.get("jan15",""))),
             "Actual Open": r.get("actual_open",""),
-            "vs Jan 8": slip,
+            "vs Dec 18": slip,
             "Sales Impact": rev,
         })
     if opened_display_rows:
@@ -7332,7 +7332,7 @@ def tab_pipeline(dash):
                      height=min(60 + len(opened_display_rows) * 35, 480))
 
     if filtered_new_since:
-        st.markdown("**🆕 New to Pipeline Since Jan 8**")
+        st.markdown("**🆕 New to Pipeline Since Dec 18**")
         new_stands_info = [r for r in _pdata["upcoming"] if r["rsh"] in filtered_new_since]
         if new_stands_info:
             new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
@@ -7357,7 +7357,7 @@ def tab_pipeline(dash):
             st.info("No stands with both Construction Start and Open Date in current filter.")
 
     st.divider()
-    st.markdown("#### 🔍 Process Leakage — Milestone Drift vs Jan 8 Baseline")
+    st.markdown("#### 🔍 Process Leakage — Milestone Drift vs Dec 18 Baseline")
     st.caption("🔴 bar = slipped later · 🟢 bar = moved earlier.")
     _ms_data = _pdata.get("milestone_shifts", [])
     ms_phase_opts = ["5. Construction", "4. Permitting", "3. Design", "All Phases"]
