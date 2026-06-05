@@ -7077,6 +7077,9 @@ def tab_pipeline(dash):
         return True
 
     shifts_df = shifts_df[shifts_df.apply(_is_2026_open, axis=1)]
+    # Hide already-opened stands — they appear in the "Already Opened" table below
+    _opened_rshs = {o.get("rsh", "") for o in _pdata.get("opened_shifts", [])}
+    shifts_df = shifts_df[~shifts_df["rsh"].isin(_opened_rshs)]
     if sel_state != "All States":
         shifts_df = shifts_df[shifts_df["state"] == sel_state]
     if sel_regions:
