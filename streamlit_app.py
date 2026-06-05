@@ -7199,6 +7199,46 @@ def tab_pipeline(dash):
 </div>
 """, unsafe_allow_html=True)
 
+    # ── Stands that slipped from 2026 → 2027 ─────────────────────────────────
+    _slipped_to_2027 = []
+    for _r in _pdata["date_shifts"]:
+        _jan8_d  = _parse_d(_r.get("jan8", ""))
+        _curr_d  = _parse_d(_r.get(curr_snap, ""))
+        if _jan8_d and _jan8_d.year == 2026 and _curr_d and _curr_d.year == 2027:
+            _slip = (_curr_d - _jan8_d).days
+            _slipped_to_2027.append({**_r, "_slip": _slip, "_curr_d": _curr_d, "_jan8_d": _jan8_d})
+    _slipped_to_2027.sort(key=lambda x: x["_curr_d"])
+
+    if _slipped_to_2027:
+        _slip_total_wks = sum(r["_slip"] for r in _slipped_to_2027) / 7
+        _slip_rev       = _slip_total_wks * AVG_REV_PER_WEEK
+        _rows_html = ""
+        for _r in _slipped_to_2027:
+            _wks = _r["_slip"] // 7
+            _rev = _r["_slip"] / 7 * AVG_REV_PER_WEEK
+            _rows_html += (
+                f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                f'padding:6px 0;border-bottom:1px solid #fee2e2;">'
+                f'<div style="font-weight:600;color:#1f2937;">{_r["city"]}, {_r["state"]}</div>'
+                f'<div style="font-size:11px;color:#6b7280;">Jan 8: {_r["_jan8_d"].strftime("%-m/%-d/%y")} → Now: {_r["_curr_d"].strftime("%-m/%-d/%y")}</div>'
+                f'<div style="font-size:12px;color:#b91c1c;font-weight:700;">+{_wks}wk&nbsp;&nbsp;−${_rev/1e3:.0f}K</div>'
+                f'</div>'
+            )
+        st.markdown(f"""
+<div style="background:transparent;border:2px solid #f87171;border-radius:6px;
+            padding:14px 18px;margin:0 0 18px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+    <div style="font-size:12px;font-weight:700;color:#ef4444;letter-spacing:0.06em;">
+      ⚠️ SLIPPED TO 2027 — LOST 2026 OPENS ({len(_slipped_to_2027)} stands)
+    </div>
+    <div style="font-size:12px;color:#b91c1c;font-weight:700;">
+      Total lost: {_slip_total_wks:.0f} wks &nbsp;·&nbsp; −${_slip_rev/1e3:.0f}K 2026 revenue
+    </div>
+  </div>
+  {_rows_html}
+</div>
+""", unsafe_allow_html=True)
+
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 8 baseline")
     st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 8** = total drift from baseline")
 
