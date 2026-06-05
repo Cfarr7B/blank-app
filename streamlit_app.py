@@ -7164,8 +7164,7 @@ def tab_pipeline(dash):
     sort_col1, toggle_col, _ = st.columns([2, 2, 2])
     with sort_col1:
         sort_opt = st.selectbox("Sort by",
-            ["Opening Date (earliest first)", "Opening Date (latest first)",
-             "Slippage (most delayed first)", "Stand Name (A–Z)"],
+            ["Opening Date", "Slippage (most delayed first)", "Stand Name (A–Z)"],
             key="si_sort_opt")
     with toggle_col:
         show_all_snaps = st.toggle("Show all weeks", value=False, key="si_show_all_snaps")
@@ -7190,14 +7189,12 @@ def tab_pipeline(dash):
             except: pass
         return _dt.date(9999, 1, 1)
 
-    if sort_opt == "Opening Date (earliest first)":
-        ss = shifts_df.copy(); ss["_s"] = ss.apply(_parse_open_date, axis=1); shifts_sorted = ss.sort_values("_s")
-    elif sort_opt == "Opening Date (latest first)":
-        ss = shifts_df.copy(); ss["_s"] = ss.apply(_parse_open_date, axis=1); shifts_sorted = ss.sort_values("_s", ascending=False)
-    elif sort_opt == "Slippage (most delayed first)":
+    if sort_opt == "Slippage (most delayed first)":
         shifts_sorted = shifts_df.sort_values("delta_days", ascending=False)
-    else:
+    elif sort_opt == "Stand Name (A–Z)":
         shifts_sorted = shifts_df.sort_values("city")
+    else:  # "Opening Date" (default)
+        ss = shifts_df.copy(); ss["_s"] = ss.apply(_parse_open_date, axis=1); shifts_sorted = ss.sort_values("_s")
 
     hist_rows = []
     for _, r in shifts_sorted.iterrows():
@@ -7225,7 +7222,13 @@ def tab_pipeline(dash):
     opened_display_rows = []
     st.markdown("**✅ Already Opened 2026 — Schedule Performance**")
     st.caption("🔴 = opened late (lost sales) · 🟢 = opened early (gained sales) · ⬜ = on time.")
-    for r in sorted(opened_rows_calc, key=lambda x: x["delta_days"], reverse=True):
+    def _actual_open_dt(r):
+        v = r.get("actual_open", "")
+        for fmt in ["%m/%d/%y", "%m/%d/%Y"]:
+            try: return _dt.datetime.strptime(str(v), fmt).date()
+            except: pass
+        return _dt.date(9999, 1, 1)
+    for r in sorted(opened_rows_calc, key=_actual_open_dt):
         delta = r["delta_days"]; wks = abs(delta) // 7; days = abs(delta)
         if delta > 0:
             slip = f"🔴 +{wks}wk" if wks else f"🔴 +{days}d"
