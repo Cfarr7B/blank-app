@@ -7158,6 +7158,47 @@ def tab_pipeline(dash):
                     f"{len(opened_late)} late ({opened_slip_weeks:.1f}wk, -${opened_rev_lost/1e3:.0f}K) · "
                     f"{len(opened_early)} early (+{early_gain_weeks:.1f}wk, +${early_rev_gained/1e3:.0f}K)")
 
+    # ── 2026 Revenue Impact Summary Box ─────────────────────────────────────
+    _pulled_savings     = abs(pulled["delta_days"].sum()) / 7 * AVG_REV_PER_WEEK
+    _net_upcoming_risk  = total_rev_risk - _pulled_savings          # upcoming: delayed minus accelerated
+    _total_2026_impact  = net_rev_impact + _net_upcoming_risk       # realized + at-risk (net)
+
+    _box_color  = "#7f1d1d" if _total_2026_impact > 0 else "#14532d"
+    _box_border = "#ef4444" if _total_2026_impact > 0 else "#22c55e"
+    _total_sign = "-" if _total_2026_impact >= 0 else "+"
+    _total_abs  = abs(_total_2026_impact)
+
+    _realized_sign = "-" if net_rev_impact >= 0 else "+"
+    _upcoming_sign = "-" if _net_upcoming_risk >= 0 else "+"
+
+    st.markdown(f"""
+<div style="background:{_box_color};border-left:4px solid {_box_border};
+            border-radius:6px;padding:14px 18px;margin:12px 0 18px 0;">
+  <div style="font-size:13px;font-weight:700;color:#f8fafc;letter-spacing:0.05em;margin-bottom:10px;">
+    💰 2026 REVENUE IMPACT — IF CURRENT DATES HOLD
+  </div>
+  <div style="display:flex;gap:32px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;color:#cbd5e1;margin-bottom:2px;">Already Realized (YTD opens)</div>
+      <div style="font-size:18px;font-weight:700;color:#fca5a5;">{_realized_sign}${abs(net_rev_impact)/1e3:.0f}K</div>
+      <div style="font-size:10px;color:#94a3b8;">{len(opened_late)}L · {len(opened_early)}E · net {net_slip_weeks:.1f} wks</div>
+    </div>
+    <div style="border-left:1px solid #475569;margin:0 4px;"></div>
+    <div>
+      <div style="font-size:11px;color:#cbd5e1;margin-bottom:2px;">Upcoming Delayed (at risk)</div>
+      <div style="font-size:18px;font-weight:700;color:#fca5a5;">{_upcoming_sign}${abs(_net_upcoming_risk)/1e3:.0f}K</div>
+      <div style="font-size:10px;color:#94a3b8;">{len(pushed)} delayed · {len(pulled)} pulled in · net {_net_upcoming_risk/AVG_REV_PER_WEEK:.1f} wks</div>
+    </div>
+    <div style="border-left:1px solid #475569;margin:0 4px;"></div>
+    <div>
+      <div style="font-size:11px;color:#cbd5e1;margin-bottom:2px;">Total 2026 Impact</div>
+      <div style="font-size:24px;font-weight:800;color:#f87171;">{_total_sign}${_total_abs/1e6:.2f}M</div>
+      <div style="font-size:10px;color:#94a3b8;">vs Jan 8 projected open dates · $45K/wk avg</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
     st.markdown("**📋 Full Date History** — every snapshot vs Jan 8 baseline")
     st.caption("🔴/🟢 in **vs Last Wk** = moved since previous report · **Net vs Jan 8** = total drift from baseline")
 
