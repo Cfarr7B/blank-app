@@ -59,7 +59,7 @@
       "permit_appr": "12/1/25",
       "cs": "2/16/26",
       "bd": "3/17/26",
-      "open": "6/15/26",
+      "open": "6/22/26",
       "notes": "power, water, sewer all connected. TCO 5/22 pending sod"
     },
     {
@@ -74,7 +74,7 @@
       "permit_appr": "1/2/26",
       "cs": "1/26/26",
       "bd": "2/26/26",
-      "open": "6/15/26",
+      "open": "7/27/26",
       "notes": "water, sewer connected power tracking for 5/14. storm/sewer conflict. comments 5/20. water shutdown?"
     },
     {
@@ -104,7 +104,7 @@
       "permit_appr": "3/18/26",
       "cs": "3/2/26",
       "bd": "4/15/26",
-      "open": "6/22/26",
+      "open": "6/29/26",
       "notes": "confirm CO date with GC.  water and sewer tapped. power tracking for 5/22 (Primary is run and buried). need green tag then excel will pull power and energize."
     },
     {
@@ -119,7 +119,7 @@
       "permit_appr": "10/10/25",
       "cs": "12/17/25",
       "bd": "3/4/26",
-      "open": "6/29/26",
+      "open": "8/17/26",
       "notes": "dates at risk for RW revision requiring neighbor coordination. water and sewer connected. power - secondary was pulled 5/? (Pedestal has already been set).  Power release pending elec. wall in inspection.  Tracking for 5/22 - need power by 5/27 for 6/12 CO"
     },
     {
@@ -149,7 +149,7 @@
       "permit_appr": "12/1/25",
       "cs": "1/12/26",
       "bd": "3/11/26",
-      "open": "7/13/26",
+      "open": "7/27/26",
       "notes": "water account set up as of 5/6. Nichiha arrived 5/13. Power and water on in building tracking 5/22."
     },
     {
@@ -164,7 +164,7 @@
       "permit_appr": "4/9/26",
       "cs": "4/8/26",
       "bd": "4/24/26",
-      "open": "7/13/26",
+      "open": "7/6/26",
       "notes": "GC looking to pull CO by as much as a month. powered as of 5/15. water and sewer connected."
     },
     {
@@ -208,8 +208,8 @@
       "permit_sub": "11/14/25",
       "permit_appr": "2/25/26",
       "cs": "4/7/26",
-      "bd": "5/26/26",
-      "open": "8/10/26",
+      "bd": "6/10/26",
+      "open": "8/24/26",
       "notes": "BD has been confirmed with NM"
     },
     {
@@ -253,8 +253,8 @@
       "permit_sub": "11/21/24",
       "permit_appr": "2/26/26",
       "cs": "4/8/26",
-      "bd": "5/27/26",
-      "open": "8/17/26",
+      "bd": "6/10/26",
+      "open": "8/31/26",
       "notes": "Owl is gone.  BD of 5/27 to be confirmed with NM & GC. Water tapped (meter pending AB's)"
     },
     {
@@ -275,7 +275,7 @@
     {
       "rsh": "RSH-00104",
       "store": "001693",
-      "phase": "4. Permitting",
+      "phase": "5. Construction",
       "address": "13500 N Rockwell Ave",
       "city": "OKC",
       "state": "OK",
@@ -311,10 +311,10 @@
       "state": "TX",
       "region": "C. TX",
       "permit_sub": "3/24/26",
-      "permit_appr": "6/5/26",
-      "cs": "6/22/26",
-      "bd": "7/15/26",
-      "open": "10/5/26",
+      "permit_appr": "6/26/26",
+      "cs": "7/8/26",
+      "bd": "8/5/26",
+      "open": "10/26/26",
       "notes": "TXDOT work during opening. City comments received 5/11 (TXDOT). Resubmit tracking for 5/20"
     },
     {
@@ -335,7 +335,7 @@
     {
       "rsh": "RSH-00094",
       "store": "000757",
-      "phase": "4. Permitting",
+      "phase": "5. Construction",
       "address": "4102 Cleveland Ave",
       "city": "Fort Myers",
       "state": "FL",
@@ -385,11 +385,11 @@
       "city": "Waco",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "5/29/26",
-      "permit_appr": "7/17/26",
-      "cs": "7/24/26",
+      "permit_sub": "6/8/26",
+      "permit_appr": "7/27/26",
+      "cs": "8/3/26",
       "bd": null,
-      "open": "10/26/26",
+      "open": "11/2/26",
       "notes": "Building only on 5/20"
     },
     {
@@ -446,7 +446,7 @@
       "state": "TX",
       "region": "W. TX",
       "permit_sub": "3/11/26",
-      "permit_appr": "6/29/26",
+      "permit_appr": "6/1/26",
       "cs": "7/13/26",
       "bd": "9/2/26",
       "open": "11/9/26",
@@ -461,10 +461,10 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "11/8/24",
-      "permit_appr": "5/22/26",
-      "cs": "6/8/26",
-      "bd": "7/8/26",
-      "open": "11/16/26",
+      "permit_appr": "6/26/26",
+      "cs": "7/15/26",
+      "bd": "7/29/26",
+      "open": "12/7/26",
       "notes": "Need permit by 5/25."
     },
     {
@@ -476,10 +476,10 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "12/11/24",
-      "permit_appr": "6/3/26",
-      "cs": "6/15/26",
-      "bd": "7/29/26",
-      "open": "11/23/26",
+      "permit_appr": "8/19/26",
+      "cs": "8/26/26",
+      "bd": "10/14/26",
+      "open": "2/8/27",
       "notes": "City has approved site plan and traffic. LL tenant approval could delay CS. Need to start construction 6/15-22 to open this year"
     },
     {
@@ -491,7 +491,7 @@
       "state": "FL",
       "region": "FLSW",
       "permit_sub": "11/5/25",
-      "permit_appr": "6/5/26",
+      "permit_appr": "6/26/26",
       "cs": "7/6/26",
       "bd": "10/21/26",
       "open": "12/7/26",
@@ -550,11 +550,11 @@
       "city": "Dallas",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "6/18/26",
-      "permit_appr": "9/24/26",
-      "cs": "10/29/26",
+      "permit_sub": "6/25/26",
+      "permit_appr": "9/15/26",
+      "cs": "9/24/26",
       "bd": null,
-      "open": "1/7/27",
+      "open": "12/7/26",
       "notes": ""
     },
     {
@@ -575,13 +575,13 @@
     {
       "rsh": "RSH-00528",
       "store": "",
-      "phase": "3. Design",
+      "phase": "4. Permitting",
       "address": "2401 Henney Rd",
       "city": "Choctaw",
       "state": "OK",
       "region": "OKC",
       "permit_sub": "5/1/26",
-      "permit_appr": "9/4/26",
+      "permit_appr": "7/31/26",
       "cs": "9/21/26",
       "bd": "11/4/26",
       "open": "2/1/27",
@@ -596,10 +596,10 @@
       "state": "TX",
       "region": "C. TX",
       "permit_sub": "6/18/26",
-      "permit_appr": "9/24/26",
-      "cs": "11/25/26",
+      "permit_appr": "9/15/26",
+      "cs": "9/24/26",
       "bd": null,
-      "open": "2/12/27",
+      "open": "12/7/26",
       "notes": ""
     },
     {
@@ -685,11 +685,11 @@
       "city": "Killeen",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "7/3/26",
-      "permit_appr": "10/30/26",
-      "cs": "12/2/26",
-      "bd": "1/13/27",
-      "open": "4/19/27",
+      "permit_sub": "7/10/26",
+      "permit_appr": "11/6/26",
+      "cs": "12/9/26",
+      "bd": "1/20/27",
+      "open": "4/26/27",
       "notes": "LSI in progress on 5/19.  TXDOT feedback on 5/20. LL sent redlines 5/20."
     },
     {
@@ -740,7 +740,7 @@
     {
       "rsh": "RSH-00689",
       "store": "",
-      "phase": "2. Due Diligence",
+      "phase": "3. Design",
       "address": "980 Pasadena Ave S",
       "city": "St. Petersburg",
       "state": "FL",
@@ -755,7 +755,7 @@
     {
       "rsh": "RSH-00617",
       "store": "001723",
-      "phase": "3. Design",
+      "phase": "4. Permitting",
       "address": "390 TX-199",
       "city": "Springtown",
       "state": "TX",
@@ -775,11 +775,11 @@
       "city": "Mulberry",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "5/29/26",
-      "permit_appr": "11/20/26",
-      "cs": "11/30/26",
-      "bd": "1/6/27",
-      "open": "5/3/27",
+      "permit_sub": "6/5/26",
+      "permit_appr": "12/21/26",
+      "cs": "1/11/27",
+      "bd": "2/10/27",
+      "open": "6/14/27",
       "notes": "Civil only KO on 3/18."
     },
     {
@@ -805,11 +805,11 @@
       "city": "Largo",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "5/8/26",
-      "permit_appr": "1/13/27",
-      "cs": "1/25/27",
-      "bd": "3/3/27",
-      "open": "6/14/27",
+      "permit_sub": "6/15/26",
+      "permit_appr": "2/20/27",
+      "cs": "3/1/27",
+      "bd": "3/31/27",
+      "open": "7/19/27",
       "notes": "lease is close.  should be signed in next few days (note on 3/18)"
     },
     {
@@ -850,11 +850,11 @@
       "city": "Arcadia",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "8/7/26",
-      "permit_appr": "2/12/27",
-      "cs": "3/1/27",
-      "bd": "4/1/27",
-      "open": "7/26/27",
+      "permit_sub": "8/21/26",
+      "permit_appr": "2/26/27",
+      "cs": "3/15/27",
+      "bd": "4/15/27",
+      "open": "8/9/27",
       "notes": "Lease is \"not close\" as of 5/20. 6/17 KDO might be ambitious"
     },
     {
@@ -880,9 +880,9 @@
       "city": "Edmond",
       "state": "OK",
       "region": "OKC",
-      "permit_sub": "10/5/26",
-      "permit_appr": "3/12/27",
-      "cs": "4/5/27",
+      "permit_sub": "5/28/26",
+      "permit_appr": "7/22/26",
+      "cs": "9/14/26",
       "bd": null,
       "open": "7/26/27",
       "notes": ""
@@ -910,11 +910,11 @@
       "city": "Garland",
       "state": "TX",
       "region": "C. TX",
-      "permit_sub": "8/7/26",
-      "permit_appr": "2/2/27",
-      "cs": "5/31/27",
-      "bd": "7/7/27",
-      "open": "8/30/27",
+      "permit_sub": "8/14/26",
+      "permit_appr": "2/9/27",
+      "cs": "6/7/27",
+      "bd": "7/14/27",
+      "open": "9/6/27",
       "notes": "Traffic study under review with LL eng. Need 6-9 months for SUP"
     },
     {
@@ -925,11 +925,11 @@
       "city": "Cape Coral",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "8/2/26",
-      "permit_appr": "2/21/27",
-      "cs": "3/15/27",
-      "bd": "4/28/27",
-      "open": "8/30/27",
+      "permit_sub": "11/30/26",
+      "permit_appr": "6/21/27",
+      "cs": "6/30/27",
+      "bd": "7/28/27",
+      "open": "11/29/27",
       "notes": "PLACEHOLDER DATES. Lease sent to LL early March"
     },
     {
@@ -1015,11 +1015,11 @@
       "city": "Bradenton",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "8/3/26",
-      "permit_appr": "4/24/27",
-      "cs": "5/17/27",
-      "bd": "6/23/27",
-      "open": "10/11/27",
+      "permit_sub": "9/7/26",
+      "permit_appr": "5/29/27",
+      "cs": "6/14/27",
+      "bd": "7/21/27",
+      "open": "11/15/27",
       "notes": "LL returned lease week of 5/11. 7C legal to advise on DKO date"
     },
     {
@@ -1060,11 +1060,11 @@
       "city": "Cape Coral",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "7/24/26",
-      "permit_appr": "4/24/27",
-      "cs": "5/17/27",
-      "bd": "7/7/27",
-      "open": "10/18/27",
+      "permit_sub": "8/14/26",
+      "permit_appr": "5/15/27",
+      "cs": "5/31/27",
+      "bd": "7/21/27",
+      "open": "11/1/27",
       "notes": "LL has had 1st draft lease for couple weeks as of 5/20. DKO 6/17 is aggressive"
     },
     {
@@ -1120,8 +1120,8 @@
       "city": "Fort Myers",
       "state": "FL",
       "region": "FLSW",
-      "permit_sub": "5/22/26",
-      "permit_appr": "2/17/27",
+      "permit_sub": "5/29/26",
+      "permit_appr": "2/24/27",
       "cs": "3/22/27",
       "bd": "6/16/27",
       "open": "11/1/27",
