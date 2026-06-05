@@ -7205,7 +7205,8 @@ def tab_pipeline(dash):
     # ── Stands that slipped from 2026 → 2027 ─────────────────────────────────
     _slipped_to_2027 = []
     for _r in _pdata["date_shifts"]:
-        _base_d  = _parse_d(_r.get("dec18", ""))
+        # Use dec18 baseline; fall back to jan8 for stands added after Dec 18
+        _base_d  = _parse_d(_r.get("dec18", "") or _r.get("jan8", ""))
         _curr_d  = _parse_d(_r.get(curr_snap, ""))
         if _base_d and _base_d.year == 2026 and _curr_d and _curr_d.year == 2027:
             _slip = (_curr_d - _base_d).days
