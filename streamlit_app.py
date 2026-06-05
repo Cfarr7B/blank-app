@@ -7340,21 +7340,21 @@ def tab_pipeline(dash):
             st.dataframe(new_df, use_container_width=True, hide_index=True)
 
     st.divider()
-    st.markdown("#### 📊 Construction Timeline — Phases 3–5")
-    gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design"])].copy()
-    gantt_df = gantt_df[gantt_df["open_dt"].notna() & gantt_df["cs_dt"].notna()].copy()
-    if not gantt_df.empty:
-        gantt_df["Label"] = gantt_df.apply(
-            lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""), axis=1)
-        gantt_df = gantt_df.sort_values("open_dt", ascending=False)
-        import json as _json_g
-        _gantt_json = _json_g.dumps(
-            gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records"))
-        fig_gantt = _build_gantt_fig(_gantt_json, str(today))
-        if fig_gantt is not None:
-            st.plotly_chart(fig_gantt, use_container_width=True)
-    else:
-        st.info("No stands with both Construction Start and Open Date in current filter.")
+    with st.expander("📊 Construction Timeline — Phases 3–5", expanded=False):
+        gantt_df = dff[dff["phase"].isin(["5. Construction","4. Permitting","3. Design"])].copy()
+        gantt_df = gantt_df[gantt_df["open_dt"].notna() & gantt_df["cs_dt"].notna()].copy()
+        if not gantt_df.empty:
+            gantt_df["Label"] = gantt_df.apply(
+                lambda r: f"{r['city']}, {r['state']}" + (f" #{r['store']}" if r["store"] != "TBD" else ""), axis=1)
+            gantt_df = gantt_df.sort_values("open_dt", ascending=False)
+            import json as _json_g
+            _gantt_json = _json_g.dumps(
+                gantt_df[["cs_dt","open_dt","Label","phase","store"]].astype(str).to_dict("records"))
+            fig_gantt = _build_gantt_fig(_gantt_json, str(today))
+            if fig_gantt is not None:
+                st.plotly_chart(fig_gantt, use_container_width=True)
+        else:
+            st.info("No stands with both Construction Start and Open Date in current filter.")
 
     st.divider()
     st.markdown("#### 🔍 Process Leakage — Milestone Drift vs Jan 8 Baseline")
