@@ -663,6 +663,12 @@ def _age_yrs_from_period(open_date_str, period_key):
 def get_stands_df(dash, period_key=None):
     df = pd.DataFrame(dash["stand_records"])
 
+    # Normalise Region — some legacy records store 0 (int) instead of a string
+    if "Region" in df.columns:
+        df["Region"] = df["Region"].apply(
+            lambda v: "Unknown" if (v is None or str(v) in ("0", "nan", "")) else str(v)
+        )
+
     # Compute Age_Bucket dynamically from Open Date + Period_Key
     # (stand_meta.json has Open_Date but Age_Bucket was never stored)
     if "Open Date" in df.columns and "Period_Key" in df.columns:
