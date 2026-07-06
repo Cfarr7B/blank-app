@@ -627,7 +627,7 @@ def _period_end_date(period_key):
 def _assign_age_bucket(open_date_str, period_key):
     """Calculate age bucket from open date and period."""
     import datetime
-    if not open_date_str or open_date_str in ("", "nan", "None"):
+    if not open_date_str or str(open_date_str).strip() in ("", "nan", "None", "0", "Unknown"):
         return "Unknown"
     try:
         open_date = pd.to_datetime(open_date_str).date()
@@ -7047,7 +7047,12 @@ def tab_pipeline(dash):
         parts = raw.split(" ", 1)
         if parts:
             open_store_ids.add(parts[0].strip())
-    for r in _pdata["open_pdf"]:
+    for r in _pdata.get("open_pdf", []):
+        s = r.get("store", "")
+        if s:
+            open_store_ids.add(s)
+    # Also include stands that opened after the latest P&L cutoff (in opened_shifts but not yet in P&L data)
+    for r in _pdata.get("opened_shifts", []):
         s = r.get("store", "")
         if s:
             open_store_ids.add(s)
