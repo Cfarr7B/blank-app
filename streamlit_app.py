@@ -1254,6 +1254,117 @@ def tab_ceo(dash):
 
     st.html('<hr class="brew">')
 
+    # ── Year-over-Year Labor % & COGS % Comparison ────────────────────────────
+    _all_ps = pd.DataFrame(dash.get("period_summaries", []))
+    if not _all_ps.empty and "labor_pct" in _all_ps.columns and "cogs_pct" in _all_ps.columns:
+        _yoy_years = sorted(_all_ps["year"].dropna().unique().astype(int).tolist())
+        _yoy_c1, _yoy_c2, _yoy_c3 = st.columns([1, 1, 4])
+        with _yoy_c1:
+            _yr_a = st.selectbox("Year A", _yoy_years,
+                                 index=max(0, len(_yoy_years) - 2),
+                                 key="yoy_yr_a")
+        with _yoy_c2:
+            _yr_b = st.selectbox("Year B", _yoy_years,
+                                 index=len(_yoy_years) - 1,
+                                 key="yoy_yr_b")
+
+        def _pnum(pk):
+            try: return int(str(pk).split("_P")[1])
+            except: return 99
+
+        _a_df = _all_ps[_all_ps["year"] == _yr_a].copy()
+        _b_df = _all_ps[_all_ps["year"] == _yr_b].copy()
+        for _d in (_a_df, _b_df):
+            _d["_pnum"] = _d["period_key"].apply(_pnum)
+        _a_df = _a_df.sort_values("_pnum")
+        _b_df = _b_df.sort_values("_pnum")
+
+        _PERIOD_ORDER = ["P1","P2","P3","P4","P5","P6","P7","P8","P9","P10","P11","P12","P13"]
+
+        # YTD averages (sales-weighted through latest available period)
+        def _ytd_wavg(df, col):
+            sub = df[df[col].notna() & (df["net_sales"] > 0)]
+            if sub.empty: return None
+            return (sub[col] * sub["net_sales"]).sum() / sub["net_sales"].sum()
+
+        _a_labor_ytd = _ytd_wavg(_a_df, "labor_pct")
+        _b_labor_ytd = _ytd_wavg(_b_df, "labor_pct")
+        _a_cogs_ytd  = _ytd_wavg(_a_df, "cogs_pct")
+        _b_cogs_ytd  = _ytd_wavg(_b_df, "cogs_pct")
+
+        _yoy_col_chart, _yoy_col_summary = st.columns([3, 1])
+        with _yoy_col_chart:
+            section("YEAR-OVER-YEAR: LABOR % & COGS %",
+                    f"{_yr_a} vs {_yr_b} — period by period")
+            _fig_yoy = go.Figure()
+
+            # Solid lines = Year A, Dashed = Year B
+            _fig_yoy.add_scatter(
+                x=_a_df["period"], y=_a_df["labor_pct"] * 100,
+                name=f"{_yr_a} Labor %", mode="lines+markers",
+                line=dict(color=AMBER, width=2.5, dash="solid"),
+                marker=dict(size=7),
+            )
+            _fig_yoy.add_scatter(
+                x=_b_df["period"], y=_b_df["labor_pct"] * 100,
+                name=f"{_yr_b} Labor %", mode="lines+markers",
+                line=dict(color=AMBER, width=2.5, dash="dot"),
+                marker=dict(size=7, symbol="diamond"),
+            )
+            _fig_yoy.add_scatter(
+                x=_a_df["period"], y=_a_df["cogs_pct"] * 100,
+                name=f"{_yr_a} COGS %", mode="lines+markers",
+                line=dict(color=BLUE, width=2.5, dash="solid"),
+                marker=dict(size=7),
+            )
+            _fig_yoy.add_scatter(
+                x=_b_df["period"], y=_b_df["cogs_pct"] * 100,
+                name=f"{_yr_b} COGS %", mode="lines+markers",
+                line=dict(color=BLUE, width=2.5, dash="dot"),
+                marker=dict(size=7, symbol="diamond"),
+            )
+            _fig_yoy.update_layout(
+                xaxis=dict(
+                    categoryorder="array", categoryarray=_PERIOD_ORDER,
+                    tickangle=-35,
+                ),
+                yaxis=dict(ticksuffix="%", tickformat=".1f"),
+                legend=dict(orientation="h", y=1.12, x=0, font=dict(size=10)),
+            )
+            brew_fig(_fig_yoy, height=320)
+            st.plotly_chart(_fig_yoy, config={"displayModeBar": False}, use_container_width=True)
+
+        with _yoy_col_summary:
+            section("YTD AVERAGES", "Sales-weighted mean")
+            def _delta_badge(a, b):
+                if a is None or b is None: return ""
+                diff = (b - a) * 100
+                arrow = "▲" if diff > 0 else "▼"
+                color = RED if diff > 0 else GREEN  # higher = worse for cost metrics
+                return f'<span style="color:{color};font-size:11px;">{arrow} {abs(diff):.2f}pp</span>'
+
+            def _ytd_row(label, a_val, b_val):
+                a_str = f"{a_val*100:.2f}%" if a_val is not None else "—"
+                b_str = f"{b_val*100:.2f}%" if b_val is not None else "—"
+                badge = _delta_badge(a_val, b_val)
+                st.html(f"""
+                <div style="border:1px solid {BORDER};border-radius:6px;padding:10px 12px;margin-bottom:8px;">
+                  <div style="font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;color:{MID};margin-bottom:6px;">{label}</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div><div style="font-size:9px;color:{MID};">{_yr_a}</div>
+                         <div style="font-size:18px;font-weight:700;color:#1A1919;">{a_str}</div></div>
+                    <div style="text-align:right;">
+                         <div style="font-size:9px;color:{MID};">{_yr_b}</div>
+                         <div style="font-size:18px;font-weight:700;color:#1A1919;">{b_str}</div></div>
+                  </div>
+                  <div style="text-align:center;margin-top:4px;">{badge}</div>
+                </div>""")
+
+            _ytd_row("LABOR %",  _a_labor_ytd, _b_labor_ytd)
+            _ytd_row("COGS %",   _a_cogs_ytd,  _b_cogs_ytd)
+
+    st.html('<hr class="brew">')
+
     # ── Cohort Analysis — filtered by selected periods ──
     col3, col4 = st.columns(2)
     with col3:
