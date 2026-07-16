@@ -1062,7 +1062,7 @@ def tab_ceo(dash):
                 _ebitda_max = max(_ebitda_vals) if _ebitda_vals else 30
                 fig_e.update_layout(
                     yaxis=dict(ticksuffix="%", tickformat=".1f",
-                               range=[0, _ebitda_max * 1.22],
+                               range=[15, _ebitda_max * 1.22],  # floor at 15% to show period swings
                                title_font=dict(size=9, color=MID)),
                     legend=dict(orientation="h", y=1.12, x=0,
                                 font=dict(size=9)),

@@ -466,5 +466,65 @@
     "Region": "South Central TX",
     "Open_Date": "2026-04-13",
     "Store_ID": "711"
+  },
+  "878": {
+    "Display_Name": "Panama City 2",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2026-05-04",
+    "Store_ID": "878"
+  },
+  "968": {
+    "Display_Name": "Lawton 2",
+    "Region": "South OK",
+    "Open_Date": "2026-05-18",
+    "Store_ID": "968"
+  },
+  "987": {
+    "Display_Name": "Norman 2",
+    "Region": "Central OK",
+    "Open_Date": "2026-04-13",
+    "Store_ID": "987"
+  },
+  "1122": {
+    "Display_Name": "Killeen",
+    "Region": "South Central TX",
+    "Open_Date": "2026-06-01",
+    "Store_ID": "1122"
+  },
+  "1238": {
+    "Display_Name": "Beverly Hills",
+    "Region": "South Central TX",
+    "Open_Date": "2026-05-18",
+    "Store_ID": "1238"
+  },
+  "547": {
+    "Display_Name": "Edmond 2",
+    "Region": "Central OK",
+    "Open_Date": "2026-06-22",
+    "Store_ID": "547"
+  },
+  "1332": {
+    "Display_Name": "Altus",
+    "Region": "South OK",
+    "Open_Date": "2026-06-22",
+    "Store_ID": "1332"
+  },
+  "518": {
+    "Display_Name": "Lynn Haven",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2026-06-29",
+    "Store_ID": "518"
+  },
+  "1236": {
+    "Display_Name": "Lubbock 4",
+    "Region": "West TX",
+    "Open_Date": "2026-06-29",
+    "Store_ID": "1236"
+  },
+  "1119": {
+    "Display_Name": "Canyon",
+    "Region": "West TX",
+    "Open_Date": "2026-06-29",
+    "Store_ID": "1119"
   }
 }
