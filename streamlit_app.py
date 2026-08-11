@@ -2929,13 +2929,18 @@ renderTable(ROWS, CLS);
                         annotation_position="right",
                         annotation_font_size=11,
                     )
+                n_periods = len(stand_hist_plot)
                 fig_t.update_layout(
                     title_text=metric_lbl,
                     yaxis=dict(ticksuffix="%" if fmt=="%" else "",
                                tickprefix="$" if fmt=="$" else ""),
-                    xaxis=dict(tickangle=-35, categoryorder="trace"),
+                    xaxis=dict(
+                        tickangle=-45 if n_periods > 13 else -35,
+                        categoryorder="trace",
+                        automargin=True,
+                    ),
                 )
-                brew_fig(fig_t, height=260)
+                brew_fig(fig_t, height=300 if n_periods > 13 else 260)
                 (tc1 if i%2==0 else tc2).plotly_chart(
                     fig_t, use_container_width=True, config={"displayModeBar":False})
         else:
@@ -7763,8 +7768,6 @@ def main():
         "💡 Wins & Opportunities",
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
-        "🔮 Forecast (Draft)",
-        "⏱️ Speed of Service",
     ]
     tabs = st.tabs(tab_names)
 
@@ -7776,8 +7779,7 @@ def main():
     with tabs[5]:  tab_insights(dash)
     with tabs[6]:  tab_utilities(dash)
     with tabs[7]:  tab_pipeline(dash)
-    with tabs[8]:  tab_forecast(dash)
-    with tabs[9]:  tab_sos(dash)
+    # Forecast and Speed of Service archived — functions retained but tabs hidden
 
 
 main()
