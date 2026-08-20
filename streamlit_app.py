@@ -42,21 +42,24 @@ GRID   = "rgba(0,0,0,0.055)"
 
 REGION_COLORS = {
     # Full region names (current)
-    "North Central TX":   "#1d6fcf",
-    "South Central TX":   "#2980b9",
-    "FL Panhandle East":  "#12a06e",
-    "FL Panhandle West":  "#1a8c5c",
-    "FL West Coast":      "#0e7a6e",
+    "TX Panhandle":       "#1d6fcf",
+    "North Central TX":   "#2980b9",
+    "South Central TX":   "#1a6fa8",
     "Middle Earth":       "#7c3aed",
+    "West TX":            "#d97706",
+    "Permian Basin":      "#e8940a",
     "NM":                 "#c2410c",
-    "CO":                 "#a16207",
     "North OK":           "#AC2430",
     "Central OK":         "#9b1a1f",
     "South OK":           "#7f1d1d",
-    "Permian Basin":      "#e8940a",
-    "West TX":            "#d97706",
+    "FL Panhandle East":  "#12a06e",
+    "FL Panhandle West":  "#1a8c5c",
+    "North SWFL":         "#0e7a6e",
+    "Central SWFL":       "#0a6a5e",
+    "CO":                 "#a16207",
     # Legacy abbreviations (backward compat)
-    "CTX-N": "#1d6fcf", "CTX-S": "#2980b9", "FL-P": "#12a06e",
+    "FL West Coast": "#0e7a6e",
+    "CTX-N": "#2980b9", "CTX-S": "#1a6fa8", "FL-P": "#12a06e",
     "FL-P1": "#1a8c5c", "FL-SW": "#0e7a6e",
     "OKC-N": "#AC2430", "OKC-S": "#9b1a1f", "WTX": "#d97706",
 }
