@@ -37,7 +37,7 @@ BORDER = "#e2e4e9"
 BODY   = "#1A1919"   # near black body text     (26, 25, 25)
 SUB    = "#595959"
 BG     = "#ffffff"
-BG2    = "#f5f6f8"
+BG2    = "#f0ede8"   # warm gray page background (NSD theme)
 GRID   = "rgba(0,0,0,0.055)"
 
 REGION_COLORS = {
@@ -80,12 +80,8 @@ st.html("""
     padding: 16px 18px; flex: 1 1 170px; min-width: 160px;
     box-shadow: 0 1px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden;
   }
-  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-  .kpi-card.red::before { background:#AC2430; }
-  .kpi-card.green::before { background:#12a06e; }
-  .kpi-card.blue::before { background:#1d6fcf; }
-  .kpi-card.amber::before { background:#e8940a; }
-  .kpi-card.grey::before { background:#595959; }
+  /* NSD theme: no colored top stripe on cards */
+  .kpi-card::before { display: none; }
   .kpi-label { font-size:17px; font-weight:700; letter-spacing:1px;
     text-transform:uppercase; color:#595959; margin-bottom:6px; }
   .kpi-value { font-family:'Bebas Neue',sans-serif; font-size:39px;
@@ -93,7 +89,7 @@ st.html("""
   .kpi-value.good { color:#12a06e; }
   .kpi-value.bad { color:#AC2430; }
   .kpi-value.warn { color:#e8940a; }
-  .kpi-sub { font-family:'DM Mono',monospace; font-size:17px; color:#C5BEBE; margin-top:4px; }
+  .kpi-sub { font-family:'DM Mono',monospace; font-size:17px; color:#777; margin-top:4px; }
   .kpi-delta { display:inline-block; font-family:'DM Mono',monospace;
     font-size:17px; font-weight:600; padding:2px 7px; border-radius:10px; margin-top:5px; }
   .kpi-delta.up { background:rgba(18,160,110,0.1); color:#12a06e; }
@@ -109,7 +105,7 @@ st.html("""
   .section-hdr::before { content:''; width:6px; height:6px; border-radius:50%;
     background:#AC2430; display:inline-block; flex-shrink:0; }
   .section-sub { font-family:'DM Mono',monospace; font-size:14px;
-    color:#C5BEBE; margin-bottom:16px; margin-left:14px; }
+    color:#666; margin-bottom:16px; margin-left:14px; }
   .red-rule { width:36px; height:3px; background:#AC2430;
     border-radius:2px; margin-bottom:18px; margin-left:14px; }
 
@@ -153,7 +149,7 @@ st.html("""
     padding:20px 24px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,0.04);
   }
   .story-label { font-family:'DM Mono',monospace; font-size:17px;
-    text-transform:uppercase; letter-spacing:1px; color:#C5BEBE; margin-bottom:6px; }
+    text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:6px; }
   .story-headline { font-family:'Bebas Neue',sans-serif; font-size:34px;
     letter-spacing:1.5px; color:#AC2430; margin-bottom:8px; }
   .story-body { font-size:17px; color:#595959; line-height:1.7; }
@@ -161,8 +157,8 @@ st.html("""
   /* ── Navigation Tabs ─────────────────────────────────────────────────── */
   .stTabs [data-baseweb="tab-list"] {
     gap: 4px;
-    background: #f5f6f8;
-    border: 1px solid #e2e4e9;
+    background: #e8e4df;
+    border: 1px solid #ddd9d3;
     border-radius: 12px;
     padding: 5px 6px;
     flex-wrap: wrap;
@@ -193,6 +189,10 @@ st.html("""
   }
   .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
   .stTabs [data-baseweb="tab-border"]    { display: none !important; }
+
+  /* NSD warm gray page background */
+  .stApp { background: #f0ede8 !important; }
+  section[data-testid="stSidebarContent"], .main { background: #f0ede8 !important; }
 
   /* Hide Streamlit branding */
   #MainMenu, footer, header { visibility: hidden; }
