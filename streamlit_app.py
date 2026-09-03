@@ -778,6 +778,37 @@ def tab_ceo(dash):
     year_label = f"FY{sel_year}"
     n_periods = len(filtered_df)
 
+    # ── AWS (Average Weekly Sales) — latest period ──
+    latest_pnum = int(latest["period_num"])
+    latest_aws  = latest["avg_sales"] / 4.0   # 4 weeks per period
+
+    # WoW: prior period in same year
+    wow_pct = None
+    prior_p_rows = year_periods[year_periods["period_num"] == latest_pnum - 1]
+    if not prior_p_rows.empty:
+        prior_aws = prior_p_rows.iloc[0]["avg_sales"] / 4.0
+        if prior_aws > 0:
+            wow_pct = (latest_aws - prior_aws) / prior_aws
+
+    # YoY: same period number, prior year
+    yoy_pct = None
+    yoy_pk  = f"{sel_year - 1}_P{latest_pnum}"
+    yoy_rows = periods_df[periods_df["period_key"] == yoy_pk]
+    if not yoy_rows.empty:
+        yoy_aws = yoy_rows.iloc[0]["avg_sales"] / 4.0
+        if yoy_aws > 0:
+            yoy_pct = (latest_aws - yoy_aws) / yoy_aws
+
+    def _pct_str(v, prefix=""):
+        if v is None: return "—"
+        sign = "+" if v >= 0 else ""
+        return f"{prefix}{sign}{v*100:.1f}%"
+
+    aws_sub   = f"WoW {_pct_str(wow_pct)}  ·  YoY {_pct_str(yoy_pct)}"
+    aws_delta = ({"str": _pct_str(wow_pct, ""), "cls": "up" if wow_pct and wow_pct >= 0 else "down"}
+                 if wow_pct is not None else None)
+    aws_vcls  = ("good" if wow_pct and wow_pct >= 0 else "bad") if wow_pct is not None else ""
+
     kpi_row([
         {"label": f"{year_label} Total Revenue",     "value": f"${total_revenue_ytd/1e6:.2f}M",  "sub": f"{n_periods}-period total",   "color": "red"},
         {"label": "YoY Revenue Growth",       "value": f"+{growth_rate*100:.2f}%",        "sub": "vs prior year class",         "color": "green",
@@ -787,6 +818,8 @@ def tab_ceo(dash):
          "valcls": "good" if avg_ebitda_pct >= 0.18 else "warn"},
         {"label": f"{latest['label']} Stands","value": str(int(latest["stands"])),        "sub": "active this period",          "color": "grey"},
         {"label": f"{latest['label']} Avg Sales","value": _fmt_d(latest["avg_sales"]),    "sub": "per stand",                   "color": "amber"},
+        {"label": f"{latest['label']} AWS",   "value": _fmt_d(latest_aws),                "sub": aws_sub,                       "color": "amber",
+         "delta": aws_delta, "valcls": aws_vcls},
     ])
 
     # Pre-compute filtered stands (needed by narrative AND cohort sections below)
