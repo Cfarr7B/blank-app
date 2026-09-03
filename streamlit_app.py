@@ -194,6 +194,15 @@ st.html("""
   .stApp { background: #f0ede8 !important; }
   section[data-testid="stSidebarContent"], .main { background: #f0ede8 !important; }
 
+  /* Plotly chart containers — white card on warm gray */
+  [data-testid="stPlotlyChart"] {
+    background: white !important;
+    border-radius: 10px !important;
+    border: 1px solid #e8e4de !important;
+    padding: 12px !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+  }
+
   /* Hide Streamlit branding */
   #MainMenu, footer, header { visibility: hidden; }
   .block-container { padding-top: 24px !important; max-width: 1600px !important; }
@@ -885,20 +894,20 @@ def tab_ceo(dash):
             return f"""
             <div style="background:white;border:1px solid #e2e4e9;border-radius:10px;
                         padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#888;
                           text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">{label}</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;
                           color:#1A1919;line-height:1;">{actual_fmt}</div>
-              <div style="font-size:11px;color:#C5BEBE;margin-bottom:8px;">
-                goal: <strong style="color:#595959;">{goal_fmt}</strong>
+              <div style="font-size:11px;color:#777;margin-bottom:8px;">
+                goal: <strong style="color:#333;">{goal_fmt}</strong>
                 {(" · " + detail) if detail else ""}
               </div>
-              <div style="background:#f0f1f3;border-radius:4px;height:6px;overflow:hidden;">
+              <div style="background:#ede9e3;border-radius:4px;height:5px;overflow:hidden;">
                 <div style="background:{bar_color};width:{bar_w:.2f}%;height:100%;
                             border-radius:4px;transition:width .3s;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:4px;">
-                <span style="font-size:10px;color:#C5BEBE;">{bar_w:.0f}% of goal</span>
+                <span style="font-size:10px;color:#777;">{bar_w:.0f}% of goal</span>
                 {pace_line}
               </div>
             </div>"""
@@ -1002,7 +1011,7 @@ def tab_ceo(dash):
         # ── Period-by-Period Actual vs Goal Chart ─────────────────────────────
         if has_period_goals and n_completed > 0:
             st.html("""
-            <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:#888;
                         text-transform:uppercase;letter-spacing:1.5px;margin:8px 0 4px;">
               PERIOD-BY-PERIOD: ACTUAL VS GOAL
             </div>""")
@@ -1045,7 +1054,7 @@ def tab_ceo(dash):
                 fig_g.add_bar(
                     x=period_labels[:n_completed],
                     y=[v for v in act_vals[:n_completed] if v is not None],
-                    name="Actual", marker_color=BLUE, opacity=0.85,
+                    name="Actual", marker_color=RED, opacity=0.9,
                 )
                 fig_g.update_layout(
                     barmode="overlay",
@@ -1070,7 +1079,7 @@ def tab_ceo(dash):
                     y=[v * 100 if v is not None else None
                        for v in goal_ebitda_pct_by_p],
                     name="Goal %", mode="lines",
-                    line=dict(color=MUTED, width=1.5, dash="dot"),
+                    line=dict(color="#ccc5bc", width=1.5, dash="dot"),
                 )
                 # Actual EBITDA% (completed periods)
                 fig_e.add_scatter(
