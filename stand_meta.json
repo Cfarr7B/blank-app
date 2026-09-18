@@ -169,7 +169,7 @@
   },
   "216": {
     "Display_Name": "Burleson",
-    "Region": "South Central TX",
+    "Region": "North Central TX",
     "Open_Date": "2025-02-17",
     "Store_ID": "216"
   },
@@ -451,7 +451,7 @@
   },
   "516": {
     "Display_Name": "Cleburne",
-    "Region": "South Central TX",
+    "Region": "North Central TX",
     "Open_Date": "2026-03-30",
     "Store_ID": "516"
   },
@@ -526,5 +526,14 @@
     "Region": "West TX",
     "Open_Date": "2026-06-29",
     "Store_ID": "1119"
+  },
+  "1156": {
+    "Display_Name": "Granbury",
+    "Region": "North Central TX",
+    "Open_Date": "2026-08-31",
+    "Store_ID": "1156",
+    "State": "TX",
+    "RM": "Mia Walker",
+    "Age_Bucket": "New"
   }
 }

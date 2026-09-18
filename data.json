@@ -62050,7 +62050,7 @@
       "Period_Key": "2026_P9",
       "Store_ID": 216,
       "State": "TX",
-      "Region": "South Central TX",
+      "Region": "North Central TX",
       "Age_Bucket": "Unknown",
       "RM": "",
       "Open Date": "2025-02-17",
@@ -63693,7 +63693,7 @@
       "Period_Key": "2026_P9",
       "Store_ID": 516,
       "State": "TX",
-      "Region": "South Central TX",
+      "Region": "North Central TX",
       "Age_Bucket": "Unknown",
       "RM": "",
       "Open Date": "2026-03-30",
@@ -66010,15 +66010,15 @@
     "2025_P2": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 529495.95,
-        "avg_sales": 132373.99,
-        "cogs_pct": 0.269,
-        "labor_pct": 0.2098,
+        "stands": 3,
+        "net_sales": 400711.41,
+        "avg_sales": 133570.47,
+        "cogs_pct": 0.2704,
+        "labor_pct": 0.2125,
         "hourly_pct": 0.1487,
-        "rm_pct": 0.0125,
-        "ebitda_pct": 0.1932,
-        "ebitda_total": 102311.03
+        "rm_pct": 0.0132,
+        "ebitda_pct": 0.1835,
+        "ebitda_total": 73524.77
       },
       {
         "region": "Permian Basin",
@@ -66043,6 +66043,18 @@
         "rm_pct": 0.0083,
         "ebitda_pct": 0.2195,
         "ebitda_total": 110080.76
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 128784.54,
+        "avg_sales": 128784.54,
+        "cogs_pct": 0.2646,
+        "labor_pct": 0.2016,
+        "hourly_pct": 0.1486,
+        "rm_pct": 0.0105,
+        "ebitda_pct": 0.2235,
+        "ebitda_total": 28786.26
       },
       {
         "region": "Central OK",
@@ -66094,15 +66106,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 3,
-        "net_sales": 339508.71,
-        "avg_sales": 113169.57,
-        "cogs_pct": 0.2719,
-        "labor_pct": 0.3061,
-        "hourly_pct": 0.2339,
-        "rm_pct": 0.0057,
-        "ebitda_pct": 0.1216,
-        "ebitda_total": 41280.32
+        "stands": 2,
+        "net_sales": 300041.96,
+        "avg_sales": 150020.98,
+        "cogs_pct": 0.2723,
+        "labor_pct": 0.2333,
+        "hourly_pct": 0.1738,
+        "rm_pct": 0.0064,
+        "ebitda_pct": 0.2001,
+        "ebitda_total": 60040.84
       },
       {
         "region": "NM",
@@ -66117,6 +66129,18 @@
         "ebitda_total": 49234.97
       },
       {
+        "region": "North Central TX",
+        "stands": 1,
+        "net_sales": 39466.75,
+        "avg_sales": 39466.75,
+        "cogs_pct": 0.269,
+        "labor_pct": 0.859,
+        "hourly_pct": 0.691,
+        "rm_pct": 0.0,
+        "ebitda_pct": -0.4754,
+        "ebitda_total": -18760.52
+      },
+      {
         "region": "FL Panhandle East",
         "stands": 3,
         "net_sales": 431311.48,
@@ -66129,7 +66153,7 @@
         "ebitda_total": 82836.14
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 137675.39,
         "avg_sales": 137675.39,
@@ -66156,15 +66180,15 @@
     "2025_P3": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 565539.62,
-        "avg_sales": 141384.9,
-        "cogs_pct": 0.2691,
-        "labor_pct": 0.2104,
-        "hourly_pct": 0.1454,
-        "rm_pct": 0.0085,
-        "ebitda_pct": 0.2027,
-        "ebitda_total": 114641.82
+        "stands": 3,
+        "net_sales": 419193.86,
+        "avg_sales": 139731.29,
+        "cogs_pct": 0.2695,
+        "labor_pct": 0.2125,
+        "hourly_pct": 0.1457,
+        "rm_pct": 0.009,
+        "ebitda_pct": 0.1895,
+        "ebitda_total": 79460.32
       },
       {
         "region": "Permian Basin",
@@ -66189,6 +66213,18 @@
         "rm_pct": 0.0093,
         "ebitda_pct": 0.24,
         "ebitda_total": 137911.04
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 146345.76,
+        "avg_sales": 146345.76,
+        "cogs_pct": 0.2681,
+        "labor_pct": 0.2043,
+        "hourly_pct": 0.1444,
+        "rm_pct": 0.0071,
+        "ebitda_pct": 0.2404,
+        "ebitda_total": 35181.5
       },
       {
         "region": "Central OK",
@@ -66240,15 +66276,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 3,
-        "net_sales": 483670.33,
-        "avg_sales": 161223.44,
-        "cogs_pct": 0.2663,
-        "labor_pct": 0.2535,
-        "hourly_pct": 0.1913,
-        "rm_pct": 0.0053,
-        "ebitda_pct": 0.2092,
-        "ebitda_total": 101182.14
+        "stands": 2,
+        "net_sales": 338017.87,
+        "avg_sales": 169008.93,
+        "cogs_pct": 0.265,
+        "labor_pct": 0.2005,
+        "hourly_pct": 0.1443,
+        "rm_pct": 0.0062,
+        "ebitda_pct": 0.2566,
+        "ebitda_total": 86744.18
       },
       {
         "region": "NM",
@@ -66263,6 +66299,18 @@
         "ebitda_total": 57548.24
       },
       {
+        "region": "North Central TX",
+        "stands": 1,
+        "net_sales": 145652.46,
+        "avg_sales": 145652.46,
+        "cogs_pct": 0.2692,
+        "labor_pct": 0.3766,
+        "hourly_pct": 0.3006,
+        "rm_pct": 0.0033,
+        "ebitda_pct": 0.0991,
+        "ebitda_total": 14437.96
+      },
+      {
         "region": "FL Panhandle East",
         "stands": 3,
         "net_sales": 497258.08,
@@ -66275,7 +66323,7 @@
         "ebitda_total": 105365.73
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 149410.34,
         "avg_sales": 149410.34,
@@ -66302,15 +66350,15 @@
     "2025_P4": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 630542.81,
-        "avg_sales": 157635.7,
-        "cogs_pct": 0.2681,
-        "labor_pct": 0.2003,
-        "hourly_pct": 0.1446,
+        "stands": 3,
+        "net_sales": 468249.09,
+        "avg_sales": 156083.03,
+        "cogs_pct": 0.2676,
+        "labor_pct": 0.1991,
+        "hourly_pct": 0.1428,
         "rm_pct": 0.0081,
-        "ebitda_pct": 0.2175,
-        "ebitda_total": 137118.53
+        "ebitda_pct": 0.2122,
+        "ebitda_total": 99354.05
       },
       {
         "region": "Permian Basin",
@@ -66335,6 +66383,18 @@
         "rm_pct": 0.0099,
         "ebitda_pct": 0.2293,
         "ebitda_total": 133673.85
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 162293.72,
+        "avg_sales": 162293.72,
+        "cogs_pct": 0.2696,
+        "labor_pct": 0.204,
+        "hourly_pct": 0.1497,
+        "rm_pct": 0.0079,
+        "ebitda_pct": 0.2327,
+        "ebitda_total": 37764.48
       },
       {
         "region": "Central OK",
@@ -66386,15 +66446,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 3,
-        "net_sales": 512944.35,
-        "avg_sales": 170981.45,
-        "cogs_pct": 0.2786,
-        "labor_pct": 0.2396,
-        "hourly_pct": 0.1844,
-        "rm_pct": 0.0094,
-        "ebitda_pct": 0.1899,
-        "ebitda_total": 97416.94
+        "stands": 2,
+        "net_sales": 365257.46,
+        "avg_sales": 182628.73,
+        "cogs_pct": 0.2672,
+        "labor_pct": 0.2124,
+        "hourly_pct": 0.1595,
+        "rm_pct": 0.0082,
+        "ebitda_pct": 0.2385,
+        "ebitda_total": 87122.04
       },
       {
         "region": "NM",
@@ -66410,15 +66470,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 1,
-        "net_sales": 140238.48,
-        "avg_sales": 140238.48,
-        "cogs_pct": 0.2838,
-        "labor_pct": 0.4547,
-        "hourly_pct": 0.3705,
-        "rm_pct": 0.0077,
-        "ebitda_pct": 0.0291,
-        "ebitda_total": 4075.49
+        "stands": 2,
+        "net_sales": 287925.37,
+        "avg_sales": 143962.68,
+        "cogs_pct": 0.2956,
+        "labor_pct": 0.3788,
+        "hourly_pct": 0.3066,
+        "rm_pct": 0.0101,
+        "ebitda_pct": 0.0499,
+        "ebitda_total": 14370.39
       },
       {
         "region": "FL Panhandle East",
@@ -66433,7 +66493,7 @@
         "ebitda_total": 112371.76
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 156331.87,
         "avg_sales": 156331.87,
@@ -66460,15 +66520,15 @@
     "2025_P5": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 702862.75,
-        "avg_sales": 175715.69,
-        "cogs_pct": 0.2692,
-        "labor_pct": 0.1889,
-        "hourly_pct": 0.1341,
-        "rm_pct": 0.0071,
-        "ebitda_pct": 0.2496,
-        "ebitda_total": 175454.23
+        "stands": 3,
+        "net_sales": 523453.78,
+        "avg_sales": 174484.59,
+        "cogs_pct": 0.2689,
+        "labor_pct": 0.1881,
+        "hourly_pct": 0.1328,
+        "rm_pct": 0.007,
+        "ebitda_pct": 0.2489,
+        "ebitda_total": 130265.36
       },
       {
         "region": "Permian Basin",
@@ -66493,6 +66553,18 @@
         "rm_pct": 0.0061,
         "ebitda_pct": 0.2484,
         "ebitda_total": 157561.34
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 179408.97,
+        "avg_sales": 179408.97,
+        "cogs_pct": 0.2701,
+        "labor_pct": 0.191,
+        "hourly_pct": 0.1379,
+        "rm_pct": 0.0074,
+        "ebitda_pct": 0.2519,
+        "ebitda_total": 45188.87
       },
       {
         "region": "Central OK",
@@ -66544,15 +66616,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 3,
-        "net_sales": 546816.36,
-        "avg_sales": 182272.12,
-        "cogs_pct": 0.2718,
-        "labor_pct": 0.2264,
-        "hourly_pct": 0.1726,
-        "rm_pct": 0.0076,
-        "ebitda_pct": 0.2121,
-        "ebitda_total": 115986.9
+        "stands": 2,
+        "net_sales": 388436.68,
+        "avg_sales": 194218.34,
+        "cogs_pct": 0.2712,
+        "labor_pct": 0.2081,
+        "hourly_pct": 0.1568,
+        "rm_pct": 0.0079,
+        "ebitda_pct": 0.2329,
+        "ebitda_total": 90471.4
       },
       {
         "region": "NM",
@@ -66568,15 +66640,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 1,
-        "net_sales": 177123.61,
-        "avg_sales": 177123.61,
-        "cogs_pct": 0.2945,
-        "labor_pct": 0.3182,
-        "hourly_pct": 0.2584,
-        "rm_pct": 0.0052,
-        "ebitda_pct": 0.1145,
-        "ebitda_total": 20280.49
+        "stands": 2,
+        "net_sales": 335503.29,
+        "avg_sales": 167751.64,
+        "cogs_pct": 0.2845,
+        "labor_pct": 0.296,
+        "hourly_pct": 0.2361,
+        "rm_pct": 0.006,
+        "ebitda_pct": 0.1365,
+        "ebitda_total": 45795.99
       },
       {
         "region": "FL Panhandle East",
@@ -66591,7 +66663,7 @@
         "ebitda_total": 127999.53
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 168379.76,
         "avg_sales": 168379.76,
@@ -66618,15 +66690,15 @@
     "2025_P6": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 624425.96,
-        "avg_sales": 156106.49,
-        "cogs_pct": 0.2721,
-        "labor_pct": 0.2156,
-        "hourly_pct": 0.1542,
-        "rm_pct": 0.0109,
-        "ebitda_pct": 0.1955,
-        "ebitda_total": 122108.72
+        "stands": 3,
+        "net_sales": 444157.81,
+        "avg_sales": 148052.6,
+        "cogs_pct": 0.2716,
+        "labor_pct": 0.2168,
+        "hourly_pct": 0.1525,
+        "rm_pct": 0.0102,
+        "ebitda_pct": 0.1835,
+        "ebitda_total": 81497.61
       },
       {
         "region": "Permian Basin",
@@ -66651,6 +66723,18 @@
         "rm_pct": 0.0091,
         "ebitda_pct": 0.2301,
         "ebitda_total": 146951.09
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 180268.15,
+        "avg_sales": 180268.15,
+        "cogs_pct": 0.2732,
+        "labor_pct": 0.2126,
+        "hourly_pct": 0.1584,
+        "rm_pct": 0.0124,
+        "ebitda_pct": 0.2253,
+        "ebitda_total": 40611.11
       },
       {
         "region": "Central OK",
@@ -66702,15 +66786,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 4,
-        "net_sales": 666765.7,
-        "avg_sales": 166691.42,
-        "cogs_pct": 0.2732,
-        "labor_pct": 0.2777,
-        "hourly_pct": 0.2168,
-        "rm_pct": 0.0138,
-        "ebitda_pct": 0.172,
-        "ebitda_total": 114721.26
+        "stands": 3,
+        "net_sales": 504791.94,
+        "avg_sales": 168263.98,
+        "cogs_pct": 0.2757,
+        "labor_pct": 0.2854,
+        "hourly_pct": 0.224,
+        "rm_pct": 0.0167,
+        "ebitda_pct": 0.1649,
+        "ebitda_total": 83259.02
       },
       {
         "region": "NM",
@@ -66726,15 +66810,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 1,
-        "net_sales": 164556.6,
-        "avg_sales": 164556.6,
-        "cogs_pct": 0.2888,
-        "labor_pct": 0.3057,
-        "hourly_pct": 0.2443,
-        "rm_pct": 0.009,
-        "ebitda_pct": 0.1221,
-        "ebitda_total": 20086.26
+        "stands": 2,
+        "net_sales": 326530.36,
+        "avg_sales": 163265.18,
+        "cogs_pct": 0.2771,
+        "labor_pct": 0.2801,
+        "hourly_pct": 0.2195,
+        "rm_pct": 0.007,
+        "ebitda_pct": 0.1579,
+        "ebitda_total": 51548.5
       },
       {
         "region": "FL Panhandle East",
@@ -66749,7 +66833,7 @@
         "ebitda_total": 182977.27
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 168100.07,
         "avg_sales": 168100.07,
@@ -66776,15 +66860,15 @@
     "2025_P7": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 607509.29,
-        "avg_sales": 151877.32,
-        "cogs_pct": 0.2826,
-        "labor_pct": 0.2214,
-        "hourly_pct": 0.16,
-        "rm_pct": 0.0117,
-        "ebitda_pct": 0.1721,
-        "ebitda_total": 104509.58
+        "stands": 3,
+        "net_sales": 441454.76,
+        "avg_sales": 147151.59,
+        "cogs_pct": 0.2816,
+        "labor_pct": 0.2242,
+        "hourly_pct": 0.1608,
+        "rm_pct": 0.0139,
+        "ebitda_pct": 0.1579,
+        "ebitda_total": 69675.82
       },
       {
         "region": "Permian Basin",
@@ -66809,6 +66893,18 @@
         "rm_pct": 0.0108,
         "ebitda_pct": 0.176,
         "ebitda_total": 118259.74
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 166054.53,
+        "avg_sales": 166054.53,
+        "cogs_pct": 0.2853,
+        "labor_pct": 0.2138,
+        "hourly_pct": 0.158,
+        "rm_pct": 0.0058,
+        "ebitda_pct": 0.2098,
+        "ebitda_total": 34833.76
       },
       {
         "region": "Central OK",
@@ -66860,15 +66956,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 5,
-        "net_sales": 920163.45,
-        "avg_sales": 184032.69,
-        "cogs_pct": 0.2872,
-        "labor_pct": 0.2656,
-        "hourly_pct": 0.2128,
-        "rm_pct": 0.0073,
-        "ebitda_pct": 0.1781,
-        "ebitda_total": 163874.54
+        "stands": 4,
+        "net_sales": 758618.05,
+        "avg_sales": 189654.51,
+        "cogs_pct": 0.287,
+        "labor_pct": 0.2652,
+        "hourly_pct": 0.214,
+        "rm_pct": 0.0084,
+        "ebitda_pct": 0.1814,
+        "ebitda_total": 137646.09
       },
       {
         "region": "NM",
@@ -66884,15 +66980,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 1,
-        "net_sales": 149187.25,
-        "avg_sales": 149187.25,
-        "cogs_pct": 0.2959,
-        "labor_pct": 0.2828,
-        "hourly_pct": 0.2205,
-        "rm_pct": 0.0121,
-        "ebitda_pct": 0.1189,
-        "ebitda_total": 17733.53
+        "stands": 2,
+        "net_sales": 310732.65,
+        "avg_sales": 155366.33,
+        "cogs_pct": 0.2918,
+        "labor_pct": 0.2747,
+        "hourly_pct": 0.2136,
+        "rm_pct": 0.007,
+        "ebitda_pct": 0.1415,
+        "ebitda_total": 43961.98
       },
       {
         "region": "FL Panhandle East",
@@ -66907,7 +67003,7 @@
         "ebitda_total": 164034.85
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 166606.75,
         "avg_sales": 166606.75,
@@ -66934,15 +67030,15 @@
     "2025_P8": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 652628.73,
-        "avg_sales": 163157.18,
-        "cogs_pct": 0.2775,
-        "labor_pct": 0.2084,
-        "hourly_pct": 0.1538,
+        "stands": 3,
+        "net_sales": 469046.63,
+        "avg_sales": 156348.88,
+        "cogs_pct": 0.2785,
+        "labor_pct": 0.209,
+        "hourly_pct": 0.1522,
         "rm_pct": 0.0066,
-        "ebitda_pct": 0.209,
-        "ebitda_total": 136357.87
+        "ebitda_pct": 0.1989,
+        "ebitda_total": 93276.05
       },
       {
         "region": "Permian Basin",
@@ -66967,6 +67063,18 @@
         "rm_pct": 0.0068,
         "ebitda_pct": 0.1821,
         "ebitda_total": 138321.11
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 183582.1,
+        "avg_sales": 183582.1,
+        "cogs_pct": 0.2752,
+        "labor_pct": 0.2069,
+        "hourly_pct": 0.158,
+        "rm_pct": 0.0064,
+        "ebitda_pct": 0.2347,
+        "ebitda_total": 43081.82
       },
       {
         "region": "Central OK",
@@ -67018,15 +67126,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 5,
-        "net_sales": 914733.25,
-        "avg_sales": 182946.65,
-        "cogs_pct": 0.287,
-        "labor_pct": 0.2622,
-        "hourly_pct": 0.2089,
+        "stands": 4,
+        "net_sales": 745502.37,
+        "avg_sales": 186375.59,
+        "cogs_pct": 0.2849,
+        "labor_pct": 0.2658,
+        "hourly_pct": 0.2125,
         "rm_pct": 0.0083,
-        "ebitda_pct": 0.1694,
-        "ebitda_total": 154959.99
+        "ebitda_pct": 0.1701,
+        "ebitda_total": 126787.7
       },
       {
         "region": "NM",
@@ -67042,15 +67150,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 2,
-        "net_sales": 246938.74,
-        "avg_sales": 123469.37,
-        "cogs_pct": 0.28,
-        "labor_pct": 0.3003,
-        "hourly_pct": 0.2324,
-        "rm_pct": 0.0028,
-        "ebitda_pct": 0.1522,
-        "ebitda_total": 37569.97
+        "stands": 3,
+        "net_sales": 416169.62,
+        "avg_sales": 138723.21,
+        "cogs_pct": 0.2865,
+        "labor_pct": 0.2785,
+        "hourly_pct": 0.2164,
+        "rm_pct": 0.0051,
+        "ebitda_pct": 0.158,
+        "ebitda_total": 65742.26
       },
       {
         "region": "FL Panhandle East",
@@ -67065,7 +67173,7 @@
         "ebitda_total": 184253.99
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 166135.6,
         "avg_sales": 166135.6,
@@ -67092,15 +67200,15 @@
     "2025_P9": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 691223.99,
-        "avg_sales": 172806.0,
-        "cogs_pct": 0.2783,
-        "labor_pct": 0.2022,
-        "hourly_pct": 0.1473,
-        "rm_pct": 0.0139,
-        "ebitda_pct": 0.2041,
-        "ebitda_total": 141107.62
+        "stands": 3,
+        "net_sales": 515066.51,
+        "avg_sales": 171688.84,
+        "cogs_pct": 0.2787,
+        "labor_pct": 0.2004,
+        "hourly_pct": 0.1451,
+        "rm_pct": 0.0152,
+        "ebitda_pct": 0.199,
+        "ebitda_total": 102489.3
       },
       {
         "region": "Permian Basin",
@@ -67125,6 +67233,18 @@
         "rm_pct": 0.0072,
         "ebitda_pct": 0.1842,
         "ebitda_total": 175608.96
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 176157.48,
+        "avg_sales": 176157.48,
+        "cogs_pct": 0.277,
+        "labor_pct": 0.2076,
+        "hourly_pct": 0.1538,
+        "rm_pct": 0.01,
+        "ebitda_pct": 0.2192,
+        "ebitda_total": 38618.32
       },
       {
         "region": "Central OK",
@@ -67176,15 +67296,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 6,
-        "net_sales": 1049312.54,
-        "avg_sales": 174885.42,
-        "cogs_pct": 0.2803,
-        "labor_pct": 0.2574,
-        "hourly_pct": 0.201,
-        "rm_pct": 0.0117,
-        "ebitda_pct": 0.175,
-        "ebitda_total": 183602.52
+        "stands": 5,
+        "net_sales": 892210.42,
+        "avg_sales": 178442.08,
+        "cogs_pct": 0.2825,
+        "labor_pct": 0.2617,
+        "hourly_pct": 0.2051,
+        "rm_pct": 0.008,
+        "ebitda_pct": 0.1764,
+        "ebitda_total": 157400.51
       },
       {
         "region": "NM",
@@ -67200,15 +67320,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 2,
-        "net_sales": 312225.83,
-        "avg_sales": 156112.92,
-        "cogs_pct": 0.2887,
-        "labor_pct": 0.2823,
-        "hourly_pct": 0.2228,
-        "rm_pct": 0.0045,
-        "ebitda_pct": 0.1448,
-        "ebitda_total": 45198.35
+        "stands": 3,
+        "net_sales": 469327.95,
+        "avg_sales": 156442.65,
+        "cogs_pct": 0.2818,
+        "labor_pct": 0.2656,
+        "hourly_pct": 0.2078,
+        "rm_pct": 0.0139,
+        "ebitda_pct": 0.1522,
+        "ebitda_total": 71400.36
       },
       {
         "region": "FL Panhandle East",
@@ -67223,7 +67343,7 @@
         "ebitda_total": 138633.1
       },
       {
-        "region": "FL West Coast",
+        "region": "North SWFL",
         "stands": 1,
         "net_sales": 160979.98,
         "avg_sales": 160979.98,
@@ -67250,15 +67370,15 @@
     "2025_P10": [
       {
         "region": "West TX",
-        "stands": 4,
-        "net_sales": 748999.71,
-        "avg_sales": 187249.93,
-        "cogs_pct": 0.2859,
-        "labor_pct": 0.1901,
-        "hourly_pct": 0.1404,
-        "rm_pct": 0.0184,
-        "ebitda_pct": 0.2066,
-        "ebitda_total": 154772.49
+        "stands": 3,
+        "net_sales": 565707.8,
+        "avg_sales": 188569.27,
+        "cogs_pct": 0.2863,
+        "labor_pct": 0.188,
+        "hourly_pct": 0.1388,
+        "rm_pct": 0.0196,
+        "ebitda_pct": 0.2017,
+        "ebitda_total": 114114.67
       },
       {
         "region": "Permian Basin",
@@ -67283,6 +67403,18 @@
         "rm_pct": 0.0115,
         "ebitda_pct": 0.1642,
         "ebitda_total": 193855.85
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 1,
+        "net_sales": 183291.91,
+        "avg_sales": 183291.91,
+        "cogs_pct": 0.2847,
+        "labor_pct": 0.1965,
+        "hourly_pct": 0.1452,
+        "rm_pct": 0.0149,
+        "ebitda_pct": 0.2218,
+        "ebitda_total": 40657.82
       },
       {
         "region": "Central OK",
@@ -67334,15 +67466,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 6,
-        "net_sales": 1089908.91,
-        "avg_sales": 181651.49,
-        "cogs_pct": 0.2847,
-        "labor_pct": 0.2328,
-        "hourly_pct": 0.1812,
-        "rm_pct": 0.012,
-        "ebitda_pct": 0.1913,
-        "ebitda_total": 208436.91
+        "stands": 5,
+        "net_sales": 930699.25,
+        "avg_sales": 186139.85,
+        "cogs_pct": 0.2818,
+        "labor_pct": 0.2352,
+        "hourly_pct": 0.1842,
+        "rm_pct": 0.0126,
+        "ebitda_pct": 0.189,
+        "ebitda_total": 175896.58
       },
       {
         "region": "NM",
@@ -67358,15 +67490,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 3,
-        "net_sales": 432076.75,
-        "avg_sales": 144025.58,
-        "cogs_pct": 0.2991,
-        "labor_pct": 0.2953,
-        "hourly_pct": 0.23,
-        "rm_pct": 0.0033,
-        "ebitda_pct": 0.1262,
-        "ebitda_total": 54525.22
+        "stands": 4,
+        "net_sales": 591286.41,
+        "avg_sales": 147821.6,
+        "cogs_pct": 0.2998,
+        "labor_pct": 0.2747,
+        "hourly_pct": 0.2121,
+        "rm_pct": 0.0048,
+        "ebitda_pct": 0.1472,
+        "ebitda_total": 87065.55
       },
       {
         "region": "FL Panhandle East",
@@ -67381,16 +67513,28 @@
         "ebitda_total": 134894.73
       },
       {
-        "region": "FL West Coast",
-        "stands": 2,
-        "net_sales": 217871.07,
-        "avg_sales": 108935.54,
-        "cogs_pct": 0.2669,
-        "labor_pct": 0.3292,
-        "hourly_pct": 0.2556,
-        "rm_pct": 0.0086,
-        "ebitda_pct": 0.1021,
-        "ebitda_total": 22230.77
+        "region": "North SWFL",
+        "stands": 1,
+        "net_sales": 160743.38,
+        "avg_sales": 160743.38,
+        "cogs_pct": 0.267,
+        "labor_pct": 0.2341,
+        "hourly_pct": 0.1732,
+        "rm_pct": 0.0101,
+        "ebitda_pct": 0.1746,
+        "ebitda_total": 28060.38
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 1,
+        "net_sales": 57127.69,
+        "avg_sales": 57127.69,
+        "cogs_pct": 0.2666,
+        "labor_pct": 0.5968,
+        "hourly_pct": 0.4876,
+        "rm_pct": 0.0044,
+        "ebitda_pct": -0.102,
+        "ebitda_total": -5829.61
       },
       {
         "region": "FL Panhandle West",
@@ -67408,15 +67552,15 @@
     "2025_P11": [
       {
         "region": "West TX",
-        "stands": 5,
-        "net_sales": 816875.16,
-        "avg_sales": 163375.03,
-        "cogs_pct": 0.2865,
-        "labor_pct": 0.2164,
-        "hourly_pct": 0.1632,
-        "rm_pct": 0.0082,
-        "ebitda_pct": 0.2333,
-        "ebitda_total": 190612.78
+        "stands": 3,
+        "net_sales": 582278.69,
+        "avg_sales": 194092.9,
+        "cogs_pct": 0.2898,
+        "labor_pct": 0.2027,
+        "hourly_pct": 0.1526,
+        "rm_pct": 0.0089,
+        "ebitda_pct": 0.2411,
+        "ebitda_total": 140382.26
       },
       {
         "region": "Permian Basin",
@@ -67441,6 +67585,18 @@
         "rm_pct": 0.0221,
         "ebitda_pct": 0.1888,
         "ebitda_total": 215107.15
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 2,
+        "net_sales": 234596.47,
+        "avg_sales": 117298.24,
+        "cogs_pct": 0.2783,
+        "labor_pct": 0.2505,
+        "hourly_pct": 0.1894,
+        "rm_pct": 0.0065,
+        "ebitda_pct": 0.2141,
+        "ebitda_total": 50230.52
       },
       {
         "region": "Central OK",
@@ -67480,15 +67636,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 6,
-        "net_sales": 1085691.35,
-        "avg_sales": 180948.56,
-        "cogs_pct": 0.2837,
-        "labor_pct": 0.2245,
-        "hourly_pct": 0.1728,
-        "rm_pct": 0.0084,
-        "ebitda_pct": 0.2168,
-        "ebitda_total": 235355.15
+        "stands": 5,
+        "net_sales": 927544.1,
+        "avg_sales": 185508.82,
+        "cogs_pct": 0.2839,
+        "labor_pct": 0.2281,
+        "hourly_pct": 0.1772,
+        "rm_pct": 0.0073,
+        "ebitda_pct": 0.2119,
+        "ebitda_total": 196536.11
       },
       {
         "region": "NM",
@@ -67504,15 +67660,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 3,
-        "net_sales": 454305.01,
-        "avg_sales": 151435.0,
-        "cogs_pct": 0.2974,
-        "labor_pct": 0.2749,
-        "hourly_pct": 0.2141,
-        "rm_pct": 0.0091,
-        "ebitda_pct": 0.1561,
-        "ebitda_total": 70927.49
+        "stands": 4,
+        "net_sales": 612452.26,
+        "avg_sales": 153113.07,
+        "cogs_pct": 0.2936,
+        "labor_pct": 0.2565,
+        "hourly_pct": 0.1968,
+        "rm_pct": 0.0106,
+        "ebitda_pct": 0.1792,
+        "ebitda_total": 109746.53
       },
       {
         "region": "FL Panhandle East",
@@ -67527,16 +67683,28 @@
         "ebitda_total": 145976.52
       },
       {
-        "region": "FL West Coast",
-        "stands": 4,
-        "net_sales": 561491.93,
-        "avg_sales": 140372.98,
-        "cogs_pct": 0.2794,
-        "labor_pct": 0.3017,
-        "hourly_pct": 0.2432,
-        "rm_pct": 0.0075,
-        "ebitda_pct": 0.1812,
-        "ebitda_total": 101756.05
+        "region": "North SWFL",
+        "stands": 1,
+        "net_sales": 152926.65,
+        "avg_sales": 152926.65,
+        "cogs_pct": 0.2867,
+        "labor_pct": 0.2316,
+        "hourly_pct": 0.1709,
+        "rm_pct": 0.0114,
+        "ebitda_pct": 0.1829,
+        "ebitda_total": 27963.02
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 3,
+        "net_sales": 408565.28,
+        "avg_sales": 136188.43,
+        "cogs_pct": 0.2767,
+        "labor_pct": 0.328,
+        "hourly_pct": 0.2703,
+        "rm_pct": 0.0061,
+        "ebitda_pct": 0.1806,
+        "ebitda_total": 73793.03
       },
       {
         "region": "FL Panhandle West",
@@ -67554,15 +67722,15 @@
     "2025_P12": [
       {
         "region": "West TX",
-        "stands": 6,
-        "net_sales": 965199.27,
-        "avg_sales": 160866.55,
-        "cogs_pct": 0.2869,
-        "labor_pct": 0.2794,
-        "hourly_pct": 0.2182,
-        "rm_pct": 0.0088,
-        "ebitda_pct": 0.1396,
-        "ebitda_total": 134734.99
+        "stands": 4,
+        "net_sales": 615074.83,
+        "avg_sales": 153768.71,
+        "cogs_pct": 0.288,
+        "labor_pct": 0.2695,
+        "hourly_pct": 0.2087,
+        "rm_pct": 0.0092,
+        "ebitda_pct": 0.1321,
+        "ebitda_total": 81273.28
       },
       {
         "region": "Permian Basin",
@@ -67587,6 +67755,18 @@
         "rm_pct": 0.0064,
         "ebitda_pct": 0.1907,
         "ebitda_total": 215713.64
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 2,
+        "net_sales": 350124.44,
+        "avg_sales": 175062.22,
+        "cogs_pct": 0.285,
+        "labor_pct": 0.2967,
+        "hourly_pct": 0.2348,
+        "rm_pct": 0.0079,
+        "ebitda_pct": 0.1527,
+        "ebitda_total": 53461.71
       },
       {
         "region": "Central OK",
@@ -67626,15 +67806,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 6,
-        "net_sales": 1006209.72,
-        "avg_sales": 167701.62,
-        "cogs_pct": 0.3086,
-        "labor_pct": 0.2349,
-        "hourly_pct": 0.1788,
-        "rm_pct": 0.0121,
-        "ebitda_pct": 0.1433,
-        "ebitda_total": 144221.05
+        "stands": 5,
+        "net_sales": 851354.77,
+        "avg_sales": 170270.95,
+        "cogs_pct": 0.3143,
+        "labor_pct": 0.2377,
+        "hourly_pct": 0.1818,
+        "rm_pct": 0.0092,
+        "ebitda_pct": 0.1371,
+        "ebitda_total": 116726.34
       },
       {
         "region": "NM",
@@ -67650,15 +67830,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 4,
-        "net_sales": 589341.46,
-        "avg_sales": 147335.36,
-        "cogs_pct": 0.2817,
-        "labor_pct": 0.2995,
-        "hourly_pct": 0.2312,
-        "rm_pct": 0.0103,
-        "ebitda_pct": 0.136,
-        "ebitda_total": 80142.17
+        "stands": 5,
+        "net_sales": 744196.41,
+        "avg_sales": 148839.28,
+        "cogs_pct": 0.2808,
+        "labor_pct": 0.2828,
+        "hourly_pct": 0.2168,
+        "rm_pct": 0.014,
+        "ebitda_pct": 0.1446,
+        "ebitda_total": 107636.88
       },
       {
         "region": "FL Panhandle East",
@@ -67673,16 +67853,28 @@
         "ebitda_total": 95615.01
       },
       {
-        "region": "FL West Coast",
-        "stands": 5,
-        "net_sales": 699331.2,
-        "avg_sales": 139866.24,
-        "cogs_pct": 0.2764,
-        "labor_pct": 0.3381,
-        "hourly_pct": 0.2732,
-        "rm_pct": 0.0075,
-        "ebitda_pct": 0.0792,
-        "ebitda_total": 55395.73
+        "region": "North SWFL",
+        "stands": 2,
+        "net_sales": 193587.2,
+        "avg_sales": 96793.6,
+        "cogs_pct": 0.2731,
+        "labor_pct": 0.355,
+        "hourly_pct": 0.2763,
+        "rm_pct": 0.0144,
+        "ebitda_pct": 0.0364,
+        "ebitda_total": 7035.68
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 3,
+        "net_sales": 505744.0,
+        "avg_sales": 168581.33,
+        "cogs_pct": 0.2777,
+        "labor_pct": 0.3316,
+        "hourly_pct": 0.272,
+        "rm_pct": 0.0049,
+        "ebitda_pct": 0.0956,
+        "ebitda_total": 48360.05
       },
       {
         "region": "FL Panhandle West",
@@ -67700,15 +67892,15 @@
     "2025_P13": [
       {
         "region": "West TX",
-        "stands": 7,
-        "net_sales": 1061135.26,
-        "avg_sales": 151590.75,
-        "cogs_pct": 0.2918,
-        "labor_pct": 0.2904,
-        "hourly_pct": 0.2269,
-        "rm_pct": 0.0128,
-        "ebitda_pct": 0.1072,
-        "ebitda_total": 113806.35
+        "stands": 4,
+        "net_sales": 618219.81,
+        "avg_sales": 154554.95,
+        "cogs_pct": 0.295,
+        "labor_pct": 0.2826,
+        "hourly_pct": 0.2209,
+        "rm_pct": 0.0155,
+        "ebitda_pct": 0.0853,
+        "ebitda_total": 52706.92
       },
       {
         "region": "Permian Basin",
@@ -67733,6 +67925,18 @@
         "rm_pct": 0.0157,
         "ebitda_pct": 0.1685,
         "ebitda_total": 194434.42
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 3,
+        "net_sales": 442915.45,
+        "avg_sales": 147638.48,
+        "cogs_pct": 0.2874,
+        "labor_pct": 0.3012,
+        "hourly_pct": 0.2352,
+        "rm_pct": 0.0089,
+        "ebitda_pct": 0.1379,
+        "ebitda_total": 61099.43
       },
       {
         "region": "Central OK",
@@ -67772,15 +67976,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 7,
-        "net_sales": 1008798.28,
-        "avg_sales": 144114.04,
-        "cogs_pct": 0.2667,
-        "labor_pct": 0.2569,
-        "hourly_pct": 0.19,
-        "rm_pct": 0.0092,
-        "ebitda_pct": 0.1399,
-        "ebitda_total": 141095.87
+        "stands": 6,
+        "net_sales": 853048.77,
+        "avg_sales": 142174.8,
+        "cogs_pct": 0.2634,
+        "labor_pct": 0.2598,
+        "hourly_pct": 0.1915,
+        "rm_pct": 0.0094,
+        "ebitda_pct": 0.1375,
+        "ebitda_total": 117266.77
       },
       {
         "region": "NM",
@@ -67796,15 +68000,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 4,
-        "net_sales": 570612.73,
-        "avg_sales": 142653.18,
-        "cogs_pct": 0.2766,
-        "labor_pct": 0.2797,
-        "hourly_pct": 0.219,
-        "rm_pct": 0.0111,
-        "ebitda_pct": 0.1338,
-        "ebitda_total": 76345.18
+        "stands": 5,
+        "net_sales": 726362.24,
+        "avg_sales": 145272.45,
+        "cogs_pct": 0.2784,
+        "labor_pct": 0.2715,
+        "hourly_pct": 0.211,
+        "rm_pct": 0.0104,
+        "ebitda_pct": 0.1379,
+        "ebitda_total": 100174.28
       },
       {
         "region": "FL Panhandle East",
@@ -67819,16 +68023,28 @@
         "ebitda_total": 39328.36
       },
       {
-        "region": "FL West Coast",
-        "stands": 5,
-        "net_sales": 675302.97,
-        "avg_sales": 135060.59,
-        "cogs_pct": 0.2932,
-        "labor_pct": 0.3155,
-        "hourly_pct": 0.2468,
-        "rm_pct": 0.0076,
-        "ebitda_pct": 0.0546,
-        "ebitda_total": 36860.61
+        "region": "North SWFL",
+        "stands": 2,
+        "net_sales": 215648.71,
+        "avg_sales": 107824.36,
+        "cogs_pct": 0.2968,
+        "labor_pct": 0.3074,
+        "hourly_pct": 0.2333,
+        "rm_pct": 0.0056,
+        "ebitda_pct": 0.0243,
+        "ebitda_total": 5253.26
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 3,
+        "net_sales": 459654.26,
+        "avg_sales": 153218.09,
+        "cogs_pct": 0.2915,
+        "labor_pct": 0.3193,
+        "hourly_pct": 0.2531,
+        "rm_pct": 0.0086,
+        "ebitda_pct": 0.0688,
+        "ebitda_total": 31607.35
       },
       {
         "region": "FL Panhandle West",
@@ -67846,15 +68062,15 @@
     "2026_P1": [
       {
         "region": "West TX",
-        "stands": 7,
-        "net_sales": 951876.76,
-        "avg_sales": 135982.39,
-        "cogs_pct": 0.3094,
-        "labor_pct": 0.2544,
-        "hourly_pct": 0.1951,
-        "rm_pct": 0.008,
-        "ebitda_pct": 0.1333,
-        "ebitda_total": 126923.2
+        "stands": 4,
+        "net_sales": 542288.99,
+        "avg_sales": 135572.25,
+        "cogs_pct": 0.3065,
+        "labor_pct": 0.25,
+        "hourly_pct": 0.1902,
+        "rm_pct": 0.0082,
+        "ebitda_pct": 0.124,
+        "ebitda_total": 67258.77
       },
       {
         "region": "Permian Basin",
@@ -67879,6 +68095,18 @@
         "rm_pct": 0.0093,
         "ebitda_pct": 0.1994,
         "ebitda_total": 206086.35
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 3,
+        "net_sales": 409587.77,
+        "avg_sales": 136529.26,
+        "cogs_pct": 0.3132,
+        "labor_pct": 0.2603,
+        "hourly_pct": 0.2015,
+        "rm_pct": 0.0077,
+        "ebitda_pct": 0.1457,
+        "ebitda_total": 59664.43
       },
       {
         "region": "Central OK",
@@ -67918,15 +68146,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 7,
-        "net_sales": 1035030.91,
-        "avg_sales": 147861.56,
-        "cogs_pct": 0.2924,
-        "labor_pct": 0.2421,
-        "hourly_pct": 0.1906,
-        "rm_pct": 0.0113,
-        "ebitda_pct": 0.1582,
-        "ebitda_total": 163720.63
+        "stands": 6,
+        "net_sales": 890686.16,
+        "avg_sales": 148447.69,
+        "cogs_pct": 0.2903,
+        "labor_pct": 0.2461,
+        "hourly_pct": 0.1933,
+        "rm_pct": 0.0117,
+        "ebitda_pct": 0.1579,
+        "ebitda_total": 140680.94
       },
       {
         "region": "NM",
@@ -67942,15 +68170,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 4,
-        "net_sales": 535641.68,
-        "avg_sales": 133910.42,
-        "cogs_pct": 0.2961,
-        "labor_pct": 0.2465,
-        "hourly_pct": 0.1898,
-        "rm_pct": 0.0071,
-        "ebitda_pct": 0.143,
-        "ebitda_total": 76568.16
+        "stands": 5,
+        "net_sales": 679986.43,
+        "avg_sales": 135997.29,
+        "cogs_pct": 0.2979,
+        "labor_pct": 0.2403,
+        "hourly_pct": 0.1865,
+        "rm_pct": 0.0074,
+        "ebitda_pct": 0.1465,
+        "ebitda_total": 99607.85
       },
       {
         "region": "FL Panhandle East",
@@ -67965,16 +68193,28 @@
         "ebitda_total": 124745.13
       },
       {
-        "region": "FL West Coast",
-        "stands": 7,
-        "net_sales": 818105.49,
-        "avg_sales": 116872.21,
-        "cogs_pct": 0.2756,
-        "labor_pct": 0.2722,
-        "hourly_pct": 0.211,
-        "rm_pct": 0.0054,
-        "ebitda_pct": 0.154,
-        "ebitda_total": 125981.97
+        "region": "North SWFL",
+        "stands": 3,
+        "net_sales": 274551.0,
+        "avg_sales": 91517.0,
+        "cogs_pct": 0.2867,
+        "labor_pct": 0.2911,
+        "hourly_pct": 0.2228,
+        "rm_pct": 0.0129,
+        "ebitda_pct": 0.0953,
+        "ebitda_total": 26160.66
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 4,
+        "net_sales": 543554.49,
+        "avg_sales": 135888.62,
+        "cogs_pct": 0.2699,
+        "labor_pct": 0.2627,
+        "hourly_pct": 0.205,
+        "rm_pct": 0.0016,
+        "ebitda_pct": 0.1836,
+        "ebitda_total": 99821.31
       },
       {
         "region": "FL Panhandle West",
@@ -67992,15 +68232,15 @@
     "2026_P2": [
       {
         "region": "West TX",
-        "stands": 7,
-        "net_sales": 1150756.52,
-        "avg_sales": 164393.79,
-        "cogs_pct": 0.2772,
-        "labor_pct": 0.2307,
-        "hourly_pct": 0.1764,
-        "rm_pct": 0.009,
-        "ebitda_pct": 0.2007,
-        "ebitda_total": 230967.42
+        "stands": 4,
+        "net_sales": 693305.28,
+        "avg_sales": 173326.32,
+        "cogs_pct": 0.2753,
+        "labor_pct": 0.2187,
+        "hourly_pct": 0.1672,
+        "rm_pct": 0.0091,
+        "ebitda_pct": 0.2056,
+        "ebitda_total": 142510.07
       },
       {
         "region": "Permian Basin",
@@ -68025,6 +68265,18 @@
         "rm_pct": 0.0153,
         "ebitda_pct": 0.2474,
         "ebitda_total": 292164.27
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 3,
+        "net_sales": 457451.24,
+        "avg_sales": 152483.75,
+        "cogs_pct": 0.28,
+        "labor_pct": 0.249,
+        "hourly_pct": 0.1903,
+        "rm_pct": 0.0088,
+        "ebitda_pct": 0.1934,
+        "ebitda_total": 88457.35
       },
       {
         "region": "Central OK",
@@ -68064,15 +68316,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 7,
-        "net_sales": 1246610.56,
-        "avg_sales": 178087.22,
-        "cogs_pct": 0.2661,
-        "labor_pct": 0.2061,
-        "hourly_pct": 0.1558,
-        "rm_pct": 0.0085,
-        "ebitda_pct": 0.2393,
-        "ebitda_total": 298339.2
+        "stands": 6,
+        "net_sales": 1076752.63,
+        "avg_sales": 179458.77,
+        "cogs_pct": 0.265,
+        "labor_pct": 0.208,
+        "hourly_pct": 0.1581,
+        "rm_pct": 0.0079,
+        "ebitda_pct": 0.2379,
+        "ebitda_total": 256194.73
       },
       {
         "region": "NM",
@@ -68088,15 +68340,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 806304.77,
-        "avg_sales": 161260.95,
-        "cogs_pct": 0.2709,
-        "labor_pct": 0.2403,
-        "hourly_pct": 0.1807,
-        "rm_pct": 0.0085,
-        "ebitda_pct": 0.2051,
-        "ebitda_total": 165416.69
+        "stands": 6,
+        "net_sales": 976162.7,
+        "avg_sales": 162693.78,
+        "cogs_pct": 0.2712,
+        "labor_pct": 0.2322,
+        "hourly_pct": 0.1738,
+        "rm_pct": 0.0091,
+        "ebitda_pct": 0.2126,
+        "ebitda_total": 207561.16
       },
       {
         "region": "FL Panhandle East",
@@ -68111,16 +68363,28 @@
         "ebitda_total": 146295.97
       },
       {
-        "region": "FL West Coast",
-        "stands": 7,
-        "net_sales": 1103935.8,
-        "avg_sales": 157705.11,
-        "cogs_pct": 0.2832,
-        "labor_pct": 0.2732,
-        "hourly_pct": 0.2118,
-        "rm_pct": 0.008,
-        "ebitda_pct": 0.1645,
-        "ebitda_total": 181597.93
+        "region": "North SWFL",
+        "stands": 3,
+        "net_sales": 414034.54,
+        "avg_sales": 138011.51,
+        "cogs_pct": 0.2891,
+        "labor_pct": 0.2888,
+        "hourly_pct": 0.224,
+        "rm_pct": 0.0091,
+        "ebitda_pct": 0.1274,
+        "ebitda_total": 52730.9
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 4,
+        "net_sales": 689901.26,
+        "avg_sales": 172475.32,
+        "cogs_pct": 0.2796,
+        "labor_pct": 0.2638,
+        "hourly_pct": 0.2046,
+        "rm_pct": 0.0074,
+        "ebitda_pct": 0.1868,
+        "ebitda_total": 128867.03
       },
       {
         "region": "FL Panhandle West",
@@ -68138,15 +68402,15 @@
     "2026_P3": [
       {
         "region": "West TX",
-        "stands": 7,
-        "net_sales": 1227612.42,
-        "avg_sales": 175373.2,
-        "cogs_pct": 0.2846,
-        "labor_pct": 0.2105,
-        "hourly_pct": 0.1604,
-        "rm_pct": 0.0065,
-        "ebitda_pct": 0.2223,
-        "ebitda_total": 272946.51
+        "stands": 4,
+        "net_sales": 732470.13,
+        "avg_sales": 183117.53,
+        "cogs_pct": 0.2827,
+        "labor_pct": 0.2061,
+        "hourly_pct": 0.1538,
+        "rm_pct": 0.0075,
+        "ebitda_pct": 0.2171,
+        "ebitda_total": 159045.95
       },
       {
         "region": "Permian Basin",
@@ -68171,6 +68435,18 @@
         "rm_pct": 0.0105,
         "ebitda_pct": 0.2586,
         "ebitda_total": 343964.73
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 3,
+        "net_sales": 495142.29,
+        "avg_sales": 165047.43,
+        "cogs_pct": 0.2873,
+        "labor_pct": 0.2169,
+        "hourly_pct": 0.17,
+        "rm_pct": 0.0051,
+        "ebitda_pct": 0.23,
+        "ebitda_total": 113900.56
       },
       {
         "region": "Central OK",
@@ -68210,15 +68486,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 8,
-        "net_sales": 1432211.21,
-        "avg_sales": 179026.4,
-        "cogs_pct": 0.2757,
-        "labor_pct": 0.2149,
-        "hourly_pct": 0.1626,
-        "rm_pct": 0.0121,
-        "ebitda_pct": 0.2254,
-        "ebitda_total": 322824.62
+        "stands": 7,
+        "net_sales": 1234751.96,
+        "avg_sales": 176393.14,
+        "cogs_pct": 0.2763,
+        "labor_pct": 0.2197,
+        "hourly_pct": 0.1672,
+        "rm_pct": 0.0119,
+        "ebitda_pct": 0.2192,
+        "ebitda_total": 270685.11
       },
       {
         "region": "NM",
@@ -68234,15 +68510,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 899211.78,
-        "avg_sales": 179842.36,
-        "cogs_pct": 0.2741,
-        "labor_pct": 0.2169,
-        "hourly_pct": 0.1601,
-        "rm_pct": 0.0135,
-        "ebitda_pct": 0.2244,
-        "ebitda_total": 201822.22
+        "stands": 6,
+        "net_sales": 1096671.03,
+        "avg_sales": 182778.51,
+        "cogs_pct": 0.2738,
+        "labor_pct": 0.2111,
+        "hourly_pct": 0.1554,
+        "rm_pct": 0.0134,
+        "ebitda_pct": 0.2316,
+        "ebitda_total": 253961.73
       },
       {
         "region": "FL Panhandle East",
@@ -68257,16 +68533,28 @@
         "ebitda_total": 213438.31
       },
       {
-        "region": "FL West Coast",
-        "stands": 9,
-        "net_sales": 1452355.04,
-        "avg_sales": 161372.78,
-        "cogs_pct": 0.2769,
-        "labor_pct": 0.2733,
-        "hourly_pct": 0.2126,
-        "rm_pct": 0.007,
-        "ebitda_pct": 0.1784,
-        "ebitda_total": 259042.26
+        "region": "North SWFL",
+        "stands": 4,
+        "net_sales": 548029.52,
+        "avg_sales": 137007.38,
+        "cogs_pct": 0.286,
+        "labor_pct": 0.2864,
+        "hourly_pct": 0.2238,
+        "rm_pct": 0.0048,
+        "ebitda_pct": 0.1433,
+        "ebitda_total": 78516.02
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 5,
+        "net_sales": 904325.52,
+        "avg_sales": 180865.1,
+        "cogs_pct": 0.2713,
+        "labor_pct": 0.2653,
+        "hourly_pct": 0.2059,
+        "rm_pct": 0.0084,
+        "ebitda_pct": 0.1996,
+        "ebitda_total": 180526.24
       },
       {
         "region": "FL Panhandle West",
@@ -68284,15 +68572,15 @@
     "2026_P4": [
       {
         "region": "West TX",
-        "stands": 8,
-        "net_sales": 1437539.38,
-        "avg_sales": 179692.42,
-        "cogs_pct": 0.2786,
-        "labor_pct": 0.2227,
-        "hourly_pct": 0.1712,
-        "rm_pct": 0.0065,
-        "ebitda_pct": 0.2274,
-        "ebitda_total": 326852.52
+        "stands": 4,
+        "net_sales": 781610.02,
+        "avg_sales": 195402.51,
+        "cogs_pct": 0.2761,
+        "labor_pct": 0.2021,
+        "hourly_pct": 0.1529,
+        "rm_pct": 0.0077,
+        "ebitda_pct": 0.238,
+        "ebitda_total": 186021.0
       },
       {
         "region": "Permian Basin",
@@ -68317,6 +68605,18 @@
         "rm_pct": 0.0146,
         "ebitda_pct": 0.2355,
         "ebitda_total": 317425.65
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 4,
+        "net_sales": 655929.36,
+        "avg_sales": 163982.34,
+        "cogs_pct": 0.2817,
+        "labor_pct": 0.2472,
+        "hourly_pct": 0.1929,
+        "rm_pct": 0.005,
+        "ebitda_pct": 0.2147,
+        "ebitda_total": 140831.52
       },
       {
         "region": "Central OK",
@@ -68356,15 +68656,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 10,
-        "net_sales": 1813372.51,
-        "avg_sales": 181337.25,
-        "cogs_pct": 0.2806,
-        "labor_pct": 0.2287,
-        "hourly_pct": 0.1755,
-        "rm_pct": 0.0124,
-        "ebitda_pct": 0.2074,
-        "ebitda_total": 376115.96
+        "stands": 8,
+        "net_sales": 1435606.05,
+        "avg_sales": 179450.76,
+        "cogs_pct": 0.2828,
+        "labor_pct": 0.2224,
+        "hourly_pct": 0.1689,
+        "rm_pct": 0.0113,
+        "ebitda_pct": 0.2058,
+        "ebitda_total": 295399.46
       },
       {
         "region": "NM",
@@ -68380,15 +68680,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 921027.92,
-        "avg_sales": 184205.58,
-        "cogs_pct": 0.2755,
-        "labor_pct": 0.2211,
-        "hourly_pct": 0.1633,
-        "rm_pct": 0.0086,
-        "ebitda_pct": 0.2159,
-        "ebitda_total": 198806.12
+        "stands": 7,
+        "net_sales": 1298794.38,
+        "avg_sales": 185542.05,
+        "cogs_pct": 0.2745,
+        "labor_pct": 0.2303,
+        "hourly_pct": 0.1742,
+        "rm_pct": 0.0108,
+        "ebitda_pct": 0.2152,
+        "ebitda_total": 279522.62
       },
       {
         "region": "FL Panhandle East",
@@ -68403,16 +68703,28 @@
         "ebitda_total": 224168.9
       },
       {
-        "region": "FL West Coast",
-        "stands": 9,
-        "net_sales": 1597142.36,
-        "avg_sales": 177460.26,
-        "cogs_pct": 0.2858,
-        "labor_pct": 0.2544,
-        "hourly_pct": 0.1984,
-        "rm_pct": 0.0065,
-        "ebitda_pct": 0.1896,
-        "ebitda_total": 302865.76
+        "region": "North SWFL",
+        "stands": 4,
+        "net_sales": 665611.24,
+        "avg_sales": 166402.81,
+        "cogs_pct": 0.2915,
+        "labor_pct": 0.2693,
+        "hourly_pct": 0.2126,
+        "rm_pct": 0.0068,
+        "ebitda_pct": 0.1716,
+        "ebitda_total": 114220.7
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 5,
+        "net_sales": 931531.12,
+        "avg_sales": 186306.22,
+        "cogs_pct": 0.2818,
+        "labor_pct": 0.2438,
+        "hourly_pct": 0.1883,
+        "rm_pct": 0.0063,
+        "ebitda_pct": 0.2025,
+        "ebitda_total": 188645.06
       },
       {
         "region": "FL Panhandle West",
@@ -68430,15 +68742,15 @@
     "2026_P5": [
       {
         "region": "West TX",
-        "stands": 8,
-        "net_sales": 1490717.86,
-        "avg_sales": 186339.73,
-        "cogs_pct": 0.2913,
-        "labor_pct": 0.2148,
-        "hourly_pct": 0.1655,
-        "rm_pct": 0.0053,
-        "ebitda_pct": 0.2207,
-        "ebitda_total": 328959.27
+        "stands": 4,
+        "net_sales": 822149.18,
+        "avg_sales": 205537.29,
+        "cogs_pct": 0.2867,
+        "labor_pct": 0.1931,
+        "hourly_pct": 0.1483,
+        "rm_pct": 0.0075,
+        "ebitda_pct": 0.2409,
+        "ebitda_total": 198055.52
       },
       {
         "region": "Permian Basin",
@@ -68463,6 +68775,18 @@
         "rm_pct": 0.0078,
         "ebitda_pct": 0.2545,
         "ebitda_total": 351869.31
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 4,
+        "net_sales": 668568.68,
+        "avg_sales": 167142.17,
+        "cogs_pct": 0.2971,
+        "labor_pct": 0.2415,
+        "hourly_pct": 0.1868,
+        "rm_pct": 0.0026,
+        "ebitda_pct": 0.1958,
+        "ebitda_total": 130903.75
       },
       {
         "region": "Central OK",
@@ -68502,15 +68826,15 @@
       },
       {
         "region": "South Central TX",
-        "stands": 10,
-        "net_sales": 1999979.91,
-        "avg_sales": 199997.99,
-        "cogs_pct": 0.2888,
-        "labor_pct": 0.2198,
-        "hourly_pct": 0.1687,
-        "rm_pct": 0.0092,
-        "ebitda_pct": 0.2167,
-        "ebitda_total": 433463.48
+        "stands": 8,
+        "net_sales": 1567118.92,
+        "avg_sales": 195889.87,
+        "cogs_pct": 0.2892,
+        "labor_pct": 0.2189,
+        "hourly_pct": 0.1676,
+        "rm_pct": 0.0095,
+        "ebitda_pct": 0.2137,
+        "ebitda_total": 334943.27
       },
       {
         "region": "NM",
@@ -68526,15 +68850,15 @@
       },
       {
         "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 956122.58,
-        "avg_sales": 191224.52,
-        "cogs_pct": 0.2766,
-        "labor_pct": 0.2205,
-        "hourly_pct": 0.1643,
-        "rm_pct": 0.0088,
-        "ebitda_pct": 0.2248,
-        "ebitda_total": 214887.75
+        "stands": 7,
+        "net_sales": 1388983.57,
+        "avg_sales": 198426.22,
+        "cogs_pct": 0.28,
+        "labor_pct": 0.2213,
+        "hourly_pct": 0.1669,
+        "rm_pct": 0.0086,
+        "ebitda_pct": 0.2257,
+        "ebitda_total": 313407.96
       },
       {
         "region": "FL Panhandle East",
@@ -68549,16 +68873,28 @@
         "ebitda_total": 199838.97
       },
       {
-        "region": "FL West Coast",
-        "stands": 9,
-        "net_sales": 1538849.63,
-        "avg_sales": 170983.29,
-        "cogs_pct": 0.2953,
-        "labor_pct": 0.242,
-        "hourly_pct": 0.1877,
-        "rm_pct": 0.0061,
-        "ebitda_pct": 0.1724,
-        "ebitda_total": 265270.86
+        "region": "North SWFL",
+        "stands": 4,
+        "net_sales": 656443.77,
+        "avg_sales": 164110.94,
+        "cogs_pct": 0.3023,
+        "labor_pct": 0.2565,
+        "hourly_pct": 0.1996,
+        "rm_pct": 0.0068,
+        "ebitda_pct": 0.154,
+        "ebitda_total": 101134.32
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 5,
+        "net_sales": 882405.86,
+        "avg_sales": 176481.17,
+        "cogs_pct": 0.2901,
+        "labor_pct": 0.2313,
+        "hourly_pct": 0.1788,
+        "rm_pct": 0.0056,
+        "ebitda_pct": 0.186,
+        "ebitda_total": 164136.54
       },
       {
         "region": "FL Panhandle West",
@@ -68600,15 +68936,15 @@
       },
       {
         "region": "West TX",
-        "stands": 8,
-        "net_sales": 1333579.9,
-        "avg_sales": 166697.49,
-        "cogs_pct": 0.2913,
-        "labor_pct": 0.2337,
-        "hourly_pct": 0.1775,
-        "rm_pct": 0.0103,
-        "ebitda_pct": 0.1831,
-        "ebitda_total": 244235.67
+        "stands": 4,
+        "net_sales": 691325.16,
+        "avg_sales": 172831.29,
+        "cogs_pct": 0.2839,
+        "labor_pct": 0.2312,
+        "hourly_pct": 0.1726,
+        "rm_pct": 0.0164,
+        "ebitda_pct": 0.1787,
+        "ebitda_total": 123557.63
       },
       {
         "region": "FL Panhandle East",
@@ -68633,6 +68969,18 @@
         "rm_pct": 0.0102,
         "ebitda_pct": 0.2275,
         "ebitda_total": 281411.96
+      },
+      {
+        "region": "TX Panhandle",
+        "stands": 4,
+        "net_sales": 642254.74,
+        "avg_sales": 160563.68,
+        "cogs_pct": 0.2994,
+        "labor_pct": 0.2364,
+        "hourly_pct": 0.1828,
+        "rm_pct": 0.0036,
+        "ebitda_pct": 0.1879,
+        "ebitda_total": 120678.04
       },
       {
         "region": "Central OK",
@@ -68660,15 +69008,27 @@
       },
       {
         "region": "South Central TX",
-        "stands": 12,
-        "net_sales": 2081125.1,
-        "avg_sales": 173427.09,
-        "cogs_pct": 0.2853,
-        "labor_pct": 0.2544,
-        "hourly_pct": 0.1987,
-        "rm_pct": 0.0159,
-        "ebitda_pct": 0.1642,
-        "ebitda_total": 341679.59
+        "stands": 10,
+        "net_sales": 1650706.06,
+        "avg_sales": 165070.61,
+        "cogs_pct": 0.2861,
+        "labor_pct": 0.2637,
+        "hourly_pct": 0.2064,
+        "rm_pct": 0.0142,
+        "ebitda_pct": 0.1536,
+        "ebitda_total": 253594.61
+      },
+      {
+        "region": "North Central TX",
+        "stands": 7,
+        "net_sales": 1367009.65,
+        "avg_sales": 195287.09,
+        "cogs_pct": 0.2822,
+        "labor_pct": 0.2187,
+        "hourly_pct": 0.1652,
+        "rm_pct": 0.0145,
+        "ebitda_pct": 0.2027,
+        "ebitda_total": 277098.7
       },
       {
         "region": "North OK",
@@ -68683,16 +69043,28 @@
         "ebitda_total": 139590.54
       },
       {
-        "region": "FL West Coast",
-        "stands": 9,
-        "net_sales": 1534984.48,
-        "avg_sales": 170553.83,
-        "cogs_pct": 0.2893,
-        "labor_pct": 0.2278,
-        "hourly_pct": 0.1742,
-        "rm_pct": 0.0081,
-        "ebitda_pct": 0.1925,
-        "ebitda_total": 295447.36
+        "region": "North SWFL",
+        "stands": 4,
+        "net_sales": 647803.91,
+        "avg_sales": 161950.98,
+        "cogs_pct": 0.2992,
+        "labor_pct": 0.2404,
+        "hourly_pct": 0.1837,
+        "rm_pct": 0.0066,
+        "ebitda_pct": 0.1634,
+        "ebitda_total": 105849.28
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 5,
+        "net_sales": 887180.57,
+        "avg_sales": 177436.11,
+        "cogs_pct": 0.2821,
+        "labor_pct": 0.2187,
+        "hourly_pct": 0.1672,
+        "rm_pct": 0.0091,
+        "ebitda_pct": 0.2137,
+        "ebitda_total": 189598.08
       },
       {
         "region": "FL Panhandle West",
@@ -68705,18 +69077,6 @@
         "rm_pct": 0.0134,
         "ebitda_pct": 0.2108,
         "ebitda_total": 226563.5
-      },
-      {
-        "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 936590.61,
-        "avg_sales": 187318.12,
-        "cogs_pct": 0.2821,
-        "labor_pct": 0.2186,
-        "hourly_pct": 0.1633,
-        "rm_pct": 0.0109,
-        "ebitda_pct": 0.2018,
-        "ebitda_total": 189013.72
       }
     ],
     "2026_P7": [
@@ -68746,15 +69106,15 @@
       },
       {
         "region": "West TX",
-        "stands": 10,
-        "net_sales": 1503717.52,
-        "avg_sales": 150371.75,
-        "cogs_pct": 0.2742,
-        "labor_pct": 0.2548,
-        "hourly_pct": 0.1969,
-        "rm_pct": 0.0176,
-        "ebitda_pct": 0.1792,
-        "ebitda_total": 269506.38
+        "stands": 5,
+        "net_sales": 785588.35,
+        "avg_sales": 157117.67,
+        "cogs_pct": 0.2634,
+        "labor_pct": 0.2567,
+        "hourly_pct": 0.1966,
+        "rm_pct": 0.0228,
+        "ebitda_pct": 0.176,
+        "ebitda_total": 138247.1
       },
       {
         "region": "FL Panhandle East",
@@ -68781,16 +69141,28 @@
         "ebitda_total": 301699.85
       },
       {
+        "region": "TX Panhandle",
+        "stands": 5,
+        "net_sales": 718129.17,
+        "avg_sales": 143625.83,
+        "cogs_pct": 0.286,
+        "labor_pct": 0.2528,
+        "hourly_pct": 0.1973,
+        "rm_pct": 0.012,
+        "ebitda_pct": 0.1828,
+        "ebitda_total": 131259.28
+      },
+      {
         "region": "Central OK",
-        "stands": 6,
-        "net_sales": 992572.36,
-        "avg_sales": 165428.73,
-        "cogs_pct": 0.2805,
-        "labor_pct": 0.2416,
-        "hourly_pct": 0.1896,
-        "rm_pct": 0.0061,
-        "ebitda_pct": 0.1974,
-        "ebitda_total": 195916.06
+        "stands": 5,
+        "net_sales": 868060.99,
+        "avg_sales": 173612.2,
+        "cogs_pct": 0.2825,
+        "labor_pct": 0.2102,
+        "hourly_pct": 0.163,
+        "rm_pct": 0.0063,
+        "ebitda_pct": 0.2222,
+        "ebitda_total": 192876.34
       },
       {
         "region": "NM",
@@ -68806,39 +69178,63 @@
       },
       {
         "region": "South Central TX",
-        "stands": 12,
-        "net_sales": 2105648.69,
-        "avg_sales": 175470.72,
-        "cogs_pct": 0.2872,
-        "labor_pct": 0.2407,
-        "hourly_pct": 0.1877,
+        "stands": 10,
+        "net_sales": 1682521.26,
+        "avg_sales": 168252.13,
+        "cogs_pct": 0.2883,
+        "labor_pct": 0.2443,
+        "hourly_pct": 0.1915,
+        "rm_pct": 0.0099,
+        "ebitda_pct": 0.1742,
+        "ebitda_total": 293133.09
+      },
+      {
+        "region": "North Central TX",
+        "stands": 7,
+        "net_sales": 1367580.99,
+        "avg_sales": 195368.71,
+        "cogs_pct": 0.2785,
+        "labor_pct": 0.2155,
+        "hourly_pct": 0.1634,
         "rm_pct": 0.01,
-        "ebitda_pct": 0.1817,
-        "ebitda_total": 382662.36
+        "ebitda_pct": 0.2229,
+        "ebitda_total": 304804.51
       },
       {
         "region": "North OK",
-        "stands": 4,
-        "net_sales": 691043.36,
-        "avg_sales": 172760.84,
-        "cogs_pct": 0.2882,
-        "labor_pct": 0.209,
-        "hourly_pct": 0.158,
-        "rm_pct": 0.0091,
-        "ebitda_pct": 0.2172,
-        "ebitda_total": 150108.25
+        "stands": 5,
+        "net_sales": 815554.73,
+        "avg_sales": 163110.95,
+        "cogs_pct": 0.2849,
+        "labor_pct": 0.2474,
+        "hourly_pct": 0.1912,
+        "rm_pct": 0.0084,
+        "ebitda_pct": 0.1878,
+        "ebitda_total": 153147.97
       },
       {
-        "region": "FL West Coast",
-        "stands": 9,
-        "net_sales": 1530757.64,
-        "avg_sales": 170084.18,
-        "cogs_pct": 0.2879,
-        "labor_pct": 0.2189,
-        "hourly_pct": 0.1669,
+        "region": "North SWFL",
+        "stands": 4,
+        "net_sales": 627745.58,
+        "avg_sales": 156936.39,
+        "cogs_pct": 0.2949,
+        "labor_pct": 0.2413,
+        "hourly_pct": 0.185,
         "rm_pct": 0.0112,
-        "ebitda_pct": 0.2043,
-        "ebitda_total": 312791.28
+        "ebitda_pct": 0.1662,
+        "ebitda_total": 104353.76
+      },
+      {
+        "region": "Central SWFL",
+        "stands": 5,
+        "net_sales": 903012.06,
+        "avg_sales": 180602.41,
+        "cogs_pct": 0.283,
+        "labor_pct": 0.2034,
+        "hourly_pct": 0.1544,
+        "rm_pct": 0.0111,
+        "ebitda_pct": 0.2308,
+        "ebitda_total": 208437.52
       },
       {
         "region": "FL Panhandle West",
@@ -68851,18 +69247,6 @@
         "rm_pct": 0.0163,
         "ebitda_pct": 0.221,
         "ebitda_total": 247021.28
-      },
-      {
-        "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 944453.56,
-        "avg_sales": 188890.71,
-        "cogs_pct": 0.2766,
-        "labor_pct": 0.2104,
-        "hourly_pct": 0.1593,
-        "rm_pct": 0.0098,
-        "ebitda_pct": 0.2279,
-        "ebitda_total": 215275.24
       }
     ],
     "2026_P8": [
@@ -69122,15 +69506,27 @@
       },
       {
         "region": "South Central TX",
-        "stands": 12,
-        "net_sales": 2117778.54,
-        "avg_sales": 176481.54,
-        "cogs_pct": 0.276,
-        "labor_pct": 0.2094,
-        "hourly_pct": 0.1555,
-        "rm_pct": 0.0156,
-        "ebitda_pct": 0.2235,
-        "ebitda_total": 473405.97
+        "stands": 10,
+        "net_sales": 1721687.21,
+        "avg_sales": 172168.72,
+        "cogs_pct": 0.2765,
+        "labor_pct": 0.2112,
+        "hourly_pct": 0.1562,
+        "rm_pct": 0.0161,
+        "ebitda_pct": 0.2177,
+        "ebitda_total": 374832.52
+      },
+      {
+        "region": "North Central TX",
+        "stands": 7,
+        "net_sales": 1304073.95,
+        "avg_sales": 186296.28,
+        "cogs_pct": 0.2757,
+        "labor_pct": 0.2024,
+        "hourly_pct": 0.1478,
+        "rm_pct": 0.011,
+        "ebitda_pct": 0.235,
+        "ebitda_total": 306488.62
       },
       {
         "region": "North OK",
@@ -69167,18 +69563,6 @@
         "rm_pct": 0.0151,
         "ebitda_pct": 0.2188,
         "ebitda_total": 224984.93
-      },
-      {
-        "region": "North Central TX",
-        "stands": 5,
-        "net_sales": 907982.62,
-        "avg_sales": 181596.52,
-        "cogs_pct": 0.2764,
-        "labor_pct": 0.2028,
-        "hourly_pct": 0.1458,
-        "rm_pct": 0.0098,
-        "ebitda_pct": 0.229,
-        "ebitda_total": 207915.17
       }
     ]
   },
