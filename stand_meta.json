@@ -535,5 +535,95 @@
     "State": "TX",
     "RM": "Mia Walker",
     "Age_Bucket": "New"
+  },
+  "428": {
+    "Display_Name": "Fort Myers",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-09-28",
+    "Store_ID": "428",
+    "State": "FL",
+    "RM": "",
+    "Age_Bucket": "New"
+  },
+  "520": {
+    "Display_Name": "Brooksville",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-08-17",
+    "Store_ID": "520",
+    "State": "FL",
+    "RM": "Gerika Tunnell",
+    "Age_Bucket": "New"
+  },
+  "674": {
+    "Display_Name": "Holiday",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-09-21",
+    "Store_ID": "674",
+    "State": "FL",
+    "RM": "Gerika Tunnell",
+    "Age_Bucket": "New"
+  },
+  "883": {
+    "Display_Name": "Winter Haven",
+    "Region": "FL West Coast",
+    "Open_Date": "2026-09-21",
+    "Store_ID": "883",
+    "State": "FL",
+    "RM": "",
+    "Age_Bucket": "New"
+  },
+  "986": {
+    "Display_Name": "Mary Esther",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2026-09-14",
+    "Store_ID": "986",
+    "State": "FL",
+    "RM": "Matt Avery",
+    "Age_Bucket": "New"
+  },
+  "1118": {
+    "Display_Name": "Snyder",
+    "Region": "Middle Earth",
+    "Open_Date": "2026-09-14",
+    "Store_ID": "1118",
+    "State": "TX",
+    "RM": "Ryley Cooper",
+    "Age_Bucket": "New"
+  },
+  "1154": {
+    "Display_Name": "Pensacola 4",
+    "Region": "FL Panhandle West",
+    "Open_Date": "2026-09-14",
+    "Store_ID": "1154",
+    "State": "FL",
+    "RM": "Matt Avery",
+    "Age_Bucket": "New"
+  },
+  "1234": {
+    "Display_Name": "El Reno",
+    "Region": "Central OK",
+    "Open_Date": "2026-09-28",
+    "Store_ID": "1234",
+    "State": "OK",
+    "RM": "Rosey Olson",
+    "Age_Bucket": "New"
+  },
+  "1333": {
+    "Display_Name": "Oklahoma City 3",
+    "Region": "Central OK",
+    "Open_Date": "2026-08-10",
+    "Store_ID": "1333",
+    "State": "OK",
+    "RM": "Rosey Olson",
+    "Age_Bucket": "New"
+  },
+  "1693": {
+    "Display_Name": "Oklahoma City 5",
+    "Region": "North OK",
+    "Open_Date": "2026-09-14",
+    "Store_ID": "1693",
+    "State": "OK",
+    "RM": "Ryley Gee",
+    "Age_Bucket": "New"
   }
 }
