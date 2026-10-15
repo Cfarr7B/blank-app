@@ -728,6 +728,29 @@ def render_sidebar():
 # ─────────────────────────────────────────────
 # TAB: CEO SNAPSHOT
 # ─────────────────────────────────────────────
+# FY plan (system-level) — used by the CEO Snapshot and the Overview scorecard
+FY_PLAN = {
+    2026: {
+        "net_sales":  205_646_328,
+        "cogs_pct":   0.276,
+        "labor_pct":  0.236,   # all-in
+        "ebitda":     39_857_275,
+        # Per-period goals — P1 through P13 (reflects stand-count ramp)
+        "net_sales_by_period": [
+             9_130_515, 11_159_651, 12_790_640, 13_664_652, 15_126_988,
+            15_496_441, 16_407_317, 17_458_962, 17_984_433, 18_758_183,
+            18_843_634, 19_135_068, 19_689_843,
+        ],
+        "ebitda_by_period": [
+            1_507_851, 1_966_287, 2_410_946, 2_658_865, 3_107_604,
+            3_067_255, 3_196_020, 3_404_142, 3_487_614, 3_668_610,
+            3_722_240, 3_808_510, 3_851_330,
+        ],
+    },
+    # Add future years here as goals are set
+}
+
+
 def tab_ceo(dash):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
@@ -836,26 +859,7 @@ def tab_ceo(dash):
     filtered_stands = stands_df[stands_df["Period_Key"].isin(filtered_pks)]
 
     # ── Annual Goals Tracker (shown when a goal year is selected) ─────────────
-    ANNUAL_GOALS = {
-        2026: {
-            "net_sales":  205_646_328,
-            "cogs_pct":   0.276,
-            "labor_pct":  0.236,   # all-in
-            "ebitda":     39_857_275,
-            # Per-period goals — P1 through P13 (reflects stand-count ramp)
-            "net_sales_by_period": [
-                 9_130_515, 11_159_651, 12_790_640, 13_664_652, 15_126_988,
-                15_496_441, 16_407_317, 17_458_962, 17_984_433, 18_758_183,
-                18_843_634, 19_135_068, 19_689_843,
-            ],
-            "ebitda_by_period": [
-                1_507_851, 1_966_287, 2_410_946, 2_658_865, 3_107_604,
-                3_067_255, 3_196_020, 3_404_142, 3_487_614, 3_668_610,
-                3_722_240, 3_808_510, 3_851_330,
-            ],
-        },
-        # Add future years here as goals are set
-    }
+    ANNUAL_GOALS = FY_PLAN
 
     if sel_year in ANNUAL_GOALS:
         goals       = ANNUAL_GOALS[sel_year]
@@ -1702,322 +1706,428 @@ def tab_ceo(dash):
 # ─────────────────────────────────────────────
 # TAB: OVERVIEW
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# OVERVIEW — KPI scorecard vs goal (Net Sales · Labor % · COGS % · Store EBITDA)
+# grouped DO → Area → Market from the Cluster Roster; any period selectable
+# ─────────────────────────────────────────────
+_GOALS_PATH = os.path.join(os.path.dirname(__file__), "kpi_goals.json")
+
+_OV_CSS = """
+<style>
+.ov7{--red:#AC2430;--card:#fff;--ink:#1a1a1a;--muted:#4d4d4d;--met:#1e7b34;--met-bg:#e7f3ea;--miss:#AC2430;
+--miss-bg:#fbecee;--none:#595959;--none-bg:#efefef;--line:#d6d1c9;--track:#e4dfd7;--head-bg:#f7f5f1;--hover:#faf8f5;
+color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45}
+.ov7 *{box-sizing:border-box}
+.ov7 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px}
+.ov7 .card{background:var(--card);border-radius:12px;border:1px solid var(--line);padding:16px}
+.ov7 .kpi{border-top:6px solid var(--none)} .ov7 .kpi-met{border-top-color:var(--met)} .ov7 .kpi-miss{border-top-color:var(--miss)}
+.ov7 .kpi h3{margin:0;font-size:1.02rem;text-transform:uppercase;letter-spacing:.04em;font-weight:800}
+.ov7 .kpi .sub{margin:2px 0 0;color:var(--muted);font-size:.84rem}
+.ov7 .kpi .big{margin:8px 0 0;font-size:2.2rem;font-weight:800;line-height:1.1}
+.ov7 .kpi .big span{font-size:.95rem;font-weight:600;color:var(--muted)}
+.ov7 .kpi .goal{margin:4px 0 0;font-weight:600}
+.ov7 .kpi .var{margin:8px 0 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:600}
+.ov7 .kpi .att{margin:8px 0 0}
+.ov7 .sec{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.86rem}
+.ov7 .sec div{margin:0 0 6px} .ov7 .sec dt{color:var(--muted);font-weight:600} .ov7 .sec dd{margin:0}
+.ov7 .st{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:.8rem;padding:1px 8px;border-radius:999px;
+border:1px solid currentColor;white-space:nowrap;line-height:1.5}
+.ov7 .st-met{color:var(--met);background:var(--met-bg)} .ov7 .st-miss{color:var(--miss);background:var(--miss-bg)}
+.ov7 .st-none{color:var(--none);background:var(--none-bg)}
+.ov7 .scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.ov7 table.data{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+.ov7 table.data caption{text-align:left;padding:10px 12px;color:var(--muted);font-size:.84rem;caption-side:top}
+.ov7 table.data th,.ov7 table.data td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top;text-align:left}
+.ov7 table.data thead th{background:var(--head-bg);font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;border-top:0;white-space:nowrap}
+.ov7 table.data .num{text-align:right}
+.ov7 table.data tbody th{font-weight:700}
+.ov7 table.data tbody tr:hover{background:var(--hover)}
+.ov7 table.data tr.do-row th,.ov7 table.data tr.do-row td{background:#f3efe9;border-top:2px solid var(--red)}
+.ov7 table.data tr.do-row th{font-size:.95rem}
+.ov7 .v{font-weight:600;white-space:nowrap} .ov7 .tv{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.ov7 .bar{display:block;position:relative;height:8px;background:var(--track);border-radius:4px;margin-top:6px;min-width:90px}
+.ov7 .bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.ov7 .fill-met{background:var(--met)} .ov7 .fill-miss{background:var(--miss)}
+.ov7 .bar .tick{position:absolute;left:83.333%;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.ov7 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px;margin:4px 0 12px}
+.ov7 .tile{border:1px solid var(--line);border-left:6px solid var(--none);border-radius:8px;padding:10px 12px;background:var(--card)}
+.ov7 .tile-met{border-left-color:var(--met)} .ov7 .tile-miss{border-left-color:var(--miss)}
+.ov7 .tile p{margin:0} .ov7 .tl{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.ov7 .tb{font-size:1.5rem;font-weight:800;line-height:1.2} .ov7 .tg{font-size:.84rem;font-weight:600}
+.ov7 .ts{margin-top:4px!important;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ov7 .tm{font-size:.8rem;color:var(--muted);margin-top:2px!important}
+.ov7 .sn{display:block} .ov7 .sid{display:block;font-weight:400;font-size:.76rem;color:var(--muted)}
+.ov7 .note{display:block;font-weight:600;font-size:.74rem;color:#175bb0}
+.ov7 .ctx{margin:10px 0 0;color:var(--muted);font-size:.9rem}
+.ov7 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 10px;padding:0;list-style:none;font-size:.86rem;color:var(--muted)}
+</style>
+"""
+
+
+@st.cache_data(show_spinner=False)
+def _load_kpi_goals(_mtime: float) -> dict:
+    with open(_GOALS_PATH, encoding="utf-8") as f:
+        return json.load(f).get("periods", {})
+
+
+def _ov_money(v, short=False):
+    if v is None:
+        return "—"
+    if short and abs(v) >= 1e6:
+        return f"{'−' if v < 0 else ''}${abs(v) / 1e6:,.2f}M"
+    return f"{'−' if v < 0 else ''}${abs(v):,.0f}"
+
+
+def _ov_smoney(v):
+    return ("+" if v >= 0 else "−") + _ov_money(abs(v))
+
+
+def _ov_pct(v, dp=2):
+    return "—" if v is None else f"{'−' if v < 0 else ''}{abs(v) * 100:.{dp}f}%"
+
+
+def _ov_pts(v):
+    return f"{'+' if v >= 0 else '−'}{abs(v) * 100:.2f} pts"
+
+
+def _ov_status(actual, goal, higher_better):
+    if actual is None or goal is None:
+        return "none"
+    return "met" if (actual >= goal if higher_better else actual <= goal) else "miss"
+
+
+def _ov_roll(ss):
+    """Roll stands up: sales-weighted %s; goals weighted over stands that have them (same as the P10 scorecard)."""
+    ns = sum(x["net_sales"] for x in ss) or 0.0
+
+    def w(k):
+        return sum(x[k] * x["net_sales"] for x in ss) / ns if ns else None
+
+    def wg(k):
+        have = [x for x in ss if x[k] is not None]
+        tot = sum(x["net_sales"] for x in have)
+        return sum(x[k] * x["net_sales"] for x in have) / tot if tot else None
+
+    gl = [x for x in ss if x["ns_goal"]]
+    return {
+        "stands": len(ss), "net_sales": ns,
+        "net_sales_goal": sum(x["ns_goal"] for x in gl), "net_sales_of_goal_stands": sum(x["net_sales"] for x in gl),
+        "cogs_pct": w("cogs_pct"), "cogs_goal": wg("cogs_goal"),
+        "hourly_pct": w("hourly_pct"), "hourly_goal": wg("hourly_goal"),
+        "labor_pct": w("labor_pct"),
+        "ebitda": sum(x["ebitda"] for x in ss), "ebitda_pct": w("ebitda_pct"),
+        "met": {"ns": sum(1 for x in gl if x["net_sales"] >= x["ns_goal"]),
+                "cogs": sum(1 for x in ss if x["cogs_goal"] is not None and x["cogs_pct"] <= x["cogs_goal"]),
+                "hourly": sum(1 for x in ss if x["hourly_goal"] is not None and x["hourly_pct"] <= x["hourly_goal"])},
+        "with_goal": {"ns": len(gl), "cogs": sum(1 for x in ss if x["cogs_goal"] is not None),
+                      "hourly": sum(1 for x in ss if x["hourly_goal"] is not None)},
+    }
+
+
+def _ov_eval(o, kind, rollup):
+    if kind == "sales":
+        a = o["net_sales_of_goal_stands"] if rollup else o["net_sales"]
+        g = o["net_sales_goal"] if rollup else o["ns_goal"]
+        st_ = _ov_status(a, g or None, True)
+        r = {"status": st_, "actual": a, "goal": g}
+        if st_ != "none":
+            r["ratio"] = a / g
+            r["var"] = f"{_ov_smoney(a - g)} ({'+' if a >= g else '−'}{abs(a / g - 1) * 100:.1f}%)"
+        return r
+    a, g = (o["hourly_pct"], o["hourly_goal"]) if kind == "labor" else (o["cogs_pct"], o["cogs_goal"])
+    st_ = _ov_status(a, g, False)
+    r = {"status": st_, "actual": a, "goal": g}
+    if st_ != "none":
+        r["var"] = _ov_pts(a - g)
+    return r
+
+
 def tab_overview(dash):
-    periods_df = get_periods_df(dash)
-    section("SYSTEM OVERVIEW", "Select period(s) to view performance KPIs and cost structure")
+    import html as _html
+    import re
+    E = _html.escape
 
-    selected_keys, ps, label_to_key = period_multiselect(periods_df, key="ov_period", label="View Period(s)")
-
-    if not selected_keys or ps is None:
-        st.info("Select at least one period above")
+    ps_all = sorted(dash.get("period_summaries", []),
+                    key=lambda p: (int(p["period_key"].split("_")[0]), int(p["period_key"].split("_P")[1])))
+    if not ps_all:
+        st.info("No P&L periods loaded.")
         return
+    order = [p["period_key"] for p in ps_all]
+    plabel = {p["period_key"]: p["label"] for p in ps_all}
+    goals_all = _load_kpi_goals(os.path.getmtime(_GOALS_PATH)) if os.path.exists(_GOALS_PATH) else {}
 
-    pk = selected_keys[0]  # Primary period key (for region lookups when single)
+    _pdata = _load_pipeline_data(_pipeline_mtime())
+    clusters = _pdata.get("clusters", {})
+    try:
+        roster = _load_roster_file(os.path.getmtime(_ROSTER_PATH))
+    except FileNotFoundError:
+        roster = {}
+    directors = roster.get("directors", {})
+    cl_state, ov = roster.get("clusters", {}), roster.get("stand_overrides", {})
+    store_cl = _pdata.get("store_clusters", {})
+    areas = list(dict.fromkeys(v["area"] for v in clusters.values()))
+    cl_order = list(clusters.keys())
+    meta = _load_stand_meta_for_roster()
 
-    # Compare To selector
-    all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
-    cmp_lbl = st.selectbox("Compare To", [l for l, _ in all_labels][1:] + [all_labels[-1][0]], key="ov_compare")
-    pkB = label_to_key.get(cmp_lbl, periods_df.iloc[-2]["period_key"])
-    psB = periods_df[periods_df["period_key"] == pkB].iloc[0] if pkB else None
+    def eff_rm(c, seen=()):
+        x = cl_state.get(c, {})
+        cw = x.get("covered_with", "")
+        if cw and cw not in seen and cw != c:
+            return eff_rm(cw, seen + (c,))
+        return x.get("rm", "")
 
-    # KPI cards
-    def d(a, b, inv=False):
-        if psB is None:
-            return None
-        delta = a - b
-        return delta_style(delta, inv=inv)
+    # ── Controls ──────────────────────────────────────────────────────────────
+    c1, c2, _ = st.columns([1.2, 1.2, 2])
+    pk = c1.selectbox("Period", list(reversed(order)), key="ov_pk", format_func=lambda k: plabel[k])
+    i = order.index(pk)
+    prev = order[i - 1] if i > 0 else None
+    goals = goals_all.get(pk, {})
+    mode = "goal" if goals else ("prior" if prev else "none")
+    cmp_lbl = "Goal" if mode == "goal" else (plabel[prev] if prev else "—")
+    met_lbl, miss_lbl = ("Met", "Missed") if mode == "goal" else ("Better", "Worse")
+    year = int(pk.split("_")[0]); pnum = int(pk.split("_P")[1])
+    plan = FY_PLAN.get(year)
 
-    avg_delta = None
-    if psB is not None:
-        pct_diff = (ps["avg_sales"] - psB["avg_sales"]) / psB["avg_sales"]
-        avg_delta = {"str": f"{pct_diff:+.1f}% vs {psB['label']}", "cls": "up" if pct_diff > 0 else "down"}
+    def badge(st_):
+        icon, lab = {"met": ("▲", met_lbl), "miss": ("▼", miss_lbl), "none": ("—", "No " + ("goal" if mode == "goal" else "compare"))}[st_]
+        return f'<span class="st st-{st_}"><span aria-hidden="true">{icon}</span> {lab}</span>'
 
-    # Row 1 — Sales & Cost metrics
-    kpi_row([
-        {"label": "Total Net Sales",     "value": _fmt_d_short(ps["net_sales"]), "sub": f"{int(ps['stands'])} stands",  "color": "red"},
-        {"label": "Avg Sales / Stand",   "value": _fmt_d_short(ps["avg_sales"]), "sub": "per-stand average",            "color": "red",  "delta": avg_delta},
-        {"label": "COGS %",              "value": _fmt_p(ps["cogs_pct"]),        "sub": "% of net sales",               "color": "blue", "delta": d(ps["cogs_pct"], psB["cogs_pct"] if psB is not None else 0, inv=True)},
-        {"label": "Hourly Labor %",      "value": _fmt_p(ps["hourly_pct"]),      "sub": "wages only",                   "color": "amber",
-         "valcls": "good" if ps["hourly_pct"] <= 0.18 else ("bad" if ps["hourly_pct"] > 0.22 else ""),
-         "delta": d(ps["hourly_pct"], psB["hourly_pct"] if psB is not None else 0, inv=True)},
-        {"label": "Total Labor & Ben %", "value": _fmt_p(ps["labor_pct"]),       "sub": "incl. mgmt & benefits",        "color": "amber",
-         "delta": d(ps["labor_pct"], psB["labor_pct"] if psB is not None else 0, inv=True)},
-        {"label": "R&M %",               "value": _fmt_p(ps["rm_pct"]),          "sub": "repair & maintenance",         "color": "grey",
-         "valcls": "good" if ps["rm_pct"] <= 0.012 else ("bad" if ps["rm_pct"] >= 0.02 else ""),
-         "delta": d(ps["rm_pct"], psB["rm_pct"] if psB is not None else 0, inv=True)},
-    ])
-    # Row 2 — EBITDA & profitability metrics
-    kpi_row([
-        {"label": "Store EBITDA $",      "value": _fmt_d_short(ps["ebitda"]),    "sub": "total portfolio",              "color": "green"},
-        {"label": "Store EBITDA %",      "value": _fmt_p(ps["ebitda_pct"]),      "sub": "% of net sales",               "color": "green",
-         "valcls": "good" if ps["ebitda_pct"] >= 0.20 else ("warn" if ps["ebitda_pct"] >= 0.15 else "bad"),
-         "delta": d(ps["ebitda_pct"], psB["ebitda_pct"] if psB is not None else 0)},
-        {"label": "Unit EBITDAR %",      "value": _fmt_p(ps["ebitdar_pct"]),     "sub": "before rent",                  "color": "green", "valcls": "good"},
-        {"label": "Rent %",              "value": _fmt_p(ps["rent_pct"]),        "sub": "occupancy cost",               "color": "grey"},
-    ])
-
-    # Charts row 1 — aggregate regions if multi-period
-    if len(selected_keys) > 1:
-        reg_frames = [get_regions_df(dash, k) for k in selected_keys]
-        valid_reg_frames = [r for r in reg_frames if not r.empty]
-        reg_all = pd.concat(valid_reg_frames, ignore_index=True) if valid_reg_frames else pd.DataFrame()
-        if not reg_all.empty:
-            pct_cols = [c for c in reg_all.columns if c.endswith("_pct")]
-            # Build agg_dict only for columns that actually exist
-            agg_dict = {}
-            for col in ["net_sales", "ebitda_total", "ebitda", "avg_sales"]:
-                if col in reg_all.columns:
-                    agg_dict[col] = "sum" if col != "avg_sales" else "mean"
-            if "stands" in reg_all.columns:
-                agg_dict["stands"] = "mean"
-            if not agg_dict:
-                reg_df = pd.DataFrame()
-            else:
-                reg_df = reg_all.groupby("region").agg(agg_dict).reset_index()
-            # Recompute pct from totals
-            for c in pct_cols:
-                if c in reg_all.columns:
-                    reg_df[c] = reg_all.groupby("region").apply(
-                        lambda g: (g[c] * g["net_sales"]).sum() / g["net_sales"].sum() if g["net_sales"].sum() > 0 else 0
-                    ).values
+    # ── Stand rows for the period ─────────────────────────────────────────────
+    recs = {str(int(r["Store_ID"])): r for r in dash["stand_records"] if r["Period_Key"] == pk}
+    prior_recs = {str(int(r["Store_ID"])): r for r in dash["stand_records"] if r["Period_Key"] == prev} if prev else {}
+    stands = []
+    for sid, r in recs.items():
+        p = prior_recs.get(sid)
+        g = goals.get(sid, {})
+        c = ov.get(sid, {}).get("cluster") or store_cl.get(sid, "")
+        area = clusters.get(c, {}).get("area", "Other")
+        m = meta.get(sid, {})
+        _st = r.get("State") or m.get("State") or (re.search(r",\s*([A-Z]{2})", r["Stand"]) or [None, ""])[1]
+        row = {
+            "sid": sid, "name": f"{m.get('Display_Name') or r['Stand']}" + (f", {_st}" if _st else ""),
+            "open_date": m.get("Open_Date", ""), "cluster": c, "area": area,
+            "do": (directors.get(area) or "DO (Open)") if c else "Other",
+            "rm": ov.get(sid, {}).get("rm") or (eff_rm(c) if c else (r.get("RM") or "")),
+            "net_sales": r["Net_Sales"] or 0.0, "cogs_pct": r["Total_COGS_pct"], "hourly_pct": r["Total_Hourly_pct"],
+            "labor_pct": r["Total_Labor_pct"], "ebitda": r["Store_EBITDA"] or 0.0, "ebitda_pct": r["Store_EBITDA_pct"],
+            "prior": p,
+        }
+        if mode == "goal":
+            row.update(ns_goal=g.get("ns"), cogs_goal=g.get("cogs"), hourly_goal=g.get("hourly"))
+        elif mode == "prior" and p:
+            row.update(ns_goal=p["Net_Sales"] or None, cogs_goal=p["Total_COGS_pct"], hourly_goal=p["Total_Hourly_pct"])
         else:
-            reg_df = pd.DataFrame()
+            row.update(ns_goal=None, cogs_goal=None, hourly_goal=None)
+        stands.append(row)
+
+    do_order = list(dict.fromkeys([directors.get(a) or "DO (Open)" for a in areas] + ["Other"]))
+    do_opts = [d for d in do_order if any(s["do"] == d for s in stands)]
+    sel_do = c2.selectbox("Director of Operations", ["All DOs"] + do_opts, key="ov_do")
+    scope = stands if sel_do == "All DOs" else [s for s in stands if s["do"] == sel_do]
+    if not scope:
+        st.info("No stands for this selection.")
+        return
+    sysr = _ov_roll(scope)
+    sys_prior = _ov_roll([{**s, "net_sales": s["prior"]["Net_Sales"] or 0.0, "cogs_pct": s["prior"]["Total_COGS_pct"],
+                           "hourly_pct": s["prior"]["Total_Hourly_pct"], "labor_pct": s["prior"]["Total_Labor_pct"],
+                           "ebitda": s["prior"]["Store_EBITDA"] or 0.0, "ebitda_pct": s["prior"]["Store_EBITDA_pct"]}
+                          for s in scope if s["prior"]]) if prev else None
+    prev_all = [r for r in dash["stand_records"] if r["Period_Key"] == prev] if prev else []
+    if sel_do != "All DOs" and prev_all:
+        prev_all = [r for r in prev_all if any(s["sid"] == str(int(r["Store_ID"])) for s in scope)]
+
+    st.html(_OV_CSS)
+    basis = ("actual vs stand goals (WoW Weekly Goals)" if mode == "goal" else
+             f"no stand goals for this period — compared to {plabel[prev]}" if mode == "prior" else "first period on file — no comparison")
+    st.markdown(f"### {plabel[pk]} Scorecard" + ("" if sel_do == "All DOs" else f" — {sel_do}"))
+    st.caption(f"{sysr['stands']} stands · {basis}. Labor and COGS are lower-is-better; Store EBITDA has no stand or market goal.")
+
+    # ── System cards ─────────────────────────────────────────────────────────
+    def drow(k, v):
+        return f"<div><dt>{k}</dt><dd>{v}</dd></div>"
+
+    def card(title, st_, big, goal_line, var_line, att, secondary, sub):
+        return (f'<article class="card kpi kpi-{st_}"><h3>{title}</h3><p class="sub">{sub}</p>'
+                f'<p class="big">{big}</p><p class="goal">{goal_line}</p>'
+                f'<p class="var">{badge(st_)} <span>{var_line}</span></p>{att}<dl class="sec">{secondary}</dl></article>')
+
+    def att(k):
+        n, w = sysr["met"][k], sysr["with_goal"][k]
+        return f'<p class="att"><strong>{n} of {w}</strong> stands {"at goal" if mode == "goal" else "improved"}</p>' if w else ""
+
+    pr = sys_prior or {}
+    show_plan = plan is not None and sel_do == "All DOs"
+    cards = []
+    ns = _ov_eval(sysr, "sales", True)
+    sec = drow("Total net sales (all stands)", _ov_money(sysr["net_sales"]))
+    if show_plan:
+        pg = plan["net_sales_by_period"][pnum - 1]
+        sec += drow(f"FY{str(year)[2:]} plan ({plabel[pk]})", f"{_ov_money(pg)} · {sysr['net_sales'] / pg * 100:.1f}% of plan")
+    if prev_all:
+        pns = sum(r["Net_Sales"] or 0 for r in prev_all); ch = sysr["net_sales"] - pns
+        sec += drow(f"vs {plabel[prev]} ({len(prev_all)} stands)",
+                    f"{_ov_smoney(ch)} ({'+' if ch >= 0 else '−'}{abs(ch / pns) * 100:.1f}%) from {_ov_money(pns)}" if pns else "—")
+    cards.append(card("Net Sales", ns["status"],
+                      f"{ns['ratio'] * 100:.1f}% <span>to {'goal' if mode == 'goal' else plabel.get(prev, '')}</span>" if "ratio" in ns else _ov_money(sysr["net_sales"]),
+                      f"{_ov_money(ns['actual'])} actual vs {_ov_money(ns['goal'])} {'goal' if mode == 'goal' else plabel.get(prev, '')}" if "ratio" in ns else "",
+                      ns.get("var", ""), att("ns"), sec,
+                      "Stands with a goal: actual vs sum of stand goals" if mode == "goal" else "Same stands, this period vs prior"))
+    lb = _ov_eval(sysr, "labor", True)
+    sec = ""
+    if show_plan:
+        ast_ = _ov_status(sysr["labor_pct"], plan["labor_pct"], False)
+        sec += drow("All-in labor vs plan", f"{_ov_pct(sysr['labor_pct'])} vs {_ov_pct(plan['labor_pct'], 1)} · "
+                                           f"{_ov_pts(sysr['labor_pct'] - plan['labor_pct'])} {badge(ast_)}")
     else:
-        reg_df = get_regions_df(dash, pk)
-
-    # ── Cost Structure (donut) + P&L Bridge (waterfall) ─────────────────────
-    _cs_other = max(0, 1 - ps["cogs_pct"] - ps["labor_pct"] - ps["rent_pct"] - ps["ebitda_pct"])
-    cs_left, cs_right = st.columns(2)
-    with cs_left:
-        fig_cs = go.Figure(go.Pie(
-            labels=["COGS", "Total Labor", "Rent", "Other OpEx", "EBITDA"],
-            values=[ps["cogs_pct"], ps["labor_pct"], ps["rent_pct"], _cs_other, ps["ebitda_pct"]],
-            hole=0.55,
-            marker_colors=[BLUE, AMBER, MID, MUTED, GREEN],
-            textinfo="label+percent",
-            textfont=dict(size=11, family="DM Mono"),
-        ))
-        brew_fig(fig_cs, height=360)
-        fig_cs.update_layout(title_text="COST STRUCTURE", legend=dict(font=dict(size=10)))
-        st.plotly_chart(fig_cs, config={"displayModeBar": False}, use_container_width=True)
-    with cs_right:
-        bridge_labels = ["Net Sales", "− COGS", "− Labor", "− Rent", "− Other OpEx", "EBITDA"]
-        bridge_values = [100, -ps["cogs_pct"]*100, -ps["labor_pct"]*100,
-                         -ps["rent_pct"]*100, -_cs_other*100, ps["ebitda_pct"]*100]
-        fig_bridge = go.Figure(go.Waterfall(
-            orientation="v", measure=["absolute","relative","relative","relative","relative","total"],
-            x=bridge_labels, y=bridge_values,
-            text=[f"{abs(v):.2f}%" for v in bridge_values], textposition="outside",
-            connector=dict(line=dict(color=BORDER, width=1)),
-            increasing=dict(marker_color=BLUE), decreasing=dict(marker_color=RED),
-            totals=dict(marker_color=GREEN),
-        ))
-        brew_fig(fig_bridge, height=360)
-        fig_bridge.update_layout(title_text="P&L BRIDGE",
-                                 yaxis=dict(ticksuffix="%", range=[0, 115]), showlegend=False)
-        st.plotly_chart(fig_bridge, config={"displayModeBar": False}, use_container_width=True)
-
-    # ── Region drill-down selector ───────────────────────────────────────────
-    all_stands_df = get_stands_df(dash)
-    available_regions = sorted(all_stands_df["Region"].dropna().unique().tolist())
-    sel_region = st.selectbox(
-        "Drill Down by Region",
-        ["All Regions"] + available_regions,
-        key="ov_region",
-    )
-
-    if sel_region == "All Regions":
-        # ── System-level regional charts ─────────────────────────────────────
-        if not reg_df.empty:
-            reg_sorted = reg_df.sort_values("net_sales", ascending=False)
-            fig = go.Figure(go.Bar(
-                x=reg_sorted["region"], y=reg_sorted["net_sales"],
-                marker_color=[REGION_COLORS.get(r, MID) for r in reg_sorted["region"]],
-                text=reg_sorted["net_sales"].map(lambda v: f"${v/1000:.0f}k"),
-                textposition="outside",
-            ))
-            brew_fig(fig, height=320)
-            fig.update_layout(title_text="NET SALES BY REGION",
-                              yaxis=dict(tickprefix="$", tickformat=",.0f"), showlegend=False)
-            st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
-
-            reg_ebi = reg_df.sort_values("ebitda_pct", ascending=False)
-            fig2 = go.Figure(go.Bar(
-                x=reg_ebi["region"], y=reg_ebi["ebitda_pct"] * 100,
-                marker_color=[REGION_COLORS.get(r, MID) for r in reg_ebi["region"]],
-                text=reg_ebi["ebitda_pct"].map(lambda v: f"{v*100:.2f}%"),
-                textposition="outside",
-            ))
-            fig2.add_hline(y=ps["ebitda_pct"] * 100, line_dash="dot", line_color=MID,
-                           annotation_text="Sys avg", annotation_font_size=9,
-                           annotation_position="top right")
-            brew_fig(fig2, height=320)
-            fig2.update_layout(title_text="EBITDA % BY REGION",
-                               yaxis=dict(ticksuffix="%"), showlegend=False)
-            st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
-
-            if "cogs_pct" in reg_df.columns:
-                reg_cogs = reg_df.sort_values("cogs_pct", ascending=False)
-                fig_cogs = go.Figure(go.Bar(
-                    x=reg_cogs["region"], y=reg_cogs["cogs_pct"] * 100,
-                    marker_color=[REGION_COLORS.get(r, MID) for r in reg_cogs["region"]],
-                    text=reg_cogs["cogs_pct"].map(lambda v: f"{v*100:.2f}%"),
-                    textposition="outside",
-                ))
-                fig_cogs.add_hline(y=ps["cogs_pct"] * 100, line_dash="dot", line_color=MID,
-                                   annotation_text="Sys avg", annotation_font_size=9,
-                                   annotation_position="top right")
-                brew_fig(fig_cogs, height=320)
-                fig_cogs.update_layout(title_text="COGS % BY REGION",
-                                       yaxis=dict(ticksuffix="%"), showlegend=False)
-                st.plotly_chart(fig_cogs, config={"displayModeBar": False}, use_container_width=True)
-
-            if "labor_pct" in reg_df.columns:
-                reg_labor = reg_df.sort_values("labor_pct", ascending=False)
-                fig_labor = go.Figure(go.Bar(
-                    x=reg_labor["region"], y=reg_labor["labor_pct"] * 100,
-                    marker_color=[REGION_COLORS.get(r, MID) for r in reg_labor["region"]],
-                    text=reg_labor["labor_pct"].map(lambda v: f"{v*100:.2f}%"),
-                    textposition="outside",
-                ))
-                fig_labor.add_hline(y=ps["labor_pct"] * 100, line_dash="dot", line_color=MID,
-                                    annotation_text="Sys avg", annotation_font_size=9,
-                                    annotation_position="top right")
-                brew_fig(fig_labor, height=320)
-                fig_labor.update_layout(title_text="TOTAL LABOR % BY REGION",
-                                        yaxis=dict(ticksuffix="%"), showlegend=False)
-                st.plotly_chart(fig_labor, config={"displayModeBar": False}, use_container_width=True)
-
+        sec += drow("All-in labor", _ov_pct(sysr["labor_pct"]))
+    if pr.get("hourly_pct") is not None and mode == "goal":
+        sec += drow(f"Hourly vs {plabel[prev]}", f"{_ov_pts(sysr['hourly_pct'] - pr['hourly_pct'])} ({plabel[prev]} {_ov_pct(pr['hourly_pct'])})")
+    cards.append(card("Labor %", lb["status"], _ov_pct(lb["actual"]),
+                      f"{cmp_lbl} {_ov_pct(lb['goal'])} · lower is better" if lb["goal"] is not None else "",
+                      lb.get("var", ""), att("hourly"), sec, "Hourly labor % of net sales"))
+    cg = _ov_eval(sysr, "cogs", True)
+    sec = ""
+    if show_plan:
+        sec += drow("FY plan COGS goal", f"{_ov_pct(plan['cogs_pct'], 1)} · {_ov_pts(sysr['cogs_pct'] - plan['cogs_pct'])}")
+    if pr.get("cogs_pct") is not None and mode == "goal":
+        sec += drow(f"vs {plabel[prev]}", f"{_ov_pts(sysr['cogs_pct'] - pr['cogs_pct'])} ({plabel[prev]} {_ov_pct(pr['cogs_pct'])})")
+    cards.append(card("COGS %", cg["status"], _ov_pct(cg["actual"]),
+                      f"{cmp_lbl} {_ov_pct(cg['goal'])} · lower is better" if cg["goal"] is not None else "",
+                      cg.get("var", ""), att("cogs"), sec, "Cost of goods sold % of net sales"))
+    a = sysr["ebitda"]
+    if show_plan:
+        g = plan["ebitda_by_period"][pnum - 1]
+        est = _ov_status(a, g, True)
+        big = f"{a / g * 100:.1f}% <span>of plan</span>"
+        gl_line = f"{_ov_money(a)} actual vs {_ov_money(g)} FY{str(year)[2:]} plan"
+        var = f"{_ov_smoney(a - g)} ({'+' if a >= g else '−'}{abs(a / g - 1) * 100:.1f}%)"
+    elif pr.get("ebitda") is not None and pr.get("stands"):
+        est = _ov_status(a, pr["ebitda"], True) if mode == "prior" else "none"
+        big, gl_line, var = _ov_money(a), (f"vs {_ov_money(pr['ebitda'])} same stands {plabel[prev]}" if prev else ""), ""
+        if mode == "prior":
+            var = f"{_ov_smoney(a - pr['ebitda'])}"
     else:
-        # ── Stand-level drill-down for selected region ────────────────────────
-        region_color = REGION_COLORS.get(sel_region, BLUE)
+        est, big, gl_line, var = "none", _ov_money(a), "", ""
+    sec = drow("Store EBITDA margin", _ov_pct(sysr["ebitda_pct"]))
+    if pr.get("ebitda_pct") is not None:
+        sec += drow(f"Same-stand margin vs {plabel[prev]}", f"{_ov_pts(sysr['ebitda_pct'] - pr['ebitda_pct'])} ({plabel[prev]} {_ov_pct(pr['ebitda_pct'])})")
+    cards.append(card("Store EBITDA", est, big, gl_line, var, "", sec,
+                      "Store-level EBITDA" + (" vs FY plan" if show_plan else "") + " · higher is better"))
+    st.html(f'<div class="ov7"><div class="cards">{"".join(cards)}</div></div>')
 
-        # Aggregate stand data across selected periods for this region
-        region_stands = all_stands_df[
-            (all_stands_df["Region"] == sel_region) &
-            (all_stands_df["Period_Key"].isin(selected_keys))
-        ].copy()
+    # ── Market overview table (grouped DO → markets) ──────────────────────────
+    st.markdown("#### Market Overview")
+    by_cl = {}
+    for s in scope:
+        by_cl.setdefault(s["cluster"] or "_other", []).append(s)
 
-        if region_stands.empty:
-            st.info(f"No stand data found for {sel_region} in the selected period(s).")
-        else:
-            # Aggregate across periods if multiple selected
-            stand_agg = region_stands.groupby("Stand").agg(
-                Net_Sales=("Net_Sales", "sum"),
-                Store_EBITDA_pct=("Store_EBITDA_pct", "mean"),
-                Total_COGS_pct=("Total_COGS_pct", "mean"),
-                Total_Labor_pct=("Total_Labor_pct", "mean"),
-            ).reset_index()
+    def mk_name(c):
+        return f"{clusters[c]['market']} <span class='sid'>{c} · {E(clusters[c]['area'])}</span>" if c in clusters else "Other / closed stands"
 
-            sys_ebitda_avg = ps["ebitda_pct"] * 100
-            sys_cogs_avg   = ps["cogs_pct"]   * 100
-            sys_labor_avg  = ps["labor_pct"]  * 100
+    def ov_row(label, r, rm_txt, cls=""):
+        ns_, lb_, cg_ = (_ov_eval(r, k, True) for k in ("sales", "labor", "cogs"))
+        ratio = ns_.get("ratio")
+        wdt = 0 if ratio is None else max(0.0, min(ratio, 1.2)) / 1.2 * 100
+        bar = (f'<span class="bar" aria-hidden="true"><span class="fill fill-{ns_["status"]}" style="width:{wdt:.1f}%"></span>'
+               f'<span class="tick"></span></span>') if ratio else ""
+        tm = sum(r["met"].values()); tg = sum(r["with_goal"].values())
+        cell = lambda e: (f'<td class="num"><span class="v">{_ov_pct(e["actual"])} / {_ov_pct(e["goal"])}</span> {badge(e["status"])}</td>'
+                          if e["goal"] is not None else f'<td class="num"><span class="v">{_ov_pct(e["actual"])}</span> {badge("none")}</td>')
+        return (f'<tr class="{cls}"><th scope="row">{label}</th><td>{rm_txt}</td><td class="num">{r["stands"]}</td>'
+                f'<td class="num"><span class="v">{"" if ratio is None else f"{ratio * 100:.1f}%"}</span> {badge(ns_["status"])}{bar}</td>'
+                f'{cell(lb_)}{cell(cg_)}'
+                f'<td class="num"><span class="v">{_ov_money(r["ebitda"])}</span> | <span class="v">{_ov_pct(r["ebitda_pct"])}</span></td>'
+                f'<td class="num">{tm} of {tg}</td></tr>')
 
-            # Net Sales by Stand
-            s_sales = stand_agg.sort_values("Net_Sales", ascending=False)
-            fig_s1 = go.Figure(go.Bar(
-                x=s_sales["Stand"], y=s_sales["Net_Sales"],
-                marker_color=region_color,
-                text=s_sales["Net_Sales"].map(lambda v: f"${v/1000:.0f}k"),
-                textposition="outside",
-            ))
-            brew_fig(fig_s1, height=340)
-            fig_s1.update_layout(
-                title_text=f"NET SALES BY STAND — {sel_region}",
-                yaxis=dict(tickprefix="$", tickformat=",.0f"),
-                xaxis=dict(tickangle=-40),
-                showlegend=False,
-            )
-            st.plotly_chart(fig_s1, config={"displayModeBar": False}, use_container_width=True)
+    rows = []
+    for do in [d for d in do_order if any(s["do"] == d for s in scope)]:
+        do_st = [s for s in scope if s["do"] == do]
+        do_areas = [a for a in areas if (directors.get(a) or "DO (Open)") == do] if do != "Other" else []
+        rows.append(ov_row(f"{E(do)}<span class='sid'>{E(', '.join(do_areas)) or 'Not in a current market'}</span>",
+                           _ov_roll(do_st), (lambda n: f"{n} RM{'' if n == 1 else 's'}")(len({s['rm'] for s in do_st if s['rm']})), "do-row"))
+        for c in [c for c in cl_order if c in by_cl and by_cl[c][0]["do"] == do] + (["_other"] if do == "Other" and "_other" in by_cl else []):
+            ss = by_cl[c]
+            rms = sorted({s["rm"] for s in ss if s["rm"]})
+            rows.append(ov_row(mk_name(c), _ov_roll(ss), E(", ".join(rms)) or "No RM"))
+    head = ["Market", "RM", "Stands", f"Sales % to {cmp_lbl}", f"Hourly Labor % (actual / {cmp_lbl.lower() if mode == 'goal' else cmp_lbl})",
+            f"COGS % (actual / {cmp_lbl.lower() if mode == 'goal' else cmp_lbl})", "EBITDA | Margin", "KPI checks " + ("at goal" if mode == "goal" else "improved")]
+    ths = "".join(f'<th scope="col" class="{"num" if i >= 2 and i != 1 else ""}">{E(h)}</th>' for i, h in enumerate(head))
+    st.html(f'<div class="ov7"><div class="scroll"><table class="data"><caption>{E(plabel[pk])}: Director of Operations roll-ups '
+            f'(shaded) and their markets. KPI checks count Net Sales, Hourly Labor and COGS. EBITDA is actual only.</caption>'
+            f'<thead><tr>{ths}</tr></thead><tbody>{"".join(rows)}</tbody></table></div></div>')
 
-            # EBITDA % by Stand
-            s_ebi = stand_agg.sort_values("Store_EBITDA_pct", ascending=False)
-            fig_s2 = go.Figure(go.Bar(
-                x=s_ebi["Stand"], y=s_ebi["Store_EBITDA_pct"] * 100,
-                marker_color=region_color,
-                text=s_ebi["Store_EBITDA_pct"].map(lambda v: f"{v*100:.2f}%"),
-                textposition="outside",
-            ))
-            fig_s2.add_hline(y=sys_ebitda_avg, line_dash="dot", line_color=MID,
-                             annotation_text="Sys avg", annotation_font_size=9,
-                             annotation_position="top right")
-            brew_fig(fig_s2, height=340)
-            fig_s2.update_layout(
-                title_text=f"EBITDA % BY STAND — {sel_region}",
-                yaxis=dict(ticksuffix="%"),
-                xaxis=dict(tickangle=-40),
-                showlegend=False,
-            )
-            st.plotly_chart(fig_s2, config={"displayModeBar": False}, use_container_width=True)
+    # ── Market detail: tiles + stand table, one expander per market ───────────
+    st.markdown("#### Market Detail")
+    st.caption("Open a market to see its roll-up and every stand.")
 
-            # COGs % by Stand
-            s_cogs = stand_agg.sort_values("Total_COGS_pct", ascending=False)
-            fig_s3 = go.Figure(go.Bar(
-                x=s_cogs["Stand"], y=s_cogs["Total_COGS_pct"] * 100,
-                marker_color=region_color,
-                text=s_cogs["Total_COGS_pct"].map(lambda v: f"{v*100:.2f}%"),
-                textposition="outside",
-            ))
-            fig_s3.add_hline(y=sys_cogs_avg, line_dash="dot", line_color=MID,
-                             annotation_text="Sys avg", annotation_font_size=9,
-                             annotation_position="top right")
-            brew_fig(fig_s3, height=340)
-            fig_s3.update_layout(
-                title_text=f"COGS % BY STAND — {sel_region}",
-                yaxis=dict(ticksuffix="%"),
-                xaxis=dict(tickangle=-40),
-                showlegend=False,
-            )
-            st.plotly_chart(fig_s3, config={"displayModeBar": False}, use_container_width=True)
+    def tile(label, e, actual_txt, goal_txt, extra=""):
+        var = f'<span class="tv">{e["var"]}</span>' if "var" in e else ""
+        return (f'<div class="tile tile-{e["status"]}"><p class="tl">{label}</p><p class="tb">{actual_txt}</p>'
+                f'<p class="tg">{goal_txt}</p><p class="ts">{badge(e["status"])} {var}</p>{extra}</div>')
 
-            # Labor % by Stand
-            s_labor = stand_agg.sort_values("Total_Labor_pct", ascending=False)
-            fig_s4 = go.Figure(go.Bar(
-                x=s_labor["Stand"], y=s_labor["Total_Labor_pct"] * 100,
-                marker_color=region_color,
-                text=s_labor["Total_Labor_pct"].map(lambda v: f"{v*100:.2f}%"),
-                textposition="outside",
-            ))
-            fig_s4.add_hline(y=sys_labor_avg, line_dash="dot", line_color=MID,
-                             annotation_text="Sys avg", annotation_font_size=9,
-                             annotation_position="top right")
-            brew_fig(fig_s4, height=340)
-            fig_s4.update_layout(
-                title_text=f"TOTAL LABOR % BY STAND — {sel_region}",
-                yaxis=dict(ticksuffix="%"),
-                xaxis=dict(tickangle=-40),
-                showlegend=False,
-            )
-            st.plotly_chart(fig_s4, config={"displayModeBar": False}, use_container_width=True)
+    def stand_rows(ss):
+        out = []
+        for s in sorted(ss, key=lambda x: x["name"]):
+            ns_, lb_, cg_ = (_ov_eval(s, k, False) for k in ("sales", "labor", "cogs"))
+            p = s["prior"]
+            note = f'<span class="note">Opened {s["open_date"]} · no {plabel[prev]} data</span>' if prev and not p and s["open_date"] else ""
+            pm = (f'<br><span class="tv">{_ov_pts(s["ebitda_pct"] - p["Store_EBITDA_pct"])} vs {plabel[prev]}</span>'
+                  if p and p.get("Store_EBITDA_pct") is not None and s["ebitda_pct"] is not None else "")
+            k = lambda e, txt: (f'<td class="num"><span class="v">{txt}</span><br>{badge(e["status"])} '
+                                f'<span class="tv">{e.get("var", "")}</span></td>')
+            nsr = (f'<td class="num"><span class="v">{ns_["ratio"] * 100:.1f}%</span><br>{badge(ns_["status"])} '
+                   f'<span class="tv">{ns_["var"]}</span></td>') if "ratio" in ns_ else f'<td class="num">{badge("none")}</td>'
+            out.append(f'<tr><th scope="row"><span class="sn">{E(s["name"])}</span>'
+                       f'<span class="sid">#{s["sid"]} · RM {E(s["rm"] or "Unassigned")}</span>{note}</th>'
+                       f'<td class="num">{_ov_money(s["net_sales"])}</td><td class="num">{_ov_money(s["ns_goal"])}</td>{nsr}'
+                       f'{k(lb_, _ov_pct(lb_["actual"]))}<td class="num">{_ov_pct(lb_["goal"])}</td>'
+                       f'{k(cg_, _ov_pct(cg_["actual"]))}<td class="num">{_ov_pct(cg_["goal"])}</td>'
+                       f'<td class="num"><span class="v">{_ov_money(s["ebitda"])}</span></td>'
+                       f'<td class="num"><span class="v">{_ov_pct(s["ebitda_pct"])}</span>{pm}</td></tr>')
+        return "".join(out)
 
-    # ── Performance by Stand Maturity ─────────────────────────────────────────
-    stands_df = get_stands_df(dash)
-    ps_stands = stands_df[stands_df["Period_Key"] == pk]
-    age_buckets = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
-    cohort_data = []
-    for b in age_buckets:
-        sub = ps_stands[ps_stands["Age_Bucket"] == b]
-        if len(sub):
-            cohort_data.append({"Cohort": b,
-                                "EBITDA%": round(sub["Store_EBITDA_pct"].mean() * 100, 1),
-                                "Labor%":  round(sub["Total_Labor_pct"].mean() * 100, 1)})
-    if cohort_data:
-        cdf = pd.DataFrame(cohort_data)
-        fig3 = go.Figure()
-        fig3.add_bar(x=cdf["Cohort"], y=cdf["EBITDA%"], name="EBITDA %",
-                     marker_color=[RED, AMBER, BLUE, GREEN][:len(cdf)],
-                     text=cdf["EBITDA%"].map(lambda v: f"{v}%"), textposition="outside")
-        fig3.add_scatter(x=cdf["Cohort"], y=cdf["Labor%"], name="Labor %",
-                         mode="lines+markers", line=dict(color=MUTED, dash="dot"))
-        brew_fig(fig3, height=320)
-        fig3.update_layout(title_text="PERFORMANCE BY STAND MATURITY",
-                           yaxis=dict(ticksuffix="%"))
-        st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
+    gw = "Goal" if mode == "goal" else plabel.get(prev, "Prior")
+    for do in [d for d in do_order if any(s["do"] == d for s in scope)]:
+        st.markdown(f"**{do}**")
+        for c in [c for c in cl_order if c in by_cl and by_cl[c][0]["do"] == do] + (["_other"] if do == "Other" and "_other" in by_cl else []):
+            ss = by_cl[c]
+            r = _ov_roll(ss)
+            ns_, lb_, cg_ = (_ov_eval(r, k, True) for k in ("sales", "labor", "cogs"))
+            rms = ", ".join(sorted({s["rm"] for s in ss if s["rm"]})) or "No RM"
+            title = (f"{clusters[c]['market']} · {c}" if c in clusters else "Other / closed stands")
+            flag = "🟢" if ns_["status"] == "met" else ("🔴" if ns_["status"] == "miss" else "⚪")
+            with st.expander(f"{flag} {title} — {rms} · {len(ss)} stand{'' if len(ss) == 1 else 's'} · "
+                             + (f"{ns_['ratio'] * 100:.1f}% to {gw.lower() if mode == 'goal' else gw}" if "ratio" in ns_ else "no sales comparison")):
+                eb_extra = f'<p class="tm">Margin {_ov_pct(r["ebitda_pct"])} · actual only</p>'
+                prs = [s for s in ss if s["prior"] and s["prior"].get("Store_EBITDA_pct") is not None and s["prior"].get("Net_Sales")]
+                if prs and prev:
+                    psales = sum(s["prior"]["Net_Sales"] for s in prs)
+                    pm_ = sum(s["prior"]["Net_Sales"] * s["prior"]["Store_EBITDA_pct"] for s in prs) / psales
+                    cur = sum(s["ebitda"] for s in prs) / sum(s["net_sales"] for s in prs)
+                    eb_extra += f'<p class="tm">Same-stand {plabel[prev]} margin {_ov_pct(pm_)} ({len(prs)} of {len(ss)}): {_ov_pts(cur - pm_)} to {_ov_pct(cur)}</p>'
+                attm = lambda k: f'<p class="tm">{r["met"][k]} of {r["with_goal"][k]} stands {"at goal" if mode == "goal" else "improved"}</p>'
+                tiles = (tile("Net Sales % to " + gw, ns_, f"{ns_['ratio'] * 100:.1f}%" if "ratio" in ns_ else "—",
+                              f"{gw} {_ov_money(ns_['goal'])} · actual {_ov_money(ns_['actual'])}",
+                              attm("ns") + f'<p class="tm">Total incl. stands without a {gw.lower()}: {_ov_money(r["net_sales"])}</p>')
+                         + tile("Hourly Labor %", lb_, _ov_pct(lb_["actual"]), f"{gw} {_ov_pct(lb_['goal'])}",
+                                attm("hourly") + f'<p class="tm">All-in labor: {_ov_pct(r["labor_pct"])}</p>')
+                         + tile("COGS %", cg_, _ov_pct(cg_["actual"]), f"{gw} {_ov_pct(cg_['goal'])}", attm("cogs"))
+                         + f'<div class="tile tile-none"><p class="tl">Store EBITDA</p><p class="tb">{_ov_money(r["ebitda"])}</p>{eb_extra}</div>')
+                st.html(f'<div class="ov7"><div class="tiles">{tiles}</div><div class="scroll"><table class="data">'
+                        f'<caption>{E(title)} stands, {E(plabel[pk])}: actual vs {E(gw.lower() if mode == "goal" else gw)}. '
+                        f'EBITDA and margin are actual only.</caption><thead><tr>'
+                        f'<th scope="col">Stand</th><th scope="col" class="num">Net Sales</th><th scope="col" class="num">Sales {E(gw)}</th>'
+                        f'<th scope="col" class="num">% to {E(gw)}</th><th scope="col" class="num">Hourly Labor %</th>'
+                        f'<th scope="col" class="num">Labor {E(gw)}</th><th scope="col" class="num">COGS %</th>'
+                        f'<th scope="col" class="num">COGS {E(gw)}</th><th scope="col" class="num">EBITDA</th>'
+                        f'<th scope="col" class="num">Margin</th></tr></thead><tbody>{stand_rows(ss)}</tbody></table></div></div>')
+
+    no_goal = [s["name"] for s in scope if mode == "goal" and not s["ns_goal"]]
+    st.caption("Sources: P&L PTD actuals · stand goals from the WoW report's Weekly Goals sheet (`kpi_goals.json`) · "
+               "FY plan from the CEO Snapshot · markets, RMs and DOs from the Cluster Roster."
+               + (f" No sales goal row: {', '.join(no_goal)}." if no_goal else ""))
 
 
-# ─────────────────────────────────────────────
-# TAB: PERIOD COMPARISON
-# ─────────────────────────────────────────────
 def tab_comparison(dash):
     periods_df = get_periods_df(dash)
     section("PERIOD COMPARISON", "Head-to-head breakdown — sales, costs, EBITDA, and stand-level distribution")
