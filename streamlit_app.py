@@ -384,9 +384,9 @@ def render_table(df, max_rows=None, height=None):
 # DATA LOADING
 # ─────────────────────────────────────────────
 @st.cache_data
-def load_base_data(_mtime: float = 0):
+def load_base_data(sig: str = ""):
     """Load DASH data — tries data.json first, falls back to extracting from dashboard.html.
-    _mtime is used as a cache-buster so the data reloads whenever data.json changes on disk."""
+    `sig` (content fingerprint of data.json) is the cache key, so the data reloads whenever data.json changes."""
     base_dir = Path(__file__).parent
 
     # Prefer data.json if present (faster)
@@ -453,9 +453,7 @@ def save_to_base_data(merged_dash):
 
 def get_dash():
     """Return base dashboard data. Cache invalidates automatically when data.json changes."""
-    _data_path = Path(__file__).parent / "data.json"
-    _mtime = _data_path.stat().st_mtime if _data_path.exists() else 0
-    return load_base_data(_mtime)
+    return load_base_data(_file_sig(str(Path(__file__).parent / "data.json")))
 
 QUARTER_MAP = {1: "Q1", 2: "Q1", 3: "Q1", 4: "Q2", 5: "Q2", 6: "Q2",
                7: "Q3", 8: "Q3", 9: "Q3", 10: "Q4", 11: "Q4", 12: "Q4", 13: "Q4"}
@@ -1759,7 +1757,7 @@ color:#175bb0;font-weight:600;text-decoration:none} .ov7 nav.jump a:hover{border
 
 
 @st.cache_data(show_spinner=False)
-def _load_kpi_goals(_mtime: float) -> dict:
+def _load_kpi_goals(sig: str) -> dict:
     with open(_GOALS_PATH, encoding="utf-8") as f:
         return json.load(f).get("periods", {})
 
@@ -1848,12 +1846,12 @@ def tab_overview(dash):
         return
     order = [p["period_key"] for p in ps_all]
     plabel = {p["period_key"]: p["label"] for p in ps_all}
-    goals_all = _load_kpi_goals(os.path.getmtime(_GOALS_PATH)) if os.path.exists(_GOALS_PATH) else {}
+    goals_all = _load_kpi_goals(_file_sig(_GOALS_PATH)) if os.path.exists(_GOALS_PATH) else {}
 
     _pdata = _load_pipeline_data(_pipeline_mtime())
     clusters = _pdata.get("clusters", {})
     try:
-        roster = _load_roster_file(os.path.getmtime(_ROSTER_PATH))
+        roster = _load_roster_file(_file_sig(_ROSTER_PATH))
     except FileNotFoundError:
         roster = {}
     directors = roster.get("directors", {})
@@ -7271,23 +7269,31 @@ def _generate_pipeline_pdf(table_df, password: str) -> bytes:
 _PIPELINE_JSON_PATH = os.path.join(os.path.dirname(__file__), "pipeline_data.json")
 
 
-def _pipeline_mtime() -> float:
+def _file_sig(path: str) -> str:
+    """Content fingerprint used as a cache key, so an updated file is picked up on the next run.
+    (Cache-key arguments must not start with "_" — st.cache_data does not hash those.)"""
+    import hashlib
     try:
-        return os.path.getmtime(_PIPELINE_JSON_PATH)
+        with open(path, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()
     except FileNotFoundError:
-        return 0.0
+        return ""
+
+
+def _pipeline_mtime() -> str:
+    return _file_sig(_PIPELINE_JSON_PATH)
 
 
 @st.cache_data(show_spinner=False)
-def _load_pipeline_data(_mtime: float) -> dict:
+def _load_pipeline_data(sig: str) -> dict:
     import json as _j
     with open(_PIPELINE_JSON_PATH) as f:
         return _j.load(f)
 
 
 @st.cache_data(show_spinner=False)
-def _get_pipeline_dfs(_mtime: float):
-    data = _load_pipeline_data(_mtime)
+def _get_pipeline_dfs(sig: str):
+    data = _load_pipeline_data(sig)
     df = pd.DataFrame(data["upcoming"])
     df["phase"]   = df["phase"].map(_norm_phase)
     _clusters     = data.get("clusters", {})
@@ -7976,7 +7982,7 @@ _ROSTER_QUARTERS = ["Q4'26", "Q1'27", "Q2'27", "Q3'27", "Q4'27", "Q1'28+"]
 
 
 @st.cache_data(show_spinner=False)
-def _load_roster_file(_mtime: float) -> dict:
+def _load_roster_file(sig: str) -> dict:
     with open(_ROSTER_PATH, encoding="utf-8") as f:
         return json.load(f)
 
@@ -8057,7 +8063,7 @@ def tab_roster(dash):
 
     # ── Source: published roster, or a roster file downloaded earlier ──────────
     try:
-        published = _load_roster_file(os.path.getmtime(_ROSTER_PATH))
+        published = _load_roster_file(_file_sig(_ROSTER_PATH))
     except FileNotFoundError:
         published = {"rms": [], "clusters": {}, "stand_overrides": {}}
     with st.expander("📂 Continue from a roster file you downloaded earlier", expanded=False):
@@ -8336,7 +8342,7 @@ _MAP_STATUS_COLORS = {
 
 
 @st.cache_data(show_spinner=False)
-def _load_stand_locations(_mtime: float) -> dict:
+def _load_stand_locations(sig: str) -> dict:
     with open(_LOC_PATH, encoding="utf-8") as f:
         return json.load(f)
 
@@ -8365,14 +8371,14 @@ def tab_map(dash):
                "Markets and RMs follow the published Cluster Roster.")
 
     try:
-        locs = _load_stand_locations(os.path.getmtime(_LOC_PATH))
+        locs = _load_stand_locations(_file_sig(_LOC_PATH))
     except FileNotFoundError:
         st.warning("stand_locations.json is missing.")
         return
     _pdata = _load_pipeline_data(_pipeline_mtime())
     clusters = _pdata.get("clusters", {})
     try:
-        roster = _load_roster_file(os.path.getmtime(_ROSTER_PATH))
+        roster = _load_roster_file(_file_sig(_ROSTER_PATH))
     except FileNotFoundError:
         roster = {}
     directors = roster.get("directors", {})
