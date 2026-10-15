@@ -160,16 +160,19 @@
     },
     "C23": {
       "rm": "",
-      "covered_with": ""
+      "covered_with": "C22"
     },
     "C24": {
       "rm": "",
-      "covered_with": ""
+      "covered_with": "C22"
     }
   },
   "stand_overrides": {
-    "87": {
-      "rm": "Robmikia Holman"
+    "1118": {
+      "rm": "Ryley Cooper"
+    },
+    "1693": {
+      "rm": "Ryley Gee"
     },
     "333": {
       "rm": "Jaden Jenkins"
@@ -189,17 +192,14 @@
     "674": {
       "rm": "Gerika Tunnell"
     },
+    "87": {
+      "rm": "Robmikia Holman"
+    },
     "872": {
       "rm": "Ryley Gee"
     },
     "986": {
       "rm": "Matt Avery"
-    },
-    "1118": {
-      "rm": "Ryley Cooper"
-    },
-    "1693": {
-      "rm": "Ryley Gee"
     }
   }
 }
