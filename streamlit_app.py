@@ -7951,10 +7951,12 @@ def tab_roster(dash):
                 st.session_state["_roster_src"] = None
                 st.session_state["_roster_ver"] = st.session_state.get("_roster_ver", 0) + 1
                 st.rerun()
-    src = st.session_state.get("_roster_src") or published
+    # An older download may predate newer sections (e.g. "directors") — fill those from the published roster
+    src = {**published, **st.session_state["_roster_src"]} if st.session_state.get("_roster_src") else published
     ver = st.session_state.get("_roster_ver", 0)
     if st.session_state.get("_roster_src") is not None:
-        st.info("Showing the roster file you uploaded (not yet published).")
+        st.info("Showing the roster file you uploaded (not yet published). "
+                "To see the live roster, open the expander above and click **Discard it**.")
 
     # ── Settings ──────────────────────────────────────────────────────────────
     s1, s2, _ = st.columns([1, 1, 2])
@@ -8196,6 +8198,160 @@ def tab_roster(dash):
 
 
 # ─────────────────────────────────────────────
+# STAND MAP — every open + pipeline stand, filterable by area / DO / market / RM
+# ─────────────────────────────────────────────
+_LOC_PATH = os.path.join(os.path.dirname(__file__), "stand_locations.json")
+
+# Status colors: first three categorical slots (validated all-pairs for scatter/map forms)
+_MAP_STATUS_COLORS = {
+    "Open":               "#2a78d6",
+    "Under Construction": "#eb6834",
+    "Earlier Pipeline":   "#1baf7a",
+}
+
+
+@st.cache_data(show_spinner=False)
+def _load_stand_locations(_mtime: float) -> dict:
+    with open(_LOC_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _published_assignments(pdata: dict, roster: dict) -> pd.DataFrame:
+    """Stands with their market + RM resolved from the published cluster roster."""
+    stands = _roster_stands(pdata)
+    cl_state = roster.get("clusters", {})
+    ov = roster.get("stand_overrides", {})
+
+    def eff(c, seen=()):
+        x = cl_state.get(c, {})
+        cw = x.get("covered_with", "")
+        if cw and cw not in seen and cw != c:
+            return eff(cw, seen + (c,))
+        return x.get("rm", "")
+
+    stands["cluster"] = stands.apply(lambda r: ov.get(r["key"], {}).get("cluster") or r["home"], axis=1)
+    stands["rm"] = stands.apply(lambda r: ov.get(r["key"], {}).get("rm") or eff(r["cluster"]), axis=1)
+    return stands
+
+
+def tab_map(dash):
+    st.markdown("### 🗺️ Stand Map")
+    st.caption("Every open stand and every pipeline stand. Pick an area, DO, market or RM to zoom in. "
+               "Markets and RMs follow the published Cluster Roster.")
+
+    try:
+        locs = _load_stand_locations(os.path.getmtime(_LOC_PATH))
+    except FileNotFoundError:
+        st.warning("stand_locations.json is missing.")
+        return
+    _pdata = _load_pipeline_data(_pipeline_mtime())
+    clusters = _pdata.get("clusters", {})
+    try:
+        roster = _load_roster_file(os.path.getmtime(_ROSTER_PATH))
+    except FileNotFoundError:
+        roster = {}
+    directors = roster.get("directors", {})
+    cl_order = list(clusters.keys())
+    areas = list(dict.fromkeys(v["area"] for v in clusters.values()))
+
+    df = _published_assignments(_pdata, roster)
+    df["Market"] = df["cluster"].map(lambda c: _cluster_label(c, clusters))
+    df["Area"] = df["cluster"].map(lambda c: clusters.get(c, {}).get("area", ""))
+    df["DO"] = df["Area"].map(lambda a: directors.get(a) or "DO (Open)")
+    df["RM"] = df["rm"].replace("", "No RM assigned")
+    df["Map Status"] = df.apply(lambda r: "Open" if r["is_open"] else
+                                ("Under Construction" if "Construction" in r["Status"] else "Earlier Pipeline"), axis=1)
+    df["lat"] = df["key"].map(lambda k: locs.get(k, {}).get("lat"))
+    df["lon"] = df["key"].map(lambda k: locs.get(k, {}).get("lon"))
+    df["Address"] = df["key"].map(lambda k: locs.get(k, {}).get("address", ""))
+    df["approx"] = df["key"].map(lambda k: locs.get(k, {}).get("precision") == "city")
+
+    # ── Filters (one row) ─────────────────────────────────────────────────────
+    f1, f2, f3, f4, f5 = st.columns([1, 1, 2, 1.4, 1.4])
+    sel_area = f1.selectbox("Area", ["All Areas"] + areas, key="map_area")
+    do_opts = list(dict.fromkeys(df.sort_values("Area", key=lambda s: s.map(areas.index))["DO"]))
+    sel_do = f2.selectbox("DO", ["All DOs"] + do_opts, key="map_do")
+    mk_scope = [c for c in cl_order
+                if (sel_area == "All Areas" or clusters[c]["area"] == sel_area)
+                and (sel_do == "All DOs" or (directors.get(clusters[c]["area"]) or "DO (Open)") == sel_do)]
+    sel_mk = f3.multiselect("Market(s)", mk_scope, key="map_markets", placeholder="All Markets",
+                            format_func=lambda c: _cluster_label(c, clusters))
+    rm_opts = sorted(df[df["cluster"].isin(mk_scope)]["RM"].unique())
+    sel_rm = f4.multiselect("RM(s)", rm_opts, key="map_rms", placeholder="All RMs")
+    sel_status = f5.multiselect("Status", list(_MAP_STATUS_COLORS), default=list(_MAP_STATUS_COLORS),
+                                key="map_status")
+
+    v = df[df["cluster"].isin(sel_mk or mk_scope) & df["Map Status"].isin(sel_status)]
+    if sel_rm:
+        v = v[v["RM"].isin(sel_rm)]
+    v = v[v["lat"].notna()]
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Stands shown", len(v))
+    m2.metric("Open", int((v["Map Status"] == "Open").sum()))
+    m3.metric("Under Construction", int((v["Map Status"] == "Under Construction").sum()))
+    m4.metric("Earlier Pipeline", int((v["Map Status"] == "Earlier Pipeline").sum()))
+
+    if v.empty:
+        st.info("No stands match these filters.")
+        return
+
+    # ── Fit the view to the selection ─────────────────────────────────────────
+    import math
+    lat0, lat1, lon0, lon1 = v["lat"].min(), v["lat"].max(), v["lon"].min(), v["lon"].max()
+    # Web-mercator zoom that fits the selection in a ~800×600 px view, with padding
+    z_lon = math.log2(800 * 360 / (256 * max(lon1 - lon0, 0.02)))
+    z_lat = math.log2(600 * 360 / (256 * max((lat1 - lat0) * 1.6, 0.02)))
+    zoom = max(3.5, min(12.0, min(z_lon, z_lat) - 1.0))
+    center = dict(lat=(lat0 + lat1) / 2, lon=(lon0 + lon1) / 2)
+
+    fig = go.Figure()
+    for status, color in _MAP_STATUS_COLORS.items():
+        s = v[v["Map Status"] == status]
+        if s.empty:
+            continue
+        hover = s.apply(lambda r: (
+            f"<b>{r['Stand']}, {r['State']}</b>" + (f" · #{r['key']}" if not str(r['key']).startswith('RSH') else "")
+            + f"<br>{r['Market']} · {r['Area']}"
+            + f"<br>RM: {r['RM']} · DO: {r['DO']}"
+            + f"<br>{r['Status']} · {'Opened' if r['is_open'] else 'Est. open'} {r['Open Date'] or '—'}"
+            + f"<br><span style='color:#777'>{r['Address']}{' (approx. — city center)' if r['approx'] else ''}</span>"
+        ), axis=1)
+        kw = dict(lat=s["lat"], lon=s["lon"], mode="markers", name=f"{status} ({len(s)})",
+                  hovertext=hover, hoverinfo="text")
+        if hasattr(go, "Scattermap"):
+            # white ring under each dot keeps overlapping stands distinguishable
+            fig.add_trace(go.Scattermap(**{**kw, "showlegend": False, "hoverinfo": "skip", "hovertext": None},
+                                        marker=dict(size=15, color="#ffffff")))
+            fig.add_trace(go.Scattermap(**kw, marker=dict(size=11, color=color)))
+        else:
+            fig.add_trace(go.Scattermapbox(**{**kw, "showlegend": False, "hoverinfo": "skip", "hovertext": None},
+                                           marker=dict(size=15, color="#ffffff")))
+            fig.add_trace(go.Scattermapbox(**kw, marker=dict(size=11, color=color)))
+    map_layout = dict(style="carto-positron", center=center, zoom=zoom)
+    if hasattr(go, "Scattermap"):
+        fig.update_layout(map=map_layout)
+    else:
+        fig.update_layout(mapbox=map_layout)
+    fig.update_layout(
+        height=600, margin=dict(l=0, r=0, t=0, b=0),
+        legend=dict(orientation="h", y=0.99, x=0.01, bgcolor="rgba(255,255,255,0.9)",
+                    font=dict(size=13, color="#1A1919")),
+        hoverlabel=dict(bgcolor="white", font_size=13, font_color="#1A1919"),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True, "displayModeBar": False})
+    n_approx = int(v["approx"].sum())
+    st.caption("Scroll or pinch to zoom, drag to pan, hover a dot for details. Click a status in the legend to hide it."
+               + (f" {n_approx} stand(s) placed at city center (exact address could not be located)." if n_approx else ""))
+
+    with st.expander(f"Table view — {len(v)} stands", expanded=False):
+        tv = v.assign(_o=v["cluster"].map(cl_order.index)).sort_values(["_o", "is_open", "Open Date"],
+                                                                        ascending=[True, False, True])
+        st.dataframe(tv[["Market", "Stand", "State", "Status", "Open Date", "RM", "DO", "Address"]],
+                     use_container_width=True, hide_index=True)
+
+
+# ─────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────
 def main():
@@ -8234,6 +8390,7 @@ def main():
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
         "🧭 Cluster Roster",
+        "🗺️ Stand Map",
     ]
     tabs = st.tabs(tab_names)
 
@@ -8246,6 +8403,7 @@ def main():
     with tabs[6]:  tab_utilities(dash)
     with tabs[7]:  tab_pipeline(dash)
     with tabs[8]:  tab_roster(dash)
+    with tabs[9]:  tab_map(dash)
     # Forecast and Speed of Service archived — functions retained but tabs hidden
 
 

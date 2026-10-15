@@ -1,0 +1,1118 @@
+{
+ "1117": {
+  "lat": 31.90288,
+  "lon": -102.25969,
+  "precision": "street",
+  "address": "6403 W Hwy 158, Midland, TX"
+ },
+ "1118": {
+  "lat": 32.70466,
+  "lon": -100.91905,
+  "precision": "address",
+  "address": "3700 College Ave, Snyder, TX"
+ },
+ "1119": {
+  "lat": 34.98179,
+  "lon": -101.91938,
+  "precision": "address",
+  "address": "210 23rd St, Canyon, TX"
+ },
+ "1120": {
+  "lat": 27.06975,
+  "lon": -82.20866,
+  "precision": "address",
+  "address": "1289 S Sumter Blvd, North Port, FL"
+ },
+ "1122": {
+  "lat": 31.08445,
+  "lon": -97.78123,
+  "precision": "address",
+  "address": "3008 W Stan Schlueter Loop, Killeen, TX"
+ },
+ "115": {
+  "lat": 34.61881,
+  "lon": -98.42212,
+  "precision": "address",
+  "address": "923 NW Sheridan Rd., Lawton, OK"
+ },
+ "1154": {
+  "lat": 30.51066,
+  "lon": -87.22016,
+  "precision": "address",
+  "address": "8106 N Davis Hwy, Pensacola, FL"
+ },
+ "1156": {
+  "lat": 32.43383,
+  "lon": -97.79782,
+  "precision": "address",
+  "address": "955 US-377, Granbury, TX"
+ },
+ "118": {
+  "lat": 33.53253,
+  "lon": -101.92231,
+  "precision": "address",
+  "address": "6821 Slide Rd., Lubbock, TX"
+ },
+ "121": {
+  "lat": 31.88851,
+  "lon": -102.35145,
+  "precision": "address",
+  "address": "4001 N. Grandview Ave., Odessa, TX"
+ },
+ "1234": {
+  "lat": 35.51208,
+  "lon": -97.97258,
+  "precision": "address",
+  "address": "2415 S Country Club Rd, El Reno, OK"
+ },
+ "1236": {
+  "lat": 33.51668,
+  "lon": -101.88771,
+  "precision": "address",
+  "address": "12902 Indiana Ave, Lubbock, TX"
+ },
+ "1238": {
+  "lat": 31.52496,
+  "lon": -97.13979,
+  "precision": "address",
+  "address": "1707 S Valley Mills Dr, Beverly Hills, TX"
+ },
+ "1241": {
+  "lat": 31.52226,
+  "lon": -97.16885,
+  "precision": "address",
+  "address": "100 S New Rd Ste. 101, Waco, TX"
+ },
+ "128": {
+  "lat": 31.99454,
+  "lon": -102.09835,
+  "precision": "address",
+  "address": "2201 W. Texas Ave., Midland, TX"
+ },
+ "1280": {
+  "lat": 27.92714,
+  "lon": -82.7877,
+  "precision": "address",
+  "address": "1159 Missouri Ave N, Largo, FL"
+ },
+ "129": {
+  "lat": 31.88014,
+  "lon": -102.38411,
+  "precision": "address",
+  "address": "3838 Andrews Hwy., Odessa, TX"
+ },
+ "1323": {
+  "lat": 26.46327,
+  "lon": -81.83014,
+  "precision": "address",
+  "address": "19017 S Tamiami Trl, Fort Myers, FL"
+ },
+ "1332": {
+  "lat": 34.66363,
+  "lon": -99.33565,
+  "precision": "address",
+  "address": "108 Sequoyah Ln, Altus, OK"
+ },
+ "1333": {
+  "lat": 35.36276,
+  "lon": -97.62037,
+  "precision": "street",
+  "address": "2917 SW 104th St., Oklahoma City, OK"
+ },
+ "1337": {
+  "lat": 28.34223,
+  "lon": -82.69902,
+  "precision": "address",
+  "address": "12720 U.S. Hwy 19, Hudson, FL"
+ },
+ "134": {
+  "lat": 33.58241,
+  "lon": -101.87057,
+  "precision": "address",
+  "address": "1415 University Ave, Lubbock, TX"
+ },
+ "1341": {
+  "lat": 27.89827,
+  "lon": -81.97364,
+  "precision": "address",
+  "address": "6875 N Church Ave, Mulberry, FL"
+ },
+ "1344": {
+  "lat": 30.43653,
+  "lon": -87.27849,
+  "precision": "address",
+  "address": "4615 Mobile Hwy, Pensacola, FL"
+ },
+ "1368": {
+  "lat": 27.52143,
+  "lon": -82.57232,
+  "precision": "city",
+  "address": "7617 Moccasin Wallow Road, Palmetto, FL"
+ },
+ "1383": {
+  "lat": 35.24049,
+  "lon": -97.48232,
+  "precision": "address",
+  "address": "1811 24th Ave NW, Norman, OK"
+ },
+ "139": {
+  "lat": 30.73359,
+  "lon": -86.56608,
+  "precision": "address",
+  "address": "2541 S. Ferdon Blvd., Crestview, FL"
+ },
+ "1404": {
+  "lat": 33.54878,
+  "lon": -101.8727,
+  "precision": "address",
+  "address": "2602 50th St. Suite 300, Lubbock, TX"
+ },
+ "1405": {
+  "lat": 26.61279,
+  "lon": -81.78305,
+  "precision": "address",
+  "address": "10581 Colonial Blvd, Fort Myers, FL"
+ },
+ "143": {
+  "lat": 35.18605,
+  "lon": -101.93744,
+  "precision": "address",
+  "address": "2405 Soncy Rd, Amarillo, TX"
+ },
+ "147": {
+  "lat": 31.4311,
+  "lon": -100.45573,
+  "precision": "address",
+  "address": "1480 Knickerbocker, San Angelo, TX"
+ },
+ "151": {
+  "lat": 33.85784,
+  "lon": -98.53255,
+  "precision": "address",
+  "address": "2730 Southwest Pkwy., Wichita Falls, TX"
+ },
+ "154": {
+  "lat": 33.5265,
+  "lon": -101.95697,
+  "precision": "address",
+  "address": "7403 Milwaukee Ave., Lubbock, TX"
+ },
+ "1673": {
+  "lat": 35.39167,
+  "lon": -97.74522,
+  "precision": "address",
+  "address": "1020 E State Hwy 152\nSuite 100, Mustang, OK"
+ },
+ "1686": {
+  "lat": 32.563,
+  "lon": -97.32266,
+  "precision": "address",
+  "address": "803 NE Alsbury Blvd., Burleson, TX"
+ },
+ "1693": {
+  "lat": 35.60615,
+  "lon": -97.63845,
+  "precision": "address",
+  "address": "13500 N Rockwell Ave, OKC, OK"
+ },
+ "1713": {
+  "lat": 31.47567,
+  "lon": -97.20328,
+  "precision": "address",
+  "address": "736 Hewitt Dr, Waco, TX"
+ },
+ "1714": {
+  "lat": 32.45787,
+  "lon": -97.72513,
+  "precision": "address",
+  "address": "4111 East US Hwy 377, Granbury, TX"
+ },
+ "1723": {
+  "lat": 32.96096,
+  "lon": -97.67603,
+  "precision": "address",
+  "address": "390 TX-199, Springtown, TX"
+ },
+ "1724": {
+  "lat": 26.55429,
+  "lon": -81.65845,
+  "precision": "address",
+  "address": "82 & Blackstone, Fort Myers, FL"
+ },
+ "1735": {
+  "lat": 35.68171,
+  "lon": -97.42502,
+  "precision": "address",
+  "address": "Covell and Sooner, Edmond, OK"
+ },
+ "1795": {
+  "lat": 35.49283,
+  "lon": -97.28289,
+  "precision": "address",
+  "address": "2343 N Henney Road, Choctaw, OK"
+ },
+ "1836": {
+  "lat": 32.80797,
+  "lon": -96.77425,
+  "precision": "address",
+  "address": "5101 Ross Ave, Dallas, TX"
+ },
+ "1856": {
+  "lat": 35.63818,
+  "lon": -97.43179,
+  "precision": "address",
+  "address": "3900 E 15th St, Edmond, OK"
+ },
+ "1890": {
+  "lat": 27.51143,
+  "lon": -81.49259,
+  "precision": "address",
+  "address": "116 Sebring Square, Sebring, FL"
+ },
+ "191": {
+  "lat": 35.19021,
+  "lon": -101.88409,
+  "precision": "address",
+  "address": "2110 S. Western St., Amarillo, TX"
+ },
+ "192": {
+  "lat": 34.18755,
+  "lon": -97.14317,
+  "precision": "address",
+  "address": "1201 N. Commerce St., Ardmore, OK"
+ },
+ "1926": {
+  "lat": 27.83922,
+  "lon": -82.73638,
+  "precision": "address",
+  "address": "7101 Park Blvd, Pinellas Park, FL"
+ },
+ "1928": {
+  "lat": 27.76059,
+  "lon": -82.73553,
+  "precision": "address",
+  "address": "980 Pasadena Ave S, St. Petersburg, FL"
+ },
+ "193": {
+  "lat": 35.51153,
+  "lon": -97.58241,
+  "precision": "address",
+  "address": "3655 NW 39th St., Oklahoma City, OK"
+ },
+ "194": {
+  "lat": 35.49244,
+  "lon": -97.76032,
+  "precision": "address",
+  "address": "1617 Garth Brooks Blvd., Yukon, OK"
+ },
+ "1943": {
+  "lat": 32.01899,
+  "lon": -102.08026,
+  "precision": "address",
+  "address": "2215 N Big Spring St, Midland, TX"
+ },
+ "198": {
+  "lat": 33.42888,
+  "lon": -104.52323,
+  "precision": "address",
+  "address": "2813 N Main St., Roswell, NM"
+ },
+ "2005": {
+  "lat": 28.18409,
+  "lon": -81.63969,
+  "precision": "address",
+  "address": "40227 Hwy 27, Davenport, FL"
+ },
+ "2038": {
+  "lat": 32.81788,
+  "lon": -96.8127,
+  "precision": "address",
+  "address": "4401 Lemmon Ave, Dallas, TX"
+ },
+ "2042": {
+  "lat": 32.7568,
+  "lon": -97.69872,
+  "precision": "address",
+  "address": "3205 Fort Worth Hwy, Hudson Oaks, TX"
+ },
+ "2114": {
+  "lat": 28.12267,
+  "lon": -81.6399,
+  "precision": "address",
+  "address": "35910 US-27, Haines City, FL"
+ },
+ "215": {
+  "lat": 30.64376,
+  "lon": -96.35331,
+  "precision": "address",
+  "address": "612 E. Villa Maria, Bryan, TX"
+ },
+ "216": {
+  "lat": 32.53557,
+  "lon": -97.33506,
+  "precision": "address",
+  "address": "627 SW Wilshire Blvd., Burleson, TX"
+ },
+ "2163": {
+  "lat": 26.64063,
+  "lon": -81.87231,
+  "precision": "city",
+  "address": "16991 Three Oaks Mkt PL, Fort Myers, FL"
+ },
+ "2176": {
+  "lat": 27.98354,
+  "lon": -82.12162,
+  "precision": "address",
+  "address": "2801 James L Redman Pkwy, Plant City, FL"
+ },
+ "218": {
+  "lat": 31.46529,
+  "lon": -100.4456,
+  "precision": "address",
+  "address": "402 N. Bryant Blvd., San Angelo, TX"
+ },
+ "219": {
+  "lat": 32.0337,
+  "lon": -102.13044,
+  "precision": "address",
+  "address": "3316 W. Loop 250, Midland, TX"
+ },
+ "220": {
+  "lat": 36.39091,
+  "lon": -97.92719,
+  "precision": "address",
+  "address": "4010 W. Owen K Garriott Rd. STE 400, Enid, OK"
+ },
+ "2200": {
+  "lat": 28.0224,
+  "lon": -81.66474,
+  "precision": "address",
+  "address": "4200 Dundee Rd, Winter Haven, FL"
+ },
+ "2201": {
+  "lat": 32.8103,
+  "lon": -96.62515,
+  "precision": "address",
+  "address": "1710 N Town E Blvd, Mesquite, TX"
+ },
+ "2206": {
+  "lat": 27.84643,
+  "lon": -82.68867,
+  "precision": "address",
+  "address": "8181 US Hwy 19 North, Pinellas Park, FL"
+ },
+ "231": {
+  "lat": 31.85865,
+  "lon": -102.35628,
+  "precision": "address",
+  "address": "1364 E. 8th St., Odessa, TX"
+ },
+ "232": {
+  "lat": 28.81993,
+  "lon": -81.88735,
+  "precision": "address",
+  "address": "800 North 14th St., Leesburg, FL"
+ },
+ "245": {
+  "lat": 32.47789,
+  "lon": -99.69803,
+  "precision": "address",
+  "address": "1639 Hwy 351, Abilene, TX"
+ },
+ "264": {
+  "lat": 30.51616,
+  "lon": -86.46625,
+  "precision": "address",
+  "address": "1162 John Sims Pkwy, Niceville, FL"
+ },
+ "278": {
+  "lat": 30.41409,
+  "lon": -86.60565,
+  "precision": "address",
+  "address": "44 Eglin Pkwy NE, Fort Walton Beach, FL"
+ },
+ "284": {
+  "lat": 27.43201,
+  "lon": -82.39516,
+  "precision": "address",
+  "address": "14511 State Road 70 E, Bradenton (Lakewood Ranch), FL"
+ },
+ "325": {
+  "lat": 35.65306,
+  "lon": -97.56776,
+  "precision": "street",
+  "address": "2840 NW 178th St., Oklahoma City, OK"
+ },
+ "327": {
+  "lat": 30.36397,
+  "lon": -87.1696,
+  "precision": "address",
+  "address": "401 Gulf Breeze Pkwy., Gulf Breeze, FL"
+ },
+ "333": {
+  "lat": 26.96781,
+  "lon": -82.07925,
+  "precision": "address",
+  "address": "4275 Tamiami Trail, Port Charlotte, FL"
+ },
+ "343": {
+  "lat": 31.60331,
+  "lon": -97.10106,
+  "precision": "street",
+  "address": "960 N Loop 340, Bellmead, TX"
+ },
+ "356": {
+  "lat": 27.46225,
+  "lon": -82.56898,
+  "precision": "address",
+  "address": "685 Cortez Rd. W., Bradenton, FL"
+ },
+ "380": {
+  "lat": 26.92777,
+  "lon": -82.04746,
+  "precision": "address",
+  "address": "1225 Tamiami Trail, Punta Gorda, FL"
+ },
+ "387": {
+  "lat": 30.61961,
+  "lon": -87.04969,
+  "precision": "address",
+  "address": "6556 Caroline St., Milton, FL"
+ },
+ "391": {
+  "lat": 31.73151,
+  "lon": -98.97269,
+  "precision": "address",
+  "address": "523 E Commerce St., Brownwood, TX"
+ },
+ "392": {
+  "lat": 34.78987,
+  "lon": -96.6673,
+  "precision": "address",
+  "address": "910 Lonnie Abbott Blvd., Ada, OK"
+ },
+ "394": {
+  "lat": 27.49605,
+  "lon": -82.61868,
+  "precision": "address",
+  "address": "5787 Manatee Ave W, Bradenton, FL"
+ },
+ "404": {
+  "lat": 26.60653,
+  "lon": -81.64967,
+  "precision": "address",
+  "address": "1201 Homestead Rd N, Lehigh Acres, FL"
+ },
+ "405": {
+  "lat": 32.71442,
+  "lon": -103.13784,
+  "precision": "address",
+  "address": "1425 N Turner, Hobbs, NM"
+ },
+ "414": {
+  "lat": 29.15023,
+  "lon": -82.18491,
+  "precision": "street",
+  "address": "3104 SW College Rd, Ocala, FL"
+ },
+ "425": {
+  "lat": 30.47354,
+  "lon": -87.2254,
+  "precision": "address",
+  "address": "5305 N Davis Hwy, Pensacola, FL"
+ },
+ "427": {
+  "lat": 35.2183,
+  "lon": -97.47413,
+  "precision": "address",
+  "address": "2218 W Main St., Norman, OK"
+ },
+ "428": {
+  "lat": 26.55644,
+  "lon": -81.9045,
+  "precision": "address",
+  "address": "9101 College Pkwy., Fort Myers, FL"
+ },
+ "458": {
+  "lat": 32.39476,
+  "lon": -99.76246,
+  "precision": "address",
+  "address": "4458 Buffalo Gap Rd, Abilene, TX"
+ },
+ "482": {
+  "lat": 31.08235,
+  "lon": -97.36457,
+  "precision": "address",
+  "address": "1918 S 31st St., Temple, TX"
+ },
+ "484": {
+  "lat": 30.39083,
+  "lon": -87.06093,
+  "precision": "address",
+  "address": "3876 Gulf Breeze Pkwy, Gulf Breeze, FL"
+ },
+ "486": {
+  "lat": 34.42334,
+  "lon": -103.19643,
+  "precision": "address",
+  "address": "2525 N Prince St., Clovis, NM"
+ },
+ "487": {
+  "lat": 32.43582,
+  "lon": -104.23899,
+  "precision": "address",
+  "address": "1102 W Pierce St., Carlsbad, NM"
+ },
+ "492": {
+  "lat": 27.99605,
+  "lon": -82.50114,
+  "precision": "address",
+  "address": "3603 W. Hillsborough, Tampa, FL"
+ },
+ "511": {
+  "lat": 30.1455,
+  "lon": -85.59133,
+  "precision": "address",
+  "address": "104 S Tyndall Pkwy, Panama City, FL"
+ },
+ "513": {
+  "lat": 32.80925,
+  "lon": -98.0896,
+  "precision": "address",
+  "address": "2801B E US Hwy 180, Mineral Wells, TX"
+ },
+ "514": {
+  "lat": 34.48323,
+  "lon": -97.96666,
+  "precision": "address",
+  "address": "1717 N Hwy 81, Duncan, OK"
+ },
+ "515": {
+  "lat": 32.20534,
+  "lon": -98.23509,
+  "precision": "address",
+  "address": "2761 W Washington St, Stephenville, TX"
+ },
+ "516": {
+  "lat": 32.35343,
+  "lon": -97.36894,
+  "precision": "address",
+  "address": "1211 W Henderson St., Cleburne, TX"
+ },
+ "517": {
+  "lat": 30.49446,
+  "lon": -87.19035,
+  "precision": "address",
+  "address": "6881 N. 9th Ave., Pensacola, FL"
+ },
+ "518": {
+  "lat": 30.23736,
+  "lon": -85.64882,
+  "precision": "address",
+  "address": "1420 Ohio Avenue, Lynn Haven, FL"
+ },
+ "520": {
+  "lat": 28.451,
+  "lon": -82.45222,
+  "precision": "address",
+  "address": "1194 S. Broad St, Brooksville, FL"
+ },
+ "521": {
+  "lat": 30.60356,
+  "lon": -87.12143,
+  "precision": "address",
+  "address": "4874 Hwy 90, Pace, FL"
+ },
+ "547": {
+  "lat": 35.65297,
+  "lon": -97.49504,
+  "precision": "address",
+  "address": "833 W. Edmond Rd., Edmond, OK"
+ },
+ "570": {
+  "lat": 29.06258,
+  "lon": -82.04951,
+  "precision": "city",
+  "address": "5530 SE Abshier Blvd, Belleview, FL"
+ },
+ "571": {
+  "lat": 30.4475,
+  "lon": -86.63851,
+  "precision": "address",
+  "address": "801 Beal Pkwy N, Fort Walton Beach, FL"
+ },
+ "572": {
+  "lat": 28.82158,
+  "lon": -81.78136,
+  "precision": "address",
+  "address": "10625 US 441, Leesburg, FL"
+ },
+ "573": {
+  "lat": 28.45279,
+  "lon": -82.63081,
+  "precision": "address",
+  "address": "1321 Commercial Way, Spring Hill, FL"
+ },
+ "607": {
+  "lat": 28.43544,
+  "lon": -82.54847,
+  "precision": "address",
+  "address": "160 Mariner Blvd, Spring Hill, FL"
+ },
+ "674": {
+  "lat": 28.1869,
+  "lon": -82.74023,
+  "precision": "address",
+  "address": "1937 US 19 Hwy, Holiday, FL"
+ },
+ "697": {
+  "lat": 36.39679,
+  "lon": -97.89027,
+  "precision": "address",
+  "address": "1002 W Broadway Ave, Enid, OK"
+ },
+ "703": {
+  "lat": 30.40166,
+  "lon": -86.86619,
+  "precision": "address",
+  "address": "8534 Navarre Pkwy, Navarre, FL"
+ },
+ "704": {
+  "lat": 31.43516,
+  "lon": -97.74391,
+  "precision": "city",
+  "address": "2302 TX-36 BUS, Gatesville, TX"
+ },
+ "705": {
+  "lat": 33.8821,
+  "lon": -98.52808,
+  "precision": "address",
+  "address": "2406 Piedmont Pl, Wichita Falls, TX"
+ },
+ "706": {
+  "lat": 33.59404,
+  "lon": -102.36452,
+  "precision": "address",
+  "address": "323 E Hwy 114, Levelland, TX"
+ },
+ "707": {
+  "lat": 33.22553,
+  "lon": -97.59409,
+  "precision": "address",
+  "address": "1330 S FM 51, Decatur, TX"
+ },
+ "708": {
+  "lat": 32.67491,
+  "lon": -97.46792,
+  "precision": "address",
+  "address": "9033 Benbrook Blvd, Benbrook, TX"
+ },
+ "709": {
+  "lat": 35.54324,
+  "lon": -100.97188,
+  "precision": "address",
+  "address": "1050 N Hobart St, Pampa, TX"
+ },
+ "711": {
+  "lat": 31.53154,
+  "lon": -97.19459,
+  "precision": "address",
+  "address": "1540 N Valley Mills Drive, Waco, TX"
+ },
+ "756": {
+  "lat": 32.84224,
+  "lon": -104.40985,
+  "precision": "address",
+  "address": "1102 W Main St, Artesia, NM"
+ },
+ "757": {
+  "lat": 26.60302,
+  "lon": -81.87197,
+  "precision": "address",
+  "address": "4102 Cleveland Ave, Fort Myers, FL"
+ },
+ "758": {
+  "lat": 31.07851,
+  "lon": -97.4574,
+  "precision": "address",
+  "address": "2304 N Main St, Belton, TX"
+ },
+ "87": {
+  "lat": 32.23314,
+  "lon": -101.47149,
+  "precision": "address",
+  "address": "2200 S. Gregg St., Big Spring, TX"
+ },
+ "872": {
+  "lat": 35.56432,
+  "lon": -97.56726,
+  "precision": "address",
+  "address": "9281 N May Ave, Oklahoma City, OK"
+ },
+ "874": {
+  "lat": 35.5589,
+  "lon": -97.64083,
+  "precision": "address",
+  "address": "7236 Northwest Expy, Oklahoma City, OK"
+ },
+ "875": {
+  "lat": 35.5261,
+  "lon": -98.69691,
+  "precision": "address",
+  "address": "945 E Main St., Weatherford, OK"
+ },
+ "876": {
+  "lat": 34.1853,
+  "lon": -101.74204,
+  "precision": "address",
+  "address": "3209 Olton Rd, Plainview, TX"
+ },
+ "877": {
+  "lat": 30.53307,
+  "lon": -87.26238,
+  "precision": "address",
+  "address": "300 E Nine Mile, Pensacola, FL"
+ },
+ "878": {
+  "lat": 30.15865,
+  "lon": -85.66029,
+  "precision": "city",
+  "address": "2105 MLK Blvd, Panama City, FL"
+ },
+ "881": {
+  "lat": 31.42594,
+  "lon": -100.51513,
+  "precision": "address",
+  "address": "5875 Sherwood Way, San Angelo, TX"
+ },
+ "882": {
+  "lat": 33.64067,
+  "lon": -97.14809,
+  "precision": "address",
+  "address": "403 W US HWY 82, Gainesville, TX"
+ },
+ "883": {
+  "lat": 28.00599,
+  "lon": -81.7311,
+  "precision": "address",
+  "address": "1603 3rd St, Winter Haven, FL"
+ },
+ "940": {
+  "lat": 32.33201,
+  "lon": -102.55065,
+  "precision": "address",
+  "address": "1300 N Main St, Andrews, TX"
+ },
+ "948": {
+  "lat": 31.12406,
+  "lon": -97.90308,
+  "precision": "city",
+  "address": "2128 US-190 BUS, Copperas Cove, TX"
+ },
+ "949": {
+  "lat": 32.733,
+  "lon": -97.79275,
+  "precision": "address",
+  "address": "1800 S Main St, Weatherford, TX"
+ },
+ "965": {
+  "lat": 35.85175,
+  "lon": -101.97341,
+  "precision": "address",
+  "address": "1324 S Dumas Ave, Dumas, TX"
+ },
+ "967": {
+  "lat": 28.29296,
+  "lon": -82.71003,
+  "precision": "address",
+  "address": "9305 US-19, Port Richey, FL"
+ },
+ "968": {
+  "lat": 34.62337,
+  "lon": -98.47402,
+  "precision": "address",
+  "address": "6618 NW Cache Road, Lawton, OK"
+ },
+ "986": {
+  "lat": 30.41942,
+  "lon": -86.653,
+  "precision": "address",
+  "address": "490 Mary Esther Blvd., Mary Esther, FL"
+ },
+ "987": {
+  "lat": 35.17455,
+  "lon": -97.41235,
+  "precision": "address",
+  "address": "3617 Classen Blvd, Norman, OK"
+ },
+ "RSH-00140": {
+  "lat": 30.70263,
+  "lon": -86.12165,
+  "precision": "address",
+  "address": "1347 US 331, Defuniak Springs, FL"
+ },
+ "RSH-00151": {
+  "lat": 35.19227,
+  "lon": -101.79578,
+  "precision": "address",
+  "address": "3514 E Interstate Drive, Amarillo, TX"
+ },
+ "RSH-00213": {
+  "lat": 32.41633,
+  "lon": -97.22161,
+  "precision": "address",
+  "address": "1048 W HWY 67, Alvarado, TX"
+ },
+ "RSH-00228": {
+  "lat": 32.63691,
+  "lon": -97.36992,
+  "precision": "address",
+  "address": "7440 McCart Ave, Fort Worth, TX"
+ },
+ "RSH-00233": {
+  "lat": 26.65593,
+  "lon": -81.88119,
+  "precision": "address",
+  "address": "15201 N Cleveland Ave, Fort Myers, FL"
+ },
+ "RSH-00235": {
+  "lat": 26.61071,
+  "lon": -81.94125,
+  "precision": "address",
+  "address": "2210 Del Prado Blvd S, Cape Coral, FL"
+ },
+ "RSH-00252": {
+  "lat": 27.43103,
+  "lon": -82.57554,
+  "precision": "address",
+  "address": "6208 S 14th St, Bradenton, FL"
+ },
+ "RSH-00261": {
+  "lat": 28.82153,
+  "lon": -81.67867,
+  "precision": "address",
+  "address": "16920 US-441, Mt Dora, FL"
+ },
+ "RSH-00554": {
+  "lat": 35.31986,
+  "lon": -97.50344,
+  "precision": "address",
+  "address": "777 SW 19th St, Moore, OK"
+ },
+ "RSH-00575": {
+  "lat": 32.43215,
+  "lon": -99.75618,
+  "precision": "address",
+  "address": "2805 S 14th St, Abilene, TX"
+ },
+ "RSH-00579": {
+  "lat": 27.21013,
+  "lon": -81.84487,
+  "precision": "address",
+  "address": "1325 E Oak St, Arcadia, FL"
+ },
+ "RSH-00584": {
+  "lat": 32.93093,
+  "lon": -96.64853,
+  "precision": "address",
+  "address": "1405 W Buckingham Rd, Garland, TX"
+ },
+ "RSH-00592": {
+  "lat": 31.11069,
+  "lon": -97.74684,
+  "precision": "address",
+  "address": "1080 Fort Hood St, Killeen, TX"
+ },
+ "RSH-00596": {
+  "lat": 32.86281,
+  "lon": -96.7526,
+  "precision": "address",
+  "address": "6051 Skillman St, Dallas, TX"
+ },
+ "RSH-00603": {
+  "lat": 32.9093,
+  "lon": -96.73637,
+  "precision": "address",
+  "address": "9375 Forest Ln, Dallas, TX"
+ },
+ "RSH-00609": {
+  "lat": 33.23107,
+  "lon": -97.00414,
+  "precision": "street",
+  "address": "11150 US-380, Cross Roads, TX"
+ },
+ "RSH-00610": {
+  "lat": 30.48477,
+  "lon": -86.12387,
+  "precision": "address",
+  "address": "16564 US-331, Freeport, FL"
+ },
+ "RSH-00620": {
+  "lat": 33.23016,
+  "lon": -97.14152,
+  "precision": "address",
+  "address": "906 W University Dr, Denton, TX"
+ },
+ "RSH-00625": {
+  "lat": 35.21472,
+  "lon": -101.90159,
+  "precision": "address",
+  "address": "5638 W Amarillo Blvd, Amarillo, TX"
+ },
+ "RSH-00634": {
+  "lat": 30.3881,
+  "lon": -86.47624,
+  "precision": "address",
+  "address": "983 US-98, Destin, FL"
+ },
+ "RSH-00658": {
+  "lat": 31.113,
+  "lon": -97.39957,
+  "precision": "address",
+  "address": "5405 W Adams Ave, Temple, TX"
+ },
+ "RSH-00662": {
+  "lat": 27.26918,
+  "lon": -82.50114,
+  "precision": "address",
+  "address": "3428 Clark Rd, Sarasota, FL"
+ },
+ "RSH-00665": {
+  "lat": 27.93775,
+  "lon": -82.26389,
+  "precision": "address",
+  "address": "1527 E Brandon Blvd, Brandon, FL"
+ },
+ "RSH-00674": {
+  "lat": 28.53383,
+  "lon": -82.50453,
+  "precision": "address",
+  "address": "13251 Cortez Blvd, Brooksville, FL"
+ },
+ "RSH-00675": {
+  "lat": 27.98163,
+  "lon": -82.28608,
+  "precision": "address",
+  "address": "707 W Dr Martin Luther King Jr, Seffner, FL"
+ },
+ "RSH-00679": {
+  "lat": 32.74904,
+  "lon": -96.6827,
+  "precision": "address",
+  "address": "2109 Buckner Blvd, Dallas, TX"
+ },
+ "RSH-00680": {
+  "lat": 35.62341,
+  "lon": -97.4786,
+  "precision": "address",
+  "address": "192 E 33rd St, Edmond, OK"
+ },
+ "RSH-00683": {
+  "lat": 32.66233,
+  "lon": -96.87294,
+  "precision": "address",
+  "address": "3230 W Camp Wisdom Rd, Dallas, TX"
+ },
+ "RSH-00685": {
+  "lat": 30.66554,
+  "lon": -96.31106,
+  "precision": "address",
+  "address": "4133 Boonville Rd, Bryan, TX"
+ },
+ "RSH-00694": {
+  "lat": 35.14725,
+  "lon": -101.93914,
+  "precision": "address",
+  "address": "5962 S Soncy Rd, Amarillo, TX"
+ },
+ "RSH-00695": {
+  "lat": 35.03307,
+  "lon": -97.93486,
+  "precision": "address",
+  "address": "1703 S 4th St, Chickasha, OK"
+ },
+ "RSH-00696": {
+  "lat": 30.6893,
+  "lon": -96.37053,
+  "precision": "address",
+  "address": "1719 E State Hwy 21, Bryan, TX"
+ },
+ "RSH-00704": {
+  "lat": 30.77901,
+  "lon": -86.56137,
+  "precision": "address",
+  "address": "914 N Ferdon Blvd, Crestview, FL"
+ },
+ "RSH-00736": {
+  "lat": 32.00852,
+  "lon": -97.09778,
+  "precision": "address",
+  "address": "1409 Corsicana Hwy, Hillsboro, TX"
+ },
+ "RSH-00741": {
+  "lat": 32.60638,
+  "lon": -97.41499,
+  "precision": "address",
+  "address": "6077 McPherson Blvd, Fort Worth, TX"
+ },
+ "RSH-00747": {
+  "lat": 31.06277,
+  "lon": -98.18172,
+  "precision": "address",
+  "address": "606 S Key Ave, Lampasas, TX"
+ },
+ "RSH-00757": {
+  "lat": 28.06928,
+  "lon": -82.43386,
+  "precision": "address",
+  "address": "2230 E Fletcher Ave, Tampa, FL"
+ },
+ "RSH-00792": {
+  "lat": 27.77762,
+  "lon": -82.67908,
+  "precision": "address",
+  "address": "3355 5th N Ave, St. Petersburg, FL"
+ },
+ "RSH-00793": {
+  "lat": 28.8924,
+  "lon": -82.47636,
+  "precision": "address",
+  "address": "3148 W Norvell Bryant Hwy, Lecanto, FL"
+ },
+ "RSH-00802": {
+  "lat": 27.7123,
+  "lon": -82.35192,
+  "precision": "city",
+  "address": "16437 US-301, Sun City Center, FL"
+ },
+ "RSH-00824": {
+  "lat": 28.01488,
+  "lon": -82.73629,
+  "precision": "address",
+  "address": "27001 US-19, Clearwater, FL"
+ },
+ "RSH-00842": {
+  "lat": 26.33152,
+  "lon": -81.74242,
+  "precision": "address",
+  "address": "11721 Bonita Beach Rd, Bonita Springs, FL"
+ },
+ "RSH-00844": {
+  "lat": 33.57786,
+  "lon": -101.93638,
+  "precision": "address",
+  "address": "5713 19th St, Lubbock, TX"
+ },
+ "RSH-00867": {
+  "lat": 30.18129,
+  "lon": -85.80354,
+  "precision": "address",
+  "address": "10010 Hutchison Blvd, Panama City Beach, FL"
+ },
+ "RSH-00956": {
+  "lat": 33.49353,
+  "lon": -101.9224,
+  "precision": "address",
+  "address": "11112 Slide Rd, Lubbock, TX"
+ }
+}
