@@ -7788,6 +7788,314 @@ def tab_pipeline(dash):
 
 
 # ─────────────────────────────────────────────
+# CLUSTER ROSTER — markets, RM coverage, split readiness
+# ─────────────────────────────────────────────
+_ROSTER_PATH = os.path.join(os.path.dirname(__file__), "cluster_roster.json")
+_ROSTER_QUARTERS = ["Q4'26", "Q1'27", "Q2'27", "Q3'27", "Q4'27", "Q1'28+"]
+
+
+@st.cache_data(show_spinner=False)
+def _load_roster_file(_mtime: float) -> dict:
+    with open(_ROSTER_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+
+@st.cache_data(show_spinner=False)
+def _load_stand_meta_for_roster() -> dict:
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "stand_meta.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def _roster_quarter(date_str):
+    """'11/30/26' → "Q4'26" (earlier → Q4'26, after Q4'27 → Q1'28+)."""
+    import datetime as _dt
+    for fmt in ("%m/%d/%y", "%m/%d/%Y"):
+        try:
+            d = _dt.datetime.strptime(str(date_str), fmt)
+        except (ValueError, TypeError):
+            continue
+        key = d.year * 10 + (d.month - 1) // 3 + 1
+        if key < 20264:
+            return "Q4'26"
+        if key > 20274:
+            return "Q1'28+"
+        return f"Q{(d.month - 1) // 3 + 1}'{str(d.year)[-2:]}"
+    return None
+
+
+def _roster_stands(pdata: dict) -> pd.DataFrame:
+    """Every open stand + every pipeline stand, keyed by store # (no leading zeros) or RSH."""
+    meta = _load_stand_meta_for_roster()
+    store_clusters = pdata.get("store_clusters", {})
+    open_pdf = {str(r.get("store", "")).lstrip("0"): r for r in pdata.get("open_pdf", [])}
+    rows = []
+    for sid, cid in store_clusters.items():
+        m = meta.get(sid, {})
+        o = open_pdf.get(sid, {})
+        od = m.get("Open_Date", "")
+        if od and "-" in od:
+            y, mo, d = od.split("-")
+            od = f"{int(mo)}/{int(d)}/{y[-2:]}"
+        rows.append({"key": sid, "Stand": m.get("Display_Name") or o.get("city", f"Store {sid}"),
+                     "State": m.get("State") or o.get("state", ""), "Status": "✅ Open",
+                     "Open Date": od or o.get("open", ""), "home": cid, "is_open": True, "quarter": None})
+    for r in pdata.get("upcoming", []):
+        key = str(r.get("store", "")).lstrip("0") or r["rsh"]
+        if key in store_clusters:
+            continue
+        rows.append({"key": key, "Stand": r["city"], "State": r["state"],
+                     "Status": _phase_label(_norm_phase(r["phase"])), "Open Date": r.get("open", ""),
+                     "home": r.get("cluster", ""), "is_open": False,
+                     "quarter": _roster_quarter(r.get("open", ""))})
+    return pd.DataFrame(rows)
+
+
+def tab_roster(dash):
+    import datetime as _dt
+
+    st.markdown("### 🧭 Cluster Roster")
+    st.caption(
+        "Each stand has a **home market** (permanent geography from the 7C Cluster Roster). "
+        "Each market either has **its own RM** or is **covered with** another market until it is big enough to split. "
+        "A stand's RM = stand override → its market's RM → the covering market's RM. "
+        "**To save changes:** edit below → **Download roster file** at the bottom → send the file to Claude to publish."
+    )
+
+    _pdata = _load_pipeline_data(_pipeline_mtime())
+    clusters = _pdata.get("clusters", {})
+    if not clusters:
+        st.warning("No cluster data in pipeline_data.json.")
+        return
+    cl_order = list(clusters.keys())
+    areas = list(dict.fromkeys(v["area"] for v in clusters.values()))
+    lab = {c: _cluster_label(c, clusters) for c in cl_order}
+    unlab = {v: k for k, v in lab.items()}
+
+    # ── Source: published roster, or a roster file downloaded earlier ──────────
+    try:
+        published = _load_roster_file(os.path.getmtime(_ROSTER_PATH))
+    except FileNotFoundError:
+        published = {"rms": [], "clusters": {}, "stand_overrides": {}}
+    with st.expander("📂 Continue from a roster file you downloaded earlier", expanded=False):
+        up = st.file_uploader("Roster file (.json)", type=["json"], key="roster_upload")
+        if up is not None:
+            sig = f"{up.name}:{up.size}"
+            if st.session_state.get("_roster_src_sig") != sig:
+                try:
+                    st.session_state["_roster_src"] = json.loads(up.getvalue().decode("utf-8"))
+                    st.session_state["_roster_src_sig"] = sig
+                    st.session_state["_roster_ver"] = st.session_state.get("_roster_ver", 0) + 1
+                except Exception as e:
+                    st.error(f"Could not read that file: {e}")
+        if st.session_state.get("_roster_src") is not None:
+            if st.button("↩ Discard it and go back to the published roster", key="roster_reset"):
+                st.session_state["_roster_src"] = None
+                st.session_state["_roster_ver"] = st.session_state.get("_roster_ver", 0) + 1
+                st.rerun()
+    src = st.session_state.get("_roster_src") or published
+    ver = st.session_state.get("_roster_ver", 0)
+    if st.session_state.get("_roster_src") is not None:
+        st.info("Showing the roster file you uploaded (not yet published).")
+
+    # ── Settings ──────────────────────────────────────────────────────────────
+    s1, s2, _ = st.columns([1, 1, 2])
+    split_at = s1.number_input("Flag market 'ready to split' at (stands)", 1, 20,
+                               int(src.get("split_threshold", 4)), key=f"roster_split_{ver}")
+    rm_max = s2.number_input("Flag RM over (stands)", 1, 30,
+                             int(src.get("rm_max_stands", 8)), key=f"roster_max_{ver}")
+
+    # ── RMs ───────────────────────────────────────────────────────────────────
+    with st.expander("👥 Regional Managers — add a new hire or change a home market", expanded=False):
+        rm_df = pd.DataFrame(src.get("rms") or [{"name": "", "home": ""}])
+        rm_df["home"] = rm_df["home"].map(lambda c: lab.get(c, ""))
+        rm_df = rm_df.rename(columns={"name": "RM", "home": "Home Market"})[["RM", "Home Market"]]
+        rm_ed = st.data_editor(
+            rm_df, key=f"roster_rms_{ver}", num_rows="dynamic", hide_index=True, use_container_width=True,
+            column_config={
+                "RM": st.column_config.TextColumn("RM", required=True),
+                "Home Market": st.column_config.SelectboxColumn("Home Market", options=[""] + list(lab.values())),
+            })
+    rm_home = {}
+    for _, r in rm_ed.iterrows():
+        n = str(r["RM"] or "").strip()
+        if n and n != "nan":
+            rm_home[n] = unlab.get(r["Home Market"] or "", "")
+    rm_list = list(rm_home.keys())
+
+    # ── Market coverage editor ────────────────────────────────────────────────
+    st.markdown("#### 🗺️ Market Coverage")
+    st.caption("Pick the market's own RM, **or** set **Covered with** to roll it up under another market's RM "
+               "(e.g. Plant City / Polk County with Tampa Bay). Covered with wins if both are set.")
+    src_cl = src.get("clusters", {})
+    cov_df = pd.DataFrame([{
+        "Area": clusters[c]["area"], "Market": lab[c],
+        "RM": src_cl.get(c, {}).get("rm", ""),
+        "Covered with": lab.get(src_cl.get(c, {}).get("covered_with", ""), ""),
+    } for c in cl_order])
+    cov_ed = st.data_editor(
+        cov_df, key=f"roster_cov_{ver}", hide_index=True, use_container_width=True, height=36 * 25,
+        disabled=["Area", "Market"],
+        column_config={
+            "Market": st.column_config.TextColumn("Market", width="medium"),
+            "RM": st.column_config.SelectboxColumn("RM (own)", options=[""] + rm_list, width="medium"),
+            "Covered with": st.column_config.SelectboxColumn("Covered with", options=[""] + list(lab.values()),
+                                                             width="medium"),
+        })
+    cl_state = {}
+    for _, r in cov_ed.iterrows():
+        c = unlab[r["Market"]]
+        rm = r["RM"] if isinstance(r["RM"], str) else ""
+        cw = unlab.get(r["Covered with"] if isinstance(r["Covered with"], str) else "", "")
+        cl_state[c] = {"rm": rm, "covered_with": cw if cw != c else ""}
+
+    def eff_cluster_rm(c, seen=()):
+        x = cl_state.get(c, {})
+        cw = x.get("covered_with", "")
+        if cw and cw not in seen and cw != c:
+            return eff_cluster_rm(cw, seen + (c,))
+        return x.get("rm", "")
+
+    # ── Stands editor — one table per area; rows stay put even if a stand is moved ─
+    st.markdown("#### 🏪 Stands by Market")
+    st.caption("Change **Market** to move a stand, or set **RM override** for a one-off exception "
+               "(blank = follow the market). Open and pipeline stands are both listed.")
+    stands = _roster_stands(_pdata)
+    ov = src.get("stand_overrides", {})
+    stands["Market"] = stands.apply(lambda r: lab.get(ov.get(r["key"], {}).get("cluster") or r["home"], ""), axis=1)
+    stands["RM override"] = stands["key"].map(lambda k: ov.get(k, {}).get("rm", ""))
+    stands["_area"] = stands["Market"].map(lambda m: clusters.get(unlab.get(m, ""), {}).get("area", "Unassigned"))
+    stands["_ord"] = stands["Market"].map(lambda m: cl_order.index(unlab[m]) if m in unlab else 99)
+    stands["_od"] = pd.to_datetime(stands["Open Date"], format="%m/%d/%y", errors="coerce")
+    stands = stands.sort_values(["_ord", "is_open", "_od"], ascending=[True, False, True])
+
+    edited = []
+    for area in areas + ["Unassigned"]:
+        part = stands[stands["_area"] == area]
+        if part.empty:
+            continue
+        n_open = int(part["is_open"].sum())
+        with st.expander(f"**{area}** — {n_open} open · {len(part) - n_open} pipeline", expanded=False):
+            view = part[["key", "Market", "Stand", "State", "Status", "Open Date", "RM override"]].reset_index(drop=True)
+            edited.append(st.data_editor(
+                view, key=f"roster_st_{area}_{ver}", hide_index=True, use_container_width=True,
+                height=min(40 + len(view) * 35, 700),
+                disabled=["key", "Stand", "State", "Status", "Open Date"],
+                column_config={
+                    "key": st.column_config.TextColumn("Store / RSH", width="small"),
+                    "Market": st.column_config.SelectboxColumn("Market", options=list(lab.values()),
+                                                               required=True, width="medium"),
+                    "RM override": st.column_config.SelectboxColumn("RM override", options=[""] + rm_list,
+                                                                    width="medium"),
+                }))
+    ed_all = pd.concat(edited, ignore_index=True)
+
+    # ── Resolve the edited roster ─────────────────────────────────────────────
+    base = stands.set_index("key")
+    new_ov, rows = {}, []
+    for _, r in ed_all.iterrows():
+        k = r["key"]
+        b = base.loc[k]
+        c = unlab.get(r["Market"], b["home"])
+        rmo = r["RM override"] if isinstance(r["RM override"], str) else ""
+        o = {}
+        if c != b["home"]:
+            o["cluster"] = c
+        if rmo:
+            o["rm"] = rmo
+        if o:
+            new_ov[k] = o
+        rows.append({"key": k, "cluster": c, "rm": rmo or eff_cluster_rm(c),
+                     "is_open": bool(b["is_open"]), "quarter": b["quarter"]})
+    res = pd.DataFrame(rows)
+
+    def cum_counts(df_):
+        out = {"Open": int(df_["is_open"].sum())}
+        run = out["Open"]
+        for q in _ROSTER_QUARTERS:
+            run += int(((~df_["is_open"]) & (df_["quarter"] == q)).sum())
+            out[q] = run
+        out["Pipeline"] = int((~df_["is_open"]).sum())
+        return out
+
+    # ── Coverage summary + split readiness ────────────────────────────────────
+    st.divider()
+    st.markdown("#### 📍 Coverage Summary & Split Readiness")
+    st.caption(f"Markets without their own RM are flagged in the first quarter they reach **{split_at}+ stands** "
+               "(open + projected opens).")
+    summ = []
+    for c in cl_order:
+        x = cl_state[c]
+        sub = res[res["cluster"] == c]
+        cc = cum_counts(sub)
+        if x["covered_with"]:
+            how = f"With {clusters[x['covered_with']]['market']}"
+        elif x["rm"]:
+            how = "Own RM"
+        else:
+            how = "⚠️ No RM"
+        split = "—"
+        if how != "Own RM":
+            if cc["Open"] >= split_at:
+                split = "🟥 Ready now"
+            else:
+                hit = next((q for q in _ROSTER_QUARTERS if cc[q] >= split_at), None)
+                split = f"🟨 {hit}" if hit else "—"
+        exc = sorted({r for r in sub["rm"] if r and r != eff_cluster_rm(c)})
+        summ.append({"Market": clusters[c]["market"], "Cluster": c, "Area": clusters[c]["area"],
+                     "RM": eff_cluster_rm(c) or "Open", "Coverage": how,
+                     "Open": cc["Open"], "Pipeline": cc["Pipeline"], "Total (Q1'28+)": cc["Q1'28+"],
+                     "Ready to split": split, "Stand exceptions": ", ".join(exc)})
+    st.dataframe(pd.DataFrame(summ), use_container_width=True, hide_index=True, height=36 * 25)
+
+    # ── RM workload ───────────────────────────────────────────────────────────
+    st.markdown("#### 👥 RM Workload — stands covered now and as the pipeline opens")
+    st.caption(f"Cumulative stands per RM by quarter. Cells over **{rm_max}** are flagged.")
+    wl = []
+    for rm in rm_list + [""]:
+        sub = res[res["rm"] == rm]
+        if sub.empty:
+            continue
+        cc = cum_counts(sub)
+        mk = [clusters[c]["market"] for c in cl_order if c in set(sub["cluster"])]
+        wl.append({"RM": rm or "⚠️ No RM assigned",
+                   "Home Market": clusters.get(rm_home.get(rm, ""), {}).get("market", ""),
+                   "Markets covered": ", ".join(mk), "Open now": cc["Open"],
+                   **{q: cc[q] for q in _ROSTER_QUARTERS}, "Pipeline": cc["Pipeline"]})
+    wl_df = pd.DataFrame(wl)
+
+    def _hi(v):
+        if isinstance(v, (int, float)) and v > rm_max:
+            return "background-color: rgba(172,36,48,0.18); font-weight: 700"
+        return ""
+    st.dataframe(wl_df.style.map(_hi, subset=["Open now"] + _ROSTER_QUARTERS),
+                 use_container_width=True, hide_index=True, height=min(40 + len(wl_df) * 35, 640))
+
+    # ── Save (download → send to Claude to publish) ───────────────────────────
+    st.divider()
+    out = {
+        "_updated": _dt.date.today().isoformat(),
+        "_note": "Edited on the Cluster Roster tab; download and send to Claude to publish.",
+        "split_threshold": int(split_at),
+        "rm_max_stands": int(rm_max),
+        "rms": [{"name": n, "home": rm_home.get(n, "")} for n in rm_list],
+        "clusters": cl_state,
+        "stand_overrides": dict(sorted(new_ov.items())),
+    }
+    _strip = lambda d: {k: v for k, v in d.items() if not k.startswith("_")}
+    changed = _strip(out) != _strip(published)
+    d1, d2 = st.columns([1, 2])
+    d1.download_button(
+        "💾 Download roster file", data=json.dumps(out, indent=2).encode("utf-8"),
+        file_name=f"cluster_roster_{_dt.date.today().strftime('%Y%m%d')}.json", mime="application/json",
+        type="primary" if changed else "secondary", key="roster_dl", use_container_width=True)
+    d2.caption("✏️ **You have unpublished changes** — download the file and send it to Claude to publish."
+               if changed else "No changes from the published roster.")
+
+
+# ─────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────
 def main():
@@ -7825,6 +8133,7 @@ def main():
         "💡 Wins & Opportunities",
         "⚡ Utilities & R&M",
         "🏗️ Pipeline (Draft)",
+        "🧭 Cluster Roster",
     ]
     tabs = st.tabs(tab_names)
 
@@ -7836,6 +8145,7 @@ def main():
     with tabs[5]:  tab_insights(dash)
     with tabs[6]:  tab_utilities(dash)
     with tabs[7]:  tab_pipeline(dash)
+    with tabs[8]:  tab_roster(dash)
     # Forecast and Speed of Service archived — functions retained but tabs hidden
 
 

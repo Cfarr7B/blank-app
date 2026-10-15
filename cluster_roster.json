@@ -1,0 +1,197 @@
+{
+  "_updated": "2026-10-15",
+  "_note": "Edited on the Cluster Roster tab; download and send to Claude to publish.",
+  "split_threshold": 4,
+  "rm_max_stands": 8,
+  "rms": [
+    {
+      "name": "Anne Springer",
+      "home": "C2"
+    },
+    {
+      "name": "April Reyes",
+      "home": "C1"
+    },
+    {
+      "name": "Cristina Pimentel",
+      "home": "C17"
+    },
+    {
+      "name": "Gerika Tunnell",
+      "home": "C20"
+    },
+    {
+      "name": "Jaden Jenkins",
+      "home": "C19"
+    },
+    {
+      "name": "Madison Macias",
+      "home": "C9"
+    },
+    {
+      "name": "Matt Avery",
+      "home": "C16"
+    },
+    {
+      "name": "Mia Walker",
+      "home": "C11"
+    },
+    {
+      "name": "Olivia Kaminski",
+      "home": "C15"
+    },
+    {
+      "name": "Robmikia Holman",
+      "home": "C3"
+    },
+    {
+      "name": "Rosey Olson",
+      "home": "C7"
+    },
+    {
+      "name": "Ryley Cooper",
+      "home": "C4"
+    },
+    {
+      "name": "Ryley Gee",
+      "home": "C6"
+    },
+    {
+      "name": "Valeria Verdugo",
+      "home": "C5"
+    }
+  ],
+  "clusters": {
+    "C1": {
+      "rm": "April Reyes",
+      "covered_with": ""
+    },
+    "C2": {
+      "rm": "Anne Springer",
+      "covered_with": ""
+    },
+    "C3": {
+      "rm": "Robmikia Holman",
+      "covered_with": ""
+    },
+    "C4": {
+      "rm": "Ryley Cooper",
+      "covered_with": ""
+    },
+    "C5": {
+      "rm": "Valeria Verdugo",
+      "covered_with": ""
+    },
+    "C6": {
+      "rm": "Ryley Gee",
+      "covered_with": ""
+    },
+    "C7": {
+      "rm": "Rosey Olson",
+      "covered_with": ""
+    },
+    "C8": {
+      "rm": "",
+      "covered_with": "C7"
+    },
+    "C9": {
+      "rm": "Madison Macias",
+      "covered_with": ""
+    },
+    "C10": {
+      "rm": "",
+      "covered_with": "C11"
+    },
+    "C11": {
+      "rm": "Mia Walker",
+      "covered_with": ""
+    },
+    "C12": {
+      "rm": "",
+      "covered_with": "C11"
+    },
+    "C13": {
+      "rm": "",
+      "covered_with": "C11"
+    },
+    "C14": {
+      "rm": "",
+      "covered_with": "C15"
+    },
+    "C15": {
+      "rm": "Olivia Kaminski",
+      "covered_with": ""
+    },
+    "C16": {
+      "rm": "Matt Avery",
+      "covered_with": ""
+    },
+    "C17": {
+      "rm": "Cristina Pimentel",
+      "covered_with": ""
+    },
+    "C18": {
+      "rm": "",
+      "covered_with": "C17"
+    },
+    "C19": {
+      "rm": "Jaden Jenkins",
+      "covered_with": ""
+    },
+    "C20": {
+      "rm": "Gerika Tunnell",
+      "covered_with": ""
+    },
+    "C21": {
+      "rm": "",
+      "covered_with": "C22"
+    },
+    "C22": {
+      "rm": "",
+      "covered_with": ""
+    },
+    "C23": {
+      "rm": "",
+      "covered_with": ""
+    },
+    "C24": {
+      "rm": "",
+      "covered_with": ""
+    }
+  },
+  "stand_overrides": {
+    "87": {
+      "rm": "Robmikia Holman"
+    },
+    "333": {
+      "rm": "Jaden Jenkins"
+    },
+    "392": {
+      "rm": "Madison Macias"
+    },
+    "484": {
+      "rm": "Matt Avery"
+    },
+    "492": {
+      "rm": "Jaden Jenkins"
+    },
+    "515": {
+      "rm": "Olivia Kaminski"
+    },
+    "674": {
+      "rm": "Gerika Tunnell"
+    },
+    "872": {
+      "rm": "Ryley Gee"
+    },
+    "986": {
+      "rm": "Matt Avery"
+    },
+    "1118": {
+      "rm": "Ryley Cooper"
+    },
+    "1693": {
+      "rm": "Ryley Gee"
+    }
+  }
+}
