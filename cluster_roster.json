@@ -3,6 +3,14 @@
   "_note": "Edited on the Cluster Roster tab; download and send to Claude to publish.",
   "split_threshold": 4,
   "rm_max_stands": 8,
+  "directors": {
+    "West Texas": "Lauren Fowler",
+    "New Mexico": "Lauren Fowler",
+    "Oklahoma": "Allen Strange",
+    "Central Texas": "Allen Strange",
+    "Florida Panhandle": "",
+    "Florida Southwest": "Denali Martinez"
+  },
   "rms": [
     {
       "name": "Anne Springer",

@@ -7981,6 +7981,16 @@ def tab_roster(dash):
             rm_home[n] = unlab.get(r["Home Market"] or "", "")
     rm_list = list(rm_home.keys())
 
+    # ── Directors of Operations (one per area) ─────────────────────────────────
+    with st.expander("🧑‍💼 Directors of Operations — who each area reports to", expanded=False):
+        src_do = src.get("directors", {})
+        do_df = pd.DataFrame([{"Area": a, "DO": src_do.get(a, "")} for a in areas])
+        do_ed = st.data_editor(
+            do_df, key=f"roster_do_{ver}", hide_index=True, use_container_width=True, disabled=["Area"],
+            column_config={"DO": st.column_config.TextColumn("Director of Operations (blank = open)")})
+    area_do = {r["Area"]: (r["DO"].strip() if isinstance(r["DO"], str) else "") for _, r in do_ed.iterrows()}
+    do_of = lambda area: area_do.get(area, "") or "DO (Open)"
+
     # ── Market coverage editor ────────────────────────────────────────────────
     st.markdown("#### 🗺️ Market Coverage")
     st.caption("Pick the market's own RM, **or** set **Covered with** to roll it up under another market's RM "
@@ -8101,23 +8111,37 @@ def tab_roster(dash):
                 split = f"🟨 {hit}" if hit else "—"
         exc = sorted({r for r in sub["rm"] if r and r != eff_cluster_rm(c)})
         summ.append({"Market": clusters[c]["market"], "Cluster": c, "Area": clusters[c]["area"],
-                     "RM": eff_cluster_rm(c) or "Open", "Coverage": how,
+                     "DO": do_of(clusters[c]["area"]), "RM": eff_cluster_rm(c) or "Open", "Coverage": how,
                      "Open": cc["Open"], "Pipeline": cc["Pipeline"], "Total (Q1'28+)": cc["Q1'28+"],
                      "Ready to split": split, "Stand exceptions": ", ".join(exc)})
     st.dataframe(pd.DataFrame(summ), use_container_width=True, hide_index=True, height=36 * 25)
 
     # ── RM workload ───────────────────────────────────────────────────────────
-    st.markdown("#### 👥 RM Workload — stands covered now and as the pipeline opens")
-    st.caption(f"Cumulative stands per RM by quarter. Cells over **{rm_max}** are flagged.")
+    st.markdown("#### 👥 RM Workload by Director of Operations")
+    st.caption(f"Cumulative stands per RM by quarter, grouped under each RM's DO (by home market's area). "
+               f"RM cells over **{rm_max}** are flagged.")
+    res["area"] = res["cluster"].map(lambda c: clusters.get(c, {}).get("area", ""))
     wl = []
-    for rm in rm_list + [""]:
+    for rm in rm_list:
         sub = res[res["rm"] == rm]
+        home = rm_home.get(rm, "")
+        area = clusters.get(home, {}).get("area") or (sub["area"].mode().iat[0] if not sub.empty else "")
+        if sub.empty and not home:
+            continue
+        cc = cum_counts(sub)
+        mk = [clusters[c]["market"] for c in cl_order if c in set(sub["cluster"])]
+        wl.append({"_do": do_of(area), "_area": area, "RM": rm,
+                   "Home Market": clusters.get(home, {}).get("market", ""),
+                   "Markets covered": ", ".join(mk), "Open now": cc["Open"],
+                   **{q: cc[q] for q in _ROSTER_QUARTERS}, "Pipeline": cc["Pipeline"]})
+    # Stands with no RM — one row per area so they land under the right DO
+    for area in areas:
+        sub = res[(res["rm"] == "") & (res["area"] == area)]
         if sub.empty:
             continue
         cc = cum_counts(sub)
         mk = [clusters[c]["market"] for c in cl_order if c in set(sub["cluster"])]
-        wl.append({"RM": rm or "⚠️ No RM assigned",
-                   "Home Market": clusters.get(rm_home.get(rm, ""), {}).get("market", ""),
+        wl.append({"_do": do_of(area), "_area": area, "RM": "⚠️ No RM assigned", "Home Market": "",
                    "Markets covered": ", ".join(mk), "Open now": cc["Open"],
                    **{q: cc[q] for q in _ROSTER_QUARTERS}, "Pipeline": cc["Pipeline"]})
     wl_df = pd.DataFrame(wl)
@@ -8126,8 +8150,27 @@ def tab_roster(dash):
         if isinstance(v, (int, float)) and v > rm_max:
             return "background-color: rgba(172,36,48,0.18); font-weight: 700"
         return ""
-    st.dataframe(wl_df.style.map(_hi, subset=["Open now"] + _ROSTER_QUARTERS),
-                 use_container_width=True, hide_index=True, height=min(40 + len(wl_df) * 35, 640))
+
+    num_cols = ["Open now"] + _ROSTER_QUARTERS + ["Pipeline"]
+    do_order = list(dict.fromkeys(do_of(a) for a in areas))
+    for do in do_order:
+        part = wl_df[wl_df["_do"] == do]
+        if part.empty:
+            continue
+        do_areas = [a for a in areas if do_of(a) == do]
+        n_rm = int((part["RM"] != "⚠️ No RM assigned").sum())
+        st.markdown(f"**{do}** · {', '.join(do_areas)} — {n_rm} RM{'s' if n_rm != 1 else ''} · "
+                    f"**{int(part['Open now'].sum())}** stands open now → **{int(part[_ROSTER_QUARTERS[-1]].sum())}** "
+                    f"by {_ROSTER_QUARTERS[-1]}")
+        part = part.assign(_ord=part["_area"].map(areas.index),
+                           _na=part["RM"].eq("⚠️ No RM assigned")).sort_values(["_na", "_ord", "RM"])
+        show = part[["RM", "Home Market", "Markets covered"] + num_cols].reset_index(drop=True)
+        total = {"RM": f"Total — {do}", "Home Market": "", "Markets covered": ""}
+        total.update({c: int(show[c].sum()) for c in num_cols})
+        show = pd.concat([show, pd.DataFrame([total])], ignore_index=True)
+        rm_rows = show.index[:-1]
+        st.dataframe(show.style.map(_hi, subset=pd.IndexSlice[rm_rows, ["Open now"] + _ROSTER_QUARTERS]),
+                     use_container_width=True, hide_index=True, height=40 + len(show) * 35)
 
     # ── Save (download → send to Claude to publish) ───────────────────────────
     st.divider()
@@ -8136,6 +8179,7 @@ def tab_roster(dash):
         "_note": "Edited on the Cluster Roster tab; download and send to Claude to publish.",
         "split_threshold": int(split_at),
         "rm_max_stands": int(rm_max),
+        "directors": {a: area_do.get(a, "") for a in areas},
         "rms": [{"name": n, "home": rm_home.get(n, "")} for n in rm_list],
         "clusters": cl_state,
         "stand_overrides": dict(sorted(new_ov.items())),
