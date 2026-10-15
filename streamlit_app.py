@@ -7377,7 +7377,7 @@ def tab_pipeline(dash):
 
     opened_rows_calc = []
     for o in _pdata["opened_shifts"]:
-        d_base   = _parse_d(o.get("dec18", o.get("jan8", o.get("jan15",""))))
+        d_base   = _parse_d(o.get("dec18") or o.get("jan8") or o.get("jan15") or "")
         d_actual = _parse_d(o.get("actual_open",""))
         delta = (d_actual - d_base).days if d_base and d_actual else 0
         opened_rows_calc.append({**o, "delta_days": delta})
@@ -7533,7 +7533,7 @@ def tab_pipeline(dash):
         for fs in ["%m/%d/%y", "%m/%d/%Y"]:
             try: return _dt.datetime.strptime(v, fs).date()
             except: pass
-        v2 = str(r.get("dec18", r.get("jan8", r.get("jan15",""))) or "")
+        v2 = str(r.get("dec18") or r.get("jan8") or r.get("jan15") or "")
         for fs in ["%m/%d/%y", "%m/%d/%Y"]:
             try: return _dt.datetime.strptime(v2, fs).date()
             except: pass
@@ -7591,7 +7591,7 @@ def tab_pipeline(dash):
         opened_display_rows.append({
             "Stand": f"{r['city']}, {r['state']}",
             "Store #": r.get("store",""),
-            "Dec 18 Projected": r.get("dec18", r.get("jan8", r.get("jan15",""))),
+            "Dec 18 Projected": r.get("dec18") or r.get("jan8") or r.get("jan15") or "",
             "Actual Open": r.get("actual_open",""),
             "vs Dec 18": slip,
             "Sales Impact": rev,

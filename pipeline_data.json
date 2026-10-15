@@ -2912,7 +2912,7 @@
     },
     {
       "rsh": "RSH-00104",
-      "city": "OKC",
+      "city": "Oklahoma City",
       "state": "OK",
       "store": "001693",
       "jan15": "1/25/27",
@@ -6154,7 +6154,8 @@
       "jan8": "6/1/26",
       "actual_open": "6/1/26",
       "dec18": "6/1/26",
-      "cluster": "C14"
+      "cluster": "C14",
+      "store": "001122"
     },
     {
       "rsh": "RSH-00079",
@@ -6181,59 +6182,35 @@
     {
       "rsh": "RSH-00106",
       "store": "001236",
-      "phase": "5. Construction",
-      "address": "12902 Indiana Ave",
       "city": "Lubbock",
       "state": "TX",
-      "region": "W. TX",
-      "permit_sub": "11/12/25",
-      "permit_appr": "4/9/26",
-      "cs": "4/8/26",
-      "bd": "4/24/26",
-      "open": "6/29/26",
-      "notes": "GC looking to pull CO by as much as a month. powered as of 5/15. water and sewer connected.",
       "actual_open": "6/29/26",
       "dec18": "6/29/26",
       "jan8": "6/29/26",
-      "cluster": "C1"
+      "cluster": "C1",
+      "jan15": "6/29/26"
     },
     {
       "rsh": "RSH-00116",
       "store": "001119",
-      "phase": "5. Construction",
-      "address": "210 23rd St",
       "city": "Canyon",
       "state": "TX",
-      "region": "W. TX",
-      "permit_sub": "9/15/25",
-      "permit_appr": "3/18/26",
-      "cs": "3/2/26",
-      "bd": "4/15/26",
-      "open": "6/29/26",
-      "notes": "confirm CO date with GC.  water and sewer tapped. power tracking for 5/22 (Primary is run and buried). need green tag then excel will pull power and energize.",
       "actual_open": "6/29/26",
       "dec18": "6/15/26",
       "jan8": "6/8/26",
-      "cluster": "C2"
+      "cluster": "C2",
+      "jan15": "6/8/26"
     },
     {
       "rsh": "RSH-00095",
       "store": "000518",
-      "phase": "5. Construction",
-      "address": "1420 Ohio Avenue",
       "city": "Lynn Haven",
       "state": "FL",
-      "region": "FLPH",
-      "permit_sub": "3/14/25",
-      "permit_appr": "1/2/26",
-      "cs": "1/22/26",
-      "bd": "2/18/26",
-      "open": "6/29/26",
-      "notes": "Backfilling for demuck started 4/29. water and sewer connected. powered 5/15.",
       "actual_open": "6/29/26",
       "dec18": "5/18/26",
       "jan8": "6/1/26",
-      "cluster": "C18"
+      "cluster": "C18",
+      "jan15": "6/1/26"
     },
     {
       "store": "001333",
@@ -6242,52 +6219,9 @@
       "state": "OK",
       "jan15": "8/10/26",
       "actual_open": "8/10/26",
-      "cluster": "C7"
-    },
-    {
-      "store": "000547",
-      "rsh": "RSH-00079",
-      "city": "Edmond",
-      "state": "OK",
-      "jan15": "",
-      "actual_open": "6/22/26",
-      "cluster": "C6"
-    },
-    {
-      "store": "001332",
-      "rsh": "RSH-00123",
-      "city": "Altus",
-      "state": "OK",
-      "jan15": "",
-      "actual_open": "6/22/26",
-      "cluster": "C9"
-    },
-    {
-      "store": "000518",
-      "rsh": "RSH-00095",
-      "city": "Lynn Haven",
-      "state": "FL",
-      "jan15": "",
-      "actual_open": "6/29/26",
-      "cluster": "C18"
-    },
-    {
-      "store": "001236",
-      "rsh": "RSH-00106",
-      "city": "Lubbock",
-      "state": "TX",
-      "jan15": "",
-      "actual_open": "6/29/26",
-      "cluster": "C1"
-    },
-    {
-      "store": "001119",
-      "rsh": "RSH-00116",
-      "city": "Canyon",
-      "state": "TX",
-      "jan15": "",
-      "actual_open": "6/29/26",
-      "cluster": "C2"
+      "cluster": "C7",
+      "dec18": "8/10/26",
+      "jan8": "8/10/26"
     },
     {
       "rsh": "RSH-00071",
@@ -6296,56 +6230,91 @@
       "state": "FL",
       "jan15": "6/1/26",
       "actual_open": "8/17/26",
-      "cluster": "C20"
+      "cluster": "C20",
+      "dec18": "5/25/26",
+      "jan8": "6/1/26"
     },
     {
       "rsh": "RSH-00110",
       "snapshot": "sep3",
       "city": "Granbury",
       "state": "TX",
-      "cluster": "C13"
+      "cluster": "C13",
+      "store": "001156",
+      "actual_open": "8/31/26",
+      "dec18": "7/20/26",
+      "jan8": "7/20/26",
+      "jan15": "7/20/26"
     },
     {
       "rsh": "RSH-00078",
       "snapshot": "sep24",
       "city": "Holiday",
       "state": "FL",
-      "cluster": "C22"
+      "cluster": "C22",
+      "store": "000674",
+      "actual_open": "9/21/26",
+      "dec18": "7/6/26",
+      "jan8": "7/6/26",
+      "jan15": "7/6/26"
     },
     {
       "rsh": "RSH-00104",
       "snapshot": "sep24",
-      "city": "OKC",
+      "city": "Oklahoma City",
       "state": "OK",
-      "cluster": "C8"
+      "cluster": "C8",
+      "store": "001693",
+      "actual_open": "9/14/26",
+      "jan15": "1/25/27"
     },
     {
       "rsh": "RSH-00114",
       "snapshot": "sep24",
       "city": "Pensacola",
       "state": "FL",
-      "cluster": "C16"
+      "cluster": "C16",
+      "store": "001154",
+      "actual_open": "9/14/26",
+      "dec18": "9/7/26",
+      "jan8": "9/7/26",
+      "jan15": "9/7/26"
     },
     {
       "rsh": "RSH-00102",
       "snapshot": "sep24",
       "city": "Snyder",
       "state": "TX",
-      "cluster": "C1"
+      "cluster": "C1",
+      "store": "001118",
+      "actual_open": "9/14/26",
+      "dec18": "6/15/26",
+      "jan8": "6/15/26",
+      "jan15": "6/15/26"
     },
     {
       "rsh": "RSH-00081",
       "snapshot": "sep24",
       "city": "Mary Esther",
       "state": "FL",
-      "cluster": "C17"
+      "cluster": "C17",
+      "store": "000986",
+      "actual_open": "9/14/26",
+      "dec18": "5/18/26",
+      "jan8": "5/18/26",
+      "jan15": "5/18/26"
     },
     {
       "rsh": "RSH-00087",
       "snapshot": "sep24",
       "city": "Winter Haven",
       "state": "FL",
-      "cluster": "C21"
+      "cluster": "C21",
+      "store": "000883",
+      "actual_open": "9/21/26",
+      "dec18": "7/27/26",
+      "jan8": "8/17/26",
+      "jan15": "8/17/26"
     },
     {
       "rsh": "RSH-00092",
@@ -6356,7 +6325,8 @@
       "dec18": "7/6/26",
       "jan8": "7/20/26",
       "actual_open": "9/28/26",
-      "cluster": "C23"
+      "cluster": "C23",
+      "jan15": "7/20/26"
     },
     {
       "rsh": "RSH-00109",
@@ -6367,7 +6337,8 @@
       "dec18": "6/8/26",
       "jan8": "6/8/26",
       "actual_open": "9/28/26",
-      "cluster": "C8"
+      "cluster": "C8",
+      "jan15": "6/8/26"
     },
     {
       "rsh": "RSH-00139",
@@ -6378,7 +6349,8 @@
       "dec18": "11/2/26",
       "jan8": "11/2/26",
       "actual_open": "10/12/26",
-      "cluster": "C7"
+      "cluster": "C7",
+      "jan15": "11/2/26"
     }
   ],
   "new_since_jan15": [
@@ -7502,7 +7474,7 @@
     },
     {
       "rsh": "RSH-00104",
-      "city": "OKC",
+      "city": "Oklahoma City",
       "state": "OK",
       "phase": "4. Permitting",
       "permit_sub_delta": null,
