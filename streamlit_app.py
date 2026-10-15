@@ -6978,6 +6978,22 @@ def _phase_label(phase):
     }
     return mapping.get(phase, phase)
 
+
+def _norm_phase(phase):
+    """Map pipeline report phases ("7. Construction Phase") to the app's labels ("5. Construction")."""
+    s = str(phase or "")
+    for kw, label in (("Construction", "5. Construction"), ("Permitting", "4. Permitting"),
+                      ("Design", "3. Design"), ("Due Diligence", "2. Due Diligence"), ("LOI", "1. LOI")):
+        if kw in s:
+            return label
+    return s
+
+
+def _cluster_label(cid, clusters):
+    """Market name first, cluster # second — e.g. "Tampa Bay · C22"."""
+    info = clusters.get(cid or "", {})
+    return f"{info['market']} · {cid}" if info else (cid or "Unassigned")
+
 @st.cache_data(show_spinner=False)
 def _build_gantt_fig(gantt_df_json: str, today_str: str):
     import json as _j
@@ -7148,6 +7164,13 @@ def _load_pipeline_data(_mtime: float) -> dict:
 def _get_pipeline_dfs(_mtime: float):
     data = _load_pipeline_data(_mtime)
     df = pd.DataFrame(data["upcoming"])
+    df["phase"]   = df["phase"].map(_norm_phase)
+    _clusters     = data.get("clusters", {})
+    if "cluster" not in df.columns:
+        df["cluster"] = ""
+    df["cluster"] = df["cluster"].fillna("")
+    df["market"]  = df["cluster"].map(lambda c: _clusters.get(c, {}).get("market", ""))
+    df["area"]    = df["cluster"].map(lambda c: _clusters.get(c, {}).get("area", ""))
     df["open_dt"] = pd.to_datetime(df["open"], format="%m/%d/%y", errors="coerce")
     df["cs_dt"]   = pd.to_datetime(df["cs"],   format="%m/%d/%y", errors="coerce")
     df = df.sort_values("open_dt").reset_index(drop=True)
@@ -7175,21 +7198,37 @@ def tab_pipeline(dash):
 
     AVG_REV_PER_WEEK = 45_000
 
-    fc1, fc2, fc3 = st.columns([1, 1, 1])
+    _clusters = _pdata.get("clusters", {})
+    _cl_order = list(_clusters.keys())          # C1…C24, grouped by area
+    _area_opts = list(dict.fromkeys(v["area"] for v in _clusters.values()))
+
+    fc1, fc2, fc3, fc4 = st.columns([1, 1, 1, 2])
     with fc1:
         phase_opts = ["All Phases", "5. Construction", "4. Permitting", "3. Design", "2. Due Diligence"]
-        sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase")
+        sel_phase = st.selectbox("Phase", phase_opts, key="pipe_phase", format_func=_phase_label)
     with fc2:
         state_opts = ["All States"] + sorted(df["state"].unique().tolist())
         sel_state = st.selectbox("State", state_opts, key="pipe_state")
     with fc3:
-        region_opts = sorted(df["region"].dropna().unique().tolist())
-        sel_regions = st.multiselect("Region(s)", region_opts, placeholder="All Regions", key="pipe_region")
+        sel_area = st.selectbox("Area", ["All Areas"] + _area_opts, key="pipe_area")
+    with fc4:
+        _mkt_opts = [c for c in _cl_order if sel_area == "All Areas" or _clusters[c]["area"] == sel_area]
+        sel_clusters = st.multiselect(
+            "Market(s)", _mkt_opts, placeholder="All Markets", key="pipe_cluster",
+            format_func=lambda c: _cluster_label(c, _clusters))
+
+    # Clusters in scope for the Area / Market filters (None = no geographic filter)
+    if sel_clusters:
+        _active_cl = set(sel_clusters)
+    elif sel_area != "All Areas":
+        _active_cl = {c for c in _cl_order if _clusters[c]["area"] == sel_area}
+    else:
+        _active_cl = None
 
     dff = df.copy()
     if sel_phase != "All Phases":  dff = dff[dff["phase"] == sel_phase]
     if sel_state != "All States":  dff = dff[dff["state"] == sel_state]
-    if sel_regions:                dff = dff[dff["region"].isin(sel_regions)]
+    if _active_cl is not None:     dff = dff[dff["cluster"].isin(_active_cl)]
 
     stands_df_pipe = get_stands_df(dash)
     # Only count stores from the most recent period to exclude sold/divested markets
@@ -7254,10 +7293,8 @@ def tab_pipeline(dash):
     shifts_df = shifts_df[~shifts_df["rsh"].isin(_opened_rshs)]
     if sel_state != "All States":
         shifts_df = shifts_df[shifts_df["state"] == sel_state]
-    if sel_regions:
-        shifts_df = shifts_df[shifts_df["state"].isin(
-            dff["state"].unique().tolist()
-        )]
+    if _active_cl is not None:
+        shifts_df = shifts_df[shifts_df.get("cluster", pd.Series("", index=shifts_df.index)).isin(_active_cl)]
     dff_rshs = set(dff["rsh"].tolist())
     _new_since_jan15 = _pdata.get("new_since_dec18", _pdata.get("new_since_jan8", _pdata.get("new_since_jan15", [])))
     filtered_new_since = [r for r in _new_since_jan15 if r in dff_rshs]
@@ -7511,8 +7548,12 @@ def tab_pipeline(dash):
         st.markdown("**🆕 New to Pipeline Since Dec 18**")
         new_stands_info = [r for r in _pdata["upcoming"] if r["rsh"] in filtered_new_since]
         if new_stands_info:
-            new_df = pd.DataFrame(new_stands_info)[["city","state","phase","open"]].copy()
-            new_df.columns = ["City","State","Phase","Est. Opening"]
+            new_df = pd.DataFrame(new_stands_info)
+            new_df["market"] = new_df.get("cluster", pd.Series("", index=new_df.index)).map(
+                lambda c: _clusters.get(c, {}).get("market", ""))
+            new_df["phase"] = new_df["phase"].map(lambda p: _phase_label(_norm_phase(p)))
+            new_df = new_df[["market","city","state","phase","open"]].copy()
+            new_df.columns = ["Market","City","State","Phase","Est. Opening"]
             st.dataframe(new_df, use_container_width=True, hide_index=True)
 
     st.divider()
@@ -7540,9 +7581,9 @@ def tab_pipeline(dash):
     ms_phase = st.selectbox("Show Phase", ms_phase_opts, key="ms_phase_sel")
     ms_rows = [
         r for r in _ms_data
-        if (ms_phase == "All Phases" or r["phase"] == ms_phase)
+        if (ms_phase == "All Phases" or _norm_phase(r["phase"]) == ms_phase)
         and (sel_state == "All States" or r["state"] == sel_state)
-        and (not sel_regions or r.get("region") in sel_regions)
+        and (_active_cl is None or r.get("cluster") in _active_cl)
         and any(r.get(f"{k}_delta") is not None for k in ["permit_sub","permit_appr","cs","open"])
     ]
     if not ms_rows:
@@ -7563,8 +7604,8 @@ def tab_pipeline(dash):
 
     st.divider()
     st.markdown("#### 📋 Upcoming Openings")
-    table_df = dff[["phase","address","city","state","region","cs","bd","open","store","rsh"]].copy()
-    table_df.columns = ["Phase","Address","City","State","Region",
+    table_df = dff[["phase","market","address","city","state","cluster","cs","bd","open","store","rsh"]].copy()
+    table_df.columns = ["Phase","Market","Address","City","State","Cluster",
                         "Const. Start","Building Drop","Est. Opening","Store #","RSH"]
     table_df["Phase"]   = table_df["Phase"].map(_phase_label)
     table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
@@ -7632,45 +7673,18 @@ def tab_pipeline(dash):
 
     st.divider()
 
-    # ── Regional Capacity Planning ────────────────────────────────────────────
-    st.markdown("#### 🗺️ Regional Stand Count — Current + Pipeline Projection")
-    st.caption("Shows total stands per region by quarter, combining current open locations and projected pipeline opens. Use to identify when a region may need an additional RM.")
+    # ── Market (Cluster) Capacity Planning ────────────────────────────────────
+    st.markdown("#### 🗺️ Stand Count by Market — Current + Pipeline Projection")
+    st.caption("Total stands per market (cluster) by quarter, combining open stands and projected pipeline opens. "
+               "Use to see when a market may need an additional RM. Follows the Area / Market filters above.")
 
-    # Map P&L region labels → pipeline region labels
-    _PL_TO_PIPE = {
-        "FL Panhandle East":  "FLPH",
-        "FL Panhandle West":  "FLPH",
-        "FL West Coast":      "FLSW",
-        "South Central TX":   "C. TX",
-        "North Central TX":   "C. TX",
-        "West TX":            "W. TX",
-        "Permian Basin":      "W. TX",
-        "North OK":           "OKC",
-        "Central OK":         "OKC",
-        "South OK":           "OKC",
-        "Middle Earth":       "OKC",
-        "NM":                 "NM",
-    }
+    _cap_clusters = [c for c in _cl_order if _active_cl is None or c in _active_cl]
 
-    # Current stand count per pipeline region (from latest P&L period)
-    _stands_all = get_stands_df(dash)
-    _all_regions_pipe = ["FLPH", "FLSW", "C. TX", "OKC", "W. TX", "NM"]
-    if not _stands_all.empty:
-        _latest_pk2 = sorted(
-            _stands_all["Period_Key"].unique(),
-            key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1]))
-        )[-1]
-        _current_stands = _stands_all[_stands_all["Period_Key"] == _latest_pk2]
-        _current_by_region = {}
-        for reg in _all_regions_pipe:
-            _current_by_region[reg] = 0
-        for _, row in _current_stands.iterrows():
-            pl_reg = row.get("Region", "")
-            pipe_reg = _PL_TO_PIPE.get(pl_reg)
-            if pipe_reg:
-                _current_by_region[pipe_reg] = _current_by_region.get(pipe_reg, 0) + 1
-    else:
-        _current_by_region = {r: 0 for r in _all_regions_pipe}
+    # Current open stands per cluster (store_clusters = every open stand, incl. opens after the last P&L)
+    _current_by_cl = {c: 0 for c in _cl_order}
+    for _sid, _c in _pdata.get("store_clusters", {}).items():
+        if _c in _current_by_cl:
+            _current_by_cl[_c] += 1
 
     # Build quarter labels Q2'26 through Q4'27+
     def _to_quarter(date_str):
@@ -7684,7 +7698,7 @@ def tab_pipeline(dash):
             except: pass
         return None
 
-    _quarter_order = ["Q2'26","Q3'26","Q4'26","Q1'27","Q2'27","Q3'27","Q4'27","Q1'28+"]
+    _quarter_order = ["Q4'26","Q1'27","Q2'27","Q3'27","Q4'27","Q1'28+"]
 
     def _qkey(qs):
         if qs is None: return 99
@@ -7693,67 +7707,65 @@ def tab_pipeline(dash):
             return int(y) * 10 + int(q[1])
         except: return 99
 
-    # Count pipeline opens by region × quarter
-    _pipe_opens = {r: {q: 0 for q in _quarter_order} for r in _all_regions_pipe}
+    # Count pipeline opens by cluster × quarter
+    _pipe_opens = {c: {q: 0 for q in _quarter_order} for c in _cl_order}
     for _s in _pdata.get("upcoming", []):
-        _reg = _s.get("region", "")
-        if _reg not in _all_regions_pipe:
+        _c = _s.get("cluster", "")
+        if _c not in _pipe_opens:
             continue
         _q = _to_quarter(_s.get("open", ""))
         if _q is None: continue
-        # Bucket anything beyond Q4'27 into Q1'28+
         if _qkey(_q) > _qkey("Q4'27"):
             _q = "Q1'28+"
-        if _q in _quarter_order:
-            _pipe_opens[_reg][_q] += 1
+        elif _qkey(_q) < _qkey("Q4'26"):
+            _q = "Q4'26"
+        _pipe_opens[_c][_q] += 1
 
-    # Build cumulative table
+    # Build cumulative table (Market name leads; cluster # is secondary)
     _cap_rows = []
-    for reg in _all_regions_pipe:
-        row = {"Region": reg, "Current": _current_by_region.get(reg, 0)}
+    for c in _cap_clusters:
+        info = _clusters[c]
+        row = {"Market": info["market"], "Cluster": c, "Area": info["area"],
+               "RM": info.get("rm") or "Open", "Current": _current_by_cl.get(c, 0)}
         running = row["Current"]
         for q in _quarter_order:
-            running += _pipe_opens[reg].get(q, 0)
+            running += _pipe_opens[c].get(q, 0)
             row[q] = running
-        row["Opens 2026+"] = sum(_pipe_opens[reg].values())
+        row["Pipeline"] = sum(_pipe_opens[c].values())
         _cap_rows.append(row)
-
     _cap_df = pd.DataFrame(_cap_rows)
 
-    # Display as styled table + line chart
-    _cap_col1, _cap_col2 = st.columns([1, 2])
-    with _cap_col1:
+    if _cap_df.empty:
+        st.info("No markets in the current filter selection.")
+    else:
         st.markdown("**Cumulative Stand Count by Quarter**")
-        _display_df = _cap_df[["Region","Current"] + _quarter_order].copy()
-        # Add a Total row summing all regions per column
-        _total_row = {"Region": "TOTAL"}
-        for _col in ["Current"] + _quarter_order:
-            _total_row[_col] = _display_df[_col].sum()
+        _display_df = _cap_df[["Market","Cluster","Area","RM","Current"] + _quarter_order + ["Pipeline"]].copy()
+        _total_row = {"Market": "TOTAL", "Cluster": "", "Area": "", "RM": ""}
+        for _col in ["Current"] + _quarter_order + ["Pipeline"]:
+            _total_row[_col] = int(_display_df[_col].sum())
         _display_df = pd.concat([_display_df, pd.DataFrame([_total_row])], ignore_index=True)
-        st.dataframe(_display_df, use_container_width=True, hide_index=True, height=310)
+        st.dataframe(_display_df, use_container_width=True, hide_index=True,
+                     height=min(40 + len(_display_df) * 35, 560))
 
-    with _cap_col2:
-        st.markdown("**Growth Trajectory by Region**")
+        st.markdown("**Growth Trajectory by Area**")
         _fig_cap = go.Figure()
-        _reg_colors_cap = {
-            "FLPH": "#0ea5e9", "FLSW": "#2563eb",
-            "C. TX": "#AC2430", "W. TX": "#e97316",
-            "OKC":  "#16a34a", "NM":   "#9333ea",
+        _area_colors_cap = {
+            "West Texas": "#e97316", "New Mexico": "#9333ea", "Oklahoma": "#16a34a",
+            "Central Texas": "#AC2430", "Florida Panhandle": "#0ea5e9", "Florida Southwest": "#2563eb",
         }
         _x_labels = ["Current"] + _quarter_order
-        for reg in _all_regions_pipe:
-            row = _cap_df[_cap_df["Region"] == reg].iloc[0]
-            _y = [row["Current"]] + [row[q] for q in _quarter_order]
+        _area_df = _cap_df.groupby("Area", sort=False)[["Current"] + _quarter_order].sum()
+        for _area, row in _area_df.iterrows():
             _fig_cap.add_scatter(
-                x=_x_labels, y=_y,
-                name=reg, mode="lines+markers",
-                line=dict(color=_reg_colors_cap.get(reg, MID), width=2.5),
+                x=_x_labels, y=[row["Current"]] + [row[q] for q in _quarter_order],
+                name=_area, mode="lines+markers",
+                line=dict(color=_area_colors_cap.get(_area, MID), width=2.5),
                 marker=dict(size=7),
             )
         brew_fig(_fig_cap, height=300)
         _fig_cap.update_layout(
             xaxis=dict(tickangle=-35),
-            yaxis=dict(title="Total Stands", dtick=2),
+            yaxis=dict(title="Total Stands"),
             legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
         )
         st.plotly_chart(_fig_cap, config={"displayModeBar": False}, use_container_width=True)

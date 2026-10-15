@@ -269,7 +269,8 @@
       "open": "10/19/26",
       "notes": "tracking TCO to operate for 9/17",
       "gc": "RNR",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00229",
@@ -285,7 +286,8 @@
       "open": "11/2/26",
       "notes": "Need AB's for EOR cert (tracking for 10/14).  Building final tracking for 10/14.",
       "gc": "Fulcrum",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00112",
@@ -301,7 +303,8 @@
       "open": "11/2/26",
       "notes": "passed building final on 10/14. only pending utility approval for CO",
       "gc": "Walker",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00180",
@@ -317,7 +320,8 @@
       "open": "11/2/26",
       "notes": "fire final passed on 10/14. Finals following processing of fire approval",
       "gc": "Burd",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00134",
@@ -333,7 +337,8 @@
       "open": "11/9/26",
       "notes": "finals tracking for 10/15-16 except for health tracking following week",
       "gc": "D&C",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00094",
@@ -349,7 +354,8 @@
       "open": "11/30/26",
       "notes": "Civil Rev approval tracking for 6/25.Pre con & VMS drawings on 7/1.",
       "gc": "BJD",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00083",
@@ -365,7 +371,8 @@
       "open": "11/30/26",
       "notes": "finals TBD",
       "gc": "Prestige",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00084",
@@ -381,7 +388,8 @@
       "open": "11/30/26",
       "notes": "check with zac on open date",
       "gc": "BJD",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00129",
@@ -397,7 +405,8 @@
       "open": "11/30/26",
       "notes": "Permits approved pending GC. Academy and Hobby Lobby open in October '26. .  LL to deliver pad & utilities in May (MH to confirm). GC needs to register",
       "gc": "D&C",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00077",
@@ -413,7 +422,8 @@
       "open": "12/7/26",
       "notes": "Contract to be sent to GC 8/5",
       "gc": "Fulcrum",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00652",
@@ -429,7 +439,8 @@
       "open": "12/7/26",
       "notes": "working thru wood rot and sewer issues",
       "gc": "Citadel",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00651",
@@ -445,7 +456,8 @@
       "open": "12/7/26",
       "notes": "would like to move open to 11/30 if CO can move to 11/13.",
       "gc": "Citadel",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00117",
@@ -461,7 +473,8 @@
       "open": "1/18/27",
       "notes": "",
       "gc": "Stansell",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00528",
@@ -477,7 +490,8 @@
       "open": "1/18/27",
       "notes": "need to determine if we can pull CO up to 11/20 by 10/16.",
       "gc": "Tatco",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00149",
@@ -493,7 +507,8 @@
       "open": "1/18/27",
       "notes": "Working with LL/GC to resolve LL/Lease issues - should be resolved by 8/19",
       "gc": "Manna (LL)",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00617",
@@ -509,7 +524,8 @@
       "open": "1/25/27",
       "notes": "Green tag tracking for 10/21-23.",
       "gc": "Walker",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00088",
@@ -525,7 +541,8 @@
       "open": "2/1/27",
       "notes": "DO review started 6/24 with payment  including easement doc.",
       "gc": "BJD",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00103",
@@ -541,7 +558,8 @@
       "open": "2/1/27",
       "notes": "TDLR delay for lease",
       "gc": "Citadel",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00113",
@@ -557,7 +575,8 @@
       "open": "2/22/27",
       "notes": "",
       "gc": "Walker",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00086",
@@ -573,7 +592,8 @@
       "open": "3/1/27",
       "notes": "do we need building for water meter?",
       "gc": "Fulcrum",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00089",
@@ -589,7 +609,8 @@
       "open": "3/8/27",
       "notes": "dates are placeholder for GC change",
       "gc": "RNR",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00692",
@@ -605,7 +626,8 @@
       "open": "3/8/27",
       "notes": "Permit approved pending GC.  LL tracking completion for mid November",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00606",
@@ -621,7 +643,8 @@
       "open": "4/12/27",
       "notes": "Need to work change of scope for 7C to construct shared road",
       "gc": "",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C3"
     },
     {
       "rsh": "RSH-00146",
@@ -637,7 +660,8 @@
       "open": "5/3/27",
       "notes": "tracking resubmittal 7/1",
       "gc": "STANSELL",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00689",
@@ -653,7 +677,8 @@
       "open": "5/3/27",
       "notes": "Civil proposal signed 6/23. As-Built info sent to Arch 6/23.",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00231",
@@ -669,7 +694,8 @@
       "open": "5/17/27",
       "notes": "tracking DO resubmit 7/1. Apply for demo 4 weeks ahead of building permit",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00601",
@@ -685,7 +711,8 @@
       "open": "5/17/27",
       "notes": "Permits must run in series.  Non-Proto building comments",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00127",
@@ -701,7 +728,8 @@
       "open": "5/17/27",
       "notes": "civil plans accepted for review on 5/12. comments 6/11. resubmitted 6/30.  targeting 10/4 for civil approval. \nSite must be approved to start building.",
       "gc": "",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00126",
@@ -717,7 +745,8 @@
       "open": "6/7/27",
       "notes": "Civil Submittal tracking 7/28 or sooner (pending cursory landscape review)",
       "gc": "",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00273",
@@ -733,7 +762,8 @@
       "open": "6/14/27",
       "notes": "Civil only KO on 3/18.",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00735",
@@ -749,7 +779,8 @@
       "open": "6/14/27",
       "notes": "",
       "gc": "",
-      "region": "Central Florida"
+      "region": "Central Florida",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00111",
@@ -765,7 +796,8 @@
       "open": "6/28/27",
       "notes": "Potential site shift for pond costs",
       "gc": "",
-      "region": "Central SWFL"
+      "region": "Central SWFL",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00695",
@@ -781,7 +813,8 @@
       "open": "7/26/27",
       "notes": "Variance approved on or before 9/23",
       "gc": "",
-      "region": "Central OK"
+      "region": "Central OK",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00592",
@@ -797,7 +830,8 @@
       "open": "8/2/27",
       "notes": "LSI in progress on 5/19.  TXDOT feedback (positive) on 5/20. LL sent redlines 5/20 with rider comments.  Need REA from LL and agreement on shared access construction. LL to provide REA draft on 7/17. Lease redlines from LL on 8/17.Civils submitted 9/17, building pending TDLR from LL",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00747",
@@ -813,7 +847,8 @@
       "open": "8/9/27",
       "notes": "Needs landscape plan approved from City for tree removal",
       "gc": "",
-      "region": "South Central TX"
+      "region": "South Central TX",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00115",
@@ -829,7 +864,8 @@
       "open": "8/23/27",
       "notes": "2-3 weeks needed to redesign civils due to new code",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00579",
@@ -845,7 +881,8 @@
       "open": "9/6/27",
       "notes": "lease returned to LL on 6/17. Lease back as of 7/1 and looks close. Call with LL legal team on 7/8 and possibly pull up projected lease sign date of 8/21",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00583",
@@ -861,7 +898,8 @@
       "open": "9/20/27",
       "notes": "DQ retrofit. tracking staff report for 12/1",
       "gc": "",
-      "region": "North Central TX"
+      "region": "North Central TX",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00211",
@@ -877,7 +915,8 @@
       "open": "9/27/27",
       "notes": "City Pre App 7/14 - staff says neighbors may be required to give cross access in front. KM pushing OR for answer on REA",
       "gc": "",
-      "region": ""
+      "region": "",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00610",
@@ -893,7 +932,8 @@
       "open": "9/27/27",
       "notes": "Lease back with LL on 6/23. DKO of 7/15 tight but possible",
       "gc": "",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00554",
@@ -909,7 +949,8 @@
       "open": "10/4/27",
       "notes": "",
       "gc": "",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00147",
@@ -925,7 +966,8 @@
       "open": "10/11/27",
       "notes": "LL construction start = 11/10, LL needs 6 months for full Delivery = 5/10/27 (originally 11/26) but LL also stated that our pad might be ready to build on in 4month from start to allow CS of 3/10/27.",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00694",
@@ -941,7 +983,8 @@
       "open": "10/15/27",
       "notes": "PLACEHOLDER DATES. Previously permitted and re-kicked off. no build period from 10/15-year end",
       "gc": "",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00680",
@@ -957,7 +1000,8 @@
       "open": "10/21/27",
       "notes": "",
       "gc": "",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00151",
@@ -973,7 +1017,8 @@
       "open": "10/21/27",
       "notes": "LL provided Lease redlines 1/28. 7C sent redlines back 2/4.  LL reviewing 7C financials and other tenant plans (chick express & title max), legal call on 4/1. 5/13 -  7C to revise lease for standard timing due back 6/26. Lease revs pending as of 7/2. 7C legal to send to LL 7/17",
       "gc": "",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00575",
@@ -989,7 +1034,8 @@
       "open": "10/22/27",
       "notes": "REC decided to pursue PSA on 7/2.",
       "gc": "",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C4"
     },
     {
       "rsh": "RSH-00584",
@@ -1005,7 +1051,8 @@
       "open": "10/22/27",
       "notes": "Traffic study under review with LL eng. Need 6-9 months for SUP.  Lease must be signed for SUP submittal. lease back from LL on 8/14.",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00266",
@@ -1021,7 +1068,8 @@
       "open": "10/25/27",
       "notes": "site plan revision ahead of DKO",
       "gc": "",
-      "region": ""
+      "region": "",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00736",
@@ -1037,7 +1085,8 @@
       "open": "10/25/27",
       "notes": "",
       "gc": "",
-      "region": "North Central TX"
+      "region": "North Central TX",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00239",
@@ -1053,7 +1102,8 @@
       "open": "11/1/27",
       "notes": "LL targeting Plat recorded June of 2026,  7B pad ready Summer '27.  WM & neighbors planning to open Feb '28. Need to align planned open with RC.",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00844",
@@ -1069,7 +1119,8 @@
       "open": "11/5/27",
       "notes": "",
       "gc": "",
-      "region": "TX Panhandle"
+      "region": "TX Panhandle",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00956",
@@ -1085,7 +1136,8 @@
       "open": "11/8/27",
       "notes": "",
       "gc": "",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00609",
@@ -1101,7 +1153,8 @@
       "open": "11/17/27",
       "notes": "",
       "gc": "",
-      "region": "North Central TX"
+      "region": "North Central TX",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00696",
@@ -1117,7 +1170,8 @@
       "open": "11/19/27",
       "notes": "",
       "gc": "",
-      "region": "South Central TX"
+      "region": "South Central TX",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00620",
@@ -1133,7 +1187,8 @@
       "open": "11/19/27",
       "notes": "PLACEHOLDER DATES. 7C to send LL redlines 8/28",
       "gc": "Walker Co.",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00252",
@@ -1149,7 +1204,8 @@
       "open": "11/22/27",
       "notes": "",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00228",
@@ -1165,7 +1221,8 @@
       "open": "11/22/27",
       "notes": "",
       "gc": "",
-      "region": "North Central TX"
+      "region": "North Central TX",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00625",
@@ -1181,7 +1238,8 @@
       "open": "11/23/27",
       "notes": "",
       "gc": "",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00621",
@@ -1197,7 +1255,8 @@
       "open": "11/29/27",
       "notes": "PSA.  JK sent updated SP and boundary on 7/7.",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00658",
@@ -1213,7 +1272,8 @@
       "open": "11/29/27",
       "notes": "",
       "gc": "",
-      "region": "South Central TX"
+      "region": "South Central TX",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00235",
@@ -1229,7 +1289,8 @@
       "open": "12/6/27",
       "notes": "LL Redlines 6/16 are not bad.  7C returned lease on 6/16. DKO on 7/1 is possible",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00704",
@@ -1245,7 +1306,8 @@
       "open": "12/6/27",
       "notes": "",
       "gc": "",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00122",
@@ -1261,7 +1323,8 @@
       "open": "12/6/27",
       "notes": "difficult LL",
       "gc": "",
-      "region": "TX Panhandle"
+      "region": "TX Panhandle",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00624",
@@ -1277,7 +1340,8 @@
       "open": "12/6/27",
       "notes": "LL permitting civil (6 months) and had 90 days to deliver driveway, pond, sewer",
       "gc": "",
-      "region": "FL West Coast"
+      "region": "FL West Coast",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00793",
@@ -1293,7 +1357,8 @@
       "open": "12/6/27",
       "notes": "",
       "gc": "",
-      "region": "North SWFL"
+      "region": "North SWFL",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00596",
@@ -1309,7 +1374,8 @@
       "open": "1/10/28",
       "notes": "LL LOI comments back as of 1/28. &C send back 2/6.  Need utility easement agreement with smoothie king (3-6 month).  DIR = Dev Impact Review (PD mod - 6-9 months)",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00757",
@@ -1325,7 +1391,8 @@
       "open": "1/17/28",
       "notes": "LL got lease 7/17 and says will have redlines back by 7/29",
       "gc": "",
-      "region": "Central SWFL"
+      "region": "Central SWFL",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00685",
@@ -1341,7 +1408,8 @@
       "open": "1/31/28",
       "notes": "HEB development on HOLD. our pad is a lower than road",
       "gc": "",
-      "region": "South Central TX"
+      "region": "South Central TX",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00233",
@@ -1357,7 +1425,8 @@
       "open": "2/14/28",
       "notes": "7C approved rent increase as of 7/8.",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00140",
@@ -1373,7 +1442,8 @@
       "open": "2/21/28",
       "notes": "LOI to be signed shortly on 7/16",
       "gc": "",
-      "region": "FL Panhandle West"
+      "region": "FL Panhandle West",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00741",
@@ -1389,7 +1459,8 @@
       "open": "2/28/28",
       "notes": "",
       "gc": "",
-      "region": "North Central TX"
+      "region": "North Central TX",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00675",
@@ -1405,7 +1476,8 @@
       "open": "3/6/28",
       "notes": "lease 11/13 looks good (2nd redlines sent 9/29)",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00634",
@@ -1421,7 +1493,8 @@
       "open": "3/20/28",
       "notes": "PLACEHOLDER DATES. Lease in 7C court as of 6/24.  7C send back to LL on 7/2. Answer on lease by 7/1 for 7/15 DKO",
       "gc": "",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00683",
@@ -1437,7 +1510,8 @@
       "open": "3/20/28",
       "notes": "pin swap site",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00662",
@@ -1453,7 +1527,8 @@
       "open": "4/3/28",
       "notes": "",
       "gc": "",
-      "region": "Central SWFL"
+      "region": "Central SWFL",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00673",
@@ -1469,7 +1544,8 @@
       "open": "4/3/28",
       "notes": "Lease call with LL by 7/10?",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00674",
@@ -1485,7 +1561,8 @@
       "open": "4/24/28",
       "notes": "No redlines from LL for lease sent in July.  County saying must demo before SP review",
       "gc": "",
-      "region": "North SWFL"
+      "region": "North SWFL",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00665",
@@ -1501,7 +1578,8 @@
       "open": "5/15/28",
       "notes": "",
       "gc": "",
-      "region": "Central SWFL"
+      "region": "Central SWFL",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00213",
@@ -1517,7 +1595,8 @@
       "open": "7/28/28",
       "notes": "Call with LL on 7/9? NEED City infrastructure upgraded to allow project.  Estimated time for infrastructure is August 2027.  Septic could be approved. SP access confirmed works with 7B/TXDOT",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00679",
@@ -1533,7 +1612,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00603",
@@ -1549,7 +1629,8 @@
       "open": "7/28/28",
       "notes": "Long John silvers site",
       "gc": "",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00261",
@@ -1565,7 +1646,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "Central Florida"
+      "region": "Central Florida",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00792",
@@ -1581,7 +1663,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00802",
@@ -1597,7 +1680,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "Central SWFL"
+      "region": "Central SWFL",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00824",
@@ -1613,7 +1697,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00827",
@@ -1629,7 +1714,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "Central SWFL"
+      "region": "Central SWFL",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00842",
@@ -1645,7 +1731,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00867",
@@ -1661,7 +1748,8 @@
       "open": "7/28/28",
       "notes": "",
       "gc": "",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C18"
     }
   ],
   "open_pdf": [
@@ -1679,7 +1767,8 @@
       "open": "1/19/26",
       "notes": "sign permit CO?",
       "gc": "RNR",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00060",
@@ -1695,7 +1784,8 @@
       "open": "1/19/26",
       "notes": "Full CO 1/13",
       "gc": "CCS",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00070",
@@ -1711,7 +1801,8 @@
       "open": "1/19/26",
       "notes": "bollards blocking lanes - GC to correct",
       "gc": "Prestige",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00073",
@@ -1727,7 +1818,8 @@
       "open": "1/26/26",
       "notes": "TCO to operate tracking for 1/7. Guardrails installed as of 1/23. GC to call finals on 2/5 Tracking 2/6 for full CO.",
       "gc": "Prestige",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00085",
@@ -1743,7 +1835,8 @@
       "open": "1/26/26",
       "notes": "",
       "gc": "D&C",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00093",
@@ -1759,7 +1852,8 @@
       "open": "1/26/26",
       "notes": "TCO pending ADA sidewalk correction (expires 2/12)",
       "gc": "D&C",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C3"
     },
     {
       "rsh": "RSH-00080",
@@ -1775,7 +1869,8 @@
       "open": "2/9/26",
       "notes": "Full CO in hand",
       "gc": "BJD",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00054",
@@ -1791,7 +1886,8 @@
       "open": "2/23/26",
       "notes": "",
       "gc": "RNR",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00074",
@@ -1807,7 +1903,8 @@
       "open": "3/9/26",
       "notes": "TCO to operate 2/23. Processing AB Cert for final CO",
       "gc": "BJD",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00090",
@@ -1823,7 +1920,8 @@
       "open": "3/9/26",
       "notes": "",
       "gc": "D&C",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00075",
@@ -1839,7 +1937,8 @@
       "open": "3/30/26",
       "notes": "Canopies coming 2/13 (moved to 3/5). Pocket door/wall needs to be added for health (need to start this by 3/2 to CO 3/13)",
       "gc": "Burd",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00066",
@@ -1855,7 +1954,8 @@
       "open": "3/30/26",
       "notes": "Full CO coming 3/11",
       "gc": "Burd",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00082",
@@ -1871,7 +1971,8 @@
       "open": "4/13/26",
       "notes": "S&T CO 3/27. tracking full TCO 4/1 (raise FH for perm. CO).  porkchop for WM = done.",
       "gc": "Tatco",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00068",
@@ -1887,7 +1988,8 @@
       "open": "4/13/26",
       "notes": "TCO to stock 3/23. Full CO on 3/27 per GC",
       "gc": "D&C",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00097",
@@ -1903,7 +2005,8 @@
       "open": "5/4/26",
       "notes": "",
       "gc": "BJD",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00096",
@@ -1919,7 +2022,8 @@
       "open": "5/18/26",
       "notes": "TCO (30 day) = 4/28. (full pending rails around cooler and building RTU). completed 5/13.  REA with neighbor and public SW easement pending for full CO.",
       "gc": "Tatco",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00101",
@@ -1935,7 +2039,8 @@
       "open": "5/18/26",
       "notes": "",
       "gc": "D&C",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00091",
@@ -1950,7 +2055,8 @@
       "bd": "3/25/26",
       "open": "6/1/26",
       "notes": "striping 5/20, should be ready 5/21. Need canopy fixed 5/21",
-      "gc": "D&C"
+      "gc": "D&C",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00079",
@@ -1965,7 +2071,8 @@
       "bd": "3/17/26",
       "open": "6/22/26",
       "notes": "power, water, sewer all connected. TCO 5/29 pending sod",
-      "gc": "Prestige"
+      "gc": "Prestige",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00123",
@@ -1980,7 +2087,8 @@
       "bd": "4/21/26",
       "open": "6/22/26",
       "notes": "GC reporting CO of 5/29. all utilities connected as of 5/6. large equipment & cooler 5/21.",
-      "gc": "Walker Co."
+      "gc": "Walker Co.",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00095",
@@ -1995,7 +2103,8 @@
       "bd": "2/18/26",
       "open": "6/29/26",
       "notes": "TCO (Stock) on 6/12. City Road work to be done 6/24.",
-      "gc": "D&C"
+      "gc": "D&C",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00106",
@@ -2010,7 +2119,8 @@
       "bd": "4/24/26",
       "open": "6/29/26",
       "notes": "",
-      "gc": "Walker Co."
+      "gc": "Walker Co.",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00116",
@@ -2025,7 +2135,8 @@
       "bd": "4/15/26",
       "open": "6/29/26",
       "notes": "TCO to operate pending landscape",
-      "gc": "Burd"
+      "gc": "Burd",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00133",
@@ -2040,7 +2151,8 @@
       "bd": "5/29/26",
       "open": "8/10/26",
       "notes": "health on 7/14.  building & fire finals on 7/16",
-      "gc": "Prestige"
+      "gc": "Prestige",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00071",
@@ -2055,7 +2167,8 @@
       "bd": "3/11/26",
       "open": "8/17/26",
       "notes": "water account set up as of 5/6. Nichiha installer to complete 6/29. signage and asphalt 7/15",
-      "gc": "RNR"
+      "gc": "RNR",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00110",
@@ -2071,7 +2184,8 @@
       "open": "8/31/26",
       "notes": "TCO (op) = 8/7\nFull CO = 9/3",
       "gc": "VBC",
-      "region": "C. TX"
+      "region": "C. TX",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00081",
@@ -2087,7 +2201,8 @@
       "open": "9/14/26",
       "notes": "Building finals friday 8/21. TCO tracking for 8/26 EOD. Full CO pending termite info (8/28).",
       "gc": "Fulcrum",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00102",
@@ -2103,7 +2218,8 @@
       "open": "9/14/26",
       "notes": "need MEP by 8/27 for 8/28 CO.",
       "gc": "Burd",
-      "region": "W. TX"
+      "region": "W. TX",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00114",
@@ -2119,7 +2235,8 @@
       "open": "9/14/26",
       "notes": "TCO (2 week - operational) on 8/25. As-Builts submitted 8/25. tracking full CO for 8/27.",
       "gc": "Fulcrum",
-      "region": "FLPH"
+      "region": "FLPH",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00104",
@@ -2135,7 +2252,8 @@
       "open": "9/14/26",
       "notes": "CO on 8/25",
       "gc": "Citadel",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00078",
@@ -2151,7 +2269,8 @@
       "open": "9/21/26",
       "notes": "Building and MECH finals 8/20",
       "gc": "Tatco (FL)",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00087",
@@ -2167,7 +2286,8 @@
       "open": "9/21/26",
       "notes": "paving 8/13",
       "gc": "Tatco (FL)",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00092",
@@ -2183,7 +2303,8 @@
       "open": "9/28/26",
       "notes": "Drainage RFI, As-Built Status, Elec Meter",
       "gc": "BJD",
-      "region": "FLSW"
+      "region": "FLSW",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00109",
@@ -2199,7 +2320,8 @@
       "open": "9/28/26",
       "notes": "power - inspector needs letter from CTAR for panel to pass elec, inspection. Green Tag on 8/4 OG&E coming out 8/6 to confirm all is good to release meter",
       "gc": "VBC",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00139",
@@ -2215,7 +2337,8 @@
       "open": "10/12/26",
       "notes": "Need beverage license",
       "gc": "Prestige",
-      "region": "OKC"
+      "region": "OKC",
+      "cluster": "C7"
     }
   ],
   "open_count_from_report": 35,
@@ -2246,7 +2369,8 @@
       "sep3": "5/4/26",
       "sep24": "5/4/26",
       "oct1": "5/4/26",
-      "oct15": "5/4/26"
+      "oct15": "5/4/26",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00096",
@@ -2274,7 +2398,8 @@
       "sep3": "5/18/26",
       "sep24": "5/18/26",
       "oct1": "5/18/26",
-      "oct15": "5/18/26"
+      "oct15": "5/18/26",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00101",
@@ -2302,7 +2427,8 @@
       "sep3": "5/18/26",
       "sep24": "5/18/26",
       "oct1": "5/18/26",
-      "oct15": "5/18/26"
+      "oct15": "5/18/26",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00095",
@@ -2331,7 +2457,8 @@
       "sep3": "6/29/26",
       "sep24": "6/29/26",
       "oct1": "6/29/26",
-      "oct15": "6/29/26"
+      "oct15": "6/29/26",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00081",
@@ -2360,7 +2487,8 @@
       "sep3": "9/14/26",
       "sep24": "9/14/26",
       "oct1": "9/14/26",
-      "oct15": "9/14/26"
+      "oct15": "9/14/26",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00079",
@@ -2389,7 +2517,8 @@
       "sep3": "6/22/26",
       "sep24": "6/22/26",
       "oct1": "6/22/26",
-      "oct15": "6/22/26"
+      "oct15": "6/22/26",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00071",
@@ -2418,7 +2547,8 @@
       "sep3": "8/17/26",
       "sep24": "8/17/26",
       "oct1": "8/17/26",
-      "oct15": "8/17/26"
+      "oct15": "8/17/26",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00069",
@@ -2447,7 +2577,8 @@
       "sep3": "10/19/26",
       "sep24": "10/19/26",
       "oct1": "10/19/26",
-      "oct15": "10/19/26"
+      "oct15": "10/19/26",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00123",
@@ -2476,7 +2607,8 @@
       "sep3": "6/22/26",
       "sep24": "6/22/26",
       "oct1": "6/22/26",
-      "oct15": "6/22/26"
+      "oct15": "6/22/26",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00116",
@@ -2505,7 +2637,8 @@
       "sep3": "6/29/26",
       "sep24": "6/29/26",
       "oct1": "6/29/26",
-      "oct15": "6/29/26"
+      "oct15": "6/29/26",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00109",
@@ -2534,7 +2667,8 @@
       "sep3": "9/28/26",
       "sep24": "9/28/26",
       "oct1": "9/28/26",
-      "oct15": "9/28/26"
+      "oct15": "9/28/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00106",
@@ -2563,7 +2697,8 @@
       "sep3": "6/29/26",
       "sep24": "6/29/26",
       "oct1": "6/29/26",
-      "oct15": "6/29/26"
+      "oct15": "6/29/26",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00078",
@@ -2592,7 +2727,8 @@
       "sep3": "9/21/26",
       "sep24": "9/21/26",
       "oct1": "9/21/26",
-      "oct15": "9/21/26"
+      "oct15": "9/21/26",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00089",
@@ -2621,7 +2757,8 @@
       "sep3": "10/26/26",
       "sep24": "10/26/26",
       "oct1": "12/7/26",
-      "oct15": "3/8/27"
+      "oct15": "3/8/27",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00114",
@@ -2650,7 +2787,8 @@
       "sep3": "9/14/26",
       "sep24": "9/14/26",
       "oct1": "9/14/26",
-      "oct15": "9/14/26"
+      "oct15": "9/14/26",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00110",
@@ -2679,7 +2817,8 @@
       "sep3": "8/31/26",
       "sep24": "8/31/26",
       "oct1": "8/31/26",
-      "oct15": "8/31/26"
+      "oct15": "8/31/26",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00133",
@@ -2708,7 +2847,8 @@
       "sep3": "8/10/26",
       "sep24": "8/10/26",
       "oct1": "8/10/26",
-      "oct15": "8/10/26"
+      "oct15": "8/10/26",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00092",
@@ -2737,7 +2877,8 @@
       "sep3": "9/21/26",
       "sep24": "9/28/26",
       "oct1": "9/28/26",
-      "oct15": "9/28/26"
+      "oct15": "9/28/26",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00087",
@@ -2766,7 +2907,8 @@
       "sep3": "9/21/26",
       "sep24": "9/21/26",
       "oct1": "9/21/26",
-      "oct15": "9/21/26"
+      "oct15": "9/21/26",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00104",
@@ -2794,7 +2936,8 @@
       "sep3": "9/14/26",
       "sep24": "9/14/26",
       "oct1": "9/14/26",
-      "oct15": "9/14/26"
+      "oct15": "9/14/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00094",
@@ -2823,7 +2966,8 @@
       "sep3": "11/16/26",
       "sep24": "11/16/26",
       "oct1": "11/16/26",
-      "oct15": "11/30/26"
+      "oct15": "11/30/26",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00102",
@@ -2852,7 +2996,8 @@
       "sep3": "9/14/26",
       "sep24": "9/14/26",
       "oct1": "9/14/26",
-      "oct15": "9/14/26"
+      "oct15": "9/14/26",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00084",
@@ -2881,7 +3026,8 @@
       "sep3": "11/16/26",
       "sep24": "11/16/26",
       "oct1": "11/16/26",
-      "oct15": "11/30/26"
+      "oct15": "11/30/26",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00112",
@@ -2910,7 +3056,8 @@
       "sep3": "10/12/26",
       "sep24": "10/19/26",
       "oct1": "10/26/26",
-      "oct15": "11/2/26"
+      "oct15": "11/2/26",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00103",
@@ -2939,7 +3086,8 @@
       "sep3": "11/23/26",
       "sep24": "12/7/26",
       "oct1": "12/7/26",
-      "oct15": "2/1/27"
+      "oct15": "2/1/27",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00086",
@@ -2968,7 +3116,8 @@
       "sep3": "2/22/27",
       "sep24": "3/1/27",
       "oct1": "3/1/27",
-      "oct15": "3/1/27"
+      "oct15": "3/1/27",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00229",
@@ -2997,7 +3146,8 @@
       "sep3": "11/2/26",
       "sep24": "11/2/26",
       "oct1": "11/2/26",
-      "oct15": "11/2/26"
+      "oct15": "11/2/26",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00139",
@@ -3026,7 +3176,8 @@
       "sep3": "11/16/26",
       "sep24": "10/12/26",
       "oct1": "10/12/26",
-      "oct15": "10/12/26"
+      "oct15": "10/12/26",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00134",
@@ -3055,7 +3206,8 @@
       "sep3": "11/16/26",
       "sep24": "11/16/26",
       "oct1": "11/16/26",
-      "oct15": "11/9/26"
+      "oct15": "11/9/26",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00180",
@@ -3083,7 +3235,8 @@
       "sep3": "11/9/26",
       "sep24": "11/9/26",
       "oct1": "11/9/26",
-      "oct15": "11/2/26"
+      "oct15": "11/2/26",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00088",
@@ -3112,7 +3265,8 @@
       "sep3": "2/1/27",
       "sep24": "2/1/27",
       "oct1": "2/1/27",
-      "oct15": "2/1/27"
+      "oct15": "2/1/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00077",
@@ -3140,7 +3294,8 @@
       "sep3": "1/18/27",
       "sep24": "1/18/27",
       "oct1": "1/18/27",
-      "oct15": "12/7/26"
+      "oct15": "12/7/26",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00113",
@@ -3169,7 +3324,8 @@
       "sep3": "1/25/27",
       "sep24": "2/22/27",
       "oct1": "2/22/27",
-      "oct15": "2/22/27"
+      "oct15": "2/22/27",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00129",
@@ -3198,7 +3354,8 @@
       "sep3": "12/7/26",
       "sep24": "12/7/26",
       "oct1": "12/7/26",
-      "oct15": "11/30/26"
+      "oct15": "11/30/26",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00149",
@@ -3226,7 +3383,8 @@
       "sep3": "2/1/27",
       "sep24": "1/18/27",
       "oct1": "1/18/27",
-      "oct15": "1/18/27"
+      "oct15": "1/18/27",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00692",
@@ -3254,7 +3412,8 @@
       "sep3": "3/8/27",
       "sep24": "3/8/27",
       "oct1": "3/8/27",
-      "oct15": "3/8/27"
+      "oct15": "3/8/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00528",
@@ -3282,7 +3441,8 @@
       "sep3": "1/18/27",
       "sep24": "1/18/27",
       "oct1": "1/18/27",
-      "oct15": "1/18/27"
+      "oct15": "1/18/27",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00117",
@@ -3310,7 +3470,8 @@
       "sep3": "1/18/27",
       "sep24": "1/18/27",
       "oct1": "1/18/27",
-      "oct15": "1/18/27"
+      "oct15": "1/18/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00146",
@@ -3338,7 +3499,8 @@
       "sep3": "3/22/27",
       "sep24": "3/22/27",
       "oct1": "3/29/27",
-      "oct15": "5/3/27"
+      "oct15": "5/3/27",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00592",
@@ -3366,7 +3528,8 @@
       "sep3": "7/26/27",
       "sep24": "7/26/27",
       "oct1": "7/26/27",
-      "oct15": "8/2/27"
+      "oct15": "8/2/27",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00147",
@@ -3394,7 +3557,8 @@
       "sep3": "8/30/27",
       "sep24": "8/30/27",
       "oct1": "8/30/27",
-      "oct15": "10/11/27"
+      "oct15": "10/11/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00231",
@@ -3422,7 +3586,8 @@
       "sep3": "5/3/27",
       "sep24": "5/3/27",
       "oct1": "5/3/27",
-      "oct15": "5/17/27"
+      "oct15": "5/17/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00606",
@@ -3450,7 +3615,8 @@
       "sep3": "3/30/27",
       "sep24": "3/30/27",
       "oct1": "3/30/27",
-      "oct15": "4/12/27"
+      "oct15": "4/12/27",
+      "cluster": "C3"
     },
     {
       "rsh": "RSH-00617",
@@ -3478,7 +3644,8 @@
       "sep3": "1/25/27",
       "sep24": "1/25/27",
       "oct1": "1/25/27",
-      "oct15": "1/25/27"
+      "oct15": "1/25/27",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00273",
@@ -3506,7 +3673,8 @@
       "sep3": "6/14/27",
       "sep24": "6/14/27",
       "oct1": "6/14/27",
-      "oct15": "6/14/27"
+      "oct15": "6/14/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00127",
@@ -3534,7 +3702,8 @@
       "sep3": "5/24/27",
       "sep24": "5/24/27",
       "oct1": "5/24/27",
-      "oct15": "5/17/27"
+      "oct15": "5/17/27",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00115",
@@ -3562,7 +3731,8 @@
       "sep3": "7/19/27",
       "sep24": "7/19/27",
       "oct1": "7/19/27",
-      "oct15": "8/23/27"
+      "oct15": "8/23/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00579",
@@ -3590,7 +3760,8 @@
       "sep3": "9/6/27",
       "sep24": "9/6/27",
       "oct1": "9/6/27",
-      "oct15": "9/6/27"
+      "oct15": "9/6/27",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00610",
@@ -3618,7 +3789,8 @@
       "sep3": "9/20/27",
       "sep24": "9/20/27",
       "oct1": "9/20/27",
-      "oct15": "9/27/27"
+      "oct15": "9/27/27",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00582",
@@ -3644,7 +3816,8 @@
       "sep3": "REMOVED",
       "sep24": "REMOVED",
       "oct1": "REMOVED",
-      "oct15": "REMOVED"
+      "oct15": "REMOVED",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00584",
@@ -3672,7 +3845,8 @@
       "sep3": "10/18/27",
       "sep24": "10/18/27",
       "oct1": "10/18/27",
-      "oct15": "10/22/27"
+      "oct15": "10/22/27",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00596",
@@ -3700,7 +3874,8 @@
       "sep3": "9/20/27",
       "sep24": "1/10/28",
       "oct1": "1/10/28",
-      "oct15": "1/10/28"
+      "oct15": "1/10/28",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00601",
@@ -3728,7 +3903,8 @@
       "sep3": "9/20/27",
       "sep24": "5/13/27",
       "oct1": "5/13/27",
-      "oct15": "5/17/27"
+      "oct15": "5/17/27",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00235",
@@ -3756,7 +3932,8 @@
       "sep3": "12/6/27",
       "sep24": "12/6/27",
       "oct1": "12/6/27",
-      "oct15": "12/6/27"
+      "oct15": "12/6/27",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00575",
@@ -3784,7 +3961,8 @@
       "sep3": "10/18/27",
       "sep24": "10/18/27",
       "oct1": "10/18/27",
-      "oct15": "10/22/27"
+      "oct15": "10/22/27",
+      "cluster": "C4"
     },
     {
       "rsh": "RSH-00126",
@@ -3812,7 +3990,8 @@
       "sep3": "9/20/27",
       "sep24": "5/31/27",
       "oct1": "5/31/27",
-      "oct15": "6/7/27"
+      "oct15": "6/7/27",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00233",
@@ -3840,7 +4019,8 @@
       "sep3": "2/14/28",
       "sep24": "2/14/28",
       "oct1": "2/14/28",
-      "oct15": "2/14/28"
+      "oct15": "2/14/28",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00239",
@@ -3868,7 +4048,8 @@
       "sep3": "11/1/27",
       "sep24": "11/1/27",
       "oct1": "11/1/27",
-      "oct15": "11/1/27"
+      "oct15": "11/1/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00634",
@@ -3896,7 +4077,8 @@
       "sep3": "2/7/28",
       "sep24": "2/7/28",
       "oct1": "3/20/28",
-      "oct15": "3/20/28"
+      "oct15": "3/20/28",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00621",
@@ -3924,7 +4106,8 @@
       "sep3": "11/29/27",
       "sep24": "11/29/27",
       "oct1": "11/29/27",
-      "oct15": "11/29/27"
+      "oct15": "11/29/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00620",
@@ -3952,7 +4135,8 @@
       "sep3": "11/15/27",
       "sep24": "11/15/27",
       "oct1": "11/15/27",
-      "oct15": "11/19/27"
+      "oct15": "11/19/27",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00656",
@@ -3980,7 +4164,8 @@
       "sep3": "9/6/27",
       "sep24": "9/6/27",
       "oct1": "9/6/27",
-      "oct15": "9/6/27"
+      "oct15": "9/6/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00673",
@@ -4008,7 +4193,8 @@
       "sep3": "1/17/28",
       "sep24": "1/17/28",
       "oct1": "1/17/28",
-      "oct15": "4/3/28"
+      "oct15": "4/3/28",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00683",
@@ -4036,7 +4222,8 @@
       "sep3": "2/14/28",
       "sep24": "2/14/28",
       "oct1": "2/14/28",
-      "oct15": "3/20/28"
+      "oct15": "3/20/28",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00689",
@@ -4063,7 +4250,8 @@
       "sep3": "5/3/27",
       "sep24": "5/3/27",
       "oct1": "5/3/27",
-      "oct15": "5/3/27"
+      "oct15": "5/3/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00694",
@@ -4090,7 +4278,8 @@
       "sep3": "1/17/28",
       "sep24": "1/17/28",
       "oct1": "1/17/28",
-      "oct15": "10/15/27"
+      "oct15": "10/15/27",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00213",
@@ -4117,7 +4306,8 @@
       "sep3": "4/3/28",
       "sep24": "4/3/28",
       "oct1": "4/3/28",
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00675",
@@ -4144,7 +4334,8 @@
       "sep3": "3/6/28",
       "sep24": "3/6/28",
       "oct1": "3/6/28",
-      "oct15": "3/6/28"
+      "oct15": "3/6/28",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00053",
@@ -4170,7 +4361,8 @@
       "sep3": "1/19/26",
       "sep24": "1/19/26",
       "oct1": "1/19/26",
-      "oct15": "1/19/26"
+      "oct15": "1/19/26",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00060",
@@ -4196,7 +4388,8 @@
       "sep3": "1/19/26",
       "sep24": "1/19/26",
       "oct1": "1/19/26",
-      "oct15": "1/19/26"
+      "oct15": "1/19/26",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00070",
@@ -4222,7 +4415,8 @@
       "sep3": "1/19/26",
       "sep24": "1/19/26",
       "oct1": "1/19/26",
-      "oct15": "1/19/26"
+      "oct15": "1/19/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00073",
@@ -4248,7 +4442,8 @@
       "sep3": "1/26/26",
       "sep24": "1/26/26",
       "oct1": "1/26/26",
-      "oct15": "1/26/26"
+      "oct15": "1/26/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00085",
@@ -4274,7 +4469,8 @@
       "sep3": "1/26/26",
       "sep24": "1/26/26",
       "oct1": "1/26/26",
-      "oct15": "1/26/26"
+      "oct15": "1/26/26",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00093",
@@ -4300,7 +4496,8 @@
       "sep3": "1/26/26",
       "sep24": "1/26/26",
       "oct1": "1/26/26",
-      "oct15": "1/26/26"
+      "oct15": "1/26/26",
+      "cluster": "C3"
     },
     {
       "rsh": "RSH-00080",
@@ -4326,7 +4523,8 @@
       "sep3": "2/9/26",
       "sep24": "2/9/26",
       "oct1": "2/9/26",
-      "oct15": "2/9/26"
+      "oct15": "2/9/26",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00054",
@@ -4352,7 +4550,8 @@
       "sep3": "2/23/26",
       "sep24": "2/23/26",
       "oct1": "2/23/26",
-      "oct15": "2/23/26"
+      "oct15": "2/23/26",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00074",
@@ -4378,7 +4577,8 @@
       "sep3": "3/9/26",
       "sep24": "3/9/26",
       "oct1": "3/9/26",
-      "oct15": "3/9/26"
+      "oct15": "3/9/26",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00090",
@@ -4404,7 +4604,8 @@
       "sep3": "3/9/26",
       "sep24": "3/9/26",
       "oct1": "3/9/26",
-      "oct15": "3/9/26"
+      "oct15": "3/9/26",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00075",
@@ -4430,7 +4631,8 @@
       "sep3": "3/30/26",
       "sep24": "3/30/26",
       "oct1": "3/30/26",
-      "oct15": "3/30/26"
+      "oct15": "3/30/26",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00066",
@@ -4456,7 +4658,8 @@
       "sep3": "3/30/26",
       "sep24": "3/30/26",
       "oct1": "3/30/26",
-      "oct15": "3/30/26"
+      "oct15": "3/30/26",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00082",
@@ -4482,7 +4685,8 @@
       "sep3": "4/13/26",
       "sep24": "4/13/26",
       "oct1": "4/13/26",
-      "oct15": "4/13/26"
+      "oct15": "4/13/26",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00068",
@@ -4508,7 +4712,8 @@
       "sep3": "4/13/26",
       "sep24": "4/13/26",
       "oct1": "4/13/26",
-      "oct15": "4/13/26"
+      "oct15": "4/13/26",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00651",
@@ -4535,7 +4740,8 @@
       "sep3": "12/7/26",
       "sep24": "12/7/26",
       "oct1": "12/7/26",
-      "oct15": "12/7/26"
+      "oct15": "12/7/26",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00652",
@@ -4562,7 +4768,8 @@
       "sep3": "12/7/26",
       "sep24": "12/7/26",
       "oct1": "12/7/26",
-      "oct15": "12/7/26"
+      "oct15": "12/7/26",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00654",
@@ -4589,7 +4796,8 @@
       "sep3": "REMOVED",
       "sep24": "REMOVED",
       "oct1": "REMOVED",
-      "oct15": "REMOVED"
+      "oct15": "REMOVED",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00701",
@@ -4616,7 +4824,8 @@
       "sep3": "REMOVED",
       "sep24": "REMOVED",
       "oct1": "REMOVED",
-      "oct15": "REMOVED"
+      "oct15": "REMOVED",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00704",
@@ -4643,7 +4852,8 @@
       "sep3": "12/6/27",
       "sep24": "12/6/27",
       "oct1": "12/6/27",
-      "oct15": "12/6/27"
+      "oct15": "12/6/27",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00735",
@@ -4670,7 +4880,8 @@
       "sep3": "9/20/27",
       "sep24": "9/20/27",
       "oct1": "9/20/27",
-      "oct15": "6/14/27"
+      "oct15": "6/14/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00726",
@@ -4694,7 +4905,8 @@
       "sep3": "REMOVED",
       "sep24": "REMOVED",
       "oct1": "REMOVED",
-      "oct15": "REMOVED"
+      "oct15": "REMOVED",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00252",
@@ -4718,7 +4930,8 @@
       "sep3": "1/31/28",
       "sep24": "1/31/28",
       "oct1": "1/31/28",
-      "oct15": "11/22/27"
+      "oct15": "11/22/27",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00083",
@@ -4742,7 +4955,8 @@
       "sep3": "11/9/26",
       "sep24": "11/9/26",
       "oct1": "11/9/26",
-      "oct15": "11/30/26"
+      "oct15": "11/30/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00711",
@@ -4777,7 +4991,8 @@
       "sep3": "1/31/28",
       "sep24": "1/31/28",
       "oct1": "1/31/28",
-      "oct15": "12/6/27"
+      "oct15": "12/6/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00111",
@@ -4806,7 +5021,8 @@
       "sep3": "6/28/27",
       "sep24": "6/28/27",
       "oct1": "6/28/27",
-      "oct15": "6/28/27"
+      "oct15": "6/28/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00140",
@@ -4835,7 +5051,8 @@
       "sep3": "2/21/28",
       "sep24": "2/21/28",
       "oct1": "2/21/28",
-      "oct15": "2/21/28"
+      "oct15": "2/21/28",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00228",
@@ -4864,7 +5081,8 @@
       "sep3": "11/22/27",
       "sep24": "11/22/27",
       "oct1": "11/22/27",
-      "oct15": "11/22/27"
+      "oct15": "11/22/27",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00609",
@@ -4893,7 +5111,8 @@
       "sep3": "11/8/27",
       "sep24": "11/8/27",
       "oct1": "11/8/27",
-      "oct15": "11/17/27"
+      "oct15": "11/17/27",
+      "cluster": "C10"
     },
     {
       "rsh": "RSH-00658",
@@ -4922,7 +5141,8 @@
       "sep3": "11/29/27",
       "sep24": "11/29/27",
       "oct1": "11/29/27",
-      "oct15": "11/29/27"
+      "oct15": "11/29/27",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00662",
@@ -4951,7 +5171,8 @@
       "sep3": "4/3/28",
       "sep24": "4/3/28",
       "oct1": "4/3/28",
-      "oct15": "4/3/28"
+      "oct15": "4/3/28",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00665",
@@ -4980,7 +5201,8 @@
       "sep3": "5/15/28",
       "sep24": "5/15/28",
       "oct1": "5/15/28",
-      "oct15": "5/15/28"
+      "oct15": "5/15/28",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00674",
@@ -5009,7 +5231,8 @@
       "sep3": "2/14/28",
       "sep24": "2/14/28",
       "oct1": "2/14/28",
-      "oct15": "4/24/28"
+      "oct15": "4/24/28",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00685",
@@ -5038,7 +5261,8 @@
       "sep3": "1/31/28",
       "sep24": "1/31/28",
       "oct1": "1/31/28",
-      "oct15": "1/31/28"
+      "oct15": "1/31/28",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00695",
@@ -5067,7 +5291,8 @@
       "sep3": "11/15/27",
       "sep24": "7/12/27",
       "oct1": "7/12/27",
-      "oct15": "7/26/27"
+      "oct15": "7/26/27",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00696",
@@ -5096,7 +5321,8 @@
       "sep3": "11/22/27",
       "sep24": "11/22/27",
       "oct1": "11/22/27",
-      "oct15": "11/19/27"
+      "oct15": "11/19/27",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00721",
@@ -5125,7 +5351,8 @@
       "sep3": "1/17/28",
       "sep24": "1/17/28",
       "oct1": "1/17/28",
-      "oct15": "1/17/28"
+      "oct15": "1/17/28",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00736",
@@ -5154,7 +5381,8 @@
       "sep3": "10/25/27",
       "sep24": "10/25/27",
       "oct1": "10/25/27",
-      "oct15": "10/25/27"
+      "oct15": "10/25/27",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00741",
@@ -5183,7 +5411,8 @@
       "sep3": "2/28/28",
       "sep24": "2/28/28",
       "oct1": "2/28/28",
-      "oct15": "2/28/28"
+      "oct15": "2/28/28",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00747",
@@ -5212,7 +5441,8 @@
       "sep3": "12/6/27",
       "sep24": "7/26/27",
       "oct1": "7/26/27",
-      "oct15": "8/9/27"
+      "oct15": "8/9/27",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00757",
@@ -5241,7 +5471,8 @@
       "sep3": "3/20/28",
       "sep24": "3/20/28",
       "oct1": "1/17/28",
-      "oct15": "1/17/28"
+      "oct15": "1/17/28",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00844",
@@ -5270,7 +5501,8 @@
       "sep3": "1/17/28",
       "sep24": "1/17/28",
       "oct1": "1/17/28",
-      "oct15": "11/5/27"
+      "oct15": "11/5/27",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00122",
@@ -5299,7 +5531,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": "12/6/27"
+      "oct15": "12/6/27",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00583",
@@ -5328,7 +5561,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": "9/20/27"
+      "oct15": "9/20/27",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00748",
@@ -5386,7 +5620,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": ""
+      "oct15": "",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00754",
@@ -5444,7 +5679,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": ""
+      "oct15": "",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00783",
@@ -5473,7 +5709,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": ""
+      "oct15": "",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00793",
@@ -5502,7 +5739,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": "12/6/27"
+      "oct15": "12/6/27",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00802",
@@ -5531,7 +5769,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00813",
@@ -5560,7 +5799,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": ""
+      "oct15": "",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00827",
@@ -5589,7 +5829,8 @@
       "sep3": "",
       "sep24": "",
       "oct1": "",
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00211",
@@ -5597,7 +5838,8 @@
       "state": "FL",
       "store": "001337",
       "delta_days": 0,
-      "oct15": "9/27/27"
+      "oct15": "9/27/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00554",
@@ -5605,7 +5847,8 @@
       "state": "OK",
       "store": "",
       "delta_days": 0,
-      "oct15": "10/4/27"
+      "oct15": "10/4/27",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00680",
@@ -5613,7 +5856,8 @@
       "state": "OK",
       "store": "",
       "delta_days": 0,
-      "oct15": "10/21/27"
+      "oct15": "10/21/27",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00151",
@@ -5621,7 +5865,8 @@
       "state": "TX",
       "store": "",
       "delta_days": 0,
-      "oct15": "10/21/27"
+      "oct15": "10/21/27",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00266",
@@ -5629,7 +5874,8 @@
       "state": "FL",
       "store": "001890",
       "delta_days": 0,
-      "oct15": "10/25/27"
+      "oct15": "10/25/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00956",
@@ -5637,7 +5883,8 @@
       "state": "TX",
       "store": "",
       "delta_days": 0,
-      "oct15": "11/8/27"
+      "oct15": "11/8/27",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00625",
@@ -5645,7 +5892,8 @@
       "state": "TX",
       "store": "",
       "delta_days": 0,
-      "oct15": "11/23/27"
+      "oct15": "11/23/27",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00679",
@@ -5653,7 +5901,8 @@
       "state": "TX",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00603",
@@ -5661,7 +5910,8 @@
       "state": "TX",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C12"
     },
     {
       "rsh": "RSH-00261",
@@ -5669,7 +5919,8 @@
       "state": "FL",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00792",
@@ -5677,7 +5928,8 @@
       "state": "FL",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00824",
@@ -5685,7 +5937,8 @@
       "state": "FL",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00842",
@@ -5693,7 +5946,8 @@
       "state": "FL",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00867",
@@ -5701,7 +5955,8 @@
       "state": "FL",
       "store": "",
       "delta_days": 0,
-      "oct15": "7/28/28"
+      "oct15": "7/28/28",
+      "cluster": "C18"
     }
   ],
   "opened_shifts": [
@@ -5713,7 +5968,8 @@
       "jan15": "1/19/26",
       "actual_open": "1/19/26",
       "jan8": "1/19/26",
-      "dec18": "1/19/26"
+      "dec18": "1/19/26",
+      "cluster": "C20"
     },
     {
       "store": "000875",
@@ -5723,7 +5979,8 @@
       "jan15": "1/19/26",
       "actual_open": "1/19/26",
       "jan8": "1/19/26",
-      "dec18": "1/19/26"
+      "dec18": "1/19/26",
+      "cluster": "C8"
     },
     {
       "store": "000356",
@@ -5733,7 +5990,8 @@
       "jan15": "1/19/26",
       "actual_open": "1/19/26",
       "jan8": "1/19/26",
-      "dec18": "1/19/26"
+      "dec18": "1/19/26",
+      "cluster": "C19"
     },
     {
       "store": "000882",
@@ -5743,7 +6001,8 @@
       "jan15": "1/26/26",
       "actual_open": "1/26/26",
       "jan8": "1/26/26",
-      "dec18": "1/26/26"
+      "dec18": "1/26/26",
+      "cluster": "C10"
     },
     {
       "store": "000872",
@@ -5753,7 +6012,8 @@
       "jan15": "1/26/26",
       "actual_open": "1/26/26",
       "jan8": "1/26/26",
-      "dec18": "1/26/26"
+      "dec18": "1/26/26",
+      "cluster": "C8"
     },
     {
       "store": "001117",
@@ -5763,7 +6023,8 @@
       "jan15": "1/26/26",
       "actual_open": "1/26/26",
       "jan8": "1/26/26",
-      "dec18": "1/26/26"
+      "dec18": "1/26/26",
+      "cluster": "C3"
     },
     {
       "store": "000394",
@@ -5773,7 +6034,8 @@
       "jan15": "2/23/26",
       "actual_open": "2/23/26",
       "jan8": "2/23/26",
-      "dec18": "2/16/26"
+      "dec18": "2/16/26",
+      "cluster": "C19"
     },
     {
       "store": "000877",
@@ -5783,7 +6045,8 @@
       "jan15": "2/9/26",
       "actual_open": "2/9/26",
       "jan8": "2/9/26",
-      "dec18": "2/9/26"
+      "dec18": "2/9/26",
+      "cluster": "C16"
     },
     {
       "store": "000516",
@@ -5793,7 +6056,8 @@
       "jan15": "3/30/26",
       "actual_open": "3/30/26",
       "jan8": "3/30/26",
-      "dec18": "3/30/26"
+      "dec18": "3/30/26",
+      "cluster": "C13"
     },
     {
       "store": "000709",
@@ -5803,7 +6067,8 @@
       "jan15": "3/30/26",
       "actual_open": "3/30/26",
       "jan8": "3/30/26",
-      "dec18": "3/30/26"
+      "dec18": "3/30/26",
+      "cluster": "C2"
     },
     {
       "store": "000573",
@@ -5813,7 +6078,8 @@
       "jan15": "3/2/26",
       "actual_open": "3/9/26",
       "jan8": "3/2/26",
-      "dec18": "3/2/26"
+      "dec18": "3/2/26",
+      "cluster": "C20"
     },
     {
       "store": "000758",
@@ -5823,7 +6089,8 @@
       "jan15": "2/16/26",
       "actual_open": "3/9/26",
       "jan8": "2/16/26",
-      "dec18": "2/16/26"
+      "dec18": "2/16/26",
+      "cluster": "C14"
     },
     {
       "store": "000987",
@@ -5833,7 +6100,8 @@
       "jan15": "4/13/26",
       "actual_open": "4/13/26",
       "jan8": "4/6/26",
-      "dec18": "4/6/26"
+      "dec18": "4/6/26",
+      "cluster": "C7"
     },
     {
       "store": "000711",
@@ -5843,7 +6111,8 @@
       "jan15": "4/13/26",
       "actual_open": "4/13/26",
       "jan8": "2/23/26",
-      "dec18": "2/23/26"
+      "dec18": "2/23/26",
+      "cluster": "C15"
     },
     {
       "store": "000878",
@@ -5853,7 +6122,8 @@
       "jan15": "4/13/26",
       "actual_open": "5/4/26",
       "jan8": "4/13/26",
-      "dec18": "4/13/26"
+      "dec18": "4/13/26",
+      "cluster": "C18"
     },
     {
       "store": "000968",
@@ -5863,7 +6133,8 @@
       "jan8": "5/18/26",
       "jan15": "5/18/26",
       "actual_open": "5/18/26",
-      "dec18": "5/18/26"
+      "dec18": "5/18/26",
+      "cluster": "C9"
     },
     {
       "store": "001238",
@@ -5873,7 +6144,8 @@
       "jan8": "6/15/26",
       "jan15": "6/15/26",
       "actual_open": "5/18/26",
-      "dec18": "6/1/26"
+      "dec18": "6/1/26",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00091",
@@ -5881,7 +6153,8 @@
       "state": "TX",
       "jan8": "6/1/26",
       "actual_open": "6/1/26",
-      "dec18": "6/1/26"
+      "dec18": "6/1/26",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00079",
@@ -5891,7 +6164,8 @@
       "dec18": "5/18/26",
       "jan8": "5/18/26",
       "jan15": "5/18/26",
-      "actual_open": "6/22/26"
+      "actual_open": "6/22/26",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00123",
@@ -5901,7 +6175,8 @@
       "dec18": "8/3/26",
       "jan8": "8/3/26",
       "jan15": "8/3/26",
-      "actual_open": "6/22/26"
+      "actual_open": "6/22/26",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00106",
@@ -5919,7 +6194,8 @@
       "notes": "GC looking to pull CO by as much as a month. powered as of 5/15. water and sewer connected.",
       "actual_open": "6/29/26",
       "dec18": "6/29/26",
-      "jan8": "6/29/26"
+      "jan8": "6/29/26",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00116",
@@ -5937,7 +6213,8 @@
       "notes": "confirm CO date with GC.  water and sewer tapped. power tracking for 5/22 (Primary is run and buried). need green tag then excel will pull power and energize.",
       "actual_open": "6/29/26",
       "dec18": "6/15/26",
-      "jan8": "6/8/26"
+      "jan8": "6/8/26",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00095",
@@ -5955,7 +6232,8 @@
       "notes": "Backfilling for demuck started 4/29. water and sewer connected. powered 5/15.",
       "actual_open": "6/29/26",
       "dec18": "5/18/26",
-      "jan8": "6/1/26"
+      "jan8": "6/1/26",
+      "cluster": "C18"
     },
     {
       "store": "001333",
@@ -5963,7 +6241,8 @@
       "city": "Oklahoma City",
       "state": "OK",
       "jan15": "8/10/26",
-      "actual_open": "8/10/26"
+      "actual_open": "8/10/26",
+      "cluster": "C7"
     },
     {
       "store": "000547",
@@ -5971,7 +6250,8 @@
       "city": "Edmond",
       "state": "OK",
       "jan15": "",
-      "actual_open": "6/22/26"
+      "actual_open": "6/22/26",
+      "cluster": "C6"
     },
     {
       "store": "001332",
@@ -5979,7 +6259,8 @@
       "city": "Altus",
       "state": "OK",
       "jan15": "",
-      "actual_open": "6/22/26"
+      "actual_open": "6/22/26",
+      "cluster": "C9"
     },
     {
       "store": "000518",
@@ -5987,7 +6268,8 @@
       "city": "Lynn Haven",
       "state": "FL",
       "jan15": "",
-      "actual_open": "6/29/26"
+      "actual_open": "6/29/26",
+      "cluster": "C18"
     },
     {
       "store": "001236",
@@ -5995,7 +6277,8 @@
       "city": "Lubbock",
       "state": "TX",
       "jan15": "",
-      "actual_open": "6/29/26"
+      "actual_open": "6/29/26",
+      "cluster": "C1"
     },
     {
       "store": "001119",
@@ -6003,7 +6286,8 @@
       "city": "Canyon",
       "state": "TX",
       "jan15": "",
-      "actual_open": "6/29/26"
+      "actual_open": "6/29/26",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00071",
@@ -6011,49 +6295,57 @@
       "city": "Brooksville",
       "state": "FL",
       "jan15": "6/1/26",
-      "actual_open": "8/17/26"
+      "actual_open": "8/17/26",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00110",
       "snapshot": "sep3",
       "city": "Granbury",
-      "state": "TX"
+      "state": "TX",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00078",
       "snapshot": "sep24",
       "city": "Holiday",
-      "state": "FL"
+      "state": "FL",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00104",
       "snapshot": "sep24",
       "city": "OKC",
-      "state": "OK"
+      "state": "OK",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00114",
       "snapshot": "sep24",
       "city": "Pensacola",
-      "state": "FL"
+      "state": "FL",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00102",
       "snapshot": "sep24",
       "city": "Snyder",
-      "state": "TX"
+      "state": "TX",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00081",
       "snapshot": "sep24",
       "city": "Mary Esther",
-      "state": "FL"
+      "state": "FL",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00087",
       "snapshot": "sep24",
       "city": "Winter Haven",
-      "state": "FL"
+      "state": "FL",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00092",
@@ -6063,7 +6355,8 @@
       "state": "FL",
       "dec18": "7/6/26",
       "jan8": "7/20/26",
-      "actual_open": "9/28/26"
+      "actual_open": "9/28/26",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00109",
@@ -6073,7 +6366,8 @@
       "state": "OK",
       "dec18": "6/8/26",
       "jan8": "6/8/26",
-      "actual_open": "9/28/26"
+      "actual_open": "9/28/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00139",
@@ -6083,7 +6377,8 @@
       "state": "OK",
       "dec18": "11/2/26",
       "jan8": "11/2/26",
-      "actual_open": "10/12/26"
+      "actual_open": "10/12/26",
+      "cluster": "C7"
     }
   ],
   "new_since_jan15": [
@@ -6202,7 +6497,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00082",
@@ -6228,7 +6524,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00097",
@@ -6254,7 +6551,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00096",
@@ -6280,7 +6578,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00091",
@@ -6306,7 +6605,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C14"
     },
     {
       "rsh": "RSH-00101",
@@ -6332,7 +6632,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00095",
@@ -6358,7 +6659,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00081",
@@ -6384,7 +6686,8 @@
       "permit_sub_aug13": "7/10/25",
       "permit_appr_aug13": "1/2/26",
       "cs_aug13": "1/26/26",
-      "open_aug13": "9/7/26"
+      "open_aug13": "9/7/26",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00071",
@@ -6411,7 +6714,8 @@
       "permit_appr_aug13": "12/1/25",
       "cs_aug13": "1/12/26",
       "open_aug13": "8/17/26",
-      "opened": "8/17/26"
+      "opened": "8/17/26",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00079",
@@ -6437,7 +6741,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00109",
@@ -6463,7 +6768,8 @@
       "permit_sub_aug13": "11/6/25",
       "permit_appr_aug13": "1/21/26",
       "cs_aug13": "2/23/26",
-      "open_aug13": "9/21/26"
+      "open_aug13": "9/21/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00069",
@@ -6489,7 +6795,8 @@
       "permit_sub_aug13": "1/28/25",
       "permit_appr_aug13": "10/10/25",
       "cs_aug13": "12/17/25",
-      "open_aug13": "10/19/26"
+      "open_aug13": "10/19/26",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00116",
@@ -6515,7 +6822,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C2"
     },
     {
       "rsh": "RSH-00106",
@@ -6541,7 +6849,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00123",
@@ -6567,7 +6876,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C9"
     },
     {
       "rsh": "RSH-00114",
@@ -6593,7 +6903,8 @@
       "permit_sub_aug13": "11/14/25",
       "permit_appr_aug13": "2/25/26",
       "cs_aug13": "4/7/26",
-      "open_aug13": "8/31/26"
+      "open_aug13": "8/31/26",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00078",
@@ -6619,7 +6930,8 @@
       "permit_sub_aug13": "10/31/24",
       "permit_appr_aug13": "2/17/26",
       "cs_aug13": "4/6/26",
-      "open_aug13": "8/31/26"
+      "open_aug13": "8/31/26",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00110",
@@ -6645,7 +6957,8 @@
       "permit_sub_aug13": "11/26/25",
       "permit_appr_aug13": "4/2/26",
       "cs_aug13": "4/20/26",
-      "open_aug13": "8/31/26"
+      "open_aug13": "8/31/26",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00133",
@@ -6671,7 +6984,8 @@
       "permit_sub_aug13": "12/3/25",
       "permit_appr_aug13": "4/8/26",
       "cs_aug13": "4/27/26",
-      "open_aug13": "8/10/26"
+      "open_aug13": "8/10/26",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00089",
@@ -6697,7 +7011,8 @@
       "permit_sub_aug13": "11/6/24",
       "permit_appr_aug13": "8/27/25",
       "cs_aug13": "1/5/26",
-      "open_aug13": "10/26/26"
+      "open_aug13": "10/26/26",
+      "cluster": "C17"
     },
     {
       "rsh": "RSH-00102",
@@ -6723,7 +7038,8 @@
       "permit_sub_aug13": "9/6/25",
       "permit_appr_aug13": "4/13/26",
       "cs_aug13": "4/13/26",
-      "open_aug13": "9/14/26"
+      "open_aug13": "9/14/26",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00092",
@@ -6749,7 +7065,8 @@
       "permit_sub_aug13": "11/21/24",
       "permit_appr_aug13": "2/26/26",
       "cs_aug13": "4/8/26",
-      "open_aug13": "9/21/26"
+      "open_aug13": "9/21/26",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00087",
@@ -6775,7 +7092,8 @@
       "permit_sub_aug13": "5/2/25",
       "permit_appr_aug13": "4/17/26",
       "cs_aug13": "5/26/26",
-      "open_aug13": "9/7/26"
+      "open_aug13": "9/7/26",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00094",
@@ -6801,7 +7119,8 @@
       "permit_sub_aug13": "4/15/25",
       "permit_appr_aug13": "4/10/26",
       "cs_aug13": "5/27/26",
-      "open_aug13": "11/16/26"
+      "open_aug13": "11/16/26",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00084",
@@ -6827,7 +7146,8 @@
       "permit_sub_aug13": "3/7/25",
       "permit_appr_aug13": "7/21/26",
       "cs_aug13": "8/3/26",
-      "open_aug13": "11/16/26"
+      "open_aug13": "11/16/26",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00112",
@@ -6853,7 +7173,8 @@
       "permit_sub_aug13": "3/24/26",
       "permit_appr_aug13": "7/17/26",
       "cs_aug13": "7/22/26",
-      "open_aug13": "11/2/26"
+      "open_aug13": "11/2/26",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00088",
@@ -6879,7 +7200,8 @@
       "permit_sub_aug13": "11/8/24",
       "permit_appr_aug13": "7/27/26",
       "cs_aug13": "8/10/26",
-      "open_aug13": "12/7/26"
+      "open_aug13": "12/7/26",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00086",
@@ -6905,7 +7227,8 @@
       "permit_sub_aug13": "12/11/24",
       "permit_appr_aug13": "8/19/26",
       "cs_aug13": "8/26/26",
-      "open_aug13": "2/8/27"
+      "open_aug13": "2/8/27",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00229",
@@ -6931,7 +7254,8 @@
       "permit_sub_aug13": "1/26/26",
       "permit_appr_aug13": "5/29/26",
       "cs_aug13": "6/29/26",
-      "open_aug13": "11/2/26"
+      "open_aug13": "11/2/26",
+      "cluster": "C16"
     },
     {
       "rsh": "RSH-00139",
@@ -6957,7 +7281,8 @@
       "permit_sub_aug13": "3/10/26",
       "permit_appr_aug13": "6/4/26",
       "cs_aug13": "7/15/26",
-      "open_aug13": "11/16/26"
+      "open_aug13": "11/16/26",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00134",
@@ -6983,7 +7308,8 @@
       "permit_sub_aug13": "3/25/26",
       "permit_appr_aug13": "7/24/26",
       "cs_aug13": "8/5/26",
-      "open_aug13": "11/16/26"
+      "open_aug13": "11/16/26",
+      "cluster": "C11"
     },
     {
       "rsh": "RSH-00083",
@@ -7009,7 +7335,8 @@
       "permit_sub_aug13": "3/25/25",
       "permit_appr_aug13": "7/11/25",
       "cs_aug13": "7/27/26",
-      "open_aug13": "11/9/26"
+      "open_aug13": "11/9/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00103",
@@ -7035,7 +7362,8 @@
       "permit_sub_aug13": "6/29/26",
       "permit_appr_aug13": "8/17/26",
       "cs_aug13": "8/24/26",
-      "open_aug13": "11/9/26"
+      "open_aug13": "11/9/26",
+      "cluster": "C15"
     },
     {
       "rsh": "RSH-00129",
@@ -7061,7 +7389,8 @@
       "permit_sub_aug13": "4/1/26",
       "permit_appr_aug13": "6/9/26",
       "cs_aug13": "8/3/26",
-      "open_aug13": "12/7/26"
+      "open_aug13": "12/7/26",
+      "cluster": "C13"
     },
     {
       "rsh": "RSH-00113",
@@ -7087,7 +7416,8 @@
       "permit_sub_aug13": "10/9/25",
       "permit_appr_aug13": "9/4/26",
       "cs_aug13": "9/14/26",
-      "open_aug13": "1/25/27"
+      "open_aug13": "1/25/27",
+      "cluster": "C24"
     },
     {
       "rsh": "RSH-00149",
@@ -7113,7 +7443,8 @@
       "permit_sub_aug13": "3/27/26",
       "permit_appr_aug13": "6/19/26",
       "cs_aug13": "8/26/26",
-      "open_aug13": "1/18/27"
+      "open_aug13": "1/18/27",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00100",
@@ -7139,7 +7470,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C3"
     },
     {
       "rsh": "RSH-00180",
@@ -7165,7 +7497,8 @@
       "permit_sub_aug13": "3/11/26",
       "permit_appr_aug13": "6/1/26",
       "cs_aug13": "7/17/26",
-      "open_aug13": "11/9/26"
+      "open_aug13": "11/9/26",
+      "cluster": "C1"
     },
     {
       "rsh": "RSH-00104",
@@ -7191,7 +7524,8 @@
       "permit_sub_aug13": "3/25/26",
       "permit_appr_aug13": "4/16/26",
       "cs_aug13": "5/25/26",
-      "open_aug13": "9/7/26"
+      "open_aug13": "9/7/26",
+      "cluster": "C8"
     },
     {
       "rsh": "RSH-00528",
@@ -7217,7 +7551,8 @@
       "permit_sub_aug13": "5/1/26",
       "permit_appr_aug13": "7/31/26",
       "cs_aug13": "8/10/26",
-      "open_aug13": "1/18/27"
+      "open_aug13": "1/18/27",
+      "cluster": "C7"
     },
     {
       "rsh": "RSH-00117",
@@ -7243,7 +7578,8 @@
       "permit_sub_aug13": "12/17/25",
       "permit_appr_aug13": "8/14/26",
       "cs_aug13": "8/20/26",
-      "open_aug13": "12/7/26"
+      "open_aug13": "12/7/26",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00077",
@@ -7269,7 +7605,8 @@
       "permit_sub_aug13": "11/5/25",
       "permit_appr_aug13": "7/24/26",
       "cs_aug13": "8/17/26",
-      "open_aug13": "1/18/27"
+      "open_aug13": "1/18/27",
+      "cluster": "C20"
     },
     {
       "rsh": "RSH-00111",
@@ -7295,7 +7632,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00146",
@@ -7321,7 +7659,8 @@
       "permit_sub_aug13": "2/23/26",
       "permit_appr_aug13": "10/16/26",
       "cs_aug13": "10/26/26",
-      "open_aug13": "3/22/27"
+      "open_aug13": "3/22/27",
+      "cluster": "C19"
     },
     {
       "rsh": "RSH-00147",
@@ -7347,7 +7686,8 @@
       "permit_sub_aug13": "3/24/26",
       "permit_appr_aug13": "10/16/26",
       "cs_aug13": "11/4/26",
-      "open_aug13": "4/19/27"
+      "open_aug13": "4/19/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00273",
@@ -7373,7 +7713,8 @@
       "permit_sub_aug13": "7/1/26",
       "permit_appr_aug13": "1/16/27",
       "cs_aug13": "1/11/27",
-      "open_aug13": "6/14/27"
+      "open_aug13": "6/14/27",
+      "cluster": "C21"
     },
     {
       "rsh": "RSH-00231",
@@ -7399,7 +7740,8 @@
       "permit_sub_aug13": "3/2/26",
       "permit_appr_aug13": "11/13/26",
       "cs_aug13": "11/30/26",
-      "open_aug13": "5/3/27"
+      "open_aug13": "5/3/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00127",
@@ -7425,7 +7767,8 @@
       "permit_sub_aug13": "4/29/26",
       "permit_appr_aug13": "12/26/26",
       "cs_aug13": "1/6/27",
-      "open_aug13": "5/24/27"
+      "open_aug13": "5/24/27",
+      "cluster": "C6"
     },
     {
       "rsh": "RSH-00115",
@@ -7451,7 +7794,8 @@
       "permit_sub_aug13": "7/13/26",
       "permit_appr_aug13": "3/20/27",
       "cs_aug13": "3/1/27",
-      "open_aug13": "7/19/27"
+      "open_aug13": "7/19/27",
+      "cluster": "C22"
     },
     {
       "rsh": "RSH-00099",
@@ -7477,7 +7821,8 @@
       "permit_sub_aug13": "",
       "permit_appr_aug13": "",
       "cs_aug13": "",
-      "open_aug13": ""
+      "open_aug13": "",
+      "cluster": "C18"
     },
     {
       "rsh": "RSH-00239",
@@ -7503,7 +7848,8 @@
       "permit_sub_aug13": "6/5/26",
       "permit_appr_aug13": "3/3/27",
       "cs_aug13": "3/22/27",
-      "open_aug13": "11/1/27"
+      "open_aug13": "11/1/27",
+      "cluster": "C23"
     },
     {
       "rsh": "RSH-00624",
@@ -7525,7 +7871,8 @@
       "permit_sub_aug13": "10/28/26",
       "permit_appr_aug13": "7/2/27",
       "cs_aug13": "8/1/27",
-      "open_aug13": "1/31/28"
+      "open_aug13": "1/31/28",
+      "cluster": "C21"
     }
   ],
   "new_since_jan8": [
@@ -7630,5 +7977,347 @@
     "RSH-00824",
     "RSH-00842",
     "RSH-00867"
-  ]
+  ],
+  "clusters": {
+    "C1": {
+      "market": "Lubbock / South Plains",
+      "area": "West Texas",
+      "rm": "April"
+    },
+    "C2": {
+      "market": "Amarillo / Panhandle",
+      "area": "West Texas",
+      "rm": "Anne"
+    },
+    "C3": {
+      "market": "Midland-Odessa",
+      "area": "West Texas",
+      "rm": "Robmikia"
+    },
+    "C4": {
+      "market": "San Angelo / Abilene",
+      "area": "West Texas",
+      "rm": "Ryley"
+    },
+    "C5": {
+      "market": "Southeast New Mexico",
+      "area": "New Mexico",
+      "rm": "Val"
+    },
+    "C6": {
+      "market": "Edmond / Enid",
+      "area": "Oklahoma",
+      "rm": "Ryley"
+    },
+    "C7": {
+      "market": "Norman / South OKC",
+      "area": "Oklahoma",
+      "rm": "Rosey"
+    },
+    "C8": {
+      "market": "Northwest OKC / I-40 West",
+      "area": "Oklahoma",
+      "rm": ""
+    },
+    "C9": {
+      "market": "South OK",
+      "area": "Oklahoma",
+      "rm": "Madison"
+    },
+    "C10": {
+      "market": "Northwest DFW",
+      "area": "Central Texas",
+      "rm": ""
+    },
+    "C11": {
+      "market": "Southwest Fort Worth",
+      "area": "Central Texas",
+      "rm": "Mia"
+    },
+    "C12": {
+      "market": "Dallas",
+      "area": "Central Texas",
+      "rm": ""
+    },
+    "C13": {
+      "market": "Granbury / Cleburne",
+      "area": "Central Texas",
+      "rm": ""
+    },
+    "C14": {
+      "market": "Temple-Killeen / Bryan",
+      "area": "Central Texas",
+      "rm": ""
+    },
+    "C15": {
+      "market": "Waco / Heart of Texas",
+      "area": "Central Texas",
+      "rm": "Olivia"
+    },
+    "C16": {
+      "market": "Pensacola",
+      "area": "Florida Panhandle",
+      "rm": "Matt"
+    },
+    "C17": {
+      "market": "Emerald Coast",
+      "area": "Florida Panhandle",
+      "rm": "Cristina"
+    },
+    "C18": {
+      "market": "Panama City / Crestview",
+      "area": "Florida Panhandle",
+      "rm": ""
+    },
+    "C19": {
+      "market": "Bradenton / Sarasota",
+      "area": "Florida Southwest",
+      "rm": "Jaden"
+    },
+    "C20": {
+      "market": "Nature Coast / Ocala",
+      "area": "Florida Southwest",
+      "rm": ""
+    },
+    "C21": {
+      "market": "Plant City / Polk County",
+      "area": "Florida Southwest",
+      "rm": ""
+    },
+    "C22": {
+      "market": "Tampa Bay",
+      "area": "Florida Southwest",
+      "rm": ""
+    },
+    "C23": {
+      "market": "Fort Myers",
+      "area": "Florida Southwest",
+      "rm": ""
+    },
+    "C24": {
+      "market": "Cape Coral / Charlotte County",
+      "area": "Florida Southwest",
+      "rm": ""
+    }
+  },
+  "city_clusters": {
+    "Abilene|TX": "C4",
+    "Ada|OK": "C7",
+    "Altus|OK": "C9",
+    "Alvarado|TX": "C13",
+    "Amarillo|TX": "C2",
+    "Andrews|TX": "C3",
+    "Arcadia|FL": "C24",
+    "Ardmore|OK": "C9",
+    "Artesia|NM": "C5",
+    "Belleview|FL": "C20",
+    "Bellmead|TX": "C15",
+    "Belton|TX": "C14",
+    "Benbrook|TX": "C11",
+    "Beverly Hills|TX": "C15",
+    "Big Spring|TX": "C4",
+    "Bonita Springs|FL": "C23",
+    "Bradenton|FL": "C19",
+    "Brandon|FL": "C21",
+    "Brooksville|FL": "C20",
+    "Brownwood|TX": "C4",
+    "Bryan|TX": "C14",
+    "Burleson|TX": "C11",
+    "Canyon|TX": "C2",
+    "Cape Coral|FL": "C24",
+    "Carlsbad|NM": "C5",
+    "Chickasha|OK": "C9",
+    "Choctaw|OK": "C7",
+    "Clearwater|FL": "C22",
+    "Cleburne|TX": "C13",
+    "Clovis|NM": "C5",
+    "Copperas Cove|TX": "C15",
+    "Crestview|FL": "C18",
+    "Cross Roads|TX": "C10",
+    "Dallas|TX": "C12",
+    "Davenport|FL": "C21",
+    "Decatur|TX": "C10",
+    "Defuniak Springs|FL": "C18",
+    "Denton|TX": "C10",
+    "Destin|FL": "C17",
+    "Dumas|TX": "C2",
+    "Duncan|OK": "C9",
+    "Edmond|OK": "C6",
+    "El Reno|OK": "C8",
+    "Enid|OK": "C6",
+    "Fort Myers|FL": "C23",
+    "Fort Walton Beach|FL": "C17",
+    "Fort Worth|TX": "C11",
+    "Freeport|FL": "C18",
+    "Gainesville|TX": "C10",
+    "Garland|TX": "C12",
+    "Gatesville|TX": "C15",
+    "Granbury|TX": "C13",
+    "Gulf Breeze|FL": "C17",
+    "Haines City|FL": "C21",
+    "Hillsboro|TX": "C13",
+    "Hobbs|NM": "C5",
+    "Holiday|FL": "C22",
+    "Hudson Oaks|TX": "C11",
+    "Hudson|FL": "C22",
+    "Killeen|TX": "C14",
+    "Lampasas|TX": "C15",
+    "Largo|FL": "C22",
+    "Lawton|OK": "C9",
+    "Lecanto|FL": "C20",
+    "Leesburg|FL": "C20",
+    "Lehigh Acres|FL": "C23",
+    "Levelland|TX": "C1",
+    "Lubbock|TX": "C1",
+    "Lynn Haven|FL": "C18",
+    "Mary Esther|FL": "C17",
+    "Mesquite|TX": "C12",
+    "Midland|TX": "C3",
+    "Milton|FL": "C16",
+    "Mineral Wells|TX": "C10",
+    "Moore|OK": "C7",
+    "Mt Dora|FL": "C20",
+    "Mulberry|FL": "C21",
+    "Mustang|OK": "C7",
+    "Navarre|FL": "C17",
+    "Niceville|FL": "C17",
+    "Norman|OK": "C7",
+    "North Fort Myers|FL": "C24",
+    "North Port|FL": "C24",
+    "Ocala|FL": "C20",
+    "Odessa|FL": "C22",
+    "Odessa|TX": "C3",
+    "Oklahoma City|OK": "C8",
+    "Pace|FL": "C16",
+    "Palmetto|FL": "C19",
+    "Pampa|TX": "C2",
+    "Panama City Beach|FL": "C18",
+    "Panama City|FL": "C18",
+    "Pensacola|FL": "C16",
+    "Pinellas Park|FL": "C22",
+    "Plainview|TX": "C2",
+    "Plant City|FL": "C21",
+    "Port Charlotte|FL": "C24",
+    "Port Richey|FL": "C22",
+    "Punta Gorda|FL": "C24",
+    "Roswell|NM": "C5",
+    "San Angelo|TX": "C4",
+    "Sarasota|FL": "C19",
+    "Sebring|FL": "C21",
+    "Seffner|FL": "C21",
+    "Snyder|TX": "C1",
+    "Spring Hill|FL": "C20",
+    "Springtown|TX": "C10",
+    "St. Petersburg|FL": "C22",
+    "Stephenville|TX": "C13",
+    "Sun City Center|FL": "C22",
+    "Tampa|FL": "C22",
+    "Temple|TX": "C14",
+    "Waco|TX": "C15",
+    "Weatherford|OK": "C8",
+    "Weatherford|TX": "C11",
+    "Wichita Falls|TX": "C9",
+    "Winter Haven|FL": "C21",
+    "Yukon|OK": "C8"
+  },
+  "store_clusters": {
+    "87": "C4",
+    "115": "C9",
+    "118": "C1",
+    "121": "C3",
+    "128": "C3",
+    "129": "C3",
+    "134": "C1",
+    "139": "C18",
+    "147": "C4",
+    "151": "C9",
+    "154": "C1",
+    "191": "C2",
+    "192": "C9",
+    "193": "C8",
+    "194": "C8",
+    "198": "C5",
+    "215": "C14",
+    "216": "C11",
+    "218": "C4",
+    "219": "C3",
+    "220": "C6",
+    "231": "C3",
+    "232": "C20",
+    "245": "C4",
+    "264": "C17",
+    "278": "C17",
+    "284": "C19",
+    "325": "C8",
+    "333": "C24",
+    "343": "C15",
+    "356": "C19",
+    "387": "C16",
+    "391": "C4",
+    "392": "C7",
+    "394": "C19",
+    "405": "C5",
+    "425": "C16",
+    "427": "C7",
+    "428": "C23",
+    "458": "C4",
+    "482": "C14",
+    "484": "C17",
+    "486": "C5",
+    "487": "C5",
+    "492": "C22",
+    "511": "C18",
+    "513": "C10",
+    "514": "C9",
+    "515": "C13",
+    "516": "C13",
+    "517": "C16",
+    "518": "C18",
+    "520": "C20",
+    "521": "C16",
+    "547": "C6",
+    "570": "C20",
+    "572": "C20",
+    "573": "C20",
+    "674": "C22",
+    "697": "C6",
+    "703": "C17",
+    "704": "C15",
+    "705": "C9",
+    "706": "C1",
+    "707": "C10",
+    "708": "C11",
+    "709": "C2",
+    "711": "C15",
+    "756": "C5",
+    "758": "C14",
+    "872": "C8",
+    "875": "C8",
+    "876": "C2",
+    "877": "C16",
+    "878": "C18",
+    "881": "C4",
+    "882": "C10",
+    "883": "C21",
+    "940": "C3",
+    "948": "C15",
+    "949": "C11",
+    "965": "C2",
+    "968": "C9",
+    "986": "C17",
+    "987": "C7",
+    "1117": "C3",
+    "1118": "C1",
+    "1119": "C2",
+    "1122": "C14",
+    "1154": "C16",
+    "1156": "C13",
+    "1234": "C8",
+    "1236": "C1",
+    "1238": "C15",
+    "1332": "C9",
+    "1333": "C7",
+    "1693": "C8",
+    "1383": "C7"
+  }
 }
