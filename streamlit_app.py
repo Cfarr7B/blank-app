@@ -7269,6 +7269,62 @@ def tab_pipeline(dash):
     import datetime as _dt
     today = _dt.date.today()
 
+    # ── Openings per month / week ────────────────────────────────────────────
+    st.divider()
+    oc1, oc2 = st.columns([3, 1])
+    with oc1:
+        st.markdown("#### 📆 Projected Openings")
+    with oc2:
+        _gran = st.radio("Group by", ["Month", "Week"], horizontal=True, key="pipe_open_gran",
+                         label_visibility="collapsed")
+    _op = dff[dff["open_dt"].notna()].copy()
+    if _op.empty:
+        st.info("No projected open dates in the current filter.")
+    else:
+        if _gran == "Week":
+            _op["_per"] = (_op["open_dt"] - pd.to_timedelta(_op["open_dt"].dt.weekday, unit="D")).dt.normalize()
+            _freq, _xfmt, _lbl = "W-MON", "%b %d '%y", "Week of %b %d, %Y"
+        else:
+            _op["_per"] = _op["open_dt"].dt.to_period("M").dt.to_timestamp()
+            _freq, _xfmt, _lbl = "MS", "%b '%y", "%B %Y"
+        _op["_name"] = _op.apply(lambda r: f"{r['city']}, {r['state']}"
+                                 + (f" · {r['market']}" if r.get("market") else ""), axis=1)
+        _grp = _op.sort_values("open_dt").groupby("_per").agg(
+            n=("rsh", "size"), names=("_name", lambda s: "<br>".join(s)))
+        # Fill empty periods so gaps in the schedule are visible
+        _idx = pd.date_range(_grp.index.min(), _grp.index.max(), freq=_freq)
+        _grp = _grp.reindex(_idx).fillna({"n": 0, "names": ""})
+        _grp["n"] = _grp["n"].astype(int)
+        _grp["label"] = [d.strftime(_lbl) for d in _grp.index]
+
+        fig_open = go.Figure(go.Bar(
+            x=_grp.index, y=_grp["n"], marker_color="#AC2430",
+            customdata=list(zip(_grp["label"], _grp["names"])),
+            hovertemplate="<b>%{customdata[0]}</b> — %{y} opening(s)<br>%{customdata[1]}<extra></extra>",
+        ))
+        brew_fig(fig_open, height=300)
+        fig_open.update_layout(
+            bargap=0.25 if _gran == "Month" else 0.15, showlegend=False,
+            xaxis=dict(tickformat=_xfmt, tickangle=-35),
+            yaxis=dict(title="Stands opening", dtick=1 if _grp["n"].max() <= 8 else 2, rangemode="tozero"),
+        )
+        st.plotly_chart(fig_open, config={"displayModeBar": False}, use_container_width=True)
+
+        _next90 = _op[(_op["open_dt"].dt.date >= today) &
+                      (_op["open_dt"].dt.date <= today + _dt.timedelta(days=90))]
+        _busiest = _grp["n"].idxmax()
+        st.caption(
+            f"{len(_op)} stands with a projected open date · **{len(_next90)}** in the next 90 days · "
+            f"busiest {_gran.lower()}: **{_grp.loc[_busiest, 'label']}** ({_grp['n'].max()}). "
+            "Hover a bar to see the stands. Follows the filters above. "
+            "2027–28 dates are soft; many early-stage sites share a placeholder date (e.g. 7/28/28)."
+        )
+        with st.expander("Table view", expanded=False):
+            _tv = _grp[_grp["n"] > 0][["label", "n", "names"]].copy()
+            _tv["names"] = _tv["names"].str.replace("<br>", "; ", regex=False)
+            _tv.columns = [_gran, "Openings", "Stands"]
+            st.dataframe(_tv, use_container_width=True, hide_index=True)
+
     st.divider()
     _report_snapshots = _pdata["report_snapshots"]
     snap_labels = [s["label"] for s in _report_snapshots]
