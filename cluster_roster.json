@@ -156,7 +156,7 @@
     },
     "C22": {
       "rm": "",
-      "covered_with": ""
+      "covered_with": "C19"
     },
     "C23": {
       "rm": "",
@@ -174,17 +174,11 @@
     "1693": {
       "rm": "Ryley Gee"
     },
-    "333": {
-      "rm": "Jaden Jenkins"
-    },
     "392": {
       "rm": "Madison Macias"
     },
     "484": {
       "rm": "Matt Avery"
-    },
-    "492": {
-      "rm": "Jaden Jenkins"
     },
     "515": {
       "rm": "Olivia Kaminski"
