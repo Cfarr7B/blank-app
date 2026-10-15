@@ -1759,6 +1759,20 @@ border:1px solid currentColor;white-space:nowrap;line-height:1.5}
 .ov7 .sn{display:block} .ov7 .sid{display:block;font-weight:400;font-size:.76rem;color:var(--muted)}
 .ov7 .note{display:block;font-weight:600;font-size:.74rem;color:#175bb0}
 .ov7 .ctx{margin:10px 0 0;color:var(--muted);font-size:.9rem}
+.ov7 h2.oh{font-size:1.35rem;margin:22px 0 8px;font-weight:800;border-left:6px solid var(--red);padding-left:10px;scroll-margin-top:70px}
+.ov7 h3.doh{font-size:1.15rem;margin:22px 0 8px;font-weight:800;border-bottom:3px solid var(--red);padding-bottom:6px;scroll-margin-top:70px}
+.ov7 h3.doh span{font-size:.85rem;font-weight:600;color:var(--muted);margin-left:8px}
+.ov7 nav.jump{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:4px 0 6px;font-size:.88rem}
+.ov7 nav.jump b{color:var(--muted);font-weight:700;margin-right:2px}
+.ov7 nav.jump a{display:inline-block;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);
+color:#175bb0;font-weight:600;text-decoration:none} .ov7 nav.jump a:hover{border-color:#175bb0}
+.ov7 a.mk{color:#175bb0;font-weight:700;text-decoration:none} .ov7 a.mk:hover{text-decoration:underline}
+.ov7 details.mkt{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:0 0 12px;scroll-margin-top:70px}
+.ov7 details.mkt>summary{cursor:pointer;padding:12px 14px;font-weight:800;font-size:1.02rem;border-bottom:1px solid transparent}
+.ov7 details.mkt[open]>summary{border-bottom-color:var(--line)}
+.ov7 details.mkt>summary .sm{font-weight:600;font-size:.86rem;color:var(--muted);margin-left:6px}
+.ov7 details.mkt .body{padding:12px 14px}
+.ov7 p.back{margin:10px 0 0;font-size:.86rem} .ov7 p.back a{color:#175bb0;font-weight:600;margin-right:14px}
 .ov7 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 10px;padding:0;list-style:none;font-size:.86rem;color:var(--muted)}
 </style>
 """
@@ -1939,7 +1953,14 @@ def tab_overview(dash):
     st.html(_OV_CSS)
     basis = ("actual vs stand goals (WoW Weekly Goals)" if mode == "goal" else
              f"no stand goals for this period — compared to {plabel[prev]}" if mode == "prior" else "first period on file — no comparison")
-    st.markdown(f"### {plabel[pk]} Scorecard" + ("" if sel_do == "All DOs" else f" — {sel_do}"))
+    _slug = lambda t: "do-" + re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
+    scope_dos = [d for d in do_order if any(s["do"] == d for s in scope)]
+    st.html(f'<div class="ov7"><h2 class="oh" id="ov-top">{E(plabel[pk])} Scorecard'
+            + ("" if sel_do == "All DOs" else f" — {E(sel_do)}") + '</h2>'
+            '<nav class="jump" aria-label="Jump to section"><b>Jump to:</b>'
+            '<a href="#ov-markets">Market Overview</a><a href="#ov-detail">Market Detail</a>'
+            + "".join(f'<a href="#{_slug(d)}">{E(d)}</a>' for d in scope_dos)
+            + '<a href="#ov-sources">Sources</a></nav></div>')
     st.caption(f"{sysr['stands']} stands · {basis}. Labor and COGS are lower-is-better; Store EBITDA has no stand or market goal.")
 
     # ── System cards ─────────────────────────────────────────────────────────
@@ -2016,13 +2037,15 @@ def tab_overview(dash):
     st.html(f'<div class="ov7"><div class="cards">{"".join(cards)}</div></div>')
 
     # ── Market overview table (grouped DO → markets) ──────────────────────────
-    st.markdown("#### Market Overview")
     by_cl = {}
     for s in scope:
         by_cl.setdefault(s["cluster"] or "_other", []).append(s)
 
     def mk_name(c):
-        return f"{clusters[c]['market']} <span class='sid'>{c} · {E(clusters[c]['area'])}</span>" if c in clusters else "Other / closed stands"
+        mid = f"mkt-{c.lower()}" if c in clusters else "mkt-other"
+        nm = clusters[c]["market"] if c in clusters else "Other / closed stands"
+        sub = f"<span class='sid'>{c} · {E(clusters[c]['area'])}</span>" if c in clusters else ""
+        return f'<a class="mk" href="#{mid}">{E(nm)}</a>{sub}'
 
     def ov_row(label, r, rm_txt, cls=""):
         ns_, lb_, cg_ = (_ov_eval(r, k, True) for k in ("sales", "labor", "cogs"))
@@ -2043,7 +2066,8 @@ def tab_overview(dash):
     for do in [d for d in do_order if any(s["do"] == d for s in scope)]:
         do_st = [s for s in scope if s["do"] == do]
         do_areas = [a for a in areas if (directors.get(a) or "DO (Open)") == do] if do != "Other" else []
-        rows.append(ov_row(f"{E(do)}<span class='sid'>{E(', '.join(do_areas)) or 'Not in a current market'}</span>",
+        rows.append(ov_row(f'<a class="mk" href="#{_slug(do)}">{E(do)}</a>'
+                           f"<span class='sid'>{E(', '.join(do_areas)) or 'Not in a current market'}</span>",
                            _ov_roll(do_st), (lambda n: f"{n} RM{'' if n == 1 else 's'}")(len({s['rm'] for s in do_st if s['rm']})), "do-row"))
         for c in [c for c in cl_order if c in by_cl and by_cl[c][0]["do"] == do] + (["_other"] if do == "Other" and "_other" in by_cl else []):
             ss = by_cl[c]
@@ -2052,13 +2076,14 @@ def tab_overview(dash):
     head = ["Market", "RM", "Stands", f"Sales % to {cmp_lbl}", f"Hourly Labor % (actual / {cmp_lbl.lower() if mode == 'goal' else cmp_lbl})",
             f"COGS % (actual / {cmp_lbl.lower() if mode == 'goal' else cmp_lbl})", "EBITDA | Margin", "KPI checks " + ("at goal" if mode == "goal" else "improved")]
     ths = "".join(f'<th scope="col" class="{"num" if i >= 2 and i != 1 else ""}">{E(h)}</th>' for i, h in enumerate(head))
-    st.html(f'<div class="ov7"><div class="scroll"><table class="data"><caption>{E(plabel[pk])}: Director of Operations roll-ups '
-            f'(shaded) and their markets. KPI checks count Net Sales, Hourly Labor and COGS. EBITDA is actual only.</caption>'
+    st.html(f'<div class="ov7"><h2 class="oh" id="ov-markets">Market Overview</h2>'
+            f'<div class="scroll"><table class="data"><caption>{E(plabel[pk])}: Director of Operations roll-ups '
+            f'(shaded) and their markets. Select a DO or market name to jump to its detail. KPI checks count Net Sales, Hourly Labor and COGS. EBITDA is actual only.</caption>'
             f'<thead><tr>{ths}</tr></thead><tbody>{"".join(rows)}</tbody></table></div></div>')
 
-    # ── Market detail: tiles + stand table, one expander per market ───────────
-    st.markdown("#### Market Detail")
-    st.caption("Open a market to see its roll-up and every stand.")
+    # ── Market detail: DO headings + one collapsible section per market (anchor targets) ─
+    _open = st.toggle("Expand all market sections", value=True, key="ov_open_all",
+                      help="Collapse to scan the market headers; select a market name above to jump to it.")
 
     def tile(label, e, actual_txt, goal_txt, extra=""):
         var = f'<span class="tv">{e["var"]}</span>' if "var" in e else ""
@@ -2087,42 +2112,52 @@ def tab_overview(dash):
         return "".join(out)
 
     gw = "Goal" if mode == "goal" else plabel.get(prev, "Prior")
-    for do in [d for d in do_order if any(s["do"] == d for s in scope)]:
-        st.markdown(f"**{do}**")
+    det = ['<h2 class="oh" id="ov-detail">Market Detail</h2>']
+    for do in scope_dos:
+        do_areas = [a for a in areas if (directors.get(a) or "DO (Open)") == do] if do != "Other" else []
+        det.append(f'<h3 class="doh" id="{_slug(do)}">{E(do)}<span>{E(", ".join(do_areas))}</span></h3>')
         for c in [c for c in cl_order if c in by_cl and by_cl[c][0]["do"] == do] + (["_other"] if do == "Other" and "_other" in by_cl else []):
             ss = by_cl[c]
             r = _ov_roll(ss)
             ns_, lb_, cg_ = (_ov_eval(r, k, True) for k in ("sales", "labor", "cogs"))
             rms = ", ".join(sorted({s["rm"] for s in ss if s["rm"]})) or "No RM"
             title = (f"{clusters[c]['market']} · {c}" if c in clusters else "Other / closed stands")
-            flag = "🟢" if ns_["status"] == "met" else ("🔴" if ns_["status"] == "miss" else "⚪")
-            with st.expander(f"{flag} {title} — {rms} · {len(ss)} stand{'' if len(ss) == 1 else 's'} · "
-                             + (f"{ns_['ratio'] * 100:.1f}% to {gw.lower() if mode == 'goal' else gw}" if "ratio" in ns_ else "no sales comparison")):
-                eb_extra = f'<p class="tm">Margin {_ov_pct(r["ebitda_pct"])} · actual only</p>'
-                prs = [s for s in ss if s["prior"] and s["prior"].get("Store_EBITDA_pct") is not None and s["prior"].get("Net_Sales")]
-                if prs and prev:
-                    psales = sum(s["prior"]["Net_Sales"] for s in prs)
-                    pm_ = sum(s["prior"]["Net_Sales"] * s["prior"]["Store_EBITDA_pct"] for s in prs) / psales
-                    cur = sum(s["ebitda"] for s in prs) / sum(s["net_sales"] for s in prs)
-                    eb_extra += f'<p class="tm">Same-stand {plabel[prev]} margin {_ov_pct(pm_)} ({len(prs)} of {len(ss)}): {_ov_pts(cur - pm_)} to {_ov_pct(cur)}</p>'
-                attm = lambda k: f'<p class="tm">{r["met"][k]} of {r["with_goal"][k]} stands {"at goal" if mode == "goal" else "improved"}</p>'
-                tiles = (tile("Net Sales % to " + gw, ns_, f"{ns_['ratio'] * 100:.1f}%" if "ratio" in ns_ else "—",
-                              f"{gw} {_ov_money(ns_['goal'])} · actual {_ov_money(ns_['actual'])}",
-                              attm("ns") + f'<p class="tm">Total incl. stands without a {gw.lower()}: {_ov_money(r["net_sales"])}</p>')
-                         + tile("Hourly Labor %", lb_, _ov_pct(lb_["actual"]), f"{gw} {_ov_pct(lb_['goal'])}",
-                                attm("hourly") + f'<p class="tm">All-in labor: {_ov_pct(r["labor_pct"])}</p>')
-                         + tile("COGS %", cg_, _ov_pct(cg_["actual"]), f"{gw} {_ov_pct(cg_['goal'])}", attm("cogs"))
-                         + f'<div class="tile tile-none"><p class="tl">Store EBITDA</p><p class="tb">{_ov_money(r["ebitda"])}</p>{eb_extra}</div>')
-                st.html(f'<div class="ov7"><div class="tiles">{tiles}</div><div class="scroll"><table class="data">'
-                        f'<caption>{E(title)} stands, {E(plabel[pk])}: actual vs {E(gw.lower() if mode == "goal" else gw)}. '
-                        f'EBITDA and margin are actual only.</caption><thead><tr>'
-                        f'<th scope="col">Stand</th><th scope="col" class="num">Net Sales</th><th scope="col" class="num">Sales {E(gw)}</th>'
-                        f'<th scope="col" class="num">% to {E(gw)}</th><th scope="col" class="num">Hourly Labor %</th>'
-                        f'<th scope="col" class="num">Labor {E(gw)}</th><th scope="col" class="num">COGS %</th>'
-                        f'<th scope="col" class="num">COGS {E(gw)}</th><th scope="col" class="num">EBITDA</th>'
-                        f'<th scope="col" class="num">Margin</th></tr></thead><tbody>{stand_rows(ss)}</tbody></table></div></div>')
+            mid = f"mkt-{c.lower()}" if c in clusters else "mkt-other"
+            eb_extra = f'<p class="tm">Margin {_ov_pct(r["ebitda_pct"])} · actual only</p>'
+            prs = [s for s in ss if s["prior"] and s["prior"].get("Store_EBITDA_pct") is not None and s["prior"].get("Net_Sales")]
+            if prs and prev:
+                psales = sum(s["prior"]["Net_Sales"] for s in prs)
+                pm_ = sum(s["prior"]["Net_Sales"] * s["prior"]["Store_EBITDA_pct"] for s in prs) / psales
+                cur = sum(s["ebitda"] for s in prs) / sum(s["net_sales"] for s in prs)
+                eb_extra += (f'<p class="tm">Same-stand {plabel[prev]} margin {_ov_pct(pm_)} ({len(prs)} of {len(ss)}): '
+                             f'{_ov_pts(cur - pm_)} to {_ov_pct(cur)}</p>')
+            attm = lambda k: f'<p class="tm">{r["met"][k]} of {r["with_goal"][k]} stands {"at goal" if mode == "goal" else "improved"}</p>'
+            tiles = (tile("Net Sales % to " + gw, ns_, f"{ns_['ratio'] * 100:.1f}%" if "ratio" in ns_ else "—",
+                          f"{gw} {_ov_money(ns_['goal'])} · actual {_ov_money(ns_['actual'])}",
+                          attm("ns") + f'<p class="tm">Total incl. stands without a {gw.lower()}: {_ov_money(r["net_sales"])}</p>')
+                     + tile("Hourly Labor %", lb_, _ov_pct(lb_["actual"]), f"{gw} {_ov_pct(lb_['goal'])}",
+                            attm("hourly") + f'<p class="tm">All-in labor: {_ov_pct(r["labor_pct"])}</p>')
+                     + tile("COGS %", cg_, _ov_pct(cg_["actual"]), f"{gw} {_ov_pct(cg_['goal'])}", attm("cogs"))
+                     + f'<div class="tile tile-none"><p class="tl">Store EBITDA</p><p class="tb">{_ov_money(r["ebitda"])}</p>{eb_extra}</div>')
+            summ = (f'{badge(ns_["status"])} {E(title)}<span class="sm">RM {E(rms)} · {len(ss)} stand{"" if len(ss) == 1 else "s"}'
+                    + (f' · {ns_["ratio"] * 100:.1f}% to {E(gw.lower() if mode == "goal" else gw)}' if "ratio" in ns_ else "")
+                    + '</span>')
+            det.append(
+                f'<details class="mkt" id="{mid}"{" open" if _open else ""}><summary>{summ}</summary><div class="body">'
+                f'<div class="tiles">{tiles}</div><div class="scroll"><table class="data">'
+                f'<caption>{E(title)} stands, {E(plabel[pk])}: actual vs {E(gw.lower() if mode == "goal" else gw)}. '
+                f'EBITDA and margin are actual only.</caption><thead><tr>'
+                f'<th scope="col">Stand</th><th scope="col" class="num">Net Sales</th><th scope="col" class="num">Sales {E(gw)}</th>'
+                f'<th scope="col" class="num">% to {E(gw)}</th><th scope="col" class="num">Hourly Labor %</th>'
+                f'<th scope="col" class="num">Labor {E(gw)}</th><th scope="col" class="num">COGS %</th>'
+                f'<th scope="col" class="num">COGS {E(gw)}</th><th scope="col" class="num">EBITDA</th>'
+                f'<th scope="col" class="num">Margin</th></tr></thead><tbody>{stand_rows(ss)}</tbody></table></div>'
+                f'<p class="back"><a href="#ov-markets">↑ Back to Market Overview</a><a href="#{_slug(do)}">↑ {E(do)}</a>'
+                f'<a href="#ov-top">↑ Top</a></p></div></details>')
+    st.html(f'<div class="ov7">{"".join(det)}</div>')
 
     no_goal = [s["name"] for s in scope if mode == "goal" and not s["ns_goal"]]
+    st.html('<div class="ov7"><h2 class="oh" id="ov-sources" style="font-size:1.05rem">Sources</h2></div>')
     st.caption("Sources: P&L PTD actuals · stand goals from the WoW report's Weekly Goals sheet (`kpi_goals.json`) · "
                "FY plan from the CEO Snapshot · markets, RMs and DOs from the Cluster Roster."
                + (f" No sales goal row: {', '.join(no_goal)}." if no_goal else ""))
