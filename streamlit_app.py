@@ -7306,7 +7306,7 @@ def _get_pipeline_dfs(_mtime: float):
 def tab_pipeline(dash):
     import streamlit.components.v1 as components
 
-    st.markdown("### 🏗️ Stand Pipeline *(Draft)*")
+    st.markdown("### 🏗️ Stand Pipeline")
 
     _pmtime = _pipeline_mtime()
     _pdata  = _load_pipeline_data(_pmtime)
@@ -8037,7 +8037,7 @@ def _roster_stands(pdata: dict) -> pd.DataFrame:
 def tab_roster(dash):
     import datetime as _dt
 
-    st.markdown("### 🧭 Cluster Roster")
+    st.markdown("### 🧭 Cluster Roster *(Draft)*")
     st.caption(
         "Each stand has a **home market** (permanent geography from the 7C Cluster Roster). "
         "Each market either has **its own RM** or is **covered with** another market until it is big enough to split. "
@@ -8360,7 +8360,7 @@ def _published_assignments(pdata: dict, roster: dict) -> pd.DataFrame:
 
 
 def tab_map(dash):
-    st.markdown("### 🗺️ Stand Map")
+    st.markdown("### 🗺️ Stand Map *(Draft)*")
     st.caption("Every open stand and every pipeline stand. Pick an area, DO, market or RM to zoom in. "
                "Markets and RMs follow the published Cluster Roster.")
 
@@ -8517,9 +8517,9 @@ def main():
         "📋 Stands",
         "💡 Wins & Opportunities",
         "⚡ Utilities & R&M",
-        "🏗️ Pipeline (Draft)",
-        "🧭 Cluster Roster",
-        "🗺️ Stand Map",
+        "🏗️ Pipeline",
+        "🧭 Cluster Roster (Draft)",
+        "🗺️ Stand Map (Draft)",
     ]
     tabs = st.tabs(tab_names)
 
