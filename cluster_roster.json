@@ -1,7 +1,7 @@
 {
   "_updated": "2026-10-19",
   "_note": "Edited on the Cluster Roster tab; download and send to Claude to publish.",
-  "split_threshold": 7,
+  "split_threshold": 4,
   "rm_max_stands": 9,
   "directors": {
     "West Texas": "Lauren Fowler",
