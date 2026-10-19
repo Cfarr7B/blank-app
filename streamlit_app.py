@@ -8064,7 +8064,8 @@ def _roster_hiring_plan(res, cl_state, rm_home, rm_max, split_at, lead, today, a
     second market the RM owns) plus any markets covered with that one. The group moves to a
     new RM, and both units keep being checked so later second hires show up too.
     If an RM is over capacity but no group is big enough to stand alone (< split_at), the largest
-    group is moved to an RM in the same area with room instead (a rebalance, not a hire). If no RM
+    group is moved to that market's own RM if they have room, else a same-area RM with room
+    (a rebalance, not a hire). If no RM
     has room, it is flagged as over capacity and the hire waits until a group can stand alone."""
     pb = _roster_period_buckets(today)
     res = res.assign(_pb=[None if o else _roster_period(d, today) for o, d in zip(res["is_open"], res["od"])])
@@ -8083,6 +8084,13 @@ def _roster_hiring_plan(res, cl_state, rm_home, rm_max, split_at, lead, today, a
 
     queue, plan = [], []
     base = {rm: cum(res[res["rm"] == rm]) for rm in rm_home}
+
+    def eff_rm(c, seen=()):
+        x = cl_state.get(c, {})
+        cw = x.get("covered_with", "")
+        if cw and cw not in seen and cw != c:
+            return eff_rm(cw, seen + (c,))
+        return x.get("rm", "")
     for rm in rm_home:
         sub = res[res["rm"] == rm]
         if not sub.empty:
@@ -8132,6 +8140,10 @@ def _roster_hiring_plan(res, cl_state, rm_home, rm_max, split_at, lead, today, a
                 ar = area_of.get(home, "")
                 room = sorted((base[r][t], r) for r in base
                               if r != u["name"] and area_of.get(rm_home.get(r), "") == ar and base[r][t] + n <= rm_max)
+                # The market's own RM (e.g. stands on an RM override going back to their market's RM) comes first
+                own = eff_rm(pick)
+                if own and own != u["name"] and own in base and base[own][t] + n <= rm_max:
+                    room = [(base[own][t], own)]
                 grp = [pick] + [m for m in groups[pick] if m != pick]
                 if room:
                     recv = room[0][1]
