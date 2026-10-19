@@ -768,6 +768,38 @@ FY_PLAN = {
 }
 
 
+def _ceo_market_rollup(dash, pks):
+    """EBITDA by market (cluster) for the given periods, from stand P&L records.
+    Mapping matches the Home scorecard: roster stand override → pipeline store_clusters.
+    Returns one row per (period_key, market) with net_sales, ebitda, ebitda_pct, stands."""
+    _pdata = _load_pipeline_data(_pipeline_mtime())
+    clusters = _pdata.get("clusters", {})
+    store_cl = _pdata.get("store_clusters", {})
+    try:
+        ov = _load_roster_file(_file_sig(_ROSTER_PATH)).get("stand_overrides", {})
+    except FileNotFoundError:
+        ov = {}
+    order = {c: i for i, c in enumerate(clusters)}
+    rows = []
+    for r in dash.get("stand_records", []):
+        if r.get("Period_Key") not in pks or not r.get("Net_Sales"):
+            continue
+        sid = str(int(r["Store_ID"])) if r.get("Store_ID") not in (None, "") else ""
+        c = ov.get(sid, {}).get("cluster") or store_cl.get(sid, "")
+        rows.append({"period_key": r["Period_Key"], "cid": c if c in clusters else "_other",
+                     "net_sales": r["Net_Sales"] or 0.0, "ebitda": r.get("Store_EBITDA") or 0.0, "sid": sid})
+    if not rows:
+        return pd.DataFrame(columns=["period_key", "cid", "market", "area", "order", "net_sales", "ebitda", "ebitda_pct", "stands"])
+    df = pd.DataFrame(rows)
+    g = df.groupby(["period_key", "cid"]).agg(net_sales=("net_sales", "sum"), ebitda=("ebitda", "sum"),
+                                             stands=("sid", "nunique")).reset_index()
+    g["ebitda_pct"] = g["ebitda"] / g["net_sales"]
+    g["market"] = g["cid"].map(lambda c: _cluster_label(c, clusters) if c in clusters else "Other / closed stands")
+    g["area"] = g["cid"].map(lambda c: clusters.get(c, {}).get("area", ""))
+    g["order"] = g["cid"].map(lambda c: order.get(c, 999))
+    return g
+
+
 def tab_ceo(dash):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
@@ -1067,9 +1099,11 @@ def tab_ceo(dash):
     net_new_stands  = last_stand_cnt - prior_year_end_cnt
     gap_pts = (avg_ebitda_pct - PE_TARGET) * 100
 
-    latest_reg_df = get_regions_df(dash, latest["period_key"])
+    # Leader / laggard by market (latest period; markets with 3+ stands so one stand can't swing it)
+    latest_reg_df = _ceo_market_rollup(dash, {latest["period_key"]})
+    latest_reg_df = latest_reg_df[(latest_reg_df["cid"] != "_other") & (latest_reg_df["stands"] >= 3)].rename(columns={"market": "region"})
     best_reg  = worst_reg = None
-    if not latest_reg_df.empty and "ebitda_pct" in latest_reg_df.columns:
+    if not latest_reg_df.empty:
         best_reg  = latest_reg_df.loc[latest_reg_df["ebitda_pct"].idxmax()]
         worst_reg = latest_reg_df.loc[latest_reg_df["ebitda_pct"].idxmin()]
 
@@ -1121,7 +1155,7 @@ def tab_ceo(dash):
         spread_pts = (best_reg["ebitda_pct"] - worst_reg["ebitda_pct"]) * 100
         reg_html = (f'<p><strong>{best_reg["region"]}</strong> leads at {_fmt_p(best_reg["ebitda_pct"])} · '
                     f'<strong>{worst_reg["region"]}</strong> lags at {_fmt_p(worst_reg["ebitda_pct"])} · '
-                    f'{spread_pts:.2f} pt regional spread ({latest["label"]})</p>')
+                    f'{spread_pts:.2f} pt spread across markets with 3+ stands ({latest["label"]})</p>')
 
     gap_state = "met" if gap_pts >= 0 else ("pace" if gap_pts >= -2 else "miss")
     gap_lab   = {"met": "On target", "pace": "Near target", "miss": "Below target"}[gap_state]
@@ -1341,37 +1375,33 @@ def tab_ceo(dash):
             st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
 
     with col4:
-        # Aggregate regions across selected periods
-        section("REGIONAL PERFORMANCE", f"EBITDA% by region — {period_range}")
-        reg_frames = [get_regions_df(dash, k) for k in filtered_pks]
-        valid_reg_frames = [r for r in reg_frames if not r.empty]
-        reg_all = pd.concat(valid_reg_frames, ignore_index=True) if valid_reg_frames else pd.DataFrame()
-        if not reg_all.empty:
-            pct_cols_r = [c for c in reg_all.columns if c.endswith("_pct")]
-            reg_agg = reg_all.groupby("region").agg({"net_sales": "sum"}).reset_index()
-            for c in pct_cols_r:
-                if c in reg_all.columns:
-                    reg_agg[c] = reg_all.groupby("region").apply(
-                        lambda g: (g[c] * g["net_sales"]).sum() / g["net_sales"].sum() if g["net_sales"].sum() > 0 else 0
-                    ).values
-            reg_df = reg_agg.sort_values("ebitda_pct", ascending=True) if "ebitda_pct" in reg_agg.columns else reg_agg
-            if "ebitda_pct" in reg_df.columns:
-                fig3 = go.Figure(go.Bar(
-                    y=reg_df["region"], x=reg_df["ebitda_pct"] * 100, orientation="h",
-                    marker_color=[C_PRIMARY if v >= avg_ebitda_pct else C_GOAL for v in reg_df["ebitda_pct"]],
-                    text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.2f}%"),
-                    textposition="outside", cliponaxis=False,
-                    hovertemplate="%{y}<br>EBITDA %{x:.2f}%<extra></extra>",
-                ))
-                fig3.add_vline(x=avg_ebitda_pct * 100, line_dash="dot",
-                               line_color=C_REF, annotation_text=f"System {avg_ebitda_pct*100:.2f}%",
-                               annotation_font=dict(size=12, color=C_REF),
-                               annotation_position="top")
-                ceo_fig(fig3, height=max(320, 28 * len(reg_df) + 70), legend=False)
-                fig3.update_layout(xaxis=dict(ticksuffix="%", rangemode="tozero"), bargap=0.3,
-                                   margin=dict(t=30, b=44, l=8, r=60))
-                st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
-                st.caption("Blue = at or above the system average; gray = below.")
+        # Aggregate markets across selected periods (sales-weighted: total EBITDA ÷ total sales)
+        section("MARKET PERFORMANCE", f"Store EBITDA % by market — {period_range}")
+        _mk = _ceo_market_rollup(dash, set(filtered_pks))
+        if not _mk.empty:
+            reg_df = (_mk.groupby(["cid", "market", "area", "order"])
+                         .agg(net_sales=("net_sales", "sum"), ebitda=("ebitda", "sum"), stands=("stands", "max"))
+                         .reset_index())
+            reg_df["ebitda_pct"] = reg_df["ebitda"] / reg_df["net_sales"]
+            reg_df = reg_df.sort_values("ebitda_pct", ascending=True)
+            fig3 = go.Figure(go.Bar(
+                y=reg_df["market"], x=reg_df["ebitda_pct"] * 100, orientation="h",
+                marker_color=[C_PRIMARY if v >= avg_ebitda_pct else C_GOAL for v in reg_df["ebitda_pct"]],
+                text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.2f}%"),
+                textposition="outside", cliponaxis=False,
+                customdata=reg_df[["area", "stands"]].values,
+                hovertemplate="%{y}<br>%{customdata[0]}<br>EBITDA %{x:.2f}% · up to %{customdata[1]} stands<extra></extra>",
+            ))
+            fig3.add_vline(x=avg_ebitda_pct * 100, line_dash="dot",
+                           line_color=C_REF, annotation_text=f"System {avg_ebitda_pct*100:.2f}%",
+                           annotation_font=dict(size=12, color=C_REF),
+                           annotation_position="top")
+            ceo_fig(fig3, height=max(320, 26 * len(reg_df) + 80), legend=False)
+            fig3.update_layout(xaxis=dict(ticksuffix="%", rangemode="tozero"), bargap=0.3,
+                               margin=dict(t=30, b=44, l=8, r=60))
+            st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
+            st.caption("Markets from the Cluster Roster. Blue = at or above the system average; gray = below. "
+                       "Markets with only 1–2 stands can swing widely.")
 
     # ── Row 2: Prime Cost vs EBITDA | New Stand Openings ──────────────────────
     col5, col6 = st.columns(2)
@@ -1473,42 +1503,42 @@ def tab_ceo(dash):
 
     st.html('<hr class="brew">')
 
-    # ── Regional Heatmap — filtered by selected periods ──
-    section("REGIONAL EBITDA HEATMAP", f"EBITDA% by region × period — {period_range}")
-    all_regions = sorted(set(r for pk in filtered_pks for r in [x["region"] for x in dash.get("region_by_period", {}).get(pk, [])]))
-    heat_data = []
-    for pk in filtered_pks:
-        regs = {r["region"]: r["ebitda_pct"] for r in dash.get("region_by_period", {}).get(pk, [])}
-        lbl = filtered_df.loc[filtered_df["period_key"]==pk, "label"].values
-        row = {"Period": lbl[0] if len(lbl) else pk}
-        for reg in all_regions:
-            row[reg] = round(regs.get(reg, float("nan")) * 100, 1) if reg in regs else None
-        heat_data.append(row)
-
-    if heat_data:
-        heat_df = pd.DataFrame(heat_data).set_index("Period")
-        _z = heat_df.astype(float).values
+    # ── Market Heatmap — markets × selected periods ──
+    section("MARKET EBITDA HEATMAP", f"Store EBITDA % by market × period — {period_range}")
+    _hm = _ceo_market_rollup(dash, set(filtered_pks))
+    if not _hm.empty:
+        _plbl = dict(zip(filtered_df["period_key"], filtered_df["label"]))
+        _cols = [k for k in filtered_pks if k in set(_hm["period_key"])]
+        _mk_rows = (_hm.drop_duplicates("cid").sort_values("order")[["cid", "market"]])
+        _pv = _hm.pivot_table(index="cid", columns="period_key", values="ebitda_pct", aggfunc="first")
+        _pv = _pv.reindex(index=_mk_rows["cid"], columns=_cols)
+        _ns = _hm.pivot_table(index="cid", columns="period_key", values="stands", aggfunc="first").reindex(index=_mk_rows["cid"], columns=_cols)
+        _z = (_pv.astype(float) * 100).values
         _sys = avg_ebitda_pct * 100
         _span = max(float(np.nanmax(np.abs(_z - _sys))) if np.isfinite(_z).any() else 5, 1)
+        _span = min(_span, 15)  # 1-stand markets can be extreme; keep the scale readable
         fig4 = go.Figure(go.Heatmap(
             z=_z,
-            x=heat_df.columns.tolist(),
-            y=heat_df.index.tolist(),
+            x=[_plbl.get(k, k) for k in _cols],
+            y=_mk_rows["market"].tolist(),
             colorscale=[[0, "#d9737b"], [0.5, "#f4f1ec"], [1, "#6ea6e6"]],
             zmid=_sys, zmin=_sys - _span, zmax=_sys + _span,
             text=[["" if pd.isna(v) else f"{v:.1f}%" for v in row] for row in _z],
+            customdata=_ns.values,
             texttemplate="%{text}",
             textfont=dict(size=12, family=FONT, color="#1a1a1a"),
             hoverongaps=False,
-            hovertemplate="%{x} · %{y}<br>EBITDA %{z:.1f}%<extra></extra>",
+            hovertemplate="%{y} · %{x}<br>EBITDA %{z:.1f}% · %{customdata} stands<extra></extra>",
             xgap=2, ygap=2,
             colorbar=dict(ticksuffix="%", tickfont=dict(size=12), thickness=14),
         ))
-        ceo_fig(fig4, height=max(240, 90 + len(heat_data) * 34), legend=False)
-        fig4.update_layout(plot_bgcolor="white", xaxis=dict(side="top", tickangle=-30, showgrid=False),
-                           yaxis=dict(autorange="reversed", showgrid=False), margin=dict(t=110, b=10, l=8, r=8))
+        ceo_fig(fig4, height=max(260, 70 + len(_mk_rows) * 30), legend=False)
+        fig4.update_layout(plot_bgcolor="white", xaxis=dict(side="top", showgrid=False, type="category"),
+                           yaxis=dict(autorange="reversed", showgrid=False, type="category"),
+                           margin=dict(t=50, b=10, l=8, r=8))
         st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
-        st.caption(f"Blue = above the {period_range} system average ({_sys:.2f}%), red = below; blank = region had no stands that period.")
+        st.caption(f"Markets in Cluster Roster order. Blue = above the {period_range} system average ({_sys:.2f}%), "
+                   "red = below; blank = market had no open stands that period. Hover for stand count.")
 
     st.html('<hr class="brew">')
 
@@ -1582,22 +1612,22 @@ def tab_ceo(dash):
                 "cls": "watch", "tag_cls": "red",
             })
 
-        # Region-specific leakage detection
-        if not reg_all.empty and "ebitda_pct" in reg_all.columns:
-            # Check for regions losing ground vs prior periods
-            for region in reg_all["region"].unique():
-                reg_periods = reg_all[reg_all["region"] == region].copy()
-                if len(reg_periods) >= 2:
-                    # Get region data across the filtered periods and check trend
-                    first_ebitda = reg_periods.iloc[0].get("ebitda_pct", 0)
-                    last_ebitda = reg_periods.iloc[-1].get("ebitda_pct", 0)
-                    if first_ebitda - last_ebitda > 0.03:  # >3% pts decline
-                        seasonal_alerts.append({
-                            "title": f"📍 {region}: EBITDA declining ({_fmt_p(first_ebitda)} → {_fmt_p(last_ebitda)})",
-                            "body": f"This region has dropped {(first_ebitda - last_ebitda)*100:.0f}bps across the selected periods. "
-                                    f"Investigate whether this is volume-driven (seasonal) or cost-driven (labor/R&M creep).",
-                            "cls": "watch", "tag_cls": "red",
-                        })
+        # Market-specific leakage detection (first vs last selected period; 3+ stands at both ends)
+        _lk = _ceo_market_rollup(dash, set(filtered_pks))
+        _lk = _lk[_lk["cid"] != "_other"]
+        _pos = {k: i for i, k in enumerate(filtered_pks)}
+        for _cid, _g in _lk.groupby("cid"):
+            _g = _g.assign(_i=_g["period_key"].map(_pos)).sort_values("_i")
+            if len(_g) < 2 or _g.iloc[0]["stands"] < 3 or _g.iloc[-1]["stands"] < 3:
+                continue
+            first_ebitda, last_ebitda = _g.iloc[0]["ebitda_pct"], _g.iloc[-1]["ebitda_pct"]
+            if first_ebitda - last_ebitda > 0.03:  # >3 pts decline
+                seasonal_alerts.append({
+                    "title": f"📍 {_g.iloc[0]['market']}: EBITDA declining ({_fmt_p(first_ebitda)} → {_fmt_p(last_ebitda)})",
+                    "body": f"This market has dropped {(first_ebitda - last_ebitda)*100:.0f}bps across the selected periods "
+                            f"({int(_g.iloc[-1]['stands'])} stands). Investigate whether this is volume-driven (seasonal) or cost-driven (labor/R&M creep).",
+                    "cls": "watch", "tag_cls": "red",
+                })
 
     if not seasonal_alerts:
         seasonal_alerts.append({
