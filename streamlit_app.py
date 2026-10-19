@@ -787,13 +787,15 @@ def _ceo_market_rollup(dash, pks):
         sid = str(int(r["Store_ID"])) if r.get("Store_ID") not in (None, "") else ""
         c = ov.get(sid, {}).get("cluster") or store_cl.get(sid, "")
         rows.append({"period_key": r["Period_Key"], "cid": c if c in clusters else "_other",
-                     "net_sales": r["Net_Sales"] or 0.0, "ebitda": r.get("Store_EBITDA") or 0.0, "sid": sid})
+                     "net_sales": r["Net_Sales"] or 0.0, "ebitda": r.get("Store_EBITDA") or 0.0,
+                     "labor": r.get("Total_Labor") or 0.0, "sid": sid})
     if not rows:
         return pd.DataFrame(columns=["period_key", "cid", "market", "area", "order", "net_sales", "ebitda", "ebitda_pct", "stands"])
     df = pd.DataFrame(rows)
     g = df.groupby(["period_key", "cid"]).agg(net_sales=("net_sales", "sum"), ebitda=("ebitda", "sum"),
-                                             stands=("sid", "nunique")).reset_index()
+                                             labor=("labor", "sum"), stands=("sid", "nunique")).reset_index()
     g["ebitda_pct"] = g["ebitda"] / g["net_sales"]
+    g["labor_pct"] = g["labor"] / g["net_sales"]
     g["market"] = g["cid"].map(lambda c: _cluster_label(c, clusters) if c in clusters else "Other / closed stands")
     g["area"] = g["cid"].map(lambda c: clusters.get(c, {}).get("area", ""))
     g["order"] = g["cid"].map(lambda c: order.get(c, 999))
@@ -3426,8 +3428,7 @@ def _cohort_section(stands_df, pk, period_lbl):
         ramp_stands = ramp_all[ramp_all["_open_year"] == int(sel_open_yr)].copy()
 
     bucket_order  = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
-    bucket_colors = {"New (<6mo)": "#FF6B00", "Young (6-12mo)": "#F5A623",
-                     "Developing (1-2yr)": "#4A90E2", "Mature (2yr+)": "#12a06e"}
+    bucket_colors = {b: C_PRIMARY for b in bucket_order}  # one hue: the axis names each cohort
 
     # ── Cohort KPI strip ─────────────────────────────────────────────────────
     cohort_agg = (period_stands.groupby("Age_Bucket")
@@ -3442,21 +3443,16 @@ def _cohort_section(stands_df, pk, period_lbl):
     mature_avg  = mature_row["avg_sales"].values[0] if not mature_row.empty else blend_avg
     dilution    = mature_avg - blend_avg
 
-    ck1, ck2, ck3, ck4 = st.columns(4)
-    ck1.metric("Mature Store Avg Sales", f"${mature_avg:,.0f}",
-               help=f"Avg net sales for 2yr+ stands in {period_lbl}")
-    ck2.metric(f"{period_lbl} System Avg", f"${blend_avg:,.0f}",
-               delta=f"${dilution:+,.0f} vs mature",
-               delta_color="inverse" if dilution < 0 else "normal",
-               help="Blended average across all stands this period — matches Period Summary above")
-    if not mature_row.empty:
-        ck3.metric("Mature Store Avg EBITDA%",
-                   f"{mature_row['avg_ebitda'].values[0]*100:.2f}%",
-                   help="EBITDA margin for 2yr+ stands this period")
-        new_row = cohort_agg[cohort_agg["Age_Bucket"] == "New (<6mo)"]
-        ck4.metric("New Stand Avg EBITDA%",
-                   f"{new_row['avg_ebitda'].mean()*100:.2f}%" if not new_row.empty else "—",
-                   help="EBITDA margin for stands in first 6 months this period")
+    new_row = cohort_agg[cohort_agg["Age_Bucket"] == "New (<6mo)"]
+    _m_e = mature_row["avg_ebitda"].values[0] if not mature_row.empty else None
+    _n_e = new_row["avg_ebitda"].mean() if not new_row.empty else None
+    _t = lambda lab, big, note: f'<div class="tile"><p class="tl">{lab}</p><p class="tb">{big}</p><p class="tm">{note}</p></div>'
+    st.html(_OV_CSS + '<div class="ov7"><div class="tiles">'
+            + _t("Mature stand avg sales", f"${mature_avg:,.0f}", f"2yr+ stands · {period_lbl}")
+            + _t(f"{period_lbl} system avg sales", f"${blend_avg:,.0f}", f"{'−' if dilution > 0 else '+'}${abs(dilution):,.0f} vs mature (new-stand dilution)")
+            + _t("Mature stand avg EBITDA %", f"{_m_e*100:.2f}%" if _m_e is not None and pd.notna(_m_e) else "—", "2yr+ stands")
+            + _t("New stand avg EBITDA %", f"{_n_e*100:.2f}%" if _n_e is not None and pd.notna(_n_e) else "—", "first 6 months")
+            + '</div></div>')
 
     st.caption(f"All metrics above reflect {period_lbl} · {yr_label}. Mature stores run at higher margins because labor is fully trained, volume is established, and pre-opening costs are absorbed.")
 
@@ -3464,7 +3460,7 @@ def _cohort_section(stands_df, pk, period_lbl):
     ch1, ch2 = st.columns(2)
 
     with ch1:
-        st.markdown(f"**Avg Net Sales by Cohort** *({period_lbl} · {yr_label})*")
+        st.markdown(f"**Avg Net Sales by Cohort** *({period_lbl} · {yr_label}) · dotted line = period avg ${blend_avg:,.0f}*")
         fig_sales = go.Figure()
         for _, crow in cohort_agg.dropna(subset=["avg_sales"]).iterrows():
             bkt = crow["Age_Bucket"]
@@ -3474,15 +3470,12 @@ def _cohort_section(stands_df, pk, period_lbl):
                 text=[f"${crow['avg_sales']:,.0f}<br>({int(crow['n_stands'])} stands)"],
                 textposition="outside", showlegend=False,
             )
-        fig_sales.add_hline(y=blend_avg, line_dash="dash",
-                            line_color="rgba(255,255,255,0.4)",
-                            annotation_text=f"Period avg ${blend_avg:,.0f}",
-                            annotation_position="top right",
-                            annotation_font_color="rgba(255,255,255,0.5)")
-        fig_sales.update_layout(template="plotly_dark", height=300,
-                                margin=dict(t=30,b=20,l=0,r=0),
-                                yaxis_title="Avg Net Sales ($)", bargap=0.35)
-        st.plotly_chart(fig_sales, use_container_width=True)
+        fig_sales.add_hline(y=blend_avg, line_dash="dot",
+                            line_color=C_REF)
+        ceo_fig(fig_sales, height=320, legend=False)
+        fig_sales.update_layout(yaxis=dict(tickprefix="$", tickformat=",.0f", rangemode="tozero"),
+                                bargap=0.35, margin=dict(t=30, b=40, l=8, r=28))
+        st.plotly_chart(fig_sales, use_container_width=True, config={"displayModeBar": False})
 
     with ch2:
         st.markdown(f"**Avg EBITDA% & Labor% by Cohort** *({period_lbl} · {yr_label})*")
@@ -3499,14 +3492,13 @@ def _cohort_section(stands_df, pk, period_lbl):
             x=cohort_agg.dropna(subset=["avg_labor"])["Age_Bucket"].tolist(),
             y=(cohort_agg.dropna(subset=["avg_labor"])["avg_labor"] * 100).tolist(),
             name="Labor%", mode="lines+markers",
-            line=dict(color="#F5A623", width=2),
+            line=dict(color=C_SECOND, width=2), marker=dict(size=8),
             showlegend=True,
         )
-        fig_pct.update_layout(template="plotly_dark", height=300,
-                              margin=dict(t=30,b=20,l=0,r=0),
-                              yaxis_title="% of Net Sales",
-                              legend=dict(orientation="h", y=1.1), bargap=0.35)
-        st.plotly_chart(fig_pct, use_container_width=True)
+        fig_pct.data[0].update(name="EBITDA %", showlegend=True)
+        ceo_fig(fig_pct, height=320)
+        fig_pct.update_layout(yaxis=dict(ticksuffix="%", rangemode="tozero"), bargap=0.35)
+        st.plotly_chart(fig_pct, use_container_width=True, config={"displayModeBar": False})
 
     # ── Revenue ramp curve (all-time — needs multiple periods to trace trajectory) ──
     rc1, rc2 = st.columns([3, 1])
@@ -3528,7 +3520,7 @@ def _cohort_section(stands_df, pk, period_lbl):
         ramp_stands["age_yrs_num"].fillna(0) * 13
     ).round().astype(int).clip(0, 39)
 
-    # Derive state from Region column (FL / OK / TX)
+    # State (FL / OK / TX): stand's State column when present, else derived from the legacy region name
     def _state_from_region(region):
         r = str(region).upper()
         if "FL" in r or "FLORIDA" in r or "PANHANDLE" in r or "WEST COAST" in r:
@@ -3539,7 +3531,10 @@ def _cohort_section(stands_df, pk, period_lbl):
             return "TX"
         return "Other"
 
-    if "Region" in ramp_stands.columns:
+    if "State" in ramp_stands.columns and ramp_stands["State"].notna().any():
+        ramp_stands["_state"] = ramp_stands["State"].fillna("").str.upper().map(
+            lambda x: x if x in ("FL", "OK", "TX") else "Other")
+    elif "Region" in ramp_stands.columns:
         ramp_stands["_state"] = ramp_stands["Region"].apply(_state_from_region)
     else:
         ramp_stands["_state"] = "Unknown"
@@ -3551,25 +3546,25 @@ def _cohort_section(stands_df, pk, period_lbl):
     sys_curve = sys_curve[sys_curve["periods_since_open"] <= 30]
 
     # State color palette
-    state_colors = {"TX": "#F5A623", "FL": "#12a06e", "OK": "#AC2430", "Other": "#888888"}
+    state_colors = {"TX": C_PRIMARY, "FL": C_SECOND, "OK": C_THIRD, "Other": C_GOAL}
 
     fig_ramp = go.Figure()
 
     # Background age-zone shading
     for x0, x1, color, label in [
-        (0,   6.5, "rgba(255,107,0,0.08)",  "New (<6mo)"),
-        (6.5, 13,  "rgba(245,166,35,0.06)", "Young"),
-        (13,  26,  "rgba(74,144,226,0.05)", "Developing"),
+        (0,   6.5, "rgba(0,0,0,0.045)", "New (<6mo)"),
+        (6.5, 13,  "rgba(0,0,0,0.025)", "Young"),
+        (13,  26,  "rgba(0,0,0,0.045)", "Developing"),
     ]:
         fig_ramp.add_vrect(x0=x0, x1=x1, fillcolor=color, line_width=0,
                            annotation_text=label, annotation_position="top left",
-                           annotation_font_color=color.replace("0.0", "0.7").replace("0.08","0.7").replace("0.06","0.7").replace("0.05","0.7"))
+                           annotation_font=dict(size=12, color=C_REF))
 
     if ramp_view == "System Average":
         fig_ramp.add_scatter(
             x=sys_curve["periods_since_open"], y=sys_curve["avg_sales"],
             mode="lines+markers", name="System Avg",
-            line=dict(color="#12a06e", width=2.5), marker=dict(size=5),
+            line=dict(color=C_PRIMARY, width=2.5), marker=dict(size=8),
             customdata=sys_curve["stand_count"],
             hovertemplate="Period %{x}<br>Avg Sales: $%{y:,.0f}<br>Stands: %{customdata}<extra></extra>",
         )
@@ -3594,7 +3589,7 @@ def _cohort_section(stands_df, pk, period_lbl):
         fig_ramp.add_scatter(
             x=sys_curve["periods_since_open"], y=sys_curve["avg_sales"],
             mode="lines", name="System Avg",
-            line=dict(color="rgba(255,255,255,0.25)", width=1.5, dash="dot"),
+            line=dict(color=C_REF, width=1.5, dash="dot"),
             hoverinfo="skip",
         )
 
@@ -3624,7 +3619,7 @@ def _cohort_section(stands_df, pk, period_lbl):
         fig_ramp.add_scatter(
             x=sys_curve["periods_since_open"], y=sys_curve["avg_sales"],
             mode="lines", name="System Avg",
-            line=dict(color="#ffffff", width=2.5, dash="dash"),
+            line=dict(color=C_REF, width=2.5, dash="dash"),
             hovertemplate="System Avg · Period %{x}<br>$%{y:,.0f}<extra></extra>",
         )
         # Add one visible legend entry per state so user knows the colors
@@ -3635,21 +3630,19 @@ def _cohort_section(stands_df, pk, period_lbl):
                     line=dict(color=scolor, width=2), showlegend=True,
                 )
 
+    ceo_fig(fig_ramp, height=360 if ramp_view == "Individual Stands" else 320, legend=ramp_view != "System Average")
     fig_ramp.update_layout(
-        template="plotly_dark",
-        height=340 if ramp_view == "Individual Stands" else 300,
-        margin=dict(t=20, b=40, l=0, r=0),
+        margin=dict(t=48, b=50, l=8, r=28),
         xaxis_title="Periods Since Opening (1 period ≈ 4 weeks)",
         yaxis_title="Net Sales ($)" if ramp_view == "Individual Stands" else "Avg Net Sales ($)",
         xaxis=dict(dtick=2),
-        legend=dict(orientation="v", x=1.01, y=1),
     )
-    st.plotly_chart(fig_ramp, use_container_width=True)
+    st.plotly_chart(fig_ramp, use_container_width=True, config={"displayModeBar": False})
 
     caption_map = {
         "System Average": "Each point = average net sales across all matching stands at that exact period-since-opening. The ramp plateau shows when a typical 7BREW stand reaches full volume.",
-        "By State":        "Each line = state average ramp. Dashed white = system average. Useful for spotting whether FL, TX, or OK stands ramp faster.",
-        "Individual Stands": "Each thin line = one stand's actual weekly-period trajectory. White dashed = system average. Hover any line for stand details.",
+        "By State":        "Each line = state average ramp. Dotted gray = system average. Useful for spotting whether FL, TX, or OK stands ramp faster.",
+        "Individual Stands": "Each thin line = one stand's actual period trajectory, colored by state. Dashed gray = system average. Hover any line for stand details.",
     }
     st.caption(caption_map[ramp_view])
 
@@ -3866,6 +3859,7 @@ def tab_regions(dash):
 def tab_insights(dash, archive=False):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
+    st.html(_OV_CSS)
     section("WINS & OPPORTUNITIES", "Evidence-based findings with recommended actions")
 
     all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
@@ -3918,6 +3912,39 @@ def tab_insights(dash, archive=False):
           The analysis below uses <strong>maturity-adjusted benchmarks</strong> so new locations aren't flagged for normal ramp behavior.
         </div>""")
 
+    # ── Period summary tiles (scorecard style; vs prior period) ──
+    if not archive:
+        _keys = periods_df["period_key"].tolist()
+        _pi = _keys.index(pk)
+        _pp = periods_df.iloc[_pi - 1] if _pi > 0 else None
+
+        def _wt(label, big, note, state="none", badge_lab=""):
+            b = f'<p class="ts">{ceo_badge(state, badge_lab)}</p>' if badge_lab else ""
+            return (f'<div class="tile tile-{state}"><p class="tl">{label}</p><p class="tb">{big}</p>'
+                    f'{b}<p class="tm">{note}</p></div>')
+
+        def _vs(cur, prev, lower_better):
+            if prev is None or pd.isna(prev):
+                return "none", ""
+            d = (cur - prev) * 100
+            if abs(d) < 0.05:
+                return "none", f"{d:+.2f} pts"
+            good = d < 0 if lower_better else d > 0
+            return ("met" if good else "miss"), f"{d:+.2f} pts"
+
+        _pl = _pp["label"] if _pp is not None else ""
+        _e_st, _e_lab = _vs(ps["ebitda_pct"], _pp["ebitda_pct"] if _pp is not None else None, False)
+        _l_st, _l_lab = _vs(ps["labor_pct"], _pp["labor_pct"] if _pp is not None else None, True)
+        _n_hi = int((mature["Store_EBITDA_pct"] >= 0.22).sum()) if len(mature) else 0
+        _n_lo = int((mature["Store_EBITDA_pct"] < 0.10).sum()) if len(mature) else 0
+        st.html('<div class="ov7"><div class="tiles">'
+                + _wt("System EBITDA %", _fmt_p(ps["ebitda_pct"]), f"vs {_pl}" if _pl else "first period on file", _e_st, _e_lab)
+                + _wt("Total labor %", _fmt_p(ps["labor_pct"]), f"vs {_pl} · lower is better" if _pl else "lower is better", _l_st, _l_lab)
+                + _wt("Established stands ≥ 22% EBITDA", f"{_n_hi} of {len(mature)}", "6+ months open", "met" if _n_hi else "none", "Wins")
+                + _wt("Established stands < 10% EBITDA", f"{_n_lo} of {len(mature)}", "6+ months open", "miss" if _n_lo else "met", "Needs action" if _n_lo else "None")
+                + _wt("New stands ramping", str(n_ramping), "open < 6 months · tracked separately below")
+                + '</div></div>')
+
     # Auto-generate wins
     wins = []
     opps = []
@@ -3941,14 +3968,13 @@ def tab_insights(dash, archive=False):
                 "tag": "Ahead of Ramp", "tag_cls": "green",
             })
 
-    strong_regions = []
-    for _, row in get_regions_df(dash, pk).iterrows():
-        if row.get("ebitda_pct", 0) >= 0.22:
-            strong_regions.append(row["region"])
-    if strong_regions:
+    _mk_pk = _ceo_market_rollup(dash, {pk})
+    _mk_pk = _mk_pk[(_mk_pk["cid"] != "_other") & (_mk_pk["stands"] >= 3)]
+    strong_regions = _mk_pk[_mk_pk["ebitda_pct"] >= 0.22].sort_values("ebitda_pct", ascending=False)
+    if len(strong_regions):
         wins.append({
-            "title": f"📍 Strong Regions: {', '.join(strong_regions)}",
-            "body": f"These regions cleared the 22% EBITDA threshold this period, showing mature unit economics and disciplined cost management.",
+            "title": f"📍 Strong Markets: {', '.join(strong_regions['market'].str.split(' · ').str[0])}",
+            "body": f"These markets (3+ stands) cleared the 22% EBITDA threshold this period, showing mature unit economics and disciplined cost management.",
             "tag": "22%+ EBITDA", "tag_cls": "green",
         })
 
@@ -4014,11 +4040,11 @@ def tab_insights(dash, archive=False):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#12a06e;margin-bottom:10px;">🏆 WINS</div>')
+        st.html(f'<div class="ov7"><h3 class="ch">{ceo_badge("met", "Wins")} <span>{len(wins)} finding{"" if len(wins) == 1 else "s"}</span></h3></div>')
         for w in wins:
             insight_card(w["title"], w["body"], w.get("tag",""), w.get("tag_cls","green"), "win")
     with col2:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#AC2430;margin-bottom:10px;">⚠ OPPORTUNITIES</div>')
+        st.html(f'<div class="ov7"><h3 class="ch">{ceo_badge("miss", "Opportunities")} <span>{len(opps)} finding{"" if len(opps) == 1 else "s"}</span></h3></div>')
         for o in opps:
             insight_card(o["title"], o["body"], o.get("tag",""), o.get("tag_cls","red"))
 
@@ -4054,73 +4080,69 @@ def tab_insights(dash, archive=False):
             n = len(names)
 
             def _rc(fig, title, yaxis_opts):
-                brew_fig(fig, height=360)
+                st.html(f'<div class="ov7"><h3 class="ch">{title}</h3></div>')
+                ceo_fig(fig, height=340)
                 fig.update_layout(
-                    title_text=title,
                     barmode="group",
                     xaxis=dict(tickangle=-30, tickfont=dict(size=13)),
                     yaxis=dict(**yaxis_opts, tickfont=dict(size=13)),
-                    legend=dict(orientation="h", y=1.08, x=0, font=dict(size=13)),
-                    bargap=0.25,
+                    bargap=0.25, bargroupgap=0.06,
                 )
                 st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
             # Chart 1 — Net Sales vs System Avg
             sv = subset["Net_Sales"].fillna(0).tolist()
             f1 = go.Figure()
-            f1.add_bar(x=names, y=sv, name="Actual", marker_color=accent_color, opacity=0.88,
+            f1.add_bar(x=names, y=sv, name="Actual", marker_color=C_PRIMARY,
                        text=[f"${v:,.0f}" for v in sv],
                        textposition="outside", textfont=dict(size=12))
-            f1.add_bar(x=names, y=[_sys_sales]*n, name="System Avg", marker_color=MUTED, opacity=0.55,
+            f1.add_bar(x=names, y=[_sys_sales]*n, name="System avg", marker_color=C_GOAL,
                        text=[f"${_sys_sales:,.0f}"]*n,
                        textposition="outside", textfont=dict(size=12))
-            _rc(f1, f"NET SALES — {group_label}", dict(tickprefix="$", tickformat=",.0f"))
+            _rc(f1, f"Net sales <span>· {group_label.title()} vs system avg</span>", dict(tickprefix="$", tickformat=",.0f"))
 
             # Chart 2 — EBITDA % vs System Avg
             ev = (subset["Store_EBITDA_pct"].fillna(0) * 100).tolist()
             f2 = go.Figure()
             f2.add_bar(x=names, y=ev, name="Actual EBITDA %",
-                       marker_color=[GREEN if v >= _sys_ebitda else AMBER if v >= _sys_ebitda * 0.6 else RED
-                                     for v in ev],
-                       opacity=0.88, text=[f"{v:.2f}%" for v in ev],
+                       marker_color=C_PRIMARY, text=[f"{v:.2f}%" for v in ev],
                        textposition="outside", textfont=dict(size=12))
             f2.add_bar(x=names, y=[_sys_ebitda]*n, name=f"Sys Avg ({_sys_ebitda:.2f}%)",
-                       marker_color=MUTED, opacity=0.55,
+                       marker_color=C_GOAL,
                        text=[f"{_sys_ebitda:.2f}%"]*n,
                        textposition="outside", textfont=dict(size=12))
-            _rc(f2, f"EBITDA % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
+            _rc(f2, f"Store EBITDA % <span>· {group_label.title()} vs system avg</span>", dict(ticksuffix="%", tickformat=".1f"))
 
             # Chart 3 — Labor % vs System Avg
             lv = (subset["Total_Labor_pct"].fillna(0) * 100).tolist()
             f3 = go.Figure()
             f3.add_bar(x=names, y=lv, name="Actual Labor %",
-                       marker_color=[GREEN if v <= _sys_labor else AMBER if v <= _sys_labor + 5 else RED
-                                     for v in lv],
-                       opacity=0.88, text=[f"{v:.2f}%" for v in lv],
+                       marker_color=C_PRIMARY, text=[f"{v:.2f}%" for v in lv],
                        textposition="outside", textfont=dict(size=12))
             f3.add_bar(x=names, y=[_sys_labor]*n, name=f"Sys Avg ({_sys_labor:.2f}%)",
-                       marker_color=MUTED, opacity=0.55,
+                       marker_color=C_GOAL,
                        text=[f"{_sys_labor:.2f}%"]*n,
                        textposition="outside", textfont=dict(size=12))
-            _rc(f3, f"LABOR % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
+            _rc(f3, f"Labor % <span>· {group_label.title()} vs system avg · lower is better</span>", dict(ticksuffix="%", tickformat=".1f"))
 
             # Chart 4 — COGS % vs System Avg
             cv = (subset["Total_COGS_pct"].fillna(0) * 100).tolist()
             f4 = go.Figure()
             f4.add_bar(x=names, y=cv, name="Actual COGS %",
-                       marker_color=[GREEN if v <= _sys_cogs else AMBER if v <= _sys_cogs + 3 else RED
-                                     for v in cv],
-                       opacity=0.88, text=[f"{v:.2f}%" for v in cv],
+                       marker_color=C_PRIMARY, text=[f"{v:.2f}%" for v in cv],
                        textposition="outside", textfont=dict(size=12))
             f4.add_bar(x=names, y=[_sys_cogs]*n, name=f"Sys Avg ({_sys_cogs:.2f}%)",
-                       marker_color=MUTED, opacity=0.55,
+                       marker_color=C_GOAL,
                        text=[f"{_sys_cogs:.2f}%"]*n,
                        textposition="outside", textfont=dict(size=12))
-            _rc(f4, f"COGS % — {group_label}", dict(ticksuffix="%", tickformat=".1f"))
+            _rc(f4, f"COGS % <span>· {group_label.title()} vs system avg · lower is better</span>", dict(ticksuffix="%", tickformat=".1f"))
 
-        # Split Florida vs Non-Florida by Region name (FL regions start with "FL")
-        if "Region" in ramping.columns:
-            fl_mask    = ramping["Region"].str.startswith("FL", na=False)
+        # Split Florida vs Non-Florida by the stand's state (legacy region names like "Central SWFL"
+        # don't start with "FL", so the old region test mis-filed SW Florida stands)
+        if "State" in ramping.columns or "Region" in ramping.columns:
+            _stt = ramping["State"].fillna("") if "State" in ramping.columns else pd.Series("", index=ramping.index)
+            _reg = ramping["Region"].fillna("") if "Region" in ramping.columns else pd.Series("", index=ramping.index)
+            fl_mask    = (_stt.str.upper() == "FL") | _reg.str.contains(r"\bFL|SWFL|Florida", regex=True)
             ramp_fl    = ramping[fl_mask].copy()
             ramp_nonfl = ramping[~fl_mask].copy()
         else:
@@ -4147,6 +4169,7 @@ def tab_insights(dash, archive=False):
 
     # ── CRITICAL ISSUES + FORWARD-LOOKING RISKS ───────────────────────────────
     st.html('<hr class="brew">')
+    section("CRITICAL ISSUES & RISKS", f"Established-stand problems and what to watch next — {ps['label']}")
 
     # Alias maturity buckets to match pothole variable names
     est_stands  = mature
@@ -4160,8 +4183,7 @@ def tab_insights(dash, archive=False):
         avg_new_labor = new_stands["Total_Labor_pct"].mean() if "Total_Labor_pct" in new_stands.columns else 0
         avg_est_labor = est_stands["Total_Labor_pct"].mean() if n_est and "Total_Labor_pct" in est_stands.columns else 0
         st.html(f"""
-        <div style="background:#fff8e1;border-left:4px solid #e8940a;border-radius:6px;
-                    padding:12px 16px;margin-bottom:14px;font-family:'DM Mono',monospace;font-size:12px;">
+        <div class="info-box">
           <strong>📋 Maturity Filter Active:</strong> {n_new} new stand(s) (&lt;6 months) are excluded from Critical Issues
           — their elevated labor ({_fmt_p(avg_new_labor)} avg) and lower EBITDA are expected during ramp.
           Established stands ({n_est}) avg labor: {_fmt_p(avg_est_labor)}.
@@ -4170,8 +4192,7 @@ def tab_insights(dash, archive=False):
     pot_col1, pot_col2 = st.columns(2)
 
     with pot_col1:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
-                'color:#AC2430;margin-bottom:10px;">🚨 CRITICAL ISSUES — ESTABLISHED STANDS</div>')
+        st.html(f'<div class="ov7"><h3 class="ch">{ceo_badge("miss", "Critical issues")} <span>established stands</span></h3></div>')
 
         if est_stands.empty:
             st.info("No established stands in this period.")
@@ -4232,22 +4253,17 @@ def tab_insights(dash, archive=False):
                 )
 
     with pot_col2:
-        st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;'
-                'color:#e8940a;margin-bottom:10px;">⚠ FORWARD-LOOKING RISKS</div>')
+        st.html(f'<div class="ov7"><h3 class="ch">{ceo_badge("pace", "Forward-looking risks")}</h3></div>')
 
-        reg_df_pot = get_regions_df(dash, pk)
-        high_labor_regions = []
-        if not reg_df_pot.empty and "labor_pct" in reg_df_pot.columns:
-            sys_labor = float(ps.get("labor_pct", 0))
-            for _, rrow in reg_df_pot.iterrows():
-                if rrow.get("labor_pct", 0) > sys_labor + 0.04:
-                    high_labor_regions.append((rrow["region"], rrow["labor_pct"]))
+        sys_labor = float(ps.get("labor_pct", 0))
+        high_labor_regions = [(r["market"].split(" · ")[0], r["labor_pct"]) for _, r in _mk_pk.iterrows()
+                              if r["labor_pct"] > sys_labor + 0.04]
         if high_labor_regions:
             reg_list = ", ".join(f"{r} ({_fmt_p(l)})" for r, l in sorted(high_labor_regions, key=lambda x: -x[1]))
             insight_card(
-                f"⚠ Regional Labor Gap: {len(high_labor_regions)} Region(s) 400bps+ Above Avg",
-                f"{reg_list} are running 400bps+ above system avg labor. "
-                f"Regional labor creep compounds quickly — investigate scheduling and staffing ratios.",
+                f"⚠ Market Labor Gap: {len(high_labor_regions)} Market(s) 400bps+ Above Avg",
+                f"{reg_list} {'is' if len(high_labor_regions) == 1 else 'are'} running 400bps+ above the {_fmt_p(sys_labor)} system avg labor (markets with 3+ stands). "
+                f"Market labor creep compounds quickly — investigate scheduling and staffing ratios.",
                 tag="Labor Risk", tag_cls="amber", card_cls="watch",
             )
 
