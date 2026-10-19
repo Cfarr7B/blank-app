@@ -8046,6 +8046,126 @@ def _roster_period(od, today):
     return f"P{yp[1]}'{str(yp[0])[-2:]}"
 
 
+def _roster_period_start(label):
+    """"P1'27" → date that period starts (None for 2028+)."""
+    import datetime as _dt
+    m = re.match(r"P(\d+)'(\d\d)$", str(label))
+    if not m or 2000 + int(m[2]) not in _ROSTER_P1:
+        return None
+    return _dt.date(*_ROSTER_P1[2000 + int(m[2])]) + _dt.timedelta(days=(int(m[1]) - 1) * 28)
+
+
+def _roster_hiring_plan(res, cl_state, rm_home, rm_max, split_at, lead, today, area_of, mname):
+    """Simulate RM hires period by period.
+
+    Each RM 'unit' owns a set of stands. A unit triggers a hire in the first period where
+    (a) its stand count goes over rm_max, or (b) a split-off group it covers reaches split_at.
+    A split-off group = a market directly under the RM's home market (covered with it, or a
+    second market the RM owns) plus any markets covered with that one. The group moves to a
+    new RM, and both units keep being checked so later second hires show up too.
+    If an RM is over capacity but no group is big enough to stand alone (< split_at), the largest
+    group is moved to an RM in the same area with room instead (a rebalance, not a hire). If no RM
+    has room, it is flagged as over capacity and the hire waits until a group can stand alone."""
+    pb = _roster_period_buckets(today)
+    res = res.assign(_pb=[None if o else _roster_period(d, today) for o, d in zip(res["is_open"], res["od"])])
+
+    def cum(sub):
+        run, out = int(sub["is_open"].sum()), []
+        for b in pb:
+            run += int(((~sub["is_open"]) & (sub["_pb"] == b)).sum())
+            out.append(run)
+        return out
+
+    def first(vals, test, start=0):
+        return next((i for i, v in enumerate(vals) if i >= start and test(v)), None)
+
+    st_ = lambda n: f"{n} stand{'' if n == 1 else 's'}"
+
+    queue, plan = [], []
+    base = {rm: cum(res[res["rm"] == rm]) for rm in rm_home}
+    for rm in rm_home:
+        sub = res[res["rm"] == rm]
+        if not sub.empty:
+            home = rm_home.get(rm) if rm_home.get(rm) in set(sub["cluster"]) else sub["cluster"].mode().iat[0]
+            queue.append({"name": rm, "home": home, "stands": sub, "new": False})
+    for c in sorted(set(res.loc[res["rm"] == "", "cluster"])):
+        sub = res[(res["rm"] == "") & (res["cluster"] == c)]
+        plan.append({"kind": "hire", "i": 0, "hire_i": -1, "rm": "⚠️ No RM", "split": [c], "why": "market has no RM",
+                     "load_t": None, "after": None, "new_load": cum(sub)[0], "series": None})
+
+    while queue and len(plan) < 40:
+        u = queue.pop(0)
+        sub, home = u["stands"], u["home"]
+        mk = set(sub["cluster"])
+
+        def parent(m):
+            cw = cl_state.get(m, {}).get("covered_with", "")
+            return cw if cw in mk and cw != m else home
+
+        def path(m):
+            seen, out = set(), []
+            while m != home and m not in seen:
+                seen.add(m); out.append(m); m = parent(m)
+            return out
+
+        kids = [c for c in mk if c != home and parent(c) == home]
+        groups = {c: [m for m in mk if c in path(m)] for c in kids}
+        load = cum(sub)
+        gl = {c: cum(sub[sub["cluster"].isin(g)]) for c, g in groups.items()}
+        f0 = u.get("from", 0)   # never re-trigger before the split that created this unit
+        over_i = None if u.get("skip_over") else first(load, lambda v: v > rm_max, f0)
+        ready = {c: first(v, lambda x: x >= split_at, f0) for c, v in gl.items()}
+        cands = [i for i in [over_i] + list(ready.values()) if i is not None]
+        if not cands:
+            continue
+        t = min(cands)
+        r_now = [c for c in kids if ready[c] is not None and ready[c] <= t]
+        if r_now:
+            pick = min(r_now, key=lambda c: (ready[c], -gl[c][t]))
+            why = f"{mname(pick)} reaches {st_(gl[pick][t])} (split at {split_at})"
+        elif kids:
+            pick = max(kids, key=lambda c: gl[c][t])
+            n = gl[pick][t]
+            why = f"RM reaches {st_(load[t])} (cap {rm_max})"
+            if n < split_at:
+                # Too small for its own RM — hand it to a same-area RM with room instead of hiring
+                ar = area_of.get(home, "")
+                room = sorted((base[r][t], r) for r in base
+                              if r != u["name"] and area_of.get(rm_home.get(r), "") == ar and base[r][t] + n <= rm_max)
+                grp = [pick] + [m for m in groups[pick] if m != pick]
+                if room:
+                    recv = room[0][1]
+                    base[recv] = [a + b for a, b in zip(base[recv], gl[pick])]
+                    plan.append({"kind": "move", "to": recv, "i": t, "hire_i": t - 1, "rm": u["name"], "split": grp,
+                                 "why": f"{why}; {mname(pick)} is only {st_(n)} — too small for its own RM",
+                                 "load_t": load[t], "after": load[t] - n, "new_load": base[recv][t],
+                                 "series": (load, gl[pick])})
+                    moved = sub["cluster"].isin(groups[pick])
+                    for q in queue:   # receiving RM not yet checked → it carries these stands from now on
+                        if q["name"] == recv:
+                            q["stands"] = pd.concat([q["stands"], sub[moved]])
+                    queue.append({"name": u["name"], "home": home, "stands": sub[~moved], "new": u["new"], "from": t})
+                    continue
+                plan.append({"kind": "over", "i": t, "hire_i": t, "rm": u["name"], "split": [],
+                             "why": f"{why}; the largest market they cover ({mname(pick)}) is only {st_(n)} and no "
+                                    f"{ar} RM has room — stretch, or move a stand by hand until a market can stand alone",
+                             "load_t": load[t], "after": None, "new_load": None, "series": (load, gl[pick])})
+                queue.append({**u, "skip_over": True, "from": t})
+                continue
+        else:
+            plan.append({"kind": "redraw", "i": t, "hire_i": t - lead, "rm": u["name"], "split": [], "why":
+                         f"RM reaches {st_(load[t])} (cap {rm_max}) and covers only the home market — redraw it into two markets",
+                         "load_t": load[t], "after": None, "new_load": None, "series": (load, None)})
+            continue
+        plan.append({"kind": "hire", "i": t, "hire_i": t - lead, "rm": u["name"], "split": [pick] + [m for m in groups[pick] if m != pick],
+                     "why": why, "load_t": load[t], "after": load[t] - gl[pick][t], "new_load": gl[pick][t],
+                     "series": (load, gl[pick])})
+        moved = sub["cluster"].isin(groups[pick])
+        queue.append({"name": u["name"], "home": home, "stands": sub[~moved], "new": u["new"], "from": t})
+        queue.append({"name": f"New RM ({mname(pick)})", "home": pick, "stands": sub[moved], "new": True, "from": t})
+    return pb, plan
+
+
 def _roster_stands(pdata: dict) -> pd.DataFrame:
     """Every open stand + every pipeline stand, keyed by store # (no leading zeros) or RSH."""
     meta = _load_stand_meta_for_roster()
@@ -8252,6 +8372,102 @@ def tab_roster(dash):
             rows.append({"key": k, "cluster": c, "rm": rmo or eff_cluster_rm(c),
                          "is_open": bool(b["is_open"]), "quarter": b["quarter"], "od": b["_od"]})
         res = pd.DataFrame(rows)
+
+        # ── RM Hiring Plan — when to hire, which market splits off ───────────────
+        st.divider()
+        st.markdown("#### 🧑‍💼 RM Hiring Plan")
+        st.caption(f"Projects every RM's stand count period by period from the pipeline open dates. A hire is triggered "
+                   f"the first period an RM goes **over {rm_max} stands**, or a market they cover (plus anything covered "
+                   f"with it) reaches **{split_at} stands** — whichever comes first. *Act by* backs off "
+                   f"the lead time below. If the RM is over capacity but nothing they cover is big enough to stand alone, it suggests "
+                   f"**moving** that market to a same-area RM with room instead of hiring. Thresholds are in Roster Setup at the bottom.")
+        hc1, _hc = st.columns([1, 3])
+        lead = hc1.number_input("Lead time to recruit + train an RM (periods)", 0, 13, 2, key="roster_lead",
+                                help="How many 28-day periods before the trigger the new RM should be hired.")
+        _today = _dt.date.today()
+        pb, plan = _roster_hiring_plan(res, cl_state, rm_home, int(rm_max), int(split_at), int(lead), _today,
+                                       {c: v["area"] for c, v in clusters.items()},
+                                       lambda c: clusters.get(c, {}).get("market", c))
+        _pl = lambda i: pb[max(i, 0)] if i is not None else "—"
+
+        def _when(i):
+            if i is None:
+                return "—"
+            if i < 0 or i == 0:
+                return f"Now ({pb[0]})"
+            d0 = _roster_period_start(pb[i])
+            return f"{pb[i]} · {d0.strftime('%b')} {d0.day}, {d0.year}" if d0 else pb[i]
+
+        rows_h = []
+        for h in sorted(plan, key=lambda h: (h["hire_i"], h["rm"])):
+            status = ("🟥 Act now" if h["hire_i"] <= 0 else "🟨 Within 3 periods" if h["hire_i"] <= 3
+                      else "🟩 Later" if pb[h["i"]] != "2028+" else "⬜ 2028+")
+            act = {"hire": "➕ Hire new RM", "move": f"🔁 Move to {h.get('to', '')}",
+                   "redraw": "✂️ Redraw market + hire", "over": "⚠️ Over cap — stretch"}[h["kind"]]
+            rows_h.append({
+                "Status": status, "Action": act, "Act by": _when(h["hire_i"]),
+                "Trigger period": _pl(h["i"]), "Current RM": h["rm"],
+                "Markets to move": ", ".join(clusters.get(m, {}).get("market", m) for m in h["split"])
+                                   or ("— (home market only)" if h["kind"] == "redraw" else "—"),
+                "Why": h["why"],
+                "RM stands at trigger": h["load_t"], "RM after": h["after"], "Receiving RM has": h["new_load"],
+            })
+        hdf = pd.DataFrame(rows_h)
+        n_now = int(hdf["Status"].eq("🟥 Act now").sum()) if not hdf.empty else 0
+        n_soon = int(hdf["Status"].eq("🟨 Within 3 periods").sum()) if not hdf.empty else 0
+        n_fy = int(((hdf["Trigger period"] != "2028+") & hdf["Action"].str.startswith(("➕", "✂️"))).sum()) if not hdf.empty else 0
+        n_ov = int(hdf["Action"].str.startswith("⚠️").sum()) if not hdf.empty else 0
+        n_mv = int(hdf["Action"].str.startswith("🔁").sum()) if not hdf.empty else 0
+        _t = lambda lab_, big, note: f'<div class="tile"><p class="tl">{lab_}</p><p class="tb">{big}</p><p class="tm">{note}</p></div>'
+        st.html(_OV_CSS + '<div class="ov7"><div class="tiles">'
+                + _t("RMs today", f"{len(rm_list)}", "in the roster")
+                + _t("Act now", f"{n_now}", "act-by date is this period or already past")
+                + _t("Within 3 periods", f"{n_soon}", "start the search soon")
+                + _t("New RMs through P13'27", f"{n_fy}", f"→ {len(rm_list) + n_fy} RMs by end of FY27")
+                + _t("Rebalances / stretch", f"{n_mv} / {n_ov}", "move a small market · over cap, nothing to split yet")
+                + '</div></div>')
+        if hdf.empty:
+            st.success(f"No RM goes over {rm_max} stands and no covered market reaches {split_at} stands in the pipeline horizon.")
+        else:
+            st.dataframe(hdf, use_container_width=True, hide_index=True, height=min(40 + len(hdf) * 35, 600),
+                         column_config={
+                             "Status": st.column_config.TextColumn("Status", pinned=True),
+                             "Action": st.column_config.TextColumn("Action", width="medium"),
+                             "Why": st.column_config.TextColumn("Why", width="large"),
+                             "RM stands at trigger": st.column_config.NumberColumn("RM stands at trigger", format="%d"),
+                             "RM after": st.column_config.NumberColumn("RM after", format="%d"),
+                             "Receiving RM has": st.column_config.NumberColumn("Receiving RM has", format="%d",
+                                                                               help="New RM's starting stands, or the receiving RM's total after a move"),
+                         })
+            # Drill-in chart for one RM: total load vs the split-off market, against both thresholds
+            _opts = [f"{r['Current RM']} · {r['Action']} · {r['Markets to move']}" for r in rows_h]
+            _ix = st.selectbox("See the projection behind a hire", range(len(_opts)), format_func=lambda i: _opts[i],
+                               key="roster_hire_pick")
+            _h = sorted(plan, key=lambda h: (h["hire_i"], h["rm"]))[_ix]
+            if _h["series"]:
+                _load, _grp = _h["series"]
+                fig_h = go.Figure()
+                fig_h.add_trace(go.Scatter(x=pb, y=_load, name=f"{_h['rm']} — total stands", mode="lines+markers",
+                                           line=dict(color=C_PRIMARY, width=2), marker=dict(size=8)))
+                if _grp:
+                    fig_h.add_trace(go.Scatter(x=pb, y=_grp, name=f"{rows_h[_ix]['Markets to move']} — stands",
+                                               mode="lines+markers", line=dict(color=C_SECOND, width=2), marker=dict(size=8)))
+                fig_h.add_hline(y=rm_max, line_dash="dot", line_color=C_REF,
+                                annotation_text=f"RM capacity ({rm_max})", annotation_position="top right",
+                                annotation_font=dict(size=12, color=C_REF))
+                fig_h.add_hline(y=split_at, line_dash="dot", line_color=C_GOAL,
+                                annotation_text=f"Split threshold ({split_at})", annotation_position="bottom right",
+                                annotation_font=dict(size=12, color=C_REF))
+                fig_h.add_vline(x=max(_h["hire_i"], 0), line_dash="dash", line_color=C_REF)
+                fig_h.add_annotation(x=max(_h["hire_i"], 0), y=1, yref="paper", text="Act by", showarrow=False,
+                                     xanchor="left", font=dict(size=12, color=C_REF))
+                ceo_fig(fig_h, height=300)
+                fig_h.update_layout(xaxis=dict(type="category", tickangle=-45),
+                                    yaxis=dict(rangemode="tozero", title="Stands", dtick=2))
+                st.plotly_chart(fig_h, config={"displayModeBar": False}, use_container_width=True)
+        st.caption("Uses the Market Coverage and stand moves above (including unsaved edits). Pipeline dates already past "
+                   "count in the current period; 2027–28 dates are soft, so treat later hires as a planning range. "
+                   "Each new RM is re-checked too, so a fast-growing split-off market can trigger its own second hire.")
 
         # ── Timeline: fiscal quarters or 28-day periods (drives every count below) ─
         st.divider()
