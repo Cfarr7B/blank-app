@@ -272,7 +272,7 @@ C_REF     = "#4d4d4d"
 
 def ceo_fig(fig, height=300, legend=True):
     """brew_fig + legend across the top so it never gets clipped on narrow columns."""
-    brew_fig(fig, height=height, show_legend=legend, margin=dict(t=48 if legend else 20, b=40, l=8, r=8))
+    brew_fig(fig, height=height, show_legend=legend, margin=dict(t=48 if legend else 20, b=40, l=8, r=28))
     fig.update_layout(legend=dict(orientation="h", y=1.02, yanchor="bottom", x=0, xanchor="left", title_text=""),
                       hoverlabel=dict(font_family=FONT))
     return fig
@@ -1153,38 +1153,54 @@ def tab_ceo(dash):
     st.html('<hr class="brew">')
 
     # ── Trend Charts (1 × 2) ─────────────────────────────────────────────────
+    # Every period of the selected year/quarter is on the axis (P1–P13), with the prior year (PY)
+    # as a lighter series so periods not reported yet still show last year's pattern.
+    _ax_n  = q_presets[sel_q]
+    _ax    = [f"P{n}" for n in _ax_n]
+    _py_df = periods_df[periods_df["year"] == sel_year - 1]
+    _cy, _py = f"FY{sel_year}", f"FY{sel_year - 1}"
+
+    def _by_p(df, col, scale=1.0):
+        m = {int(r["period_num"]): r[col] for _, r in df.iterrows() if col in df.columns and pd.notna(r[col])}
+        return [m[n] * scale if n in m else None for n in _ax_n]
+
+    _has_py = not _py_df.empty
+    _ax_layout = dict(type="category", categoryorder="array", categoryarray=_ax, tickangle=0)
+    _sub_py = f" · lighter = {_py}" if _has_py else ""
+
     col1, col2 = st.columns(2)
     with col1:
-        section("AVG SALES PER STAND", f"Net sales ÷ active stands, by period — {period_range}")
+        section("AVG SALES PER STAND", f"Net sales ÷ active stands, by period — {_cy}{_sub_py}")
         fig = go.Figure()
-        fig.add_bar(x=filtered_df["label"], y=filtered_df["avg_sales"],
-                    name="Avg sales / stand", marker_color=C_PRIMARY,
-                    hovertemplate="%{x}<br>$%{y:,.0f} per stand<extra></extra>")
+        if _has_py:
+            fig.add_bar(x=_ax, y=_by_p(_py_df, "avg_sales"), name=_py, marker_color=C_GOAL,
+                        hovertemplate=f"{_py} %{{x}}<br>$%{{y:,.0f}} per stand<extra></extra>")
+        fig.add_bar(x=_ax, y=_by_p(year_periods, "avg_sales"), name=_cy, marker_color=C_PRIMARY,
+                    hovertemplate=f"{_cy} %{{x}}<br>$%{{y:,.0f}} per stand<extra></extra>")
         fig.update_layout(
-            xaxis=dict(categoryorder="trace"),
+            xaxis=_ax_layout,
             yaxis=dict(tickprefix="$", tickformat=",.0f"),
-            bargap=0.35,
+            barmode="group", bargap=0.25, bargroupgap=0.08,
         )
-        ceo_fig(fig, height=300, legend=False)
+        ceo_fig(fig, height=300, legend=_has_py)
         st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
     with col2:
-        section("LABOR % & COGS % TREND", f"Share of net sales, by period — {period_range}")
+        section("LABOR % & COGS % TREND", f"Share of net sales, by period — {_cy}" + (f" · dotted = {_py}" if _has_py else ""))
         fig_lc = go.Figure()
-        if "labor_pct" in filtered_df.columns:
-            fig_lc.add_scatter(
-                x=filtered_df["label"], y=filtered_df["labor_pct"] * 100,
-                name="Total labor %", mode="lines+markers",
-                line=dict(color=C_SECOND, width=2.5), marker=dict(size=8),
-            )
-        if "cogs_pct" in filtered_df.columns:
-            fig_lc.add_scatter(
-                x=filtered_df["label"], y=filtered_df["cogs_pct"] * 100,
-                name="COGS %", mode="lines+markers",
-                line=dict(color=C_PRIMARY, width=2.5), marker=dict(size=8),
-            )
+        for col, nm, colr in (("labor_pct", "Labor %", C_SECOND), ("cogs_pct", "COGS %", C_PRIMARY)):
+            if col not in year_periods.columns:
+                continue
+            if _has_py:
+                fig_lc.add_scatter(x=_ax, y=_by_p(_py_df, col, 100), name=f"{nm} {_py}", mode="lines+markers",
+                                   line=dict(color=colr, width=1.5, dash="dot"), marker=dict(size=6, symbol="diamond"),
+                                   opacity=0.75, connectgaps=False,
+                                   hovertemplate=f"{_py} %{{x}}<br>{nm} %{{y:.2f}}%<extra></extra>")
+            fig_lc.add_scatter(x=_ax, y=_by_p(year_periods, col, 100), name=f"{nm} {_cy}", mode="lines+markers",
+                               line=dict(color=colr, width=2.5), marker=dict(size=8), connectgaps=False,
+                               hovertemplate=f"{_cy} %{{x}}<br>{nm} %{{y:.2f}}%<extra></extra>")
         fig_lc.update_layout(
-            xaxis=dict(categoryorder="trace"),
+            xaxis=_ax_layout,
             yaxis=dict(ticksuffix="%", tickformat=".1f"),
         )
         ceo_fig(fig_lc, height=300)
@@ -1361,22 +1377,29 @@ def tab_ceo(dash):
     col5, col6 = st.columns(2)
     with col5:
         if "labor_pct" in filtered_df.columns and "cogs_pct" in filtered_df.columns:
-            section("PRIME COST vs EBITDA %", f"Labor + COGs vs EBITDA margin — {period_range}")
-            prime_cost = (filtered_df["labor_pct"] + filtered_df["cogs_pct"]) * 100
+            section("PRIME COST vs EBITDA %", f"Labor + COGS vs EBITDA margin — {_cy}" + (f" · dotted = {_py} EBITDA %" if _has_py else ""))
+            _yp = year_periods.assign(_prime=year_periods["labor_pct"] + year_periods["cogs_pct"])
             fig_pc = go.Figure()
             fig_pc.add_bar(
-                x=filtered_df["label"], y=prime_cost,
-                name="Prime cost % (labor + COGS)", marker_color=C_GOAL,
-                hovertemplate="%{x}<br>Prime cost %{y:.1f}%<extra></extra>",
+                x=_ax, y=_by_p(_yp, "_prime", 100),
+                name=f"Prime cost % {_cy}", marker_color=C_GOAL,
+                hovertemplate=f"{_cy} %{{x}}<br>Prime cost %{{y:.1f}}%<extra></extra>",
             )
+            if _has_py:
+                fig_pc.add_scatter(
+                    x=_ax, y=_by_p(_py_df, "ebitda_pct", 100),
+                    name=f"EBITDA % {_py}", mode="lines+markers",
+                    line=dict(color=C_PRIMARY, width=1.5, dash="dot"), marker=dict(size=6, symbol="diamond"), opacity=0.75,
+                    hovertemplate=f"{_py} %{{x}}<br>EBITDA %{{y:.2f}}%<extra></extra>",
+                )
             fig_pc.add_scatter(
-                x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
-                name="Store EBITDA %", mode="lines+markers",
+                x=_ax, y=_by_p(year_periods, "ebitda_pct", 100),
+                name=f"EBITDA % {_cy}", mode="lines+markers",
                 line=dict(color=C_PRIMARY, width=2.5), marker=dict(size=8),
-                hovertemplate="%{x}<br>EBITDA %{y:.2f}%<extra></extra>",
+                hovertemplate=f"{_cy} %{{x}}<br>EBITDA %{{y:.2f}}%<extra></extra>",
             )
             fig_pc.update_layout(
-                xaxis=dict(categoryorder="trace"),
+                xaxis=_ax_layout,
                 yaxis=dict(ticksuffix="%", tickformat=".0f", rangemode="tozero"),
                 bargap=0.35,
             )
@@ -1424,21 +1447,28 @@ def tab_ceo(dash):
         _open_df = pd.DataFrame(_open_rows)
         _open_df = _open_df[_open_df["label"].isin(filtered_df["label"])]
 
-        section("NEW STAND OPENINGS", f"Stands opened per period — {period_range}")
+        section("NEW STAND OPENINGS", f"Stands opened per period — {_cy}" + (f" · lighter = {_py}" if _has_py else ""))
+        _oc = lambda yr: [_open_counts.get(f"{yr}_P{n}", 0) for n in _ax_n]
+        _cur_open = [c if n <= int(year_periods["period_num"].max()) else None
+                     for c, n in zip(_oc(sel_year), _ax_n)]  # future periods: no bar
         fig_op = go.Figure()
+        if _has_py:
+            fig_op.add_bar(x=_ax, y=_oc(sel_year - 1), name=_py, marker_color=C_GOAL,
+                           text=[str(v) if v else "" for v in _oc(sel_year - 1)], textposition="outside",
+                           hovertemplate=f"{_py} %{{x}}<br>%{{y}} opened<extra></extra>")
         fig_op.add_bar(
-            x=_open_df["label"], y=_open_df["new_stands"],
+            x=_ax, y=_cur_open,
             marker_color=C_PRIMARY,
-            text=_open_df["new_stands"].apply(lambda v: str(v) if v > 0 else ""),
+            text=[str(v) if v else "" for v in _cur_open],
             textposition="outside",
-            name="New Stands",
+            name=_cy, hovertemplate=f"{_cy} %{{x}}<br>%{{y}} opened<extra></extra>",
         )
         fig_op.update_layout(
-            xaxis=dict(categoryorder="trace"),
+            xaxis=_ax_layout,
             yaxis=dict(title="Stands opened", dtick=1, rangemode="tozero"),
-            bargap=0.35,
+            barmode="group", bargap=0.25, bargroupgap=0.08,
         )
-        ceo_fig(fig_op, height=300, legend=False)
+        ceo_fig(fig_op, height=300, legend=_has_py)
         st.plotly_chart(fig_op, config={"displayModeBar": False}, use_container_width=True)
 
     st.html('<hr class="brew">')
