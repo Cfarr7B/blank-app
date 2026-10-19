@@ -5,6 +5,7 @@ Pure Streamlit + Plotly implementation
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import json
@@ -260,6 +261,28 @@ def brew_fig(fig, height=320, show_legend=True, margin=None):
         if hasattr(trace, 'textfont'):
             trace.textfont = dict(size=12, family=FONT)
     return fig
+
+# CEO chart palette — matches the Home scorecard (blue = actual/primary, orange = labor, gray = goal/reference)
+C_PRIMARY = "#2a78d6"
+C_SECOND  = "#eb6834"
+C_THIRD   = "#1baf7a"
+C_GOAL    = "#bdb6ac"
+C_REF     = "#4d4d4d"
+
+
+def ceo_fig(fig, height=300, legend=True):
+    """brew_fig + legend across the top so it never gets clipped on narrow columns."""
+    brew_fig(fig, height=height, show_legend=legend, margin=dict(t=48 if legend else 20, b=40, l=8, r=8))
+    fig.update_layout(legend=dict(orientation="h", y=1.02, yanchor="bottom", x=0, xanchor="left", title_text=""),
+                      hoverlabel=dict(font_family=FONT))
+    return fig
+
+
+def ceo_badge(state, label):
+    """Status pill in the scorecard style: met (green ▲), miss (red ▼), pace (blue →), none (gray —)."""
+    icon = {"met": "▲", "miss": "▼", "pace": "→", "none": "—"}[state]
+    return f'<span class="st st-{state}"><span aria-hidden="true">{icon}</span> {label}</span>'
+
 
 def period_multiselect(periods_df, key, label="Select Period(s)"):
     """Render a multi-select period picker with quarterly preset buttons.
@@ -748,6 +771,7 @@ FY_PLAN = {
 def tab_ceo(dash):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
+    st.html(_OV_CSS)
 
     # ── Time Frame Selector ──
     available_years = sorted(periods_df["year"].unique().tolist())
@@ -824,16 +848,15 @@ def tab_ceo(dash):
     aws_vcls  = ("good" if wow_pct and wow_pct >= 0 else "bad") if wow_pct is not None else ""
 
     kpi_row([
-        {"label": f"{year_label} Total Revenue",     "value": f"${total_revenue_ytd/1e6:.2f}M",  "sub": f"{n_periods}-period total",   "color": "red"},
-        {"label": "YoY Revenue Growth",       "value": f"+{growth_rate*100:.2f}%",        "sub": "vs prior year class",         "color": "green",
-         "valcls": "good"},
-        {"label": f"{year_label} Total EBITDA",      "value": f"${total_ebitda_ytd/1e6:.2f}M",  "sub": "after rent",                  "color": "blue"},
-        {"label": f"{year_label} Avg EBITDA%",       "value": _fmt_p(avg_ebitda_pct),             "sub": "sales-weighted average",      "color": "green",
-         "valcls": "good" if avg_ebitda_pct >= 0.18 else "warn"},
-        {"label": f"{latest['label']} Stands","value": str(int(latest["stands"])),        "sub": "active this period",          "color": "grey"},
-        {"label": f"{latest['label']} Avg Sales","value": _fmt_d(latest["avg_sales"]),    "sub": "per stand",                   "color": "amber"},
-        {"label": f"{latest['label']} AWS",   "value": _fmt_d(latest_aws),                "sub": aws_sub,                       "color": "amber",
-         "delta": aws_delta, "valcls": aws_vcls},
+        {"label": f"{year_label} Total Revenue",     "value": f"${total_revenue_ytd/1e6:.2f}M",  "sub": f"{n_periods}-period total"},
+        {"label": "YoY Revenue Growth",       "value": f"{growth_rate*100:+.2f}%",        "sub": "vs prior year class",
+         "delta": {"str": "▲ Growing" if growth_rate >= 0 else "▼ Shrinking", "cls": "up" if growth_rate >= 0 else "down"}},
+        {"label": f"{year_label} Total EBITDA",      "value": f"${total_ebitda_ytd/1e6:.2f}M",  "sub": "after rent"},
+        {"label": f"{year_label} Avg EBITDA%",       "value": _fmt_p(avg_ebitda_pct),             "sub": "sales-weighted average"},
+        {"label": f"{latest['label']} Stands","value": str(int(latest["stands"])),        "sub": "active this period"},
+        {"label": f"{latest['label']} Avg Sales","value": _fmt_d(latest["avg_sales"]),    "sub": "per stand"},
+        {"label": f"{latest['label']} AWS",   "value": _fmt_d(latest_aws),                "sub": aws_sub,
+         "delta": aws_delta and {**aws_delta, "str": ("▲ " if aws_delta["cls"] == "up" else "▼ ") + aws_delta["str"] + " WoW"}},
     ])
 
     # Pre-compute filtered stands (needed by narrative AND cohort sections below)
@@ -871,136 +894,57 @@ def tab_ceo(dash):
             pace_sales  = goals["net_sales"] * pct_elapsed
             pace_ebitda = goals["ebitda"]    * pct_elapsed
 
-        def _goal_card(label, actual_fmt, goal_fmt, progress_pct, status, status_color,
-                       detail="", bar_color=None):
-            """Render a goal-tracker card with progress bar."""
-            bar_color  = bar_color or BLUE
-            bar_w      = min(max(progress_pct * 100, 0), 100)
-            pace_line  = f'<div style="font-size:11px;color:{status_color};font-weight:700;margin-top:4px;">{status}</div>'
-            return f"""
-            <div style="background:white;border:1px solid #e2e4e9;border-radius:10px;
-                        padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:#888;
-                          text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">{label}</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;
-                          color:#1A1919;line-height:1;">{actual_fmt}</div>
-              <div style="font-size:11px;color:#777;margin-bottom:8px;">
-                goal: <strong style="color:#333;">{goal_fmt}</strong>
-                {(" · " + detail) if detail else ""}
-              </div>
-              <div style="background:#ede9e3;border-radius:4px;height:5px;overflow:hidden;">
-                <div style="background:{bar_color};width:{bar_w:.2f}%;height:100%;
-                            border-radius:4px;transition:width .3s;"></div>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-top:4px;">
-                <span style="font-size:10px;color:#777;">{bar_w:.0f}% of goal</span>
-                {pace_line}
-              </div>
-            </div>"""
+        def _pace_state(actual, pace_target, tolerance=0.03):
+            """(state, badge label, detail) for a $ metric vs its YTD pace."""
+            if not pace_target:
+                return "none", "No goal", ""
+            d = (actual / pace_target - 1) * 100
+            if d >= tolerance * 100:
+                return "met", "Ahead", f"{d:+.0f}% vs YTD pace"
+            if d >= -tolerance * 100:
+                return "pace", "On pace", f"{d:+.0f}% vs YTD pace"
+            return "miss", "Behind", f"{d:+.0f}% vs YTD pace"
 
-        def _pace_status(actual, pace_target, tolerance=0.03):
-            """Return (status_text, color) based on actual vs on-pace target."""
-            if pace_target == 0:
-                return "—", MID
-            ratio = actual / pace_target
-            delta_pct = (ratio - 1) * 100
-            if ratio >= 1 + tolerance:
-                return f"▲ AHEAD  (+{delta_pct:.0f}% vs pace)", GREEN
-            elif ratio >= 1 - tolerance:
-                return f"→ ON PACE ({delta_pct:+.0f}% vs pace)", BLUE
-            else:
-                return f"▼ BEHIND  ({delta_pct:.0f}% vs pace)", RED
-
-        def _pct_status(actual, target, lower_is_better=False):
-            """Return (status_text, color) for a % metric."""
+        def _pct_state(actual, target, lower_is_better=True):
+            """(state, badge label, detail) for a % metric vs goal; within 0.3 pts = on target."""
             if actual is None:
-                return "No data yet", MID
-            delta = (actual - target) * 100
-            better = delta < 0 if lower_is_better else delta > 0
-            on_target = abs(delta) <= 0.3
-            if on_target:
-                return f"→ ON TARGET ({actual*100:.2f}%)", BLUE
-            elif better:
-                return f"▲ {'BELOW' if lower_is_better else 'ABOVE'} TARGET ({delta:+.1f}pts)", GREEN
-            else:
-                return f"▼ {'ABOVE' if lower_is_better else 'BELOW'} TARGET ({delta:+.1f}pts)", RED
+                return "none", "No data yet", ""
+            d = (actual - target) * 100
+            if abs(d) <= 0.3:
+                return "pace", "On target", f"{d:+.2f} pts vs goal"
+            better = d < 0 if lower_is_better else d > 0
+            return ("met", "Better than goal", f"{d:+.2f} pts vs goal") if better else ("miss", "Worse than goal", f"{d:+.2f} pts vs goal")
+
+        def _gcard(title, sub, big, goal_line, state_t, bar_pct=None):
+            state, lab, detail = state_t
+            bar = (f'<p class="att"><span class="bar" role="img" aria-label="{bar_pct*100:.0f}% of full-year goal">'
+                   f'<span class="fill fill-{state}" style="width:{min(max(bar_pct, 0), 1)*100:.1f}%"></span></span>'
+                   f'<span class="tm">{bar_pct*100:.0f}% of full-year goal</span></p>') if bar_pct is not None else ""
+            return (f'<article class="card kpi kpi-{state}"><h3>{title}</h3><p class="sub">{sub}</p>'
+                    f'<p class="big">{big}</p><p class="goal">{goal_line}</p>'
+                    f'<p class="var">{ceo_badge(state, lab)} <span>{detail}</span></p>{bar}</article>')
 
         ytd_sales_goal_fmt  = f"${pace_sales/1e6:.2f}M"  if n_completed > 0 else "—"
         ytd_ebitda_goal_fmt = f"${pace_ebitda/1e6:.2f}M" if n_completed > 0 else "—"
-        st.html(f"""
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
-                    color:#1A1919;margin:16px 0 4px;display:flex;align-items:center;gap:10px;">
-          <span style="width:6px;height:6px;border-radius:50%;background:#AC2430;
-                       display:inline-block;flex-shrink:0;"></span>
-          FY{sel_year} GOALS TRACKER
-          <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:400;
-                       color:#C5BEBE;letter-spacing:1px;margin-left:8px;">
-            P1–P{n_completed} of 13 complete · YTD Sales Goal: {ytd_sales_goal_fmt} · YTD EBITDA Goal: {ytd_ebitda_goal_fmt}
-          </span>
-        </div>""")
-
-        # Sales status
-        sales_status, sales_color = _pace_status(ytd_sales, pace_sales)
-        # EBITDA $ status
-        ebi_status, ebi_color = _pace_status(ytd_ebitda, pace_ebitda)
-        # COGs % status
-        cogs_status, cogs_color = _pct_status(ytd_cogs_pct, goals["cogs_pct"], lower_is_better=True)
-        # Labor % status
-        labor_status, labor_color = _pct_status(ytd_labor_pct, goals["labor_pct"], lower_is_better=True)
-
-        g1, g2, g3, g4 = st.columns(4)
-        with g1:
-            st.html(_goal_card(
-                label="Net Sales (YTD)",
-                actual_fmt=f"${ytd_sales/1e6:.2f}M",
-                goal_fmt=f"${goals['net_sales']/1e6:.2f}M",
-                progress_pct=ytd_sales / goals["net_sales"],
-                status=sales_status, status_color=sales_color,
-                detail=f"YTD goal: ${pace_sales/1e6:.2f}M",
-                bar_color=sales_color,
-            ))
-        with g2:
-            st.html(_goal_card(
-                label="EBITDA (YTD)",
-                actual_fmt=f"${ytd_ebitda/1e6:.2f}M",
-                goal_fmt=f"${goals['ebitda']/1e6:.2f}M",
-                progress_pct=ytd_ebitda / goals["ebitda"] if goals["ebitda"] else 0,
-                status=ebi_status, status_color=ebi_color,
-                detail=f"YTD goal: ${pace_ebitda/1e6:.2f}M",
-                bar_color=ebi_color,
-            ))
-        with g3:
-            cogs_actual_fmt = f"{ytd_cogs_pct*100:.2f}%" if ytd_cogs_pct is not None else "—"
-            cogs_prog = max(0, 1 - (ytd_cogs_pct - goals["cogs_pct"]) * 10) if ytd_cogs_pct else 0.5
-            st.html(_goal_card(
-                label="COGs % (YTD avg)",
-                actual_fmt=cogs_actual_fmt,
-                goal_fmt=f"{goals['cogs_pct']*100:.2f}%",
-                progress_pct=min(cogs_prog, 1.0),
-                status=cogs_status, status_color=cogs_color,
-                detail="lower is better",
-                bar_color=cogs_color,
-            ))
-        with g4:
-            labor_actual_fmt = f"{ytd_labor_pct*100:.2f}%" if ytd_labor_pct is not None else "—"
-            labor_prog = max(0, 1 - (ytd_labor_pct - goals["labor_pct"]) * 10) if ytd_labor_pct else 0.5
-            st.html(_goal_card(
-                label="Labor % All-In (YTD avg)",
-                actual_fmt=labor_actual_fmt,
-                goal_fmt=f"{goals['labor_pct']*100:.2f}%",
-                progress_pct=min(labor_prog, 1.0),
-                status=labor_status, status_color=labor_color,
-                detail="lower is better",
-                bar_color=labor_color,
-            ))
+        section(f"FY{sel_year} GOALS TRACKER",
+                f"P1–P{n_completed} of 13 complete · YTD sales goal {ytd_sales_goal_fmt} · YTD EBITDA goal {ytd_ebitda_goal_fmt}")
+        _cogs_fmt  = f"{ytd_cogs_pct*100:.2f}%" if ytd_cogs_pct is not None else "—"
+        _labor_fmt = f"{ytd_labor_pct*100:.2f}%" if ytd_labor_pct is not None else "—"
+        st.html('<div class="ov7"><div class="cards">'
+                + _gcard("Net Sales", "Year to date", f"${ytd_sales/1e6:.2f}M",
+                         f"YTD goal {ytd_sales_goal_fmt} · FY goal ${goals['net_sales']/1e6:.2f}M",
+                         _pace_state(ytd_sales, pace_sales), ytd_sales / goals["net_sales"])
+                + _gcard("Store EBITDA", "Year to date", f"${ytd_ebitda/1e6:.2f}M",
+                         f"YTD goal {ytd_ebitda_goal_fmt} · FY goal ${goals['ebitda']/1e6:.2f}M",
+                         _pace_state(ytd_ebitda, pace_ebitda), ytd_ebitda / goals["ebitda"] if goals["ebitda"] else 0)
+                + _gcard("COGS %", "YTD sales-weighted average", _cogs_fmt,
+                         f"Goal {goals['cogs_pct']*100:.2f}% · lower is better", _pct_state(ytd_cogs_pct, goals["cogs_pct"]))
+                + _gcard("Labor % (all-in)", "YTD sales-weighted average", _labor_fmt,
+                         f"Goal {goals['labor_pct']*100:.2f}% · lower is better", _pct_state(ytd_labor_pct, goals["labor_pct"]))
+                + '</div></div>')
 
         # ── Period-by-Period Actual vs Goal Chart ─────────────────────────────
         if has_period_goals and n_completed > 0:
-            st.html("""
-            <div style="font-family:'DM Mono',monospace;font-size:10px;color:#888;
-                        text-transform:uppercase;letter-spacing:1.5px;margin:8px 0 4px;">
-              PERIOD-BY-PERIOD: ACTUAL VS GOAL
-            </div>""")
 
             period_labels = [f"P{i+1}" for i in range(13)]
 
@@ -1026,13 +970,14 @@ def tab_ceo(dash):
 
             ch1, ch2 = st.columns(2)
             with ch1:
+                st.html('<div class="ov7"><h3 class="ch">Net Sales by period <span>· actual vs goal</span></h3></div>')
                 fig_g = go.Figure()
                 # Goal bars (all 13, lighter)
                 fig_g.add_bar(
                     x=period_labels,
                     y=[v/1e6 for v in goals["net_sales_by_period"]],
-                    name="Goal", marker_color=BORDER,
-                    marker_line_color=BORDER, marker_line_width=1,
+                    name="Goal", marker_color="#e4dfd7",
+                    marker_line_color=C_GOAL, marker_line_width=1,
                 )
                 # Actual bars (completed periods only)
                 act_vals = [v/1e6 if v is not None else None
@@ -1040,24 +985,20 @@ def tab_ceo(dash):
                 fig_g.add_bar(
                     x=period_labels[:n_completed],
                     y=[v for v in act_vals[:n_completed] if v is not None],
-                    name="Actual", marker_color=RED, opacity=0.9,
+                    name="Actual", marker_color=C_PRIMARY, width=0.5,
                 )
                 fig_g.update_layout(
                     barmode="overlay",
                     yaxis=dict(tickprefix="$", ticksuffix="M", tickformat=".1f",
                                title_font=dict(size=9, color=MID)),
-                    legend=dict(orientation="h", y=1.12, x=0,
-                                font=dict(size=9)),
-                    margin=dict(t=24, b=28, l=0, r=0),
-                    height=250,
-                    xaxis=dict(tickfont=dict(size=9)),
+                    height=280,
                 )
-                brew_fig(fig_g, height=250)
+                ceo_fig(fig_g, height=280)
                 st.plotly_chart(fig_g, config={"displayModeBar": False},
                                 use_container_width=True)
-                st.caption("Net Sales — Actual vs Goal by Period")
 
             with ch2:
+                st.html('<div class="ov7"><h3 class="ch">Store EBITDA % by period <span>· actual vs goal</span></h3></div>')
                 fig_e = go.Figure()
                 # Goal EBITDA% line (all 13)
                 fig_e.add_scatter(
@@ -1065,7 +1006,7 @@ def tab_ceo(dash):
                     y=[v * 100 if v is not None else None
                        for v in goal_ebitda_pct_by_p],
                     name="Goal %", mode="lines",
-                    line=dict(color="#ccc5bc", width=1.5, dash="dot"),
+                    line=dict(color=C_GOAL, width=2, dash="dot"),
                 )
                 # Actual EBITDA% (completed periods)
                 fig_e.add_scatter(
@@ -1073,16 +1014,16 @@ def tab_ceo(dash):
                     y=[v * 100 if v is not None else None
                        for v in actual_ebitda_pct_by_p[:n_completed]],
                     name="Actual %", mode="lines+markers",
-                    line=dict(color=RED, width=2.5),
-                    marker=dict(size=6),
+                    line=dict(color=C_PRIMARY, width=2.5),
+                    marker=dict(size=8),
                 )
                 # PE target reference
                 fig_e.add_hline(
                     y=goal_ebitda_pct * 100,
-                    line_dash="dash", line_color=GREEN, line_width=1,
-                    annotation_text=f"FY Goal {goal_ebitda_pct*100:.2f}%",
-                    annotation_font=dict(size=9, color=GREEN),
-                    annotation_position="top right",
+                    line_dash="dash", line_color=C_REF, line_width=1,
+                    annotation_text=f"FY goal {goal_ebitda_pct*100:.2f}%",
+                    annotation_font=dict(size=12, color=C_REF),
+                    annotation_position="bottom left",
                 )
                 # Dynamic Y-axis range — pad 20% above max so actuals beating goal stay visible
                 _ebitda_vals = (
@@ -1095,16 +1036,11 @@ def tab_ceo(dash):
                     yaxis=dict(ticksuffix="%", tickformat=".1f",
                                range=[15, _ebitda_max * 1.22],  # floor at 15% to show period swings
                                title_font=dict(size=9, color=MID)),
-                    legend=dict(orientation="h", y=1.12, x=0,
-                                font=dict(size=9)),
-                    margin=dict(t=24, b=28, l=0, r=0),
-                    height=250,
-                    xaxis=dict(tickfont=dict(size=9)),
+                    height=280,
                 )
-                brew_fig(fig_e, height=250)
+                ceo_fig(fig_e, height=280)
                 st.plotly_chart(fig_e, config={"displayModeBar": False},
                                 use_container_width=True)
-                st.caption("EBITDA % — Actual vs Goal by Period")
 
         st.html('<hr class="brew">')
 
@@ -1183,104 +1119,75 @@ def tab_ceo(dash):
     reg_html = ""
     if best_reg is not None and worst_reg is not None and best_reg["region"] != worst_reg["region"]:
         spread_pts = (best_reg["ebitda_pct"] - worst_reg["ebitda_pct"]) * 100
-        reg_html = (f'<div style="font-size:13px;color:{MID};margin-top:8px;line-height:1.5;">'
-                    f'<strong>{best_reg["region"]}</strong> leads at {_fmt_p(best_reg["ebitda_pct"])} · '
+        reg_html = (f'<p><strong>{best_reg["region"]}</strong> leads at {_fmt_p(best_reg["ebitda_pct"])} · '
                     f'<strong>{worst_reg["region"]}</strong> lags at {_fmt_p(worst_reg["ebitda_pct"])} · '
-                    f'{spread_pts:.2f}pt regional spread</div>')
+                    f'{spread_pts:.2f} pt regional spread ({latest["label"]})</p>')
 
+    gap_state = "met" if gap_pts >= 0 else ("pace" if gap_pts >= -2 else "miss")
+    gap_lab   = {"met": "On target", "pace": "Near target", "miss": "Below target"}[gap_state]
+    rev_state = "met" if rev_trend > 0.005 else ("miss" if rev_trend < -0.005 else "none")
+    ebi_state = "met" if ebitda_trend > 0.001 else ("miss" if ebitda_trend < -0.001 else "none")
+    _dir = lambda stt: {"met": "Up", "miss": "Down", "none": "Flat"}[stt]
+
+    def _ntile(label, big, state, badge_lab, note):
+        return (f'<div class="tile tile-{state}"><p class="tl">{label}</p><p class="tb">{big}</p>'
+                f'<p class="ts">{ceo_badge(state, badge_lab)}</p><p class="tm">{note}</p></div>')
+
+    section("BOARD NARRATIVE", period_range)
     st.html(f"""
-    <div class="story-block">
-      <div class="story-label">BOARD NARRATIVE · {period_range}</div>
-      <div class="story-headline" style="font-size:24px;color:{hl_color};line-height:1.2;margin-bottom:16px;">
-        {hl_text}
+    <div class="ov7"><div class="card nar">
+      <p class="nar-hl">{ceo_badge(gap_state, gap_lab)} {_fmt_p(avg_ebitda_pct)} EBITDA · ${total_revenue_ytd/1e6:.2f}M revenue</p>
+      <div class="tiles">
+        {_ntile("Avg sales / stand", _fmt_d(latest['avg_sales']), rev_state, _dir(rev_state), f"{rev_trend*100:+.1f}% first → last third of range")}
+        {_ntile("EBITDA margin", _fmt_p(avg_ebitda_pct), gap_state, gap_lab, f"{gap_pts:+.2f} pts vs {PE_TARGET*100:.2f}% target")}
+        {_ntile("Network size", f"{last_stand_cnt} stands", "none", f"+{net_new_stands} new", f"since end of {sel_year - 1} · {n_periods} periods shown")}
+        {_ntile("EBITDA trend", f"{ebitda_trend*100:+.1f} pts", ebi_state, _dir(ebi_state), "first → last third of range")}
       </div>
-
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;">
-
-        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Avg Sales / Stand</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{_fmt_d(latest['avg_sales'])}</div>
-          <div style="font-size:12px;color:{rev_color};font-weight:600;">{rev_arrow} {rev_trend*100:+.1f}% over period</div>
-        </div>
-
-        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">EBITDA Margin</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{_fmt_p(avg_ebitda_pct)}</div>
-          <div style="font-size:12px;color:{gap_color};font-weight:600;">{gap_pts:+.1f}pts vs 20% target {ebi_arrow}</div>
-        </div>
-
-        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Network Size</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1A1919;">{last_stand_cnt} Stands</div>
-          <div style="font-size:12px;color:{net_color};font-weight:600;">+{net_new_stands} since end of {sel_year - 1} · {n_periods} periods shown</div>
-        </div>
-
-        <div style="background:#f5f6f8;border-radius:8px;padding:12px 16px;">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#C5BEBE;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">EBITDA Trend</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:{ebi_color};">{ebitda_trend*100:+.1f}pts</div>
-          <div style="font-size:12px;color:{MID};">first → last third of range</div>
-        </div>
-
-      </div>
-
       {reg_html}
-
-      <div style="font-size:13px;color:#595959;line-height:1.7;margin-top:12px;border-top:1px solid #e2e4e9;padding-top:12px;">
-        Over {period_range}, {ebitda_phrase} while avg sales/stand
+      <p>Over {period_range}, {ebitda_phrase} while avg sales/stand
         {"improved" if rev_trend > 0.005 else ("softened" if rev_trend < -0.005 else "held flat")}
-        at {_fmt_d(latest['avg_sales'])}.
-        {mature_premium_txt}
-        <br>{lever}
-      </div>
-    </div>""")
+        at {_fmt_d(latest['avg_sales'])}. {mature_premium_txt}</p>
+      <p>{lever}</p>
+    </div></div>""")
 
     st.html('<hr class="brew">')
 
     # ── Trend Charts (1 × 2) ─────────────────────────────────────────────────
     col1, col2 = st.columns(2)
     with col1:
-        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">REVENUE & EBITDA TREND — {period_range}</div>')
+        section("AVG SALES PER STAND", f"Net sales ÷ active stands, by period — {period_range}")
         fig = go.Figure()
         fig.add_bar(x=filtered_df["label"], y=filtered_df["avg_sales"],
-                    name="Avg Sales/Stand", marker_color=BLUE, opacity=0.7,
-                    yaxis="y1")
-        fig.add_scatter(x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
-                        name="EBITDA %", mode="lines+markers",
-                        line=dict(color=RED, width=2.5), marker=dict(size=6),
-                        yaxis="y2")
+                    name="Avg sales / stand", marker_color=C_PRIMARY,
+                    hovertemplate="%{x}<br>$%{y:,.0f} per stand<extra></extra>")
         fig.update_layout(
-            xaxis=dict(tickangle=-35, categoryorder="trace"),
-            yaxis=dict(title="Avg Sales / Stand ($)", tickprefix="$", tickformat=",.0f",
-                       title_font=dict(size=10, color=MID)),
-            yaxis2=dict(title="EBITDA %", overlaying="y", side="right",
-                        ticksuffix="%", title_font=dict(size=10, color=RED),
-                        tickfont=dict(size=9, color=RED)),
-            barmode="overlay",
+            xaxis=dict(categoryorder="trace"),
+            yaxis=dict(tickprefix="$", tickformat=",.0f"),
+            bargap=0.35,
         )
-        brew_fig(fig, height=300)
+        ceo_fig(fig, height=300, legend=False)
         st.plotly_chart(fig, config={"displayModeBar": False}, use_container_width=True)
 
     with col2:
-        st.html(f'<div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:#1A1919;margin-bottom:4px;">LABOR % & COGS % TREND — {period_range}</div>')
+        section("LABOR % & COGS % TREND", f"Share of net sales, by period — {period_range}")
         fig_lc = go.Figure()
         if "labor_pct" in filtered_df.columns:
             fig_lc.add_scatter(
                 x=filtered_df["label"], y=filtered_df["labor_pct"] * 100,
-                name="Total Labor %", mode="lines+markers",
-                line=dict(color=AMBER, width=2.5), marker=dict(size=6),
+                name="Total labor %", mode="lines+markers",
+                line=dict(color=C_SECOND, width=2.5), marker=dict(size=8),
             )
         if "cogs_pct" in filtered_df.columns:
             fig_lc.add_scatter(
                 x=filtered_df["label"], y=filtered_df["cogs_pct"] * 100,
-                name="COGs %", mode="lines+markers",
-                line=dict(color=BLUE, width=2.5), marker=dict(size=6),
+                name="COGS %", mode="lines+markers",
+                line=dict(color=C_PRIMARY, width=2.5), marker=dict(size=8),
             )
         fig_lc.update_layout(
-            xaxis=dict(tickangle=-35, categoryorder="trace"),
+            xaxis=dict(categoryorder="trace"),
             yaxis=dict(ticksuffix="%", tickformat=".1f"),
-            legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
         )
-        brew_fig(fig_lc, height=300)
+        ceo_fig(fig_lc, height=300)
         st.plotly_chart(fig_lc, config={"displayModeBar": False}, use_container_width=True)
 
     st.html('<hr class="brew">')
@@ -1333,66 +1240,54 @@ def tab_ceo(dash):
             _fig_yoy.add_scatter(
                 x=_a_df["period"], y=_a_df["labor_pct"] * 100,
                 name=f"{_yr_a} Labor %", mode="lines+markers",
-                line=dict(color=AMBER, width=2.5, dash="solid"),
-                marker=dict(size=7),
+                line=dict(color=C_SECOND, width=2.5, dash="solid"),
+                marker=dict(size=8),
             )
             _fig_yoy.add_scatter(
                 x=_b_df["period"], y=_b_df["labor_pct"] * 100,
                 name=f"{_yr_b} Labor %", mode="lines+markers",
-                line=dict(color=AMBER, width=2.5, dash="dot"),
-                marker=dict(size=7, symbol="diamond"),
+                line=dict(color=C_SECOND, width=2.5, dash="dot"),
+                marker=dict(size=8, symbol="diamond"),
             )
             _fig_yoy.add_scatter(
                 x=_a_df["period"], y=_a_df["cogs_pct"] * 100,
                 name=f"{_yr_a} COGS %", mode="lines+markers",
-                line=dict(color=BLUE, width=2.5, dash="solid"),
-                marker=dict(size=7),
+                line=dict(color=C_PRIMARY, width=2.5, dash="solid"),
+                marker=dict(size=8),
             )
             _fig_yoy.add_scatter(
                 x=_b_df["period"], y=_b_df["cogs_pct"] * 100,
                 name=f"{_yr_b} COGS %", mode="lines+markers",
-                line=dict(color=BLUE, width=2.5, dash="dot"),
-                marker=dict(size=7, symbol="diamond"),
+                line=dict(color=C_PRIMARY, width=2.5, dash="dot"),
+                marker=dict(size=8, symbol="diamond"),
             )
             _fig_yoy.update_layout(
                 xaxis=dict(
                     categoryorder="array", categoryarray=_PERIOD_ORDER,
-                    tickangle=-35,
                 ),
                 yaxis=dict(ticksuffix="%", tickformat=".1f"),
-                legend=dict(orientation="h", y=1.12, x=0, font=dict(size=10)),
             )
-            brew_fig(_fig_yoy, height=320)
+            ceo_fig(_fig_yoy, height=340)
             st.plotly_chart(_fig_yoy, config={"displayModeBar": False}, use_container_width=True)
 
         with _yoy_col_summary:
             section("YTD AVERAGES", "Sales-weighted mean")
-            def _delta_badge(a, b):
-                if a is None or b is None: return ""
-                diff = (b - a) * 100
-                arrow = "▲" if diff > 0 else "▼"
-                color = RED if diff > 0 else GREEN  # higher = worse for cost metrics
-                return f'<span style="color:{color};font-size:11px;">{arrow} {abs(diff):.2f}pp</span>'
-
-            def _ytd_row(label, a_val, b_val):
+            def _ytd_tile(label, a_val, b_val):
                 a_str = f"{a_val*100:.2f}%" if a_val is not None else "—"
                 b_str = f"{b_val*100:.2f}%" if b_val is not None else "—"
-                badge = _delta_badge(a_val, b_val)
-                st.html(f"""
-                <div style="border:1px solid {BORDER};border-radius:6px;padding:10px 12px;margin-bottom:8px;">
-                  <div style="font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:1px;color:{MID};margin-bottom:6px;">{label}</div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div><div style="font-size:9px;color:{MID};">{_yr_a}</div>
-                         <div style="font-size:18px;font-weight:700;color:#1A1919;">{a_str}</div></div>
-                    <div style="text-align:right;">
-                         <div style="font-size:9px;color:{MID};">{_yr_b}</div>
-                         <div style="font-size:18px;font-weight:700;color:#1A1919;">{b_str}</div></div>
-                  </div>
-                  <div style="text-align:center;margin-top:4px;">{badge}</div>
-                </div>""")
+                if a_val is None or b_val is None:
+                    state, lab = "none", "No compare"
+                else:
+                    diff = (b_val - a_val) * 100  # lower is better for cost metrics
+                    state = "met" if diff < 0 else ("miss" if diff > 0 else "none")
+                    lab = f"{diff:+.2f} pts"
+                return (f'<div class="tile tile-{state}"><p class="tl">{label}</p>'
+                        f'<p class="tb">{b_str}</p><p class="tm">{_yr_b} · was {a_str} in {_yr_a}</p>'
+                        f'<p class="ts">{ceo_badge(state, lab)}</p></div>')
 
-            _ytd_row("LABOR %",  _a_labor_ytd, _b_labor_ytd)
-            _ytd_row("COGS %",   _a_cogs_ytd,  _b_cogs_ytd)
+            st.html('<div class="ov7"><div class="tiles" style="grid-template-columns:1fr">'
+                    + _ytd_tile("Labor %", _a_labor_ytd, _b_labor_ytd)
+                    + _ytd_tile("COGS %", _a_cogs_ytd, _b_cogs_ytd) + '</div></div>')
 
     st.html('<hr class="brew">')
 
@@ -1402,7 +1297,6 @@ def tab_ceo(dash):
         section("COHORT PERFORMANCE", f"EBITDA% & Labor% by stand maturity — {period_range}")
 
         age_buckets = ["New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
-        age_colors  = [RED, AMBER, BLUE, GREEN]
 
         cohort_rows = []
         for bkt in age_buckets:
@@ -1420,14 +1314,15 @@ def tab_ceo(dash):
             cdf = pd.DataFrame(cohort_rows)
             fig2 = go.Figure()
             fig2.add_bar(x=cdf["Cohort"], y=cdf["EBITDA%"], name="EBITDA %",
-                         marker_color=age_colors[:len(cdf)], text=cdf["EBITDA%"].map(lambda v: f"{v}%"),
-                         textposition="outside", marker_line_width=0, width=0.4)
+                         marker_color=C_PRIMARY, text=cdf["EBITDA%"].map(lambda v: f"{v}%"),
+                         textposition="outside", marker_line_width=0, width=0.45,
+                         customdata=cdf["Stands"], hovertemplate="%{x}<br>EBITDA %{y}%<br>%{customdata} stands<extra></extra>")
             fig2.add_scatter(x=cdf["Cohort"], y=cdf["Labor%"], name="Labor %",
-                             mode="lines+markers", line=dict(color=MUTED, dash="dot"),
-                             marker=dict(size=7), yaxis="y")
-            brew_fig(fig2, height=280)
-            fig2.update_layout(yaxis=dict(ticksuffix="%"))
-            st.plotly_chart(fig2, config={"displayModeBar": False})
+                             mode="lines+markers", line=dict(color=C_SECOND, width=2),
+                             marker=dict(size=8), hovertemplate="%{x}<br>Labor %{y}%<extra></extra>")
+            ceo_fig(fig2, height=320)
+            fig2.update_layout(yaxis=dict(ticksuffix="%", rangemode="tozero"))
+            st.plotly_chart(fig2, config={"displayModeBar": False}, use_container_width=True)
 
     with col4:
         # Aggregate regions across selected periods
@@ -1443,21 +1338,24 @@ def tab_ceo(dash):
                     reg_agg[c] = reg_all.groupby("region").apply(
                         lambda g: (g[c] * g["net_sales"]).sum() / g["net_sales"].sum() if g["net_sales"].sum() > 0 else 0
                     ).values
-            reg_df = reg_agg.sort_values("ebitda_pct", ascending=False) if "ebitda_pct" in reg_agg.columns else reg_agg
+            reg_df = reg_agg.sort_values("ebitda_pct", ascending=True) if "ebitda_pct" in reg_agg.columns else reg_agg
             if "ebitda_pct" in reg_df.columns:
                 fig3 = go.Figure(go.Bar(
-                    x=reg_df["region"], y=reg_df["ebitda_pct"] * 100,
-                    marker_color=[REGION_COLORS.get(r, MID) for r in reg_df["region"]],
+                    y=reg_df["region"], x=reg_df["ebitda_pct"] * 100, orientation="h",
+                    marker_color=[C_PRIMARY if v >= avg_ebitda_pct else C_GOAL for v in reg_df["ebitda_pct"]],
                     text=reg_df["ebitda_pct"].map(lambda v: f"{v*100:.2f}%"),
-                    textposition="outside",
+                    textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>EBITDA %{x:.2f}%<extra></extra>",
                 ))
-                fig3.add_hline(y=avg_ebitda_pct * 100, line_dash="dot",
-                               line_color=MID, annotation_text="Sys avg",
-                               annotation_font_size=9,
-                               annotation_position="top right")
-                brew_fig(fig3, height=320)
-                fig3.update_layout(yaxis=dict(ticksuffix="%"), showlegend=False)
+                fig3.add_vline(x=avg_ebitda_pct * 100, line_dash="dot",
+                               line_color=C_REF, annotation_text=f"System {avg_ebitda_pct*100:.2f}%",
+                               annotation_font=dict(size=12, color=C_REF),
+                               annotation_position="top")
+                ceo_fig(fig3, height=max(320, 28 * len(reg_df) + 70), legend=False)
+                fig3.update_layout(xaxis=dict(ticksuffix="%", rangemode="tozero"), bargap=0.3,
+                                   margin=dict(t=30, b=44, l=8, r=60))
                 st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
+                st.caption("Blue = at or above the system average; gray = below.")
 
     # ── Row 2: Prime Cost vs EBITDA | New Stand Openings ──────────────────────
     col5, col6 = st.columns(2)
@@ -1468,28 +1366,21 @@ def tab_ceo(dash):
             fig_pc = go.Figure()
             fig_pc.add_bar(
                 x=filtered_df["label"], y=prime_cost,
-                name="Prime Cost %", marker_color=RED, opacity=0.65,
-                yaxis="y1",
+                name="Prime cost % (labor + COGS)", marker_color=C_GOAL,
+                hovertemplate="%{x}<br>Prime cost %{y:.1f}%<extra></extra>",
             )
             fig_pc.add_scatter(
                 x=filtered_df["label"], y=filtered_df["ebitda_pct"] * 100,
-                name="EBITDA %", mode="lines+markers",
-                line=dict(color=GREEN, width=2.5), marker=dict(size=6),
-                yaxis="y2",
+                name="Store EBITDA %", mode="lines+markers",
+                line=dict(color=C_PRIMARY, width=2.5), marker=dict(size=8),
+                hovertemplate="%{x}<br>EBITDA %{y:.2f}%<extra></extra>",
             )
             fig_pc.update_layout(
-                xaxis=dict(tickangle=-35, categoryorder="trace"),
-                yaxis=dict(title="Prime Cost %", ticksuffix="%", tickformat=".1f",
-                           title_font=dict(size=10, color=RED),
-                           tickfont=dict(size=9, color=RED)),
-                yaxis2=dict(title="EBITDA %", overlaying="y", side="right",
-                            ticksuffix="%", tickformat=".1f",
-                            title_font=dict(size=10, color=GREEN),
-                            tickfont=dict(size=9, color=GREEN)),
-                legend=dict(orientation="h", y=1.08, x=0, font=dict(size=11)),
-                barmode="overlay",
+                xaxis=dict(categoryorder="trace"),
+                yaxis=dict(ticksuffix="%", tickformat=".0f", rangemode="tozero"),
+                bargap=0.35,
             )
-            brew_fig(fig_pc, height=300)
+            ceo_fig(fig_pc, height=300)
             st.plotly_chart(fig_pc, config={"displayModeBar": False}, use_container_width=True)
 
     with col6:
@@ -1537,17 +1428,17 @@ def tab_ceo(dash):
         fig_op = go.Figure()
         fig_op.add_bar(
             x=_open_df["label"], y=_open_df["new_stands"],
-            marker_color=BLUE, opacity=0.8,
+            marker_color=C_PRIMARY,
             text=_open_df["new_stands"].apply(lambda v: str(v) if v > 0 else ""),
             textposition="outside",
             name="New Stands",
         )
         fig_op.update_layout(
-            xaxis=dict(tickangle=-35, categoryorder="trace"),
-            yaxis=dict(title="# Stands Opened", dtick=1, rangemode="tozero"),
-            showlegend=False,
+            xaxis=dict(categoryorder="trace"),
+            yaxis=dict(title="Stands opened", dtick=1, rangemode="tozero"),
+            bargap=0.35,
         )
-        brew_fig(fig_op, height=300)
+        ceo_fig(fig_op, height=300, legend=False)
         st.plotly_chart(fig_op, config={"displayModeBar": False}, use_container_width=True)
 
     st.html('<hr class="brew">')
@@ -1566,21 +1457,28 @@ def tab_ceo(dash):
 
     if heat_data:
         heat_df = pd.DataFrame(heat_data).set_index("Period")
+        _z = heat_df.astype(float).values
+        _sys = avg_ebitda_pct * 100
+        _span = max(float(np.nanmax(np.abs(_z - _sys))) if np.isfinite(_z).any() else 5, 1)
         fig4 = go.Figure(go.Heatmap(
-            z=heat_df.values,
+            z=_z,
             x=heat_df.columns.tolist(),
             y=heat_df.index.tolist(),
-            colorscale=[[0, "#AC2430"], [0.5, "#e8940a"], [1, "#12a06e"]],
-            zmid=18, zmin=5, zmax=30,
-            text=[[f"{v:.2f}%" if v is not None else "—" for v in row] for row in heat_df.values],
+            colorscale=[[0, "#d9737b"], [0.5, "#f4f1ec"], [1, "#6ea6e6"]],
+            zmid=_sys, zmin=_sys - _span, zmax=_sys + _span,
+            text=[["" if pd.isna(v) else f"{v:.1f}%" for v in row] for row in _z],
             texttemplate="%{text}",
-            textfont=dict(size=9, family=FONT),
+            textfont=dict(size=12, family=FONT, color="#1a1a1a"),
             hoverongaps=False,
-            colorbar=dict(ticksuffix="%", tickfont=dict(size=9)),
+            hovertemplate="%{x} · %{y}<br>EBITDA %{z:.1f}%<extra></extra>",
+            xgap=2, ygap=2,
+            colorbar=dict(ticksuffix="%", tickfont=dict(size=12), thickness=14),
         ))
-        brew_fig(fig4, height=max(200, 60 + len(heat_data) * 35))
-        fig4.update_layout(xaxis=dict(tickangle=-35))
-        st.plotly_chart(fig4, config={"displayModeBar": False})
+        ceo_fig(fig4, height=max(240, 90 + len(heat_data) * 34), legend=False)
+        fig4.update_layout(plot_bgcolor="white", xaxis=dict(side="top", tickangle=-30, showgrid=False),
+                           yaxis=dict(autorange="reversed", showgrid=False), margin=dict(t=110, b=10, l=8, r=8))
+        st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
+        st.caption(f"Blue = above the {period_range} system average ({_sys:.2f}%), red = below; blank = region had no stands that period.")
 
     st.html('<hr class="brew">')
 
@@ -1716,6 +1614,11 @@ color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica
 border:1px solid currentColor;white-space:nowrap;line-height:1.5}
 .ov7 .st-met{color:var(--met);background:var(--met-bg)} .ov7 .st-miss{color:var(--miss);background:var(--miss-bg)}
 .ov7 .st-none{color:var(--none);background:var(--none-bg)}
+.ov7 .st-pace{color:#175bb0;background:#eaf1fb} .ov7 .kpi-pace{border-top-color:#175bb0} .ov7 .fill-pace{background:#175bb0}
+.ov7 .tile-pace{border-left-color:#175bb0} .ov7 .fill-none{background:var(--none)}
+.ov7 h3.ch{font-size:1.02rem;font-weight:800;margin:14px 0 4px} .ov7 h3.ch span{font-weight:600;color:var(--muted);font-size:.86rem}
+.ov7 .nar-hl{margin:0 0 12px;font-size:1.5rem;font-weight:800;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ov7 .nar>p:not(.nar-hl){margin:10px 0 0;color:var(--muted);font-size:.95rem;line-height:1.6} .ov7 .nar>p strong{color:var(--ink)}
 .ov7 .scroll{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:10px;background:var(--card)}
 .ov7 table.data{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
 .ov7 table.data caption{text-align:left;padding:10px 12px;color:var(--muted);font-size:.84rem;caption-side:top}
