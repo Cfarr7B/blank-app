@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
+import re
 import os
 import tempfile
 from pathlib import Path
@@ -185,6 +186,13 @@ st.html("""
   [data-testid="stExpander"] details { background: var(--k-card); border-color: var(--k-line) !important; border-radius: 12px !important; }
 
   /* Hide Streamlit chrome; header sits flush at the top */
+  /* Navigation tray (top) and sub-page tray */
+  .st-key-k_tray { background: var(--k-card); border: 1px solid var(--k-line); border-radius: 12px; padding: 6px 8px; margin-bottom: 2px; }
+  .st-key-k_tray [data-testid="stButtonGroup"] { width: 100%; }
+  .st-key-k_tray button { font-size: 1rem !important; font-weight: 800 !important; padding: 10px 20px !important; min-height: 44px; }
+  .st-key-k_tray button p { font-size: 1rem !important; font-weight: 800 !important; }
+  .st-key-k_subtray { padding: 0 0 0 4px; margin-bottom: 6px; }
+  .st-key-k_subtray button { font-size: .9rem !important; font-weight: 700 !important; min-height: 36px; }
   #MainMenu, footer, header[data-testid="stHeader"] { visibility: hidden; }
   .block-container { padding-top: 0 !important; max-width: 1600px !important; }
 </style>
@@ -737,30 +745,18 @@ def tab_ceo(dash):
     available_years = sorted(periods_df["year"].unique().tolist())
     all_labels = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
 
-    sel_col1, sel_col2 = st.columns([1, 4])
+    sel_col1, sel_col2, _ = st.columns([1, 1, 3])
     with sel_col1:
         sel_year = st.selectbox("Fiscal Year", available_years, index=len(available_years)-1, key="ceo_year")
 
     year_periods = periods_df[periods_df["year"] == sel_year]
     period_labels = year_periods["label"].tolist()
 
-    # Clear stale selections when year changes
-    if "ceo_periods" in st.session_state:
-        st.session_state["ceo_periods"] = [l for l in st.session_state["ceo_periods"] if l in period_labels]
-
+    q_presets = {"All": list(range(1, 14)), "Q1 (P1–3)": [1, 2, 3], "Q2 (P4–6)": [4, 5, 6],
+                 "Q3 (P7–9)": [7, 8, 9], "Q4 (P10–13)": [10, 11, 12, 13]}
     with sel_col2:
-        q_presets = {"Q1 (P1–3)": [1, 2, 3], "Q2 (P4–6)": [4, 5, 6],
-                     "Q3 (P7–9)": [7, 8, 9], "Q4 (P10–13)": [10, 11, 12, 13], "All": list(range(1, 14))}
-        qcols = st.columns(5)
-        for i, (q_name, p_nums) in enumerate(q_presets.items()):
-            with qcols[i]:
-                if st.button(q_name, key=f"ceo_q_{q_name}", use_container_width=True):
-                    matching = year_periods[year_periods["period_num"].isin(p_nums)]["label"].tolist()
-                    if matching:
-                        st.session_state["ceo_periods"] = matching
-                    st.rerun()
-
-    selected_periods = st.session_state.get("ceo_periods", [])
+        sel_q = st.selectbox("Quarter", list(q_presets), key="ceo_quarter")
+    selected_periods = year_periods[year_periods["period_num"].isin(q_presets[sel_q])]["label"].tolist()
 
     # Filter to selected periods (or all periods for selected year)
     if selected_periods:
@@ -8514,31 +8510,45 @@ def main():
     if base_keys:
         st.caption(f"📊 {len(base_keys)} periods · {base_keys[0]} – {base_keys[-1]} · {len(dash.get('stand_records', []))} stand records")
 
-    # Tabs
-    tab_names = [
-        "📊 CEO Snapshot",
-        "🏠 Overview",
-        "📈 Period Comparison",
-        "🗺 Regions",
-        "📋 Stands",
-        "💡 Wins & Opportunities",
-        "⚡ Utilities & R&M",
-        "🏗️ Pipeline",
-        "🧭 Cluster Roster (Draft)",
-        "🗺️ Stand Map (Draft)",
-    ]
-    tabs = st.tabs(tab_names)
-
-    with tabs[0]:  tab_ceo(dash)
-    with tabs[1]:  tab_overview(dash)
-    with tabs[2]:  tab_comparison(dash)
-    with tabs[3]:  tab_regions(dash)
-    with tabs[4]:  tab_stands(dash)
-    with tabs[5]:  tab_insights(dash)
-    with tabs[6]:  tab_utilities(dash)
-    with tabs[7]:  tab_pipeline(dash)
-    with tabs[8]:  tab_roster(dash)
-    with tabs[9]:  tab_map(dash)
+    # Navigation tray — top-level pages, each with optional sub-pages. Only the selected page runs.
+    # The choice is mirrored in the URL (?page=…&sub=…) so a refresh or shared link lands in the same place.
+    nav = {
+        "🏠 Home": {
+            "Scorecard": tab_overview,
+            "Period Comparison": tab_comparison,
+            "Regions": tab_regions,
+            "Stands": tab_stands,
+            "Wins & Opportunities": tab_insights,
+            "Utilities & R&M": tab_utilities,
+        },
+        "📊 CEO": {"": tab_ceo},
+        "🏗️ Pipeline": {"": tab_pipeline},
+        "🧭 Stand Clusters (Draft)": {
+            "Cluster Roster": tab_roster,
+            "Stand Map": tab_map,
+        },
+    }
+    qp = st.query_params
+    pages = list(nav)
+    _slug = lambda t: re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
+    if "nav_page" not in st.session_state:
+        st.session_state["nav_page"] = next((p for p in pages if _slug(p) == qp.get("page")), pages[0])
+    with st.container(key="k_tray"):
+        page = st.segmented_control("Section", pages, key="nav_page", label_visibility="collapsed") or pages[0]
+    subs = list(nav[page])
+    sub = subs[0]
+    if len(subs) > 1:
+        sk = f"nav_sub_{_slug(page)}"
+        if sk not in st.session_state:
+            st.session_state[sk] = next((s for s in subs if _slug(s) == qp.get("sub")), subs[0])
+        with st.container(key="k_subtray"):
+            sub = st.segmented_control("Page", subs, key=sk, label_visibility="collapsed") or subs[0]
+    qp["page"] = _slug(page)
+    if len(subs) > 1:
+        qp["sub"] = _slug(sub)
+    elif "sub" in qp:
+        del qp["sub"]
+    nav[page][sub](dash)
     # Forecast and Speed of Service archived — functions retained but tabs hidden
 
 
