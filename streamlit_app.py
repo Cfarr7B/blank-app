@@ -186,7 +186,15 @@ st.html("""
   [data-testid="stExpander"] details { background: var(--k-card); border-color: var(--k-line) !important; border-radius: 12px !important; }
 
   /* Hide Streamlit chrome; header sits flush at the top */
-  /* Navigation tray (top) and sub-page tray */
+  /* Navigation tray (top) and sub-page tray — pinned while scrolling */
+  [data-testid="stLayoutWrapper"]:has(> .st-key-k_navbar) { position: sticky; top: 0; z-index: 990; }
+  .st-key-k_navbar { position: relative; background: var(--k-bg); padding: 8px 0 4px;
+    gap: 6px !important; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
+  .st-key-k_navbar [data-testid="stElementContainer"]:has(.k-totop) { position: absolute; right: 14px; top: 20px; width: auto !important; z-index: 2; }
+  .k-totop { display: inline-block; padding: 8px 14px; border: 1px solid var(--k-line); border-radius: 999px; background: var(--k-card);
+    color: var(--k-blue); font-weight: 700; font-size: .9rem; text-decoration: none; }
+  .k-totop:hover, .k-totop:focus-visible { border-color: var(--k-blue); text-decoration: underline; }
+  .k-header { scroll-margin-top: 0; }
   .st-key-k_tray { background: var(--k-card); border: 1px solid var(--k-line); border-radius: 12px; padding: 6px 8px; margin-bottom: 2px; }
   .st-key-k_tray [data-testid="stButtonGroup"] { width: 100%; }
   .st-key-k_tray button { font-size: 1rem !important; font-weight: 800 !important; padding: 10px 20px !important; min-height: 44px; }
@@ -1733,15 +1741,15 @@ border:1px solid currentColor;white-space:nowrap;line-height:1.5}
 .ov7 .sn{display:block} .ov7 .sid{display:block;font-weight:400;font-size:.76rem;color:var(--muted)}
 .ov7 .note{display:block;font-weight:600;font-size:.74rem;color:#175bb0}
 .ov7 .ctx{margin:10px 0 0;color:var(--muted);font-size:.9rem}
-.ov7 h2.oh{font-size:1.35rem;margin:22px 0 8px;font-weight:800;border-left:6px solid var(--red);padding-left:10px;scroll-margin-top:70px}
-.ov7 h3.doh{font-size:1.15rem;margin:22px 0 8px;font-weight:800;border-bottom:3px solid var(--red);padding-bottom:6px;scroll-margin-top:70px}
+.ov7 h2.oh{font-size:1.35rem;margin:22px 0 8px;font-weight:800;border-left:6px solid var(--red);padding-left:10px;scroll-margin-top:140px}
+.ov7 h3.doh{font-size:1.15rem;margin:22px 0 8px;font-weight:800;border-bottom:3px solid var(--red);padding-bottom:6px;scroll-margin-top:140px}
 .ov7 h3.doh span{font-size:.85rem;font-weight:600;color:var(--muted);margin-left:8px}
 .ov7 nav.jump{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:4px 0 6px;font-size:.88rem}
 .ov7 nav.jump b{color:var(--muted);font-weight:700;margin-right:2px}
 .ov7 nav.jump a{display:inline-block;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);
 color:#175bb0;font-weight:600;text-decoration:none} .ov7 nav.jump a:hover{border-color:#175bb0}
 .ov7 a.mk{color:#175bb0;font-weight:700;text-decoration:none} .ov7 a.mk:hover{text-decoration:underline}
-.ov7 details.mkt{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:0 0 12px;scroll-margin-top:70px}
+.ov7 details.mkt{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:0 0 12px;scroll-margin-top:140px}
 .ov7 details.mkt>summary{cursor:pointer;padding:12px 14px;font-weight:800;font-size:1.02rem;border-bottom:1px solid transparent}
 .ov7 details.mkt[open]>summary{border-bottom-color:var(--line)}
 .ov7 details.mkt>summary .sm{font-weight:600;font-size:.86rem;color:var(--muted);margin-left:6px}
@@ -8518,7 +8526,7 @@ def main():
     _yrs = sorted({int(p["year"]) for p in _ps})
     _fy = f"FY{_yrs[0]}" + (f"–{_yrs[-1]}" if len(_yrs) > 1 else "") if _yrs else ""
     st.html(f"""
-    <div class="k-header" role="banner">
+    <div class="k-header" id="k-top" role="banner">
       <img src="data:image/jpeg;base64,{_LOGO_B64}" alt="7 Brew logo">
       <div>
         <h1>7Crew Performance Dashboard <span class="accent">— {_latest}</span></h1>
@@ -8563,16 +8571,19 @@ def main():
     _slug = lambda t: re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
     if "nav_page" not in st.session_state:
         st.session_state["nav_page"] = next((p for p in pages if _slug(p) == qp.get("page")), pages[0])
-    with st.container(key="k_tray"):
-        page = st.segmented_control("Section", pages, key="nav_page", label_visibility="collapsed") or pages[0]
-    subs = list(nav[page])
-    sub = subs[0]
-    if len(subs) > 1:
-        sk = f"nav_sub_{_slug(page)}"
-        if sk not in st.session_state:
-            st.session_state[sk] = next((s for s in subs if _slug(s) == qp.get("sub")), subs[0])
-        with st.container(key="k_subtray"):
-            sub = st.segmented_control("Page", subs, key=sk, label_visibility="collapsed") or subs[0]
+    # Menu bar stays pinned to the top while scrolling (CSS: .st-key-k_navbar), with a back-to-top link
+    with st.container(key="k_navbar"):
+        st.html('<a class="k-totop" href="#k-top" title="Back to the top of this page">↑ Top</a>')
+        with st.container(key="k_tray"):
+            page = st.segmented_control("Section", pages, key="nav_page", label_visibility="collapsed") or pages[0]
+        subs = list(nav[page])
+        sub = subs[0]
+        if len(subs) > 1:
+            sk = f"nav_sub_{_slug(page)}"
+            if sk not in st.session_state:
+                st.session_state[sk] = next((s for s in subs if _slug(s) == qp.get("sub")), subs[0])
+            with st.container(key="k_subtray"):
+                sub = st.segmented_control("Page", subs, key=sk, label_visibility="collapsed") or subs[0]
     qp["page"] = _slug(page)
     if len(subs) > 1:
         qp["sub"] = _slug(sub)
