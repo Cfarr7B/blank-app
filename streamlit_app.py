@@ -2496,7 +2496,7 @@ def _aggregate_stands_multi(raw_df):
 # ─────────────────────────────────────────────
 # TAB: STAND DETAIL
 # ─────────────────────────────────────────────
-def tab_stands(dash):
+def tab_stands(dash, archive=False):
     # ── P&L benchmark targets (lower=better for costs, higher=better for margins) ──
     _BM = {
         "Total_COGS_pct":       {"t": 0.265, "hi": False, "label": "COGS"},
@@ -3115,6 +3115,8 @@ renderTable(ROWS, CLS);
     # ══════════════════════════════════════════════════════════════════════════
     # SECTION 3: CATEGORY DEEP-DIVES
     # ══════════════════════════════════════════════════════════════════════════
+    if not archive:
+        st.caption("R&M and Utilities by stand now live on Home › Utilities & R&M.")
     section("📂 CATEGORY DEEP-DIVES",
             "Expand any category to see ranked bar charts and distribution analysis")
 
@@ -3256,16 +3258,17 @@ renderTable(ROWS, CLS);
         st.plotly_chart(fig_lab, use_container_width=True, config={"displayModeBar":False})
 
     # ── R&M ──────────────────────────────────────────────────────────────────
-    with st.expander("🔧 REPAIRS & MAINTENANCE (R&M)", expanded=False):
-        st.caption(f"Target: {_BM['Total_RM_pct']['t']*100:.2f}% · System avg: {df['Total_RM_pct'].mean()*100:.2f}%")
-        _ranked_bar("Total_RM_pct","Total_RM","R&M% by Stand",
-                    target=_BM["Total_RM_pct"]["t"])
-        ra, rb = st.columns(2)
-        with ra:
-            st.metric("Total R&M Spend (period)", f"${df['Total_RM'].sum():,.0f}")
-        with rb:
-            over = df[df["Total_RM_pct"] > _BM["Total_RM_pct"]["t"]]
-            st.metric("Stands Over R&M Target", f"{len(over)}/{n}")
+    if archive:  # moved to the Utilities & R&M page
+        with st.expander("🔧 REPAIRS & MAINTENANCE (R&M)", expanded=False):
+            st.caption(f"Target: {_BM['Total_RM_pct']['t']*100:.2f}% · System avg: {df['Total_RM_pct'].mean()*100:.2f}%")
+            _ranked_bar("Total_RM_pct","Total_RM","R&M% by Stand",
+                        target=_BM["Total_RM_pct"]["t"])
+            ra, rb = st.columns(2)
+            with ra:
+                st.metric("Total R&M Spend (period)", f"${df['Total_RM'].sum():,.0f}")
+            with rb:
+                over = df[df["Total_RM_pct"] > _BM["Total_RM_pct"]["t"]]
+                st.metric("Stands Over R&M Target", f"{len(over)}/{n}")
 
     # ── Controllable ──────────────────────────────────────────────────────────
     with st.expander("🎛️ CONTROLLABLE EXPENSES", expanded=False):
@@ -3274,16 +3277,17 @@ renderTable(ROWS, CLS);
                     target=_BM["Controllable_pct"]["t"])
 
     # ── Utilities ─────────────────────────────────────────────────────────────
-    with st.expander("⚡ UTILITIES", expanded=False):
-        st.caption(f"Target: {_BM['Total_Utilities_pct']['t']*100:.2f}% · System avg: {df['Total_Utilities_pct'].mean()*100:.2f}%")
-        _ranked_bar("Total_Utilities_pct","Total_Utilities","Utilities% by Stand",
-                    target=_BM["Total_Utilities_pct"]["t"])
-        if "Waste_Removal" in df.columns and "Landscaping" in df.columns:
-            uc1, uc2 = st.columns(2)
-            with uc1:
-                st.metric("Avg Waste Removal / Stand", f"${df['Waste_Removal'].mean():,.0f}")
-            with uc2:
-                st.metric("Avg Landscaping / Stand", f"${df['Landscaping'].mean():,.0f}")
+    if archive:  # moved to the Utilities & R&M page
+        with st.expander("⚡ UTILITIES", expanded=False):
+            st.caption(f"Target: {_BM['Total_Utilities_pct']['t']*100:.2f}% · System avg: {df['Total_Utilities_pct'].mean()*100:.2f}%")
+            _ranked_bar("Total_Utilities_pct","Total_Utilities","Utilities% by Stand",
+                        target=_BM["Total_Utilities_pct"]["t"])
+            if "Waste_Removal" in df.columns and "Landscaping" in df.columns:
+                uc1, uc2 = st.columns(2)
+                with uc1:
+                    st.metric("Avg Waste Removal / Stand", f"${df['Waste_Removal'].mean():,.0f}")
+                with uc2:
+                    st.metric("Avg Landscaping / Stand", f"${df['Landscaping'].mean():,.0f}")
 
     # ── Fixed Costs ───────────────────────────────────────────────────────────
     with st.expander("🏢 FIXED COSTS", expanded=False):
@@ -3399,209 +3403,9 @@ renderTable(ROWS, CLS);
 # ─────────────────────────────────────────────
 # TAB: REGIONS
 # ─────────────────────────────────────────────
-def tab_regions(dash):
-    periods_df = get_periods_df(dash)
-    stands_df  = get_stands_df(dash)
-    section("REGIONAL ANALYSIS", "Performance by region for selected period")
-
-    all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
-    label_to_key = {l: pk for l, pk in all_options}
-    all_labels   = [l for l, _ in all_options]
-
-    sel_lbls = st.multiselect(
-        "Period(s)", all_labels,
-        default=[all_labels[0]] if all_labels else [],
-        key="reg_period",
-        help="Select one or more periods — metrics are aggregated across all selected periods",
-    )
-    if not sel_lbls:
-        st.info("Select at least one period above.")
-        return
-
-    sel_pks  = [label_to_key[l] for l in sel_lbls]
-    # For display labels and single-period references use the most-recent selected period
-    pk       = sorted(sel_pks, key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))[-1]
-    ps       = periods_df[periods_df["period_key"] == pk].iloc[0]
-    sel_lbl  = ps["label"]
-
-    # Aggregate regional data across all selected periods
-    _reg_frames = [get_regions_df(dash, _pk) for _pk in sel_pks]
-    _reg_frames = [f for f in _reg_frames if not f.empty]
-    if not _reg_frames:
-        st.info("No regional data for the selected period(s).")
-        return
-    _reg_all = pd.concat(_reg_frames, ignore_index=True)
-    _pct_cols_r = [c for c in _reg_all.columns if c.endswith("_pct")]
-    reg_df = _reg_all.groupby("region").agg({"net_sales": "sum", "stands": "mean"}).reset_index()
-    reg_df["stands"] = reg_df["stands"].round(0).astype(int)
-    reg_df["avg_sales"] = reg_df["net_sales"] / reg_df["stands"]
-    for _c in _pct_cols_r:
-        if _c in _reg_all.columns:
-            reg_df[_c] = _reg_all.groupby("region").apply(
-                lambda g: (g[_c] * g["net_sales"]).sum() / g["net_sales"].sum()
-                if g["net_sales"].sum() > 0 else 0
-            ).values
-    period_range_lbl = sel_lbl if len(sel_lbls) == 1 else f"{sel_lbls[-1]} – {sel_lbls[0]}"
-
-    # Region cards
-    reg_sorted = reg_df.sort_values("net_sales", ascending=False)
-    cols = st.columns(min(len(reg_sorted), 4))
-    for i, (_, row) in enumerate(reg_sorted.iterrows()):
-        col_idx = i % len(cols)
-        color = REGION_COLORS.get(row["region"], MID)
-        ebi_color = "good" if row["ebitda_pct"] >= 0.22 else ("warn" if row["ebitda_pct"] >= 0.15 else "bad")
-        with cols[col_idx]:
-            st.html(f"""
-            <div class="kpi-card" style="border-top:3px solid {color}; margin-bottom:10px;">
-              <div class="kpi-label">{row['region']}</div>
-              <div class="kpi-value">{_fmt_d_short(row['net_sales'])}</div>
-              <div class="kpi-sub">{int(row['stands'])} stands · {_fmt_d_short(row['avg_sales'])}/stand</div>
-              <div class="kpi-delta {'up' if row['ebitda_pct']>=0.20 else 'down'}">EBITDA {_fmt_p(row['ebitda_pct'])}</div>
-            </div>""")
-
-    st.html('<hr class="brew">')
-
-    # Drill-down: Show stands by selected region
-    section("STANDS BY REGION", "Click on a region below to view its stands")
-    region_list = sorted(reg_df["region"].unique().tolist())
-    sel_region = st.selectbox("Select Region to Drill Down", region_list, key="region_drilldown")
-
-    if sel_region:
-        region_stands = stands_df[(stands_df["Period_Key"].isin(sel_pks)) & (stands_df["Region"] == sel_region)].copy()
-        # For multi-period, keep only the most recent record per stand
-        if len(sel_pks) > 1:
-            region_stands["_sort"] = region_stands["Period_Key"].apply(
-                lambda x: (int(x.split("_")[0]), int(x.split("_P")[1]))
-            )
-            region_stands = region_stands.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
-        if not region_stands.empty:
-            st.caption(f"**{sel_region}** - {len(region_stands)} stands")
-            # Display stands in selected region
-            display_cols_region = ["Stand", "Net_Sales", "Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]
-            display_cols_region = [c for c in display_cols_region if c in region_stands.columns]
-            tbl = region_stands[display_cols_region].copy()
-            if "Net_Sales" in tbl.columns:
-                tbl["Net_Sales"] = tbl["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
-            for pct_col in ["Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]:
-                if pct_col in tbl.columns:
-                    tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.2f}%" if pd.notna(x) else "—")
-            render_table(tbl.reset_index(drop=True))
-        else:
-            st.info(f"No stand data available for {sel_region} in this period.")
-
-    st.html('<hr class="brew">')
-
-    col1, col2 = st.columns(2)
-    with col1:
-        # Labor vs EBITDA scatter
-        ps_stands = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
-        if len(sel_pks) > 1:
-            ps_stands["_sort"] = ps_stands["Period_Key"].apply(lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))
-            ps_stands = ps_stands.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
-        reg_agg = ps_stands.groupby("Region").agg(
-            ebitda_pct=("Store_EBITDA_pct", "mean"),
-            labor_pct=("Total_Labor_pct", "mean"),
-            net_sales=("Net_Sales", "sum"),
-            stands=("Stand", "count"),
-        ).reset_index()
-        fig = go.Figure(go.Scatter(
-            x=reg_agg["labor_pct"] * 100,
-            y=reg_agg["ebitda_pct"] * 100,
-            mode="markers+text",
-            text=reg_agg["Region"],
-            textposition="top center",
-            marker=dict(
-                size=reg_agg["net_sales"].map(lambda v: max(10, min(40, v / 30000))),
-                color=[REGION_COLORS.get(r, MID) for r in reg_agg["Region"]],
-                opacity=0.85,
-                line=dict(width=1, color="white"),
-            ),
-            textfont=dict(size=9, family=FONT),
-        ))
-        fig.update_layout(title_text="LABOR% vs EBITDA% (bubble = sales volume)",
-                          xaxis=dict(ticksuffix="%", title="Total Labor %"),
-                          yaxis=dict(ticksuffix="%", title="EBITDA %"),
-                          showlegend=False)
-        brew_fig(fig, height=420)
-        st.plotly_chart(fig, config={"displayModeBar": False})
-
-    with col2:
-        # Cost stack
-        reg_stack = reg_df.copy()
-        cost_fields = {"cogs_pct": "COGS", "labor_pct": "Labor", "rm_pct": "R&M",
-                       "ebitda_pct": "EBITDA"}
-        fig2 = go.Figure()
-        colors_stack = [BLUE, AMBER, MID, GREEN]
-        for (field, name), color in zip(cost_fields.items(), colors_stack):
-            fig2.add_bar(
-                x=reg_stack["region"],
-                y=reg_stack[field] * 100 if field in reg_stack.columns else [0] * len(reg_stack),
-                name=name,
-                marker_color=color,
-            )
-        fig2.update_layout(title_text="COST STACK BY REGION",
-                           barmode="stack", yaxis=dict(ticksuffix="%"))
-        brew_fig(fig2, height=420, margin=dict(t=60, b=100, l=8, r=8))
-        st.plotly_chart(fig2, config={"displayModeBar": False})
-
-    # ── STAND DETAIL ──────────────────────────────────────────────────────────
-    st.html('<hr class="brew">')
-    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {period_range_lbl}")
-
-    sd_c1, sd_c2, sd_c3 = st.columns([1.5, 1.5, 2])
-    with sd_c1:
-        try:
-            if "Region" in stands_df.columns and len(stands_df) > 0:
-                sd_regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
-            else:
-                sd_regions = ["All Regions"]
-        except Exception:
-            sd_regions = ["All Regions"]
-        sd_reg = st.selectbox("Region", sd_regions, key="reg_sd_region")
-    with sd_c2:
-        sd_ages = ["All Ages", "New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
-        sd_age  = st.selectbox("Age Bucket", sd_ages, key="reg_sd_age")
-    with sd_c3:
-        sd_search = st.text_input("Search Stands", placeholder="Type stand name...", key="reg_sd_search")
-
-    sd_df = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
-    # Keep most recent period per stand when multiple periods selected
-    if len(sel_pks) > 1:
-        sd_df["_sort"] = sd_df["Period_Key"].apply(lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))
-        sd_df = sd_df.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
-    if sd_reg != "All Regions" and "Region" in sd_df.columns:
-        sd_df = sd_df[sd_df["Region"] == sd_reg]
-    if sd_age != "All Ages" and "Age_Bucket" in sd_df.columns:
-        sd_df = sd_df[sd_df["Age_Bucket"] == sd_age]
-    if sd_search and "Stand" in sd_df.columns:
-        sd_df = sd_df[sd_df["Stand"].str.contains(sd_search, case=False, na=False)]
-
-    st.caption(f"Showing {len(sd_df)} stands")
-
-    display_cols = {
-        "Stand": "Stand", "Region": "Region", "Age_Bucket": "Age",
-        "Net_Sales": "Net Sales", "Total_COGS_pct": "COGS%",
-        "Total_Hourly_pct": "Hourly%", "Total_Labor_pct": "Labor%",
-        "Total_RM_pct": "R&M%", "Controllable_pct": "Ctrl%",
-        "Total_Utilities_pct": "Util%", "Total_Fixed_pct": "Fixed%",
-        "Unit_EBITDAR_pct": "EBITDAR%", "Total_Rent_pct": "Rent%",
-        "Store_EBITDA_pct": "EBITDA%", "Discounts_pct": "Disc%",
-    }
-    avail = [c for c in display_cols if c in sd_df.columns]
-    disp  = sd_df[avail].rename(columns={k: v for k, v in display_cols.items() if k in avail}).copy()
-    for col in ["COGS%","Hourly%","Labor%","R&M%","Ctrl%","Util%",
-                "Fixed%","EBITDAR%","Rent%","EBITDA%","Disc%"]:
-        if col in disp.columns:
-            disp[col] = disp[col].map(lambda v: f"{v*100:.2f}%" if pd.notna(v) else "—")
-    if "Net Sales" in disp.columns:
-        disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
-    render_table(disp)
-
-    # ── 🌱 Store Cohort / Ramp Analysis ─────────────────────────────────────
-    st.html('<hr class="brew">')
-    period_lbl = ps["label"] if hasattr(ps, "__getitem__") else str(pk)
-    section("🌱 STORE COHORT ANALYSIS",
-            f"Avg performance by stand maturity — {period_lbl} · uses the period selected above")
+def _cohort_section(stands_df, pk, period_lbl):
+    """Stand-maturity cohorts for one period + revenue ramp curve (all periods).
+    Shared by Wins & Opportunities (New Stand Ramp) and the archived Regions tab."""
 
     # ── Opening-year filter ───────────────────────────────────────────────────
     # Derive the opening year for every stand from its "Open Date" field
@@ -3879,10 +3683,216 @@ def tab_regions(dash):
     st.caption(caption_map[ramp_view])
 
 
+def tab_regions(dash):
+    periods_df = get_periods_df(dash)
+    stands_df  = get_stands_df(dash)
+    section("REGIONAL ANALYSIS", "Performance by region for selected period")
+
+    all_options = [(row["label"], row["period_key"]) for _, row in periods_df.iloc[::-1].iterrows()]
+    label_to_key = {l: pk for l, pk in all_options}
+    all_labels   = [l for l, _ in all_options]
+
+    sel_lbls = st.multiselect(
+        "Period(s)", all_labels,
+        default=[all_labels[0]] if all_labels else [],
+        key="reg_period",
+        help="Select one or more periods — metrics are aggregated across all selected periods",
+    )
+    if not sel_lbls:
+        st.info("Select at least one period above.")
+        return
+
+    sel_pks  = [label_to_key[l] for l in sel_lbls]
+    # For display labels and single-period references use the most-recent selected period
+    pk       = sorted(sel_pks, key=lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))[-1]
+    ps       = periods_df[periods_df["period_key"] == pk].iloc[0]
+    sel_lbl  = ps["label"]
+
+    # Aggregate regional data across all selected periods
+    _reg_frames = [get_regions_df(dash, _pk) for _pk in sel_pks]
+    _reg_frames = [f for f in _reg_frames if not f.empty]
+    if not _reg_frames:
+        st.info("No regional data for the selected period(s).")
+        return
+    _reg_all = pd.concat(_reg_frames, ignore_index=True)
+    _pct_cols_r = [c for c in _reg_all.columns if c.endswith("_pct")]
+    reg_df = _reg_all.groupby("region").agg({"net_sales": "sum", "stands": "mean"}).reset_index()
+    reg_df["stands"] = reg_df["stands"].round(0).astype(int)
+    reg_df["avg_sales"] = reg_df["net_sales"] / reg_df["stands"]
+    for _c in _pct_cols_r:
+        if _c in _reg_all.columns:
+            reg_df[_c] = _reg_all.groupby("region").apply(
+                lambda g: (g[_c] * g["net_sales"]).sum() / g["net_sales"].sum()
+                if g["net_sales"].sum() > 0 else 0
+            ).values
+    period_range_lbl = sel_lbl if len(sel_lbls) == 1 else f"{sel_lbls[-1]} – {sel_lbls[0]}"
+
+    # Region cards
+    reg_sorted = reg_df.sort_values("net_sales", ascending=False)
+    cols = st.columns(min(len(reg_sorted), 4))
+    for i, (_, row) in enumerate(reg_sorted.iterrows()):
+        col_idx = i % len(cols)
+        color = REGION_COLORS.get(row["region"], MID)
+        ebi_color = "good" if row["ebitda_pct"] >= 0.22 else ("warn" if row["ebitda_pct"] >= 0.15 else "bad")
+        with cols[col_idx]:
+            st.html(f"""
+            <div class="kpi-card" style="border-top:3px solid {color}; margin-bottom:10px;">
+              <div class="kpi-label">{row['region']}</div>
+              <div class="kpi-value">{_fmt_d_short(row['net_sales'])}</div>
+              <div class="kpi-sub">{int(row['stands'])} stands · {_fmt_d_short(row['avg_sales'])}/stand</div>
+              <div class="kpi-delta {'up' if row['ebitda_pct']>=0.20 else 'down'}">EBITDA {_fmt_p(row['ebitda_pct'])}</div>
+            </div>""")
+
+    st.html('<hr class="brew">')
+
+    # Drill-down: Show stands by selected region
+    section("STANDS BY REGION", "Click on a region below to view its stands")
+    region_list = sorted(reg_df["region"].unique().tolist())
+    sel_region = st.selectbox("Select Region to Drill Down", region_list, key="region_drilldown")
+
+    if sel_region:
+        region_stands = stands_df[(stands_df["Period_Key"].isin(sel_pks)) & (stands_df["Region"] == sel_region)].copy()
+        # For multi-period, keep only the most recent record per stand
+        if len(sel_pks) > 1:
+            region_stands["_sort"] = region_stands["Period_Key"].apply(
+                lambda x: (int(x.split("_")[0]), int(x.split("_P")[1]))
+            )
+            region_stands = region_stands.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
+        if not region_stands.empty:
+            st.caption(f"**{sel_region}** - {len(region_stands)} stands")
+            # Display stands in selected region
+            display_cols_region = ["Stand", "Net_Sales", "Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]
+            display_cols_region = [c for c in display_cols_region if c in region_stands.columns]
+            tbl = region_stands[display_cols_region].copy()
+            if "Net_Sales" in tbl.columns:
+                tbl["Net_Sales"] = tbl["Net_Sales"].apply(lambda x: f"${x:,.0f}" if pd.notna(x) else "—")
+            for pct_col in ["Store_EBITDA_pct", "Total_COGS_pct", "Total_Labor_pct"]:
+                if pct_col in tbl.columns:
+                    tbl[pct_col] = tbl[pct_col].apply(lambda x: f"{x*100:.2f}%" if pd.notna(x) else "—")
+            render_table(tbl.reset_index(drop=True))
+        else:
+            st.info(f"No stand data available for {sel_region} in this period.")
+
+    st.html('<hr class="brew">')
+
+    col1, col2 = st.columns(2)
+    with col1:
+        # Labor vs EBITDA scatter
+        ps_stands = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
+        if len(sel_pks) > 1:
+            ps_stands["_sort"] = ps_stands["Period_Key"].apply(lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))
+            ps_stands = ps_stands.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
+        reg_agg = ps_stands.groupby("Region").agg(
+            ebitda_pct=("Store_EBITDA_pct", "mean"),
+            labor_pct=("Total_Labor_pct", "mean"),
+            net_sales=("Net_Sales", "sum"),
+            stands=("Stand", "count"),
+        ).reset_index()
+        fig = go.Figure(go.Scatter(
+            x=reg_agg["labor_pct"] * 100,
+            y=reg_agg["ebitda_pct"] * 100,
+            mode="markers+text",
+            text=reg_agg["Region"],
+            textposition="top center",
+            marker=dict(
+                size=reg_agg["net_sales"].map(lambda v: max(10, min(40, v / 30000))),
+                color=[REGION_COLORS.get(r, MID) for r in reg_agg["Region"]],
+                opacity=0.85,
+                line=dict(width=1, color="white"),
+            ),
+            textfont=dict(size=9, family=FONT),
+        ))
+        fig.update_layout(title_text="LABOR% vs EBITDA% (bubble = sales volume)",
+                          xaxis=dict(ticksuffix="%", title="Total Labor %"),
+                          yaxis=dict(ticksuffix="%", title="EBITDA %"),
+                          showlegend=False)
+        brew_fig(fig, height=420)
+        st.plotly_chart(fig, config={"displayModeBar": False})
+
+    with col2:
+        # Cost stack
+        reg_stack = reg_df.copy()
+        cost_fields = {"cogs_pct": "COGS", "labor_pct": "Labor", "rm_pct": "R&M",
+                       "ebitda_pct": "EBITDA"}
+        fig2 = go.Figure()
+        colors_stack = [BLUE, AMBER, MID, GREEN]
+        for (field, name), color in zip(cost_fields.items(), colors_stack):
+            fig2.add_bar(
+                x=reg_stack["region"],
+                y=reg_stack[field] * 100 if field in reg_stack.columns else [0] * len(reg_stack),
+                name=name,
+                marker_color=color,
+            )
+        fig2.update_layout(title_text="COST STACK BY REGION",
+                           barmode="stack", yaxis=dict(ticksuffix="%"))
+        brew_fig(fig2, height=420, margin=dict(t=60, b=100, l=8, r=8))
+        st.plotly_chart(fig2, config={"displayModeBar": False})
+
+    # ── STAND DETAIL ──────────────────────────────────────────────────────────
+    st.html('<hr class="brew">')
+    section("STAND DETAIL", f"Filter, sort, and drill into individual stand performance · {period_range_lbl}")
+
+    sd_c1, sd_c2, sd_c3 = st.columns([1.5, 1.5, 2])
+    with sd_c1:
+        try:
+            if "Region" in stands_df.columns and len(stands_df) > 0:
+                sd_regions = ["All Regions"] + sorted(stands_df["Region"].dropna().unique().tolist())
+            else:
+                sd_regions = ["All Regions"]
+        except Exception:
+            sd_regions = ["All Regions"]
+        sd_reg = st.selectbox("Region", sd_regions, key="reg_sd_region")
+    with sd_c2:
+        sd_ages = ["All Ages", "New (<6mo)", "Young (6-12mo)", "Developing (1-2yr)", "Mature (2yr+)"]
+        sd_age  = st.selectbox("Age Bucket", sd_ages, key="reg_sd_age")
+    with sd_c3:
+        sd_search = st.text_input("Search Stands", placeholder="Type stand name...", key="reg_sd_search")
+
+    sd_df = stands_df[stands_df["Period_Key"].isin(sel_pks)].copy()
+    # Keep most recent period per stand when multiple periods selected
+    if len(sel_pks) > 1:
+        sd_df["_sort"] = sd_df["Period_Key"].apply(lambda x: (int(x.split("_")[0]), int(x.split("_P")[1])))
+        sd_df = sd_df.sort_values("_sort").drop_duplicates("Stand", keep="last").drop(columns=["_sort"])
+    if sd_reg != "All Regions" and "Region" in sd_df.columns:
+        sd_df = sd_df[sd_df["Region"] == sd_reg]
+    if sd_age != "All Ages" and "Age_Bucket" in sd_df.columns:
+        sd_df = sd_df[sd_df["Age_Bucket"] == sd_age]
+    if sd_search and "Stand" in sd_df.columns:
+        sd_df = sd_df[sd_df["Stand"].str.contains(sd_search, case=False, na=False)]
+
+    st.caption(f"Showing {len(sd_df)} stands")
+
+    display_cols = {
+        "Stand": "Stand", "Region": "Region", "Age_Bucket": "Age",
+        "Net_Sales": "Net Sales", "Total_COGS_pct": "COGS%",
+        "Total_Hourly_pct": "Hourly%", "Total_Labor_pct": "Labor%",
+        "Total_RM_pct": "R&M%", "Controllable_pct": "Ctrl%",
+        "Total_Utilities_pct": "Util%", "Total_Fixed_pct": "Fixed%",
+        "Unit_EBITDAR_pct": "EBITDAR%", "Total_Rent_pct": "Rent%",
+        "Store_EBITDA_pct": "EBITDA%", "Discounts_pct": "Disc%",
+    }
+    avail = [c for c in display_cols if c in sd_df.columns]
+    disp  = sd_df[avail].rename(columns={k: v for k, v in display_cols.items() if k in avail}).copy()
+    for col in ["COGS%","Hourly%","Labor%","R&M%","Ctrl%","Util%",
+                "Fixed%","EBITDAR%","Rent%","EBITDA%","Disc%"]:
+        if col in disp.columns:
+            disp[col] = disp[col].map(lambda v: f"{v*100:.2f}%" if pd.notna(v) else "—")
+    if "Net Sales" in disp.columns:
+        disp["Net Sales"] = disp["Net Sales"].map(lambda v: f"${v:,.0f}" if pd.notna(v) else "—")
+    render_table(disp)
+
+    # ── 🌱 Store Cohort / Ramp Analysis ─────────────────────────────────────
+    st.html('<hr class="brew">')
+    period_lbl = ps["label"] if hasattr(ps, "__getitem__") else str(pk)
+    section("🌱 STORE COHORT ANALYSIS",
+            f"Avg performance by stand maturity — {period_lbl} · uses the period selected above")
+    _cohort_section(stands_df, pk, period_lbl)
+
+
 # ─────────────────────────────────────────────
 # TAB: WINS & OPPORTUNITIES
 # ─────────────────────────────────────────────
-def tab_insights(dash):
+def tab_insights(dash, archive=False):
     periods_df = get_periods_df(dash)
     stands_df  = get_stands_df(dash)
     section("WINS & OPPORTUNITIES", "Evidence-based findings with recommended actions")
@@ -4040,6 +4050,13 @@ def tab_insights(dash):
         st.html('<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#AC2430;margin-bottom:10px;">⚠ OPPORTUNITIES</div>')
         for o in opps:
             insight_card(o["title"], o["body"], o.get("tag",""), o.get("tag_cls","red"))
+
+    # ── New Stand Ramp: cohorts by maturity (moved from Regions), then the per-stand tracker ──
+    if not archive:
+        st.html('<hr class="brew">')
+        section("🌱 NEW STAND RAMP",
+                f"Performance by stand maturity — {ps['label']} · ramp curve uses every period on file")
+        _cohort_section(stands_df, pk, ps["label"])
 
     # ── Ramp-Up Tracker — charts ──────────────────────────────────────────────
     if n_ramping > 0:
@@ -8478,6 +8495,11 @@ def tab_map(dash):
                      use_container_width=True, hide_index=True)
 
 
+def _archive_note(name, moved):
+    st.html(f'<div class="info-box"><strong>Archive — {name} as it was before the consolidation.</strong> '
+            f'Kept for review until it is retired. What moved: {moved}.</div>')
+
+
 # ─────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────
@@ -8516,7 +8538,6 @@ def main():
         "🏠 Home": {
             "Scorecard": tab_overview,
             "Period Comparison": tab_comparison,
-            "Regions": tab_regions,
             "Stands": tab_stands,
             "Wins & Opportunities": tab_insights,
             "Utilities & R&M": tab_utilities,
@@ -8526,6 +8547,15 @@ def main():
         "🧭 Stand Clusters (Draft)": {
             "Cluster Roster": tab_roster,
             "Stand Map": tab_map,
+        },
+        # Originals kept for side-by-side review; retire each once nothing is missing.
+        "🗄️ Archive": {
+            "Regions": lambda d: (_archive_note("Regions", "Store Cohort Analysis → Home › Wins & Opportunities (New Stand Ramp); "
+                                                "stand table → Home › Stands"), tab_regions(d)),
+            "Stands (original)": lambda d: (_archive_note("Stands", "R&M and Utilities sections → Home › Utilities & R&M"),
+                                            tab_stands(d, archive=True)),
+            "Wins & Opps (original)": lambda d: (_archive_note("Wins & Opportunities", "now also includes New Stand Ramp"),
+                                                 tab_insights(d, archive=True)),
         },
     }
     qp = st.query_params
