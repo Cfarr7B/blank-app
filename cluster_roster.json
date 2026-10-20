@@ -14,157 +14,157 @@
   "rms": [
     {
       "name": "Anne Springer",
-      "home": "C2"
+      "home": "R2"
     },
     {
       "name": "April Reyes",
-      "home": "C1"
+      "home": "R1"
     },
     {
       "name": "Cristina Pimentel",
-      "home": "C17"
+      "home": "R17"
     },
     {
       "name": "Gerika Tunnell",
-      "home": "C20"
+      "home": "R20"
     },
     {
       "name": "Jaden Jenkins",
-      "home": "C19"
+      "home": "R19"
     },
     {
       "name": "Madison Macias",
-      "home": "C9"
+      "home": "R9"
     },
     {
       "name": "Matt Avery",
-      "home": "C16"
+      "home": "R16"
     },
     {
       "name": "Mia Walker",
-      "home": "C11"
+      "home": "R11"
     },
     {
       "name": "Olivia Kaminski",
-      "home": "C15"
+      "home": "R15"
     },
     {
       "name": "Robmikia Holman",
-      "home": "C3"
+      "home": "R3"
     },
     {
       "name": "Rosey Olson",
-      "home": "C7"
+      "home": "R7"
     },
     {
       "name": "Ryley Cooper",
-      "home": "C4"
+      "home": "R4"
     },
     {
       "name": "Ryley Gee",
-      "home": "C6"
+      "home": "R6"
     },
     {
       "name": "Valeria Verdugo",
-      "home": "C5"
+      "home": "R5"
     }
   ],
   "clusters": {
-    "C1": {
+    "R1": {
       "rm": "April Reyes",
       "covered_with": ""
     },
-    "C2": {
+    "R2": {
       "rm": "Anne Springer",
       "covered_with": ""
     },
-    "C3": {
+    "R3": {
       "rm": "Robmikia Holman",
       "covered_with": ""
     },
-    "C4": {
+    "R4": {
       "rm": "Ryley Cooper",
       "covered_with": ""
     },
-    "C5": {
+    "R5": {
       "rm": "Valeria Verdugo",
       "covered_with": ""
     },
-    "C6": {
+    "R6": {
       "rm": "Ryley Gee",
       "covered_with": ""
     },
-    "C7": {
+    "R7": {
       "rm": "Rosey Olson",
       "covered_with": ""
     },
-    "C8": {
+    "R8": {
       "rm": "",
-      "covered_with": "C7"
+      "covered_with": "R7"
     },
-    "C9": {
+    "R9": {
       "rm": "Madison Macias",
       "covered_with": ""
     },
-    "C10": {
+    "R10": {
       "rm": "",
-      "covered_with": "C11"
+      "covered_with": "R11"
     },
-    "C11": {
+    "R11": {
       "rm": "Mia Walker",
       "covered_with": ""
     },
-    "C12": {
+    "R12": {
       "rm": "",
-      "covered_with": "C11"
+      "covered_with": "R11"
     },
-    "C13": {
+    "R13": {
       "rm": "",
-      "covered_with": "C11"
+      "covered_with": "R11"
     },
-    "C14": {
+    "R14": {
       "rm": "",
-      "covered_with": "C15"
+      "covered_with": "R15"
     },
-    "C15": {
+    "R15": {
       "rm": "Olivia Kaminski",
       "covered_with": ""
     },
-    "C16": {
+    "R16": {
       "rm": "Matt Avery",
       "covered_with": ""
     },
-    "C17": {
+    "R17": {
       "rm": "Cristina Pimentel",
       "covered_with": ""
     },
-    "C18": {
+    "R18": {
       "rm": "",
-      "covered_with": "C17"
+      "covered_with": "R17"
     },
-    "C19": {
+    "R19": {
       "rm": "Jaden Jenkins",
       "covered_with": ""
     },
-    "C20": {
+    "R20": {
       "rm": "Gerika Tunnell",
       "covered_with": ""
     },
-    "C21": {
+    "R21": {
       "rm": "",
-      "covered_with": "C22"
+      "covered_with": "R22"
     },
-    "C22": {
+    "R22": {
       "rm": "",
-      "covered_with": "C19"
+      "covered_with": "R19"
     },
-    "C23": {
+    "R23": {
       "rm": "",
-      "covered_with": "C22"
+      "covered_with": "R22"
     },
-    "C24": {
+    "R24": {
       "rm": "",
-      "covered_with": "C22"
+      "covered_with": "R22"
     }
   },
   "stand_overrides": {

@@ -1402,7 +1402,7 @@ def tab_ceo(dash):
             fig3.update_layout(xaxis=dict(ticksuffix="%", rangemode="tozero"), bargap=0.3,
                                margin=dict(t=30, b=44, l=8, r=60))
             st.plotly_chart(fig3, config={"displayModeBar": False}, use_container_width=True)
-            st.caption("Markets from the Cluster Roster. Blue = at or above the system average; gray = below. "
+            st.caption("Markets from the Region Roster. Blue = at or above the system average; gray = below. "
                        "Markets with only 1–2 stands can swing widely.")
 
     # ── Row 2: Prime Cost vs EBITDA | New Stand Openings ──────────────────────
@@ -1539,7 +1539,7 @@ def tab_ceo(dash):
                            yaxis=dict(autorange="reversed", showgrid=False, type="category"),
                            margin=dict(t=50, b=10, l=8, r=8))
         st.plotly_chart(fig4, config={"displayModeBar": False}, use_container_width=True)
-        st.caption(f"Markets in Cluster Roster order. Blue = above the {period_range} system average ({_sys:.2f}%), "
+        st.caption(f"Markets in Region Roster order. Blue = above the {period_range} system average ({_sys:.2f}%), "
                    "red = below; blank = market had no open stands that period. Hover for stand count.")
 
     st.html('<hr class="brew">')
@@ -2106,7 +2106,7 @@ def tab_overview(dash):
     no_goal = [s["name"] for s in scope if mode == "goal" and not s["ns_goal"]]
     st.html('<div class="ov7"><h2 class="oh" id="ov-sources" style="font-size:1.05rem">Sources</h2></div>')
     st.caption("Sources: P&L PTD actuals · stand goals from the WoW report's Weekly Goals sheet (`kpi_goals.json`) · "
-               "FY plan from the CEO Snapshot · markets, RMs and DOs from the Cluster Roster."
+               "FY plan from the CEO Snapshot · markets, RMs and DOs from the Region Roster."
                + (f" No sales goal row: {', '.join(no_goal)}." if no_goal else ""))
 
 
@@ -7113,7 +7113,7 @@ def _norm_phase(phase):
 
 
 def _cluster_label(cid, clusters):
-    """Market name first, cluster # second — e.g. "Tampa Bay · C22"."""
+    """Market name first, region # second — e.g. "Tampa Bay · R22"."""
     info = clusters.get(cid or "", {})
     return f"{info['market']} · {cid}" if info else (cid or "Unassigned")
 
@@ -7792,7 +7792,7 @@ def tab_pipeline(dash):
     st.divider()
     st.markdown("#### 📋 Upcoming Openings")
     table_df = dff[["phase","market","address","city","state","cluster","cs","bd","open","store","rsh"]].copy()
-    table_df.columns = ["Phase","Market","Address","City","State","Cluster",
+    table_df.columns = ["Phase","Market","Address","City","State","Region",
                         "Const. Start","Building Drop","Est. Opening","Store #","RSH"]
     table_df["Phase"]   = table_df["Phase"].map(_phase_label)
     table_df["Store #"] = table_df["Store #"].apply(lambda x: x if x != "TBD" else "—")
@@ -7862,7 +7862,7 @@ def tab_pipeline(dash):
 
     # ── Market (Cluster) Capacity Planning ────────────────────────────────────
     st.markdown("#### 🗺️ Stand Count by Market — Current + Pipeline Projection")
-    st.caption("Total stands per market (cluster) by quarter, combining open stands and projected pipeline opens. "
+    st.caption("Total stands per market (region) by quarter, combining open stands and projected pipeline opens. "
                "Use to see when a market may need an additional RM. Follows the Area / Market filters above.")
 
     _cap_clusters = [c for c in _cl_order if _active_cl is None or c in _active_cl]
@@ -7912,7 +7912,7 @@ def tab_pipeline(dash):
     _cap_rows = []
     for c in _cap_clusters:
         info = _clusters[c]
-        row = {"Market": info["market"], "Cluster": c, "Area": info["area"],
+        row = {"Market": info["market"], "Region": c, "Area": info["area"],
                "RM": info.get("rm") or "Open", "Current": _current_by_cl.get(c, 0)}
         running = row["Current"]
         for q in _quarter_order:
@@ -7926,8 +7926,8 @@ def tab_pipeline(dash):
         st.info("No markets in the current filter selection.")
     else:
         st.markdown("**Cumulative Stand Count by Quarter**")
-        _display_df = _cap_df[["Market","Cluster","Area","RM","Current"] + _quarter_order + ["Pipeline"]].copy()
-        _total_row = {"Market": "TOTAL", "Cluster": "", "Area": "", "RM": ""}
+        _display_df = _cap_df[["Market","Region","Area","RM","Current"] + _quarter_order + ["Pipeline"]].copy()
+        _total_row = {"Market": "TOTAL", "Region": "", "Area": "", "RM": ""}
         for _col in ["Current"] + _quarter_order + ["Pipeline"]:
             _total_row[_col] = int(_display_df[_col].sum())
         _display_df = pd.concat([_display_df, pd.DataFrame([_total_row])], ignore_index=True)
@@ -8208,9 +8208,9 @@ def _roster_stands(pdata: dict) -> pd.DataFrame:
 def tab_roster(dash):
     import datetime as _dt
 
-    st.markdown("### 🧭 Cluster Roster *(Draft)*")
+    st.markdown("### 🧭 Region Roster *(Draft)*")
     st.caption(
-        "Each stand has a **home market** (permanent geography from the 7C Cluster Roster). "
+        "Each stand has a **home market** (permanent geography from the 7C Enterprises roster). "
         "Each market either has **its own RM** or is **covered with** another market until it is big enough to split. "
         "A stand's RM = stand override → its market's RM → the covering market's RM. "
         "**To save changes:** edit below → **Download roster file** at the bottom → send the file to Claude to publish."
@@ -8219,7 +8219,7 @@ def tab_roster(dash):
     _pdata = _load_pipeline_data(_pipeline_mtime())
     clusters = _pdata.get("clusters", {})
     if not clusters:
-        st.warning("No cluster data in pipeline_data.json.")
+        st.warning("No region data in pipeline_data.json.")
         return
     cl_order = list(clusters.keys())
     areas = list(dict.fromkeys(v["area"] for v in clusters.values()))
@@ -8245,7 +8245,8 @@ def tab_roster(dash):
                 sig = f"{up.name}:{up.size}"
                 if st.session_state.get("_roster_src_sig") != sig:
                     try:
-                        st.session_state["_roster_src"] = json.loads(up.getvalue().decode("utf-8"))
+                        st.session_state["_roster_src"] = json.loads(
+                        re.sub(r'"C(\d+)"', r'"R\1"', up.getvalue().decode("utf-8")))  # pre-rename files used C#
                         st.session_state["_roster_src_sig"] = sig
                         st.session_state["_roster_ver"] = st.session_state.get("_roster_ver", 0) + 1
                     except Exception as e:
@@ -8598,7 +8599,7 @@ def tab_roster(dash):
                     hit = next((q for q in buckets if cc[q] >= split_at), None)
                     split = f"🟨 {hit}" if hit else "—"
             exc = sorted({r for r in sub["rm"] if r and r != eff_cluster_rm(c)})
-            summ.append({"Market": clusters[c]["market"], "Cluster": c, "Area": clusters[c]["area"],
+            summ.append({"Market": clusters[c]["market"], "Region": c, "Area": clusters[c]["area"],
                          "DO": do_of(clusters[c]["area"]), "RM": eff_cluster_rm(c) or "Open", "Coverage": how,
                          "Open": cc["Open"], "Pipeline": cc["Pipeline"], f"Total ({last_b})": cc[last_b],
                          "Ready to split": split, "Stand exceptions": ", ".join(exc)})
@@ -8664,7 +8665,7 @@ def tab_roster(dash):
     st.divider()
     out = {
         "_updated": _dt.date.today().isoformat(),
-        "_note": "Edited on the Cluster Roster tab; download and send to Claude to publish.",
+        "_note": "Edited on the Region Roster tab; download and send to Claude to publish.",
         "split_threshold": int(split_at),
         "rm_max_stands": int(rm_max),
         "directors": {a: area_do.get(a, "") for a in areas},
@@ -8677,7 +8678,7 @@ def tab_roster(dash):
     d1, d2 = st.columns([1, 2])
     d1.download_button(
         "💾 Download roster file", data=json.dumps(out, indent=2).encode("utf-8"),
-        file_name=f"cluster_roster_{_dt.date.today().strftime('%Y%m%d')}.json", mime="application/json",
+        file_name=f"region_roster_{_dt.date.today().strftime('%Y%m%d')}.json", mime="application/json",
         type="primary" if changed else "secondary", key="roster_dl", use_container_width=True)
     d2.caption("✏️ **You have unpublished changes** — download the file and send it to Claude to publish."
                if changed else "No changes from the published roster.")
@@ -8703,7 +8704,7 @@ def _load_stand_locations(sig: str) -> dict:
 
 
 def _published_assignments(pdata: dict, roster: dict) -> pd.DataFrame:
-    """Stands with their market + RM resolved from the published cluster roster."""
+    """Stands with their market + RM resolved from the published region roster."""
     stands = _roster_stands(pdata)
     cl_state = roster.get("clusters", {})
     ov = roster.get("stand_overrides", {})
@@ -8723,7 +8724,7 @@ def _published_assignments(pdata: dict, roster: dict) -> pd.DataFrame:
 def tab_map(dash):
     st.markdown("### 🗺️ Stand Map *(Draft)*")
     st.caption("Every open stand and every pipeline stand. Pick an area, DO, market or RM to zoom in. "
-               "Markets and RMs follow the published Cluster Roster.")
+               "Markets and RMs follow the published Region Roster.")
 
     try:
         locs = _load_stand_locations(_file_sig(_LOC_PATH))
@@ -8886,13 +8887,13 @@ def main():
         },
         "📊 CEO": {"": tab_ceo},
         "🏗️ Pipeline": {"": tab_pipeline},
-        "🧭 Stand Clusters (Draft)": {
-            "Cluster Roster": tab_roster,
+        "🧭 Regions (Draft)": {
+            "Region Roster": tab_roster,
             "Stand Map": tab_map,
         },
         # Originals kept for side-by-side review; retire each once nothing is missing.
         "🗄️ Archive": {
-            "Regions": lambda d: (_archive_note("Regions", "Store Cohort Analysis → Home › Wins & Opportunities (New Stand Ramp); "
+            "Legacy P&L Regions": lambda d: (_archive_note("Regions", "Store Cohort Analysis → Home › Wins & Opportunities (New Stand Ramp); "
                                                 "stand table → Home › Stands"), tab_regions(d)),
             "Stands (original)": lambda d: (_archive_note("Stands", "R&M and Utilities sections → Home › Utilities & R&M"),
                                             tab_stands(d, archive=True)),
@@ -8900,9 +8901,12 @@ def main():
                                                  tab_insights(d, archive=True)),
         },
     }
-    qp = st.query_params
     pages = list(nav)
     _slug = lambda t: re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
+    # Old bookmarks from before Clusters were renamed Regions
+    _old = {"stand-clusters-draft": "regions-draft", "cluster-roster": "region-roster", "regions": "legacy-p-l-regions"}
+    qp = {"page": _old.get(st.query_params.get("page"), st.query_params.get("page")),
+          "sub": _old.get(st.query_params.get("sub"), st.query_params.get("sub"))}
     if "nav_page" not in st.session_state:
         st.session_state["nav_page"] = next((p for p in pages if _slug(p) == qp.get("page")), pages[0])
     # Menu bar stays pinned to the top while scrolling (CSS: .st-key-k_navbar), with a back-to-top link
@@ -8918,11 +8922,11 @@ def main():
                 st.session_state[sk] = next((s for s in subs if _slug(s) == qp.get("sub")), subs[0])
             with st.container(key="k_subtray"):
                 sub = st.segmented_control("Page", subs, key=sk, label_visibility="collapsed") or subs[0]
-    qp["page"] = _slug(page)
+    st.query_params["page"] = _slug(page)
     if len(subs) > 1:
-        qp["sub"] = _slug(sub)
-    elif "sub" in qp:
-        del qp["sub"]
+        st.query_params["sub"] = _slug(sub)
+    elif "sub" in st.query_params:
+        del st.query_params["sub"]
     nav[page][sub](dash)
     # Forecast and Speed of Service archived — functions retained but tabs hidden
 
