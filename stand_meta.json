@@ -625,5 +625,14 @@
     "State": "OK",
     "RM": "Ryley Gee",
     "Age_Bucket": "New"
+  },
+  "571": {
+    "Display_Name": "Ft. Walton 2",
+    "Region": "FL Panhandle East",
+    "Open_Date": "2026-10-19",
+    "Store_ID": "571",
+    "State": "FL",
+    "RM": "Cristina Pimentel",
+    "Age_Bucket": "New"
   }
 }
