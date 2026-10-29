@@ -1114,5 +1114,41 @@
   "lon": -101.9224,
   "precision": "address",
   "address": "11112 Slide Rd, Lubbock, TX"
+ },
+ "RSH-00890": {
+  "lat": 35.16176,
+  "lon": -101.92034,
+  "precision": "address",
+  "address": "7404 SW 45th Ave, Amarillo, TX"
+ },
+ "RSH-00684": {
+  "lat": 32.91715,
+  "lon": -96.6852,
+  "precision": "address",
+  "address": "3555 W Walnut St, Garland, TX"
+ },
+ "RSH-00858": {
+  "lat": 28.33131,
+  "lon": -82.18792,
+  "precision": "address",
+  "address": "11921 Frontage Rd, Dade City, FL"
+ },
+ "RSH-00904": {
+  "lat": 28.12013,
+  "lon": -81.97385,
+  "precision": "address",
+  "address": "5750 US Hwy 98 N, Lakeland, FL"
+ },
+ "RSH-00910": {
+  "lat": 33.18725,
+  "lon": -97.10961,
+  "precision": "address",
+  "address": "2200 S Interstate 35, Denton, TX"
+ },
+ "RSH-00952": {
+  "lat": 28.89853,
+  "lon": -82.58024,
+  "precision": "address",
+  "address": "823 NE 5th St, Crystal River, FL"
  }
 }
